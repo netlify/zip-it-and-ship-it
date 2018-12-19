@@ -215,6 +215,11 @@ function zipFunctions(folder, cb) {
         file: zipName,
         zip: zipFunction(path.resolve(path.join(folder, file)))
       });
+    } else if (path.extname(file) === ".zip") {
+      cb({
+        file,
+        zip: new AdmZip(file)
+      });
     }
   });
 }
