@@ -6,10 +6,32 @@ const resolve = require("resolve");
 const readPkgUp = require("read-pkg-up");
 const requirePackageName = require("require-package-name");
 const glob = require("glob");
-const AdmZip = require("adm-zip");
+const archiver = require("archiver");
 const elfTools = require("elf-tools");
 
 const alwaysIgnored = new Set(["aws-sdk"]);
+
+class Zip {
+  constructor(path) {
+    this.output = fs.createWriteStream(path);
+    this.archive = archiver("zip");
+    this.archive.pipe(this.output);
+  }
+
+  addLocalFile(path, data) {
+    this.archive.file(path, data);
+  }
+
+  finalize() {
+    return new Promise((resolve, reject) => {
+      this.output.on("end", resolve);
+      this.output.on("close", resolve);
+      this.output.on("finish", resolve);
+      this.output.on("error", reject);
+      this.archive.finalize();
+    });
+  }
+}
 
 function ignoreMissing(dependency, optional) {
   return alwaysIgnored.has(dependency) || (optional && dependency in optional);
@@ -191,23 +213,27 @@ function isGoExe(file) {
   }
 }
 
-function zipPath(file, basedir, moduledir) {
-  return file.replace(basedir, "").replace(moduledir, "");
+function zipEntryPath(file, basedir, moduledir) {
+  return file
+    .replace(basedir, "")
+    .replace(moduledir, "")
+    .replace(/^\//, "");
 }
 
-function zipGoExe(file) {
-  const zip = new AdmZip();
-  zip.addFile(
-    path.basename(file),
-    fs.readFileSync(file),
-    "",
-    fs.lstatSync(file).mode
-  );
-  return zip;
+function zipGoExe(file, zipPath) {
+  const zip = new Zip(zipPath);
+  const stat = fs.lstatSync(file);
+  zip.addLocalFile(file, {
+    name: path.basename(file),
+    mode: stat.mode,
+    date: stat.mtime,
+    stats: stat
+  });
+  return zip.finalize();
 }
 
-function zipJs(functionPath) {
-  const zip = new AdmZip();
+function zipJs(functionPath, zipPath) {
+  const zip = new Zip(zipPath);
   let basedir = functionPath;
   if (fs.lstatSync(functionPath).isFile()) {
     basedir = path.dirname(basedir);
@@ -215,53 +241,61 @@ function zipJs(functionPath) {
   const moduledir = findModuleDir(basedir);
 
   filesForFunctionZip(functionPath).forEach(file => {
-    const zipEntry = zipPath(file, basedir, moduledir);
+    const entryPath = zipEntryPath(file, basedir, moduledir);
     const stat = fs.lstatSync(file);
-    zip.addFile(
-      zipEntry.replace(/^\//, ""),
-      fs.readFileSync(file),
-      "",
-      stat.mode
-    );
+    zip.addLocalFile(file, {
+      name: entryPath,
+      mode: stat.mode,
+      date: stat.mtime,
+      stats: stat
+    });
   });
-  return zip;
+  return zip.finalize();
 }
 
-function zipFunction(functionPath) {
-  const zipName =
-    path.basename(functionPath).replace(/\.(js|zip)$/, "") + ".zip";
+function zipFunction(functionPath, destFolder) {
+  if (path.basename(functionPath) === "node_modules") {
+    return Promise.resolve(null);
+  }
+  const zipPath = path.join(
+    destFolder,
+    path.basename(functionPath).replace(/\.(js|zip)$/, "") + ".zip"
+  );
   if (path.extname(functionPath) === ".zip") {
-    return {
-      file: zipName,
-      zip: new AdmZip(functionPath),
+    fs.copyFileSync(functionPath, zipPath);
+    return Promise.resolve({
+      path: zipPath,
       runtime: "js"
-    };
+    });
   }
   const ds = fs.lstatSync(functionPath);
   if (ds.isDirectory() || path.extname(functionPath) === ".js") {
-    return {
-      file: zipName,
-      zip: zipJs(functionPath),
-      runtime: "js"
-    };
+    return zipJs(functionPath, zipPath).then(() => {
+      return {
+        path: zipPath,
+        runtime: "js"
+      };
+    });
   }
   if (isGoExe(functionPath)) {
-    return {
-      file: zipName,
-      zip: zipGoExe(functionPath),
-      runtime: "go"
-    };
+    return zipGoExe(functionPath, zipPath).then(() => {
+      return {
+        path: zipPath,
+        runtime: "go"
+      };
+    });
   }
-  return null;
+  return Promise.resolve(null);
 }
 
-function zipFunctions(folder, cb) {
-  fs.readdirSync(folder).forEach(file => {
-    const zip = zipFunction(path.resolve(path.join(folder, file)));
-    if (zip) {
-      cb(zip);
-    }
-  });
+function zipFunctions(srcFolder, destFolder, cb) {
+  return Promise.all(
+    fs
+      .readdirSync(srcFolder)
+      .map(file =>
+        zipFunction(path.resolve(path.join(srcFolder, file)), destFolder)
+      )
+  );
 }
 
 module.exports = {

@@ -7,9 +7,7 @@ The main usage is:
 ```
 const {zipFunctions} = require("zip-it-and-ship-it);
 
-zipFunctions("functions", ({file, zip}) => {
-  zip.writeZip(path.join("functions-dist", file))
-})
+zipFunctions("functions", "functions-dist")
 ```
 
 This will take all functions in the `functions` folder and create a matching `.zip` file in the `functions-dist` folder.
