@@ -195,7 +195,18 @@ function zipPath(file, basedir, moduledir) {
   return file.replace(basedir, "").replace(moduledir, "");
 }
 
-function zipFunction(functionPath) {
+function zipGoExe(file) {
+  const zip = new AdmZip();
+  zip.addFile(
+    path.basename(file),
+    fs.readFileSync(file),
+    "",
+    fs.lstatSync(file).mode
+  );
+  return zip;
+}
+
+function zipJs(functionPath) {
   const zip = new AdmZip();
   let basedir = functionPath;
   if (fs.lstatSync(functionPath).isFile()) {
@@ -216,40 +227,39 @@ function zipFunction(functionPath) {
   return zip;
 }
 
-function zipGoExe(file) {
-  const zip = new AdmZip();
-  zip.addFile(
-    path.basename(file),
-    fs.readFileSync(file),
-    "",
-    33279 // 0777
-  );
-  return zip;
+function zipFunction(functionPath) {
+  const zipName =
+    path.basename(functionPath).replace(/\.(js|zip)$/, "") + ".zip";
+  if (path.extname(functionPath) === ".zip") {
+    return {
+      file: zipName,
+      zip: new AdmZip(functionPath),
+      runtime: "js"
+    };
+  }
+  const ds = fs.lstatSync(functionPath);
+  if (ds.isDirectory() || path.extname(functionPath) === ".js") {
+    return {
+      file: zipName,
+      zip: zipJs(functionPath),
+      runtime: "js"
+    };
+  }
+  if (isGoExe(functionPath)) {
+    return {
+      file: zipName,
+      zip: zipGoExe(functionPath),
+      runtime: "go"
+    };
+  }
+  return null;
 }
 
 function zipFunctions(folder, cb) {
   fs.readdirSync(folder).forEach(file => {
-    const ds = fs.lstatSync(path.join(folder, file));
-    if (ds.isDirectory() || path.extname(file) === ".js") {
-      const zipName = file.replace(/\.js$/, "") + ".zip";
-      cb({
-        file: zipName,
-        zip: zipFunction(path.resolve(path.join(folder, file))),
-        runtime: "js"
-      });
-    } else if (path.extname(file) === ".zip") {
-      cb({
-        file,
-        zip: new AdmZip(file),
-        runtime: "js"
-      });
-    } else if (isGoExe(path.resolve(path.join(folder, file)))) {
-      const zipName = file.replace(/\.js$/, "") + ".zip";
-      cb({
-        file: zipName,
-        zip: zipGoExe(path.resolve(path.join(folder, file))),
-        runtime: "go"
-      });
+    const zip = zipFunction(path.resolve(path.join(folder, file)));
+    if (zip) {
+      cb(zip);
     }
   });
 }
