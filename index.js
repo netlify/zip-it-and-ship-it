@@ -7,6 +7,7 @@ const readPkgUp = require("read-pkg-up");
 const requirePackageName = require("require-package-name");
 const glob = require("glob");
 const AdmZip = require("adm-zip");
+const elfTools = require("elf-tools");
 
 const alwaysIgnored = new Set(["aws-sdk"]);
 
@@ -180,6 +181,16 @@ function filesForFunctionZip(functionPath) {
   return filesToBundle;
 }
 
+function isGoExe(file) {
+  try {
+    const buf = fs.readFileSync(file);
+    const elf = elfTools.parse(buf);
+    return elf.sections.find(s => s.header.name === ".note.go.buildid");
+  } catch (e) {
+    return false;
+  }
+}
+
 function zipPath(file, basedir, moduledir) {
   return file.replace(basedir, "").replace(moduledir, "");
 }
@@ -201,8 +212,18 @@ function zipFunction(functionPath) {
       "",
       stat.mode
     );
-    //zip.addLocalFile(file, zipEntry);
   });
+  return zip;
+}
+
+function zipGoExe(file) {
+  const zip = new AdmZip();
+  zip.addFile(
+    path.basename(file),
+    fs.readFileSync(file),
+    "",
+    33279 // 0777
+  );
   return zip;
 }
 
@@ -213,12 +234,21 @@ function zipFunctions(folder, cb) {
       const zipName = file.replace(/\.js$/, "") + ".zip";
       cb({
         file: zipName,
-        zip: zipFunction(path.resolve(path.join(folder, file)))
+        zip: zipFunction(path.resolve(path.join(folder, file))),
+        runtime: "js"
       });
     } else if (path.extname(file) === ".zip") {
       cb({
         file,
-        zip: new AdmZip(file)
+        zip: new AdmZip(file),
+        runtime: "js"
+      });
+    } else if (isGoExe(path.resolve(path.join(folder, file)))) {
+      const zipName = file.replace(/\.js$/, "") + ".zip";
+      cb({
+        file: zipName,
+        zip: zipGoExe(path.resolve(path.join(folder, file))),
+        runtime: "go"
       });
     }
   });
