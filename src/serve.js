@@ -5,6 +5,7 @@ const expressLogging = require("express-logging");
 const queryString = require("querystring");
 const path = require("path");
 const getPort = require("get-port");
+const chokidar = require("chokidar");
 const { findModuleDir } = require("./finders");
 
 const defaultPort = 30001;
@@ -82,6 +83,23 @@ function createHandler(dir, options) {
     }
   });
 
+  Object.keys(functions).forEach(name => {
+    const fn = functions[name];
+    const clearCache = () => {
+      delete require.cache[require.resolve(fn.functionPath)];
+    };
+    fn.watcher = chokidar.watch(
+      [fn.functionPath, path.join(fn.moduleDir, "package.json")],
+      {
+        ignored: /node_modules/
+      }
+    );
+    fn.watcher
+      .on("add", clearCache)
+      .on("change", clearCache)
+      .on("unlink", clearCache);
+  });
+
   return function(request, response) {
     // handle proxies without path re-writes (http-servr)
     const cleanPath = request.path.replace(/^\/.netlify\/functions/, "");
@@ -95,9 +113,6 @@ function createHandler(dir, options) {
       return;
     }
     const { functionPath, moduleDir } = functions[func];
-    if (options.static) {
-      delete require.cache[require.resolve(functionPath)];
-    }
     let handler;
     let before = module.paths;
     try {
@@ -161,11 +176,7 @@ async function serveFunctions(settings, options) {
   });
 
   return Promise.resolve({
-    port,
-    clearCache: function(chunk) {
-      var module = path.join(process.cwd(), dir, chunk);
-      delete require.cache[require.resolve(module)];
-    }
+    port
   });
 }
 
