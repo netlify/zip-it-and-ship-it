@@ -3,12 +3,12 @@ const fs = require("fs");
 const glob = require("glob");
 const archiver = require("archiver");
 const elfTools = require("elf-tools");
-const { getDependencies, findModuleDir } = require("./finders");
+const { getDependencies, findModuleDir, findHandler } = require("./finders");
 
 class Zip {
   constructor(path) {
     this.output = fs.createWriteStream(path);
-    this.archive = archiver("zip");
+    this.archive = archiver("zip", { level: 9 });
     this.archive.pipe(this.output);
   }
 
@@ -136,6 +136,9 @@ function zipFunction(functionPath, destFolder, options) {
   }
   const ds = fs.lstatSync(functionPath);
   if (ds.isDirectory() || path.extname(functionPath) === ".js") {
+    if (!findHandler(functionPath)) {
+      return Promise.resolve(null);
+    }
     return zipJs(functionPath, zipPath).then(() => {
       return {
         path: zipPath,
@@ -174,7 +177,7 @@ function zipFunctions(srcFolder, destFolder, options) {
           options
         )
       )
-  );
+  ).then(zipped => zipped.filter(e => e));
 }
 
 module.exports = {

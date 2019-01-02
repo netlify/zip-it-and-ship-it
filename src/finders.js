@@ -1,14 +1,37 @@
 const path = require("path");
 const fs = require("fs");
-const glob = require("glob");
+const packList = require("npm-packlist");
 const precinct = require("precinct");
 const resolve = require("resolve");
 const readPkgUp = require("read-pkg-up");
 const requirePackageName = require("require-package-name");
 const alwaysIgnored = new Set(["aws-sdk"]);
 
+const ignoredExtensions = new Set([
+  ".log",
+  ".lock",
+  ".html",
+  ".md",
+  ".map",
+  ".ts",
+  ".png",
+  ".jpeg",
+  ".jpg",
+  ".gif",
+  ".css",
+  ".patch"
+]);
+
 function ignoreMissing(dependency, optional) {
   return alwaysIgnored.has(dependency) || (optional && dependency in optional);
+}
+
+function includeModuleFile(packageJson, moduleFilePath) {
+  if (packageJson.files) {
+    return true;
+  }
+
+  return !ignoredExtensions.has(path.extname(moduleFilePath));
 }
 
 function getDependencies(filename, basedir) {
@@ -16,6 +39,7 @@ function getDependencies(filename, basedir) {
 
   const filePaths = new Set();
   const modulePaths = new Set();
+  const pkgs = {};
 
   const modulesToProcess = [];
   const localFilesToProcess = [filename];
@@ -82,14 +106,13 @@ function getDependencies(filename, basedir) {
   while (modulesToProcess.length) {
     const currentModule = modulesToProcess.pop();
     const currentModulePath = path.join(currentModule.path, "..");
+    const packageJson = currentModule.pkg;
 
     if (modulePaths.has(currentModulePath)) {
       continue;
     }
-
     modulePaths.add(currentModulePath);
-
-    const packageJson = currentModule.pkg;
+    pkgs[currentModulePath] = packageJson;
 
     ["dependencies", "peerDependencies", "optionalDependencies"].forEach(
       key => {
@@ -109,16 +132,26 @@ function getDependencies(filename, basedir) {
   }
 
   modulePaths.forEach(modulePath => {
-    const moduleFilePaths = glob.sync(path.join(modulePath, "**"), {
-      nodir: true,
-      ignore: path.join(modulePath, "node_modules", "**"),
-      absolute: true
-    });
+    const packageJson = pkgs[modulePath];
+    let moduleFilePaths;
+
+    moduleFilePaths = packList.sync({ path: modulePath });
 
     moduleFilePaths.forEach(moduleFilePath => {
-      filePaths.add(moduleFilePath);
+      if (includeModuleFile(packageJson, moduleFilePath)) {
+        filePaths.add(path.join(modulePath, moduleFilePath));
+      }
     });
   });
+
+  // TODO: get rid of this
+  const sizes = {};
+  filePaths.forEach(filepath => {
+    const stat = fs.lstatSync(filepath);
+    const ext = path.extname(filepath);
+    sizes[ext] = (sizes[ext] || 0) + stat.size;
+  });
+  console.log("Sizes per extension: ", sizes);
 
   return Array.from(filePaths);
 }
@@ -135,4 +168,19 @@ function findModuleDir(dir) {
   return basedir;
 }
 
-module.exports = { getDependencies, findModuleDir };
+function findHandler(functionPath) {
+  if (fs.lstatSync(functionPath).isFile()) {
+    return functionPath;
+  }
+
+  const handlerPath = path.join(
+    functionPath,
+    `${path.basename(functionPath)}.js`
+  );
+  if (!fs.existsSync(handlerPath)) {
+    return;
+  }
+  return handlerPath;
+}
+
+module.exports = { getDependencies, findModuleDir, findHandler };

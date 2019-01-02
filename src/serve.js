@@ -6,7 +6,7 @@ const queryString = require("querystring");
 const path = require("path");
 const getPort = require("get-port");
 const chokidar = require("chokidar");
-const { findModuleDir } = require("./finders");
+const { findModuleDir, findHandler } = require("./finders");
 
 const defaultPort = 30001;
 
@@ -67,6 +67,10 @@ function createHandler(dir, options) {
       return;
     }
     const functionPath = path.resolve(path.join(dir, file));
+    const handlerPath = findHandler(functionPath);
+    if (!handlerPath) {
+      return;
+    }
     if (path.extname(functionPath) === ".js") {
       functions[file.replace(/\.js$/, "")] = {
         functionPath,
@@ -74,10 +78,7 @@ function createHandler(dir, options) {
       };
     } else if (fs.lstatSync(functionPath).isDirectory()) {
       functions[file] = {
-        functionPath: path.join(
-          functionPath,
-          `${path.basename(functionPath)}.js`
-        ),
+        functionPath: handlerPath,
         moduleDir: findModuleDir(functionPath)
       };
     }
@@ -86,7 +87,10 @@ function createHandler(dir, options) {
   Object.keys(functions).forEach(name => {
     const fn = functions[name];
     const clearCache = () => {
+      const before = module.paths;
+      module.paths = [fn.moduleDir];
       delete require.cache[require.resolve(fn.functionPath)];
+      module.paths = before;
     };
     fn.watcher = chokidar.watch(
       [fn.functionPath, path.join(fn.moduleDir, "package.json")],
