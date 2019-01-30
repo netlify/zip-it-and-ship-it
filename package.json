@@ -1,5 +1,5 @@
 {
-  "name": "zip-it-and-ship-it",
+  "name": "@netlify/zip-it-and-ship-it",
   "version": "0.1.1",
   "description": "Zip it and ship it",
   "main": "index.js",
