@@ -63,9 +63,7 @@ function getDependencies(filename, basedir) {
     } catch (e) {
       if (e.code === "MODULE_NOT_FOUND") {
         if (ignoreMissing(moduleName, optionalDependencies)) {
-          serverless.cli.log(
-            `WARNING missing optional dependency: ${moduleName}`
-          );
+          console.log(`WARNING missing optional dependency: ${moduleName}`);
           return null;
         }
         try {
