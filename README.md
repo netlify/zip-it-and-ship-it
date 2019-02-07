@@ -4,8 +4,8 @@ This module handles zipping up lambda functions with their dependencies before d
 
 The main usage is:
 
-```
-const {zipFunctions} = require("zip-it-and-ship-it);
+```js
+const {zipFunctions} = require("@netlify/zip-it-and-ship-it");
 
 zipFunctions("functions", "functions-dist")
 ```
@@ -18,20 +18,20 @@ The packaging tool will look for the `package.json` closest to the handler and u
 
 Ie, the following combinations would all work:
 
-```
+```console
 /functions/foo.js
 /package.json
 /node_modules/
 ```
 
-```
+```console
 /functions/foo.js
 /functions/bar/bar.js
 /functions/package.json
 /functions/node_modules/
 ```
 
-```
+```console
 /functions/foo.js
 /functions/bar/bar.js
 /functions/bar/package.json
