@@ -6,6 +6,7 @@ const resolve = require("resolve");
 const readPkgUp = require("read-pkg-up");
 const requirePackageName = require("require-package-name");
 const alwaysIgnored = new Set(["aws-sdk"]);
+const debug = require("debug")("@netlify/zip-it-and-ship-it:finders");
 
 const ignoredExtensions = new Set([
   ".log",
@@ -63,7 +64,7 @@ function getDependencies(filename, basedir) {
     } catch (e) {
       if (e.code === "MODULE_NOT_FOUND") {
         if (ignoreMissing(moduleName, optionalDependencies)) {
-          console.log(`WARNING missing optional dependency: ${moduleName}`);
+          debug(`WARNING missing optional dependency: ${moduleName}`);
           return null;
         }
         try {
@@ -149,7 +150,7 @@ function getDependencies(filename, basedir) {
     const ext = path.extname(filepath);
     sizes[ext] = (sizes[ext] || 0) + stat.size;
   });
-  console.log("Sizes per extension: ", sizes);
+  debug("Sizes per extension: ", sizes);
 
   return Array.from(filePaths);
 }

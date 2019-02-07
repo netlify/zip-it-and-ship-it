@@ -12,6 +12,7 @@
     "archiver": "^3.0.0",
     "body-parser": "^1.18.3",
     "chokidar": "^2.0.4",
+    "debug": "^4.1.1",
     "elf-tools": "^1.1.1",
     "express": "^4.16.4",
     "express-logging": "^1.1.1",
