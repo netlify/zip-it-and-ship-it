@@ -4,6 +4,7 @@ const glob = require("glob");
 const archiver = require("archiver");
 const elfTools = require("elf-tools");
 const { getDependencies, findModuleDir, findHandler } = require("./finders");
+const pAll = require("p-all");
 
 class Zip {
   constructor(path) {
@@ -167,16 +168,23 @@ function zipFunction(functionPath, destFolder, options) {
 }
 
 function zipFunctions(srcFolder, destFolder, options) {
-  return Promise.all(
+  options = Object.assign(
+    {
+      parallelLimit: 5
+    },
+    options
+  );
+  return pAll(
     fs
       .readdirSync(srcFolder)
-      .map(file =>
+      .map(file => () =>
         zipFunction(
           path.resolve(path.join(srcFolder, file)),
           destFolder,
           options
         )
-      )
+      ),
+    { concurrency: options.parallelLimit }
   ).then(zipped => zipped.filter(e => e));
 }
 
