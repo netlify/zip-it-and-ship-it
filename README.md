@@ -41,3 +41,7 @@ Ie, the following combinations would all work:
 ```
 
 Zip It and Ship It will only include dependencies in each zip file that's been required from the relevant handler file.
+
+## Further reading
+
+Check [our official docs here](https://www.netlify.com/docs/cli/#unbundled-javascript-function-deploys).
