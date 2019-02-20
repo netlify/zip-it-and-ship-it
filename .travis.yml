@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - "node"
+  - "lts/*"
+sudo: false
+cache: npm
+install:
+  - npm i
+script:
+  - node --version
+  - npm --version
+  - npm test
