@@ -4,7 +4,8 @@
   "description": "Zip it and ship it",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "run-s test:*",
+    "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer"
   },
   "author": "Netlify, Inc",
   "license": "MIT",
@@ -22,6 +23,11 @@
     "p-all": "^1.0.0",
     "precinct": "^5.2.1",
     "read-pkg-up": "^4.0.0",
-    "require-package-name": "^2.0.1"
+    "require-package-name": "^2.0.1",
+    "resolve": "^1.10.0"
+  },
+  "devDependencies": {
+    "dependency-check": "^3.3.0",
+    "npm-run-all": "^4.1.3"
   }
 }
