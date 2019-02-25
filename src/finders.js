@@ -73,7 +73,9 @@ function getDependencies(filename, basedir) {
           localFilesToProcess.push(resolved);
           return;
         } catch (e) {
-          throw new Error(`Could not find ${moduleName}`);
+          throw new Error(`Could not find "${moduleName}" module in file: ${filename.replace(path.dirname(basedir), '')}. 
+          
+Please ensure "${moduleName}" is installed in the project.`);
         }
       }
       throw e;
