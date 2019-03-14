@@ -157,17 +157,27 @@ Please ensure "${moduleName}" is installed in the project.`);
   return Array.from(filePaths);
 }
 
-function findModuleDir(dir) {
-  let basedir = dir;
-  while (!fs.existsSync(path.join(basedir, "package.json"))) {
-    const newBasedir = path.dirname(basedir);
-    if (newBasedir === basedir) {
-      return null;
+function getAscendingFinder(name) {
+  const cache = {};
+  return function(dir) {
+    if (cache[dir]) {
+      return cache[dir];
     }
-    basedir = newBasedir;
-  }
-  return basedir;
+    let basedir = dir;
+    while (!fs.existsSync(path.join(basedir, name))) {
+      const newBasedir = path.dirname(basedir);
+      if (newBasedir === basedir) {
+        return null;
+      }
+      basedir = newBasedir;
+    }
+    cache[dir] = basedir;
+    return basedir;
+  };
 }
+
+const findModuleDir = getAscendingFinder("package.json");
+const findGitDir = getAscendingFinder(".git");
 
 function findHandler(functionPath) {
   if (fs.lstatSync(functionPath).isFile()) {
@@ -184,4 +194,4 @@ function findHandler(functionPath) {
   return handlerPath;
 }
 
-module.exports = { getDependencies, findModuleDir, findHandler };
+module.exports = { getDependencies, findModuleDir, findGitDir, findHandler };

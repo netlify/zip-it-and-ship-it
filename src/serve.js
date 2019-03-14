@@ -6,7 +6,7 @@ const queryString = require("querystring");
 const path = require("path");
 const getPort = require("get-port");
 const chokidar = require("chokidar");
-const { findModuleDir, findHandler } = require("./finders");
+const { findModuleDir, findGitDir, findHandler } = require("./finders");
 
 const defaultPort = 30001;
 
@@ -60,6 +60,12 @@ function getHandlerPath(functionPath) {
   return path.join(functionPath, `${path.basename(functionPath)}.js`);
 }
 
+function getFunctionModuleDir(functionPath) {
+  return (
+    findModuleDir(functionPath) || findGitDir(functionPath) || process.cwd()
+  );
+}
+
 function createHandler(dir, options) {
   const functions = {};
   fs.readdirSync(dir).forEach(file => {
@@ -74,12 +80,12 @@ function createHandler(dir, options) {
     if (path.extname(functionPath) === ".js") {
       functions[file.replace(/\.js$/, "")] = {
         functionPath,
-        moduleDir: findModuleDir(functionPath)
+        moduleDir: getFunctionModuleDir(functionPath)
       };
     } else if (fs.lstatSync(functionPath).isDirectory()) {
       functions[file] = {
         functionPath: handlerPath,
-        moduleDir: findModuleDir(functionPath)
+        moduleDir: getFunctionModuleDir(functionPath)
       };
     }
   });
