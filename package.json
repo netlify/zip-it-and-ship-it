@@ -2,6 +2,9 @@
   "name": "@netlify/zip-it-and-ship-it",
   "version": "0.2.3",
   "description": "Zip it and ship it",
+  "bin": {
+    "zip-it-and-ship-it": "./bin.js"
+  },
   "main": "index.js",
   "scripts": {
     "test": "run-s test:*",
@@ -13,12 +16,14 @@
     "archiver": "^3.0.0",
     "body-parser": "^1.18.3",
     "chokidar": "^2.0.4",
+    "cliclopts": "^1.1.1",
     "debug": "^4.1.1",
     "elf-tools": "^1.1.1",
     "express": "^4.16.4",
     "express-logging": "^1.1.1",
     "get-port": "^4.1.0",
     "glob": "^7.1.3",
+    "minimist": "^1.2.0",
     "npm-packlist": "^1.1.12",
     "p-all": "^2.0.0",
     "precinct": "^6.1.1",
