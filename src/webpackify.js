@@ -2,47 +2,54 @@ const path = require("path");
 const fs = require("fs");
 
 /**
+ * run through webpack, incl possibly babel-loader
+ *
+ * uses a cache inside .netlify/functions-cache/ to store build output
+ *
+ * functionPath: path to the js/ts file, not the function folder
+ */
+async function webpackify(configPath, functionPath, dirPath) {
+  //
+
+  // derive useful filepaths we can use
+  const projectRoot = process.cwd();
+  const cachePath = path.join(projectRoot, ".netlify", "functions-cache");
+  const functionName = dirPath.split("/").slice(-1)[0];
+  const cacheFunctionPath = path.join(cachePath, functionName);
+
+  // functionPath is the source
+  // cacheFunctionPath is the output
+  const givenWebpackConfig = require(configPath);
+  givenWebpackConfig.entry = functionPath;
+  givenWebpackConfig.context = dirPath;
+  givenWebpackConfig.output = {
+    path: cacheFunctionPath,
+    filename: functionName + ".js",
+    libraryTarget: "commonjs"
+  };
+  return new Promise(function(resolve, reject) {
+    const webpack = require("webpack");
+    webpack(givenWebpackConfig, (err, stats) =>
+      err ? reject(err) : resolve(stats)
+    );
+  }).then(() => path.join(cacheFunctionPath, functionName + ".js"));
+}
+
+/**
  * differentially handle the function
  *
  * if webpack.config.js exists, run webpack (possibly including babel loader)
  * elif babelrc (or babel.config.js) exists, run babel (not yet implemented)
  * else just serve raw function
  */
-async function _getFinalHandler(functionPath, moduleDir, dir, dirPath) {
+async function _getFinalHandler(functionPath, dirPath) {
   if (dirPath) {
     // function is a directory
-
-    // setup the cache
-    const root = process.cwd();
-    const dotNetlifyPath = path.join(root, ".netlify");
-    const cachePath = path.join(dotNetlifyPath, "functions-cache");
-    if (!fs.existsSync(cachePath)) fs.mkdirSync(cachePath);
-    const functionName = dirPath.split("/").slice(-1)[0];
-    const cacheFunctionPath = path.join(cachePath, functionName);
-    if (!fs.existsSync(cacheFunctionPath)) fs.mkdirSync(cacheFunctionPath);
 
     // do work!
     const configPath = path.join(dirPath, "webpack.config.js");
     if (fs.existsSync(configPath)) {
-      // run through webpack, incl possibly babel-loader
-      // functionPath is the source
-      // cacheFunctionPath is the output
-      const givenWebpackConfig = require(configPath);
-      givenWebpackConfig.entry = functionPath;
-      givenWebpackConfig.context = dirPath;
-      givenWebpackConfig.output = {
-        path: cacheFunctionPath,
-        filename: "bundle.js",
-        libraryTarget: "commonjs"
-      };
-      // console.log({ givenWebpackConfig });
-      return new Promise(function(resolve, reject) {
-        const webpack = require("webpack");
-        webpack(givenWebpackConfig, function(err, stats) {
-          if (err) return reject(err);
-          resolve(stats);
-        });
-      }).then(() => require(path.join(cacheFunctionPath, "bundle.js")));
+      return require(webpackify(configPath, functionPath, dirPath));
     }
     // else if (
     //   /** just babel, no webpack section */
@@ -63,7 +70,7 @@ async function _getFinalHandler(functionPath, moduleDir, dir, dirPath) {
   // else just serve raw function
   return require(functionPath);
 }
-module.exports = { getFinalHandler };
+module.exports = { getFinalHandler, webpackify };
 
 function getFinalHandler(...args) {
   // translate promise back to callback

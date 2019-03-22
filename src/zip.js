@@ -99,7 +99,7 @@ function zipGoExe(file, zipPath) {
   return zip.finalize();
 }
 
-function zipJs(functionPath, zipPath) {
+async function zipJs(functionPath, zipPath) {
   const zip = new Zip(zipPath);
   let basedir = functionPath;
   if (fs.lstatSync(functionPath).isFile()) {
@@ -107,7 +107,30 @@ function zipJs(functionPath, zipPath) {
   }
   const moduledir = findModuleDir(basedir);
 
-  filesForFunctionZip(functionPath).forEach(file => {
+  /** if webpack config exists, webpackify */
+  let _functionPath = functionPath;
+  const configPath = path.join(basedir, "webpack.config.js");
+  const functionName = functionPath.split("/").slice(-1)[0];
+  const functionEntryPointJS = path.join(functionPath, functionName + ".js");
+  const functionEntryPointTS = path.join(functionPath, functionName + ".ts");
+  let functionEntryPoint;
+  if (fs.existsSync(functionEntryPointJS))
+    functionEntryPoint = functionEntryPointJS;
+  if (fs.existsSync(functionEntryPointTS))
+    functionEntryPoint = functionEntryPointTS;
+  if (functionEntryPoint && fs.existsSync(configPath)) {
+    console.log(`webpack config detected at ${configPath}`);
+    const { webpackify } = require("./webpackify");
+    const bundledFunction = await webpackify(
+      configPath,
+      functionEntryPoint,
+      functionPath
+    );
+    _functionPath = path.dirname(bundledFunction);
+    basedir = path.dirname(_functionPath);
+  }
+
+  filesForFunctionZip(_functionPath).forEach(file => {
     const entryPath = zipEntryPath(file, basedir, moduledir);
     const stat = fs.lstatSync(file);
     zip.addLocalFile(file, {
@@ -117,6 +140,7 @@ function zipJs(functionPath, zipPath) {
       stats: stat
     });
   });
+
   return zip.finalize();
 }
 

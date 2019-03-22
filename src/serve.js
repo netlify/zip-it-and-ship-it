@@ -7,7 +7,7 @@ const path = require("path");
 const getPort = require("get-port");
 const chokidar = require("chokidar");
 const { findModuleDir, findHandler } = require("./finders");
-const { getFinalHandler } = require("./getFinalHandler");
+const { getFinalHandler } = require("./webpackify");
 
 const defaultPort = 30001;
 
@@ -139,7 +139,7 @@ function createHandler(dir, options) {
     let before = module.paths;
     try {
       module.paths = [moduleDir];
-      handler = getFinalHandler(functionPath, moduleDir, dir, dirPath);
+      handler = getFinalHandler(functionPath, dirPath);
       module.paths = before;
     } catch (err) {
       module.paths = before;
