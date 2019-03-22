@@ -56,7 +56,7 @@
   },
   "repository": "netlify/zip-it-and-ship-it",
   "scripts": {
-    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a zip-it-and-ship-it-linux-x64.tar.gz -a zip-it-and-ship-it-macos-x64.tar.gz",
+    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a zip-it-and-ship-it-linux-x64.tar.gz,zip-it-and-ship-it-macos-x64.tar.gz",
     "test": "run-s test:*",
     "pkg": "rimraf build && run-p pkg:*",
     "pkg:linux": "mkdirp build/zip-it-and-ship-it-linux-x64 && pkg . -t node10-linux-x64 --output build/zip-it-and-ship-it-linux-x64/zip-it-and-ship-it && tar -cvzf zip-it-and-ship-it-linux-x64.tar.gz --directory=build/zip-it-and-ship-it-linux-x64 zip-it-and-ship-it",
