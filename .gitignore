@@ -2,5 +2,5 @@ node_modules/
 yarn-error.log
 package-lock.json
 yarn.lock
-
-zip-it-and-ship-it
+build
+zip-it-and-ship-it*
