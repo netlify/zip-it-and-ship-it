@@ -1,19 +1,14 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "0.2.4-0",
   "description": "Zip it and ship it",
+  "version": "0.2.4-beta.0",
+  "author": "Netlify, Inc",
   "bin": {
     "zip-it-and-ship-it": "./bin.js"
   },
-  "main": "index.js",
-  "scripts": {
-    "test": "run-s test:*",
-    "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
-    "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md",
-    "prepublishOnly": "pkg . && git push && git push --tags && gh-release -a zip-it-and-ship-it"
+  "bugs": {
+    "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
   },
-  "author": "Netlify, Inc",
-  "license": "MIT",
   "dependencies": {
     "archiver": "^3.0.0",
     "body-parser": "^1.18.3",
@@ -40,9 +35,28 @@
     "npm-run-all": "^4.1.5",
     "pkg": "^4.3.7"
   },
+  "homepage": "https://github.com/netlify/zip-it-and-ship-it#README",
+  "keywords": [
+    "api",
+    "bundler",
+    "cli",
+    "lambda",
+    "lambda functions",
+    "netlify",
+    "static"
+  ],
+  "license": "MIT",
+  "main": "index.js",
   "pkg": {
     "targets": [
       "node10"
     ]
+  },
+  "repository": "netlify/zip-it-and-ship-it",
+  "scripts": {
+    "prepublishOnly": "pkg . && git push && git push --tags && gh-release -a zip-it-and-ship-it",
+    "test": "run-s test:*",
+    "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
+    "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
   }
 }
