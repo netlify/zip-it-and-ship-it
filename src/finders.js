@@ -73,7 +73,10 @@ function getDependencies(filename, basedir) {
           localFilesToProcess.push(resolved);
           return;
         } catch (e) {
-          throw new Error(`Could not find "${moduleName}" module in file: ${filename.replace(path.dirname(basedir), '')}. 
+          throw new Error(`Could not find "${moduleName}" module in file: ${filename.replace(
+            path.dirname(basedir),
+            ""
+          )}. 
           
 Please ensure "${moduleName}" is installed in the project.`);
         }
@@ -174,14 +177,18 @@ function findHandler(functionPath) {
     return functionPath;
   }
 
-  const handlerPath = path.join(
+  const JShandlerPath = path.join(
     functionPath,
     `${path.basename(functionPath)}.js`
   );
-  if (!fs.existsSync(handlerPath)) {
-    return;
-  }
-  return handlerPath;
+  if (fs.existsSync(JShandlerPath)) return JShandlerPath;
+  const TShandlerPath = path.join(
+    functionPath,
+    `${path.basename(functionPath)}.ts`
+  );
+  if (fs.existsSync(TShandlerPath)) return TShandlerPath;
+  // nothing found
+  return;
 }
 
 module.exports = { getDependencies, findModuleDir, findHandler };

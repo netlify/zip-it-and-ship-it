@@ -7,6 +7,7 @@ const path = require("path");
 const getPort = require("get-port");
 const chokidar = require("chokidar");
 const { findModuleDir, findHandler } = require("./finders");
+const { getFinalHandler } = require("./getFinalHandler");
 
 const defaultPort = 30001;
 
@@ -56,8 +57,19 @@ function getHandlerPath(functionPath) {
   if (functionPath.match(/\.js$/)) {
     return functionPath;
   }
-
-  return path.join(functionPath, `${path.basename(functionPath)}.js`);
+  if (
+    fs.existsSync(path.join(functionPath, `${path.basename(functionPath)}.js`))
+  )
+    return path.join(functionPath, `${path.basename(functionPath)}.js`);
+  if (
+    fs.existsSync(path.join(functionPath, `${path.basename(functionPath)}.ts`))
+  )
+    return path.join(functionPath, `${path.basename(functionPath)}.ts`);
+  throw new Error(
+    `function dir ${functionPath} does not have ${path.basename(
+      functionPath
+    )}.js or .ts file`
+  );
 }
 
 function createHandler(dir, options) {
@@ -76,9 +88,15 @@ function createHandler(dir, options) {
         functionPath,
         moduleDir: findModuleDir(functionPath)
       };
+    } else if (path.extname(functionPath) === ".ts") {
+      functions[file.replace(/\.ts$/, "")] = {
+        functionPath,
+        moduleDir: findModuleDir(functionPath)
+      };
     } else if (fs.lstatSync(functionPath).isDirectory()) {
       functions[file] = {
         functionPath: handlerPath,
+        dirPath: functionPath,
         moduleDir: findModuleDir(functionPath)
       };
     }
@@ -116,12 +134,12 @@ function createHandler(dir, options) {
       response.end("Function not found...");
       return;
     }
-    const { functionPath, moduleDir } = functions[func];
+    const { functionPath, moduleDir, dirPath } = functions[func];
     let handler;
     let before = module.paths;
     try {
       module.paths = [moduleDir];
-      handler = require(functionPath);
+      handler = getFinalHandler(functionPath, moduleDir, dir, dirPath);
       module.paths = before;
     } catch (err) {
       module.paths = before;
@@ -176,7 +194,7 @@ async function serveFunctions(settings, options) {
       process.exit(1);
     }
 
-    console.log(`Lambda server is listening on ${port}`);
+    console.log(`\nLambda server is listening on ${port}`);
   });
 
   return Promise.resolve({
