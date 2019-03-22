@@ -56,11 +56,11 @@
   },
   "repository": "netlify/zip-it-and-ship-it",
   "scripts": {
-    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
+    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
     "test": "run-s test:*",
     "pkg": "rimraf build && run-p pkg:*",
-    "pkg:linux": "mkdirp build/zip-it-and-ship-it-linux-x64 && pkg . -t node10-linux-x64 --output build/zip-it-and-ship-it-linux-x64/zip-it-and-ship-it && tar -cvzf zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz --directory=build/zip-it-and-ship-it-linux-x64 zip-it-and-ship-it",
-    "pkg:macos": "mkdirp build/zip-it-and-ship-it-macos-x64 && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it-macos-x64/zip-it-and-ship-it && tar -cvzf zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/zip-it-and-ship-it-macos-x64 zip-it-and-ship-it",
+    "pkg:linux": "mkdirp build && pkg . -t node10-linux-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64",
+    "pkg:macos": "mkdirp build && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64",
     "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
     "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
   }
