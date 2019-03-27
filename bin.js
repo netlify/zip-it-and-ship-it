@@ -45,7 +45,7 @@ const dest = path.resolve(process.cwd(), destArg)
 
 zipIt.zipFunctions(source, dest).then(console.log).catch(err => {
   const errObj = {
-    err
+    error: err.toString()
   }
   console.error(JSON.stringify(errObj, null, '  '))
   process.exit(1)
