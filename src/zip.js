@@ -175,8 +175,7 @@ function zipFunctions(srcFolder, destFolder, options) {
     options
   );
   return pAll(
-    fs
-      .readdirSync(srcFolder)
+    fs.readdirSync(srcFolder)
       .map(file => () =>
         zipFunction(
           path.resolve(path.join(srcFolder, file)),

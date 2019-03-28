@@ -8,6 +8,13 @@ const pkg = require("./package.json");
 
 const allowedOptions = [
   {
+    name: "zip-go",
+    abbr: "g",
+    help: "zip go binaries",
+    boolean: true,
+    default: false
+  },
+  {
     name: "help",
     abbr: "h",
     help: "show help",
@@ -43,10 +50,9 @@ if (argv.help || !sourceArg || !destArg) {
 const source = path.resolve(process.cwd(), sourceArg)
 const dest = path.resolve(process.cwd(), destArg)
 
-zipIt.zipFunctions(source, dest).then(console.log).catch(err => {
-  const errObj = {
-    error: err.toString()
-  }
-  console.error(JSON.stringify(errObj, null, '  '))
+zipIt.zipFunctions(source, dest, { skipGo: !argv['zip-go'] })
+.then(console.log)
+.catch(err => {
+  console.error(err.toString())
   process.exit(1)
 })
