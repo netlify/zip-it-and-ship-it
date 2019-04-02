@@ -177,11 +177,11 @@ module.exports = { serveFunctions }
 function assignLoudly(
   optionalValue,
   defaultValue,
-  logOverride = (oV, dV) => console.log(`Overriding default of `, dV, `with`, oV)
+  tellUser = dV => console.log(`No port specified, using default value of`, dV)
 ) {
   if (defaultValue === undefined) throw new Error("must have a defaultValue")
-  if (defaultValue !== optionalValue && optionalValue !== undefined) {
-    logOverride(optionalValue, defaultValue)
+  if (defaultValue !== optionalValue && optionalValue === undefined) {
+    tellUser(defaultValue)
     return optionalValue
   } else {
     return defaultValue
