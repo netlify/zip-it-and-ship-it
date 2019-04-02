@@ -144,6 +144,7 @@ async function serveFunctions(settings, options) {
   const app = express()
   const dir = settings.functionsDir
   const port = await getPort({ port: assignLoudly(settings.port, defaultPort) })
+
   app.use(bodyParser.raw({ limit: "6mb" }))
   app.use(bodyParser.text({ limit: "6mb", type: "*/*" }))
   app.use(
@@ -177,7 +178,7 @@ module.exports = { serveFunctions }
 function assignLoudly(
   optionalValue,
   defaultValue,
-  tellUser = dV => console.log(`No port specified, using default value of`, dV)
+  tellUser = dV => console.log(`No port specified, using defaultPort of `, dV)
 ) {
   if (defaultValue === undefined) throw new Error("must have a defaultValue")
   if (defaultValue !== optionalValue && optionalValue === undefined) {
