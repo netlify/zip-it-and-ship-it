@@ -183,8 +183,8 @@ function assignLoudly(
   if (defaultValue === undefined) throw new Error("must have a defaultValue")
   if (defaultValue !== optionalValue && optionalValue === undefined) {
     tellUser(defaultValue)
-    return optionalValue
-  } else {
     return defaultValue
+  } else {
+    return optionalValue
   }
 }
