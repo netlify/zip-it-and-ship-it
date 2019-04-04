@@ -1,24 +1,26 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "0.2.3",
   "description": "Zip it and ship it",
-  "main": "index.js",
-  "scripts": {
-    "test": "run-s test:*",
-    "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer"
-  },
+  "version": "0.2.4-beta.10",
   "author": "Netlify, Inc",
-  "license": "MIT",
+  "bin": {
+    "zip-it-and-ship-it": "./bin.js"
+  },
+  "bugs": {
+    "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
+  },
   "dependencies": {
     "archiver": "^3.0.0",
     "body-parser": "^1.18.3",
     "chokidar": "^2.0.4",
+    "cliclopts": "^1.1.1",
     "debug": "^4.1.1",
     "elf-tools": "^1.1.1",
     "express": "^4.16.4",
     "express-logging": "^1.1.1",
     "get-port": "^4.1.0",
     "glob": "^7.1.3",
+    "minimist": "^1.2.0",
     "npm-packlist": "^1.1.12",
     "p-all": "^2.0.0",
     "precinct": "^6.1.1",
@@ -27,7 +29,39 @@
     "resolve": "^1.10.0"
   },
   "devDependencies": {
+    "auto-changelog": "^1.12.0",
     "dependency-check": "^3.3.0",
-    "npm-run-all": "^4.1.3"
+    "gh-release": "^3.5.0",
+    "mkdirp": "^0.5.1",
+    "npm-run-all": "^4.1.5",
+    "pkg": "^4.3.7",
+    "rimraf": "^2.6.3"
+  },
+  "homepage": "https://github.com/netlify/zip-it-and-ship-it#README",
+  "keywords": [
+    "api",
+    "bundler",
+    "cli",
+    "lambda",
+    "lambda functions",
+    "netlify",
+    "static"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "pkg": {
+    "targets": [
+      "node10"
+    ]
+  },
+  "repository": "netlify/zip-it-and-ship-it",
+  "scripts": {
+    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
+    "test": "run-s test:*",
+    "pkg": "rimraf build && run-p pkg:*",
+    "pkg:linux": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && pkg . -t node10-linux-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64",
+    "pkg:macos": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64",
+    "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
+    "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
   }
 }
