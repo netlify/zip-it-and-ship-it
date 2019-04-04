@@ -73,7 +73,10 @@ function getDependencies(filename, basedir) {
           localFilesToProcess.push(resolved);
           return;
         } catch (e) {
-          throw new Error(`Could not find "${moduleName}" module in file: ${filename.replace(path.dirname(basedir), '')}. 
+          throw new Error(`Could not find "${moduleName}" module in file: ${filename.replace(
+            path.dirname(basedir),
+            ""
+          )}. 
           
 Please ensure "${moduleName}" is installed in the project.`);
         }
@@ -114,7 +117,6 @@ Please ensure "${moduleName}" is installed in the project.`);
     }
     modulePaths.add(currentModulePath);
     pkgs[currentModulePath] = packageJson;
-
     ["dependencies", "peerDependencies", "optionalDependencies"].forEach(
       key => {
         const dependencies = packageJson[key];
