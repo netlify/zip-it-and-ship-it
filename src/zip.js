@@ -93,7 +93,7 @@ function zipGoExe(file, zipPath) {
   zip.addLocalFile(file, {
     name: path.basename(file),
     mode: stat.mode,
-    date: stat.mtime,
+    date: new Date(0), // Ensure sha256 stability regardless of mtime
     stats: stat
   });
   return zip.finalize();
@@ -113,7 +113,7 @@ function zipJs(functionPath, zipPath) {
     zip.addLocalFile(file, {
       name: entryPath,
       mode: stat.mode,
-      date: stat.mtime,
+      date: new Date(0), // Ensure sha256 stability regardless of mtime
       stats: stat
     });
   });
