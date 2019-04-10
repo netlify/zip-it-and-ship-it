@@ -7,7 +7,11 @@ const path = require("path");
 const getPort = require("get-port");
 const chokidar = require("chokidar");
 const chalk = require("chalk");
-const NETLIFYZISI = `[${chalk.cyan("Netlify ZISI")}]`;
+
+const NETLIFYDEVLOG = `${chalk.greenBright("◈")}`
+const NETLIFYDEVWARN = `${chalk.yellowBright("◈")}`
+const NETLIFYDEVERR = `${chalk.redBright("◈")}`
+
 const { findModuleDir, findHandler } = require("./finders");
 
 const defaultPort = 34567;
@@ -15,10 +19,10 @@ const defaultPort = 34567;
 function handleErr(err, response) {
   response.statusCode = 500;
   response.write(
-    `${NETLIFYZISI} Function invocation failed: ` + err.toString()
+    `${NETLIFYDEVERR} Function invocation failed: ` + err.toString()
   );
   response.end();
-  console.log(`${NETLIFYZISI} Error during invocation: `, err);
+  console.log(`${NETLIFYDEVERR} Error during invocation: `, err);
   return;
 }
 
@@ -178,12 +182,12 @@ async function serveFunctions(settings, options) {
 
   app.listen(port, function(err) {
     if (err) {
-      console.error(`${NETLIFYZISI} Unable to start lambda server: `, err);
+      console.error(`${NETLIFYDEVERR} Unable to start lambda server: `, err);
       process.exit(1);
     }
 
     // add newline because this often appears alongside the client devserver's output
-    console.log(`\n${NETLIFYZISI} Lambda server is listening on ${port}`);
+    console.log(`\n${NETLIFYDEVLOG} Lambda server is listening on ${port}`);
   });
 
   return Promise.resolve({
@@ -198,7 +202,7 @@ function assignLoudly(
   optionalValue,
   fallbackValue,
   tellUser = dV =>
-    console.log(`${NETLIFYZISI} No port specified, using defaultPort of `, dV)
+    console.log(`${NETLIFYDEVLOG} No port specified, using defaultPort of `, dV)
 ) {
   if (fallbackValue === undefined) throw new Error("must have a fallbackValue");
   if (fallbackValue !== optionalValue && optionalValue === undefined) {
