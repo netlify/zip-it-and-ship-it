@@ -6,15 +6,19 @@ const queryString = require("querystring");
 const path = require("path");
 const getPort = require("get-port");
 const chokidar = require("chokidar");
+const chalk = require("chalk");
+const NETLIFYZISI = `[${chalk.cyan("Netlify ZISI")}]`;
 const { findModuleDir, findHandler } = require("./finders");
 
 const defaultPort = 34567;
 
 function handleErr(err, response) {
   response.statusCode = 500;
-  response.write("Function invocation failed: " + err.toString());
+  response.write(
+    `${NETLIFYZISI} Function invocation failed: ` + err.toString()
+  );
   response.end();
-  console.log("Error during invocation: ", err);
+  console.log(`${NETLIFYZISI} Error during invocation: `, err);
   return;
 }
 
@@ -174,11 +178,12 @@ async function serveFunctions(settings, options) {
 
   app.listen(port, function(err) {
     if (err) {
-      console.error("Unable to start lambda server: ", err);
+      console.error(`${NETLIFYZISI} Unable to start lambda server: `, err);
       process.exit(1);
     }
 
-    console.log(`Lambda server is listening on ${port}`);
+    // add newline because this often appears alongside the client devserver's output
+    console.log(`\n${NETLIFYZISI} Lambda server is listening on ${port}`);
   });
 
   return Promise.resolve({
@@ -191,13 +196,14 @@ module.exports = { serveFunctions };
 // if first arg is undefined, use default, but tell user about it in case it is unintentional
 function assignLoudly(
   optionalValue,
-  defaultValue,
-  tellUser = dV => console.log(`No port specified, using defaultPort of `, dV)
+  fallbackValue,
+  tellUser = dV =>
+    console.log(`${NETLIFYZISI} No port specified, using defaultPort of `, dV)
 ) {
-  if (defaultValue === undefined) throw new Error("must have a defaultValue");
-  if (defaultValue !== optionalValue && optionalValue === undefined) {
-    tellUser(defaultValue);
-    return defaultValue;
+  if (fallbackValue === undefined) throw new Error("must have a fallbackValue");
+  if (fallbackValue !== optionalValue && optionalValue === undefined) {
+    tellUser(fallbackValue);
+    return fallbackValue;
   } else {
     return optionalValue;
   }
