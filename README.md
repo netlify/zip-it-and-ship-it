@@ -5,9 +5,9 @@ This module handles zipping up lambda functions with their dependencies before d
 The main usage is:
 
 ```js
-const {zipFunctions} = require("@netlify/zip-it-and-ship-it");
+const { zipFunctions } = require("@netlify/zip-it-and-ship-it");
 
-zipFunctions("functions", "functions-dist")
+zipFunctions("functions", "functions-dist");
 ```
 
 This will take all functions in the `functions` folder and create a matching `.zip` file in the `functions-dist` folder.
@@ -41,6 +41,10 @@ Ie, the following combinations would all work:
 ```
 
 Zip It and Ship It will only include dependencies in each zip file that's been required from the relevant handler file.
+
+## File Serving
+
+As of v0.3.0 the serveFunctions capability has been extracted out to [Netlify Dev](https://github.com/netlify/netlify-dev-plugin/).
 
 ## Further reading
 
