@@ -1,6 +1,6 @@
 # zip-it-and-ship-it
 
-[![npm version][npm-img]][npm] [![build status][azure-img]][azure] [![dependencies][david-img]][david] [![downloads][dl-img]][dl]
+[![npm version][npm-img]][npm] [![build status][travis-img]][travis] [![dependencies][david-img]][david] [![downloads][dl-img]][dl]
 
 This module handles zipping up lambda functions with their dependencies before deployment.  You are probably looking for [netlify-cli](https://github.com/netlify/cli) or [js-client](https://github.com/netlify/js-client).
 
@@ -99,11 +99,11 @@ Usage: zip-it-and-ship-it [source] [destination] {options}
 
 Check [our official docs here](https://www.netlify.com/docs/cli/#unbundled-javascript-function-deploys).
 
-[npm-img]: https://img.shields.io/npm/v/zip-it-and-ship-it.svg
-[npm]: https://npmjs.org/package/zip-it-and-ship-it
+[npm-img]: https://img.shields.io/npm/v/@netlify/zip-it-and-ship-it.svg
+[npm]: https://npmjs.org/package/@netlify/zip-it-and-ship-it
 [travis-img]: https://img.shields.io/travis/netlify/zip-it-and-ship-it/master.svg
 [travis]: https://travis-ci.org/netlify/zip-it-and-ship-it
-[dl-img]: https://img.shields.io/npm/dm/zip-it-and-ship-it.svg
-[dl]: https://npmjs.org/package/zip-it-and-ship-it
+[dl-img]: https://img.shields.io/npm/dm/@netlify/zip-it-and-ship-it.svg
+[dl]: https://www.npmjs.com/package/@netlify/zip-it-and-ship-it
 [david-img]: https://david-dm.org/netlify/zip-it-and-ship-it/status.svg
 [david]: https://david-dm.org/netlify/zip-it-and-ship-it
