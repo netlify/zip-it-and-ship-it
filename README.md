@@ -60,25 +60,25 @@ As of v0.3.0 the serveFunctions capability has been extracted out to [Netlify De
 
 Discover and zip all functions found in the `source` path into the `destination`.  Returns a promise containing a `zipped` array of function objects.
 
-A zipped function object has the following shape:
+The array of zipped function objects has the following shape:
 
 ```js
-{
-  path,  // Absolute filepath to zipped function
-  runtime // 'go' or 'js'
-}
+[
+  {
+    path,  // Absolute filepath to zipped function
+    runtime // 'go' or 'js'
+  }
+  //...
+]
 ```
 
 `opts` include:
 
 ```js
-[
-  {
-    parallelLimit: 5, // Limit the number of concurrent zipping operations at a time
-    skipGo: false // Don't zip go functions, just move them to the destination path
-  }
-  // ...
-]
+{
+  parallelLimit: 5, // Limit the number of concurrent zipping operations at a time
+  skipGo: false // Don't zip go functions, just move them to the destination path
+}
 ```
 
 ## CLI
