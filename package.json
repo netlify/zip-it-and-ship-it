@@ -24,16 +24,15 @@
     "resolve": "^1.10.0"
   },
   "devDependencies": {
-    "auto-changelog": "^1.12.0",
-    "dependency-check": "^3.3.0",
-    "eslint": "^5.16.0",
-    "eslint": "^5.14.1",
     "@babel/core": "^7.3.3",
     "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.3.1",
     "@babel/runtime": "^7.3.1",
+    "auto-changelog": "^1.12.0",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.5",
+    "dependency-check": "^3.3.0",
+    "eslint": "^5.14.1",
     "eslint-config-prettier": "^4.0.0",
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-node": "^8.0.1",
@@ -67,12 +66,12 @@
   },
   "repository": "netlify/zip-it-and-ship-it",
   "scripts": {
-    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
-    "test": "run-s test:*",
     "pkg": "rimraf build && run-p pkg:*",
     "pkg:linux": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && pkg . -t node10-linux-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64",
     "pkg:macos": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64",
-    "test:deps": "dependency-check ./package.json --unused --missing --no-peer",
+    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
+    "test": "run-s test:*",
+    "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
     "test:lint": "eslint src",
     "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
   }
