@@ -28,12 +28,10 @@ test.serial("find function files without a package.json", async t => {
   const fixture = path.resolve(__dirname, "./fixtures", name);
   cpx.copySync(path.join(fixture, "**/*"), tmp);
 
-  const files = filesForFunctionZip(
-    path.join(tmp, "functions", "a-function.js")
-  );
+  const files = filesForFunctionZip(path.join(tmp, "functions", "a-function"));
 
   t.true(files instanceof Set, "get a set back");
-  t.is(files.size, 1, "Got all 1 files");
+  t.is(files.size, 2, "Got all 2 files");
 
   await rimraf(tmp);
 });
