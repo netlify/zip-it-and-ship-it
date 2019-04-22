@@ -32,10 +32,13 @@ function filesForFunctionZip(functionPath) {
   const filesToBundle = new Set();
   if (fs.lstatSync(functionPath).isDirectory()) {
     const moduledir = findModuleDir(functionPath);
+    const ignoreArgs = [moduledir, "node_modules", "**"].filter(
+      segment => segment != null
+    );
     glob
       .sync(path.join(functionPath, "**"), {
         nodir: true,
-        ignore: path.join(moduledir, "node_modules", "**"),
+        ignore: path.join(...ignoreArgs),
         absolute: true
       })
       .forEach(file => filesToBundle.add(file));
