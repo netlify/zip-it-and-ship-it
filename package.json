@@ -3,6 +3,18 @@
   "description": "Zip it and ship it",
   "version": "0.3.0",
   "author": "Netlify, Inc",
+  "ava": {
+    "files": [
+      "src/**/*.test.js"
+    ],
+    "cache": true,
+    "concurrency": 5,
+    "failFast": false,
+    "failWithoutAssertions": false,
+    "tap": false,
+    "compileEnhancements": false,
+    "babel": false
+  },
   "bin": {
     "zip-it-and-ship-it": "./bin.js"
   },
@@ -24,13 +36,16 @@
     "resolve": "^1.10.0"
   },
   "devDependencies": {
+    "nyc": "^14.0.0",
     "@babel/core": "^7.3.3",
     "@babel/plugin-transform-runtime": "^7.1.0",
     "@babel/preset-env": "^7.3.1",
     "@babel/runtime": "^7.3.1",
     "auto-changelog": "^1.12.0",
+    "ava": "^1.4.1",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.5",
+    "cpx": "^1.5.0",
     "dependency-check": "^3.3.0",
     "eslint": "^5.14.1",
     "eslint-config-prettier": "^4.0.0",
@@ -42,7 +57,9 @@
     "npm-run-all": "^4.1.5",
     "pkg": "^4.3.7",
     "prettier": "^1.16.4",
-    "rimraf": "^2.6.3"
+    "rimraf": "^2.6.3",
+    "tempy": "^0.2.1",
+    "util.promisify": "^1.0.0"
   },
   "engines": {
     "node": ">=8.5.0"
@@ -71,6 +88,7 @@
     "pkg:macos": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64",
     "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
     "test": "run-s test:*",
+    "test:ava": "nyc --reporter=lcov ava --verbose && nyc report",
     "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
     "test:lint": "eslint src",
     "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
