@@ -52,15 +52,10 @@ const source = path.resolve(process.cwd(), sourceArg)
 const dest = path.resolve(process.cwd(), destArg)
 
 /* Recursively loop through functions + function folders and install deps */
-installFunctionDeps(source).then(() => {
-  /* Then zip em up */
-  zipIt.zipFunctions(source, dest, { skipGo: !argv['zip-go'] })
+installFunctionDeps(source)
+  .then(() => zipIt.zipFunctions(source, dest, { skipGo: true }))
   .then(console.log)
   .catch(err => {
     console.error(err.toString())
     process.exit(1)
   })
-}).catch(err => {
-  console.error(err.toString())
-  process.exit(1)
-})
