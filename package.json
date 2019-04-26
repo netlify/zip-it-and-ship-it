@@ -33,7 +33,9 @@
     "precinct": "^6.1.1",
     "read-pkg-up": "^4.0.0",
     "require-package-name": "^2.0.1",
-    "resolve": "^1.10.0"
+    "resolve": "^1.10.0",
+    "run-parallel-limit": "^1.0.5",
+    "run-series": "^1.1.8"
   },
   "devDependencies": {
     "nyc": "^14.0.0",
