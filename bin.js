@@ -3,6 +3,7 @@ const minimist = require("minimist");
 const cliOpts = require("cliclopts");
 const zipIt = require(".");
 const path = require("path")
+const installFunctionDeps = require("./src/install-deps");
 
 const pkg = require("./package.json");
 
@@ -50,9 +51,16 @@ if (argv.help || !sourceArg || !destArg) {
 const source = path.resolve(process.cwd(), sourceArg)
 const dest = path.resolve(process.cwd(), destArg)
 
-zipIt.zipFunctions(source, dest, { skipGo: !argv['zip-go'] })
-.then(console.log)
-.catch(err => {
+/* Recursively loop through functions + function folders and install deps */
+installFunctionDeps(source).then(() => {
+  /* Then zip em up */
+  zipIt.zipFunctions(source, dest, { skipGo: !argv['zip-go'] })
+  .then(console.log)
+  .catch(err => {
+    console.error(err.toString())
+    process.exit(1)
+  })
+}).catch(err => {
   console.error(err.toString())
   process.exit(1)
 })
