@@ -2,22 +2,27 @@ const path = require("path");
 const glob = require("glob");
 const cp = require("child_process");
 const parallelLimit = require("run-parallel-limit");
-const series = require("run-series");
+const fs = require("fs");
 
-module.exports = async function installFunctionDeps(src) {
-  const fns = functionGlobber(src)
+module.exports = async function installFunctionDeps(src, opts) {
+  opts = Object.assign({
+    logFn: (msg) => {/* noop */}
+  }, opts)
+
+  const { logFn } = opts
 
   const hasNpm = await verifyInstaller('npm')
-  const installCommand = (hasNpm) ? 'npm i' : 'yarn'
+  const hasYarn = await verifyInstaller('yarn')
+  if (!hasNpm) throw new Error("zip-it-and-ship-it: Missing required npm command")
+
+  const fns = functionGlobber(src)
+
+  opts.logFn(fns.length ? `Found ${fns.length} function package.json files... Installing dependencies` : "No function package.json files found... Skipping dependency installs")
 
   return new Promise((resolve, reject) => {
-    if (fns.length === 0) return resolve()
+    if (fns.length === 0) return resolve([])
 
-    const jobs = fns.map(fnPath => {
-      return cb => {
-        series([cb => install(installCommand, fnPath, cb)], cb);
-      }
-    })
+    const jobs = fns.map(fnPath => cb => install(fnPath, { hasYarn, logFn }, cb))
 
     parallelLimit(jobs, 5, (error, data) => {
       if (error) {
@@ -52,6 +57,31 @@ function verifyInstaller(type) {
   })
 }
 
-async function install(command, functionDir, cb) {
-  cp.exec(command, { cwd: functionDir }, cb);
+function install(functionDir, opts, cb) {
+  opts = Object.assign({
+    hasYarn: false,
+    logFn: (msg) => {/* noop */}
+  }, opts)
+
+  const { hasYarn, logFn } = opts
+
+  if (hasYarn) {
+    fs.access(path.join(functionDir, "yarn.lock"), fs.constants.F_OK, handleYarnTest)
+  } else {
+    runInstallCommand("npm i", cb)
+  }
+
+  function handleYarnTest (err) {
+    // If there is a yarn lock file and we have yarn, try to use yarn
+    let command = err ? "npm i" : "yarn"
+    runInstallCommand(command, cb)
+  }
+
+  function runInstallCommand (command, cb) {
+    logFn(`Installing dependencies for "${path.basename(functionDir)}" with ${command.split(' ')[0]}`)
+    cp.exec(command, { cwd: functionDir }, (err, data) => {
+      logFn(`Finished installing dependencies for ${path.basename(functionDir)}`)
+      cb(err, data)
+    });
+  }
 }

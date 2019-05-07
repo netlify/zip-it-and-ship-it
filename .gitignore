@@ -5,6 +5,7 @@ yarn.lock
 build
 zip-it-and-ship-it*
 !src/fixtures/*/node_modules
+!src/fixtures/*/**/yarn.lock
 
 .nyc_output
 coverage

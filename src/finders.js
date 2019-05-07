@@ -76,8 +76,8 @@ function getDependencies(filename, basedir) {
           throw new Error(`Could not find "${moduleName}" module in file: ${filename.replace(
             path.dirname(basedir),
             ""
-          )}. 
-          
+          )}.
+
 Please ensure "${moduleName}" is installed in the project.`);
         }
       }

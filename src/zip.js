@@ -5,6 +5,8 @@ const archiver = require("archiver");
 const elfTools = require("elf-tools");
 const { getDependencies, findModuleDir, findHandler } = require("./finders");
 const pAll = require("p-all");
+const promisify = require('util.promisify')
+const mkdirp = promisify(require('mkdirp'))
 
 class Zip {
   constructor(path) {
@@ -123,10 +125,17 @@ function zipJs(functionPath, zipPath) {
   return zip.finalize();
 }
 
-function zipFunction(functionPath, destFolder, options) {
+async function zipFunction(functionPath, destFolder, options) {
+  options = Object.assign({
+    skipGo: false,
+    logFn: (msg) => {/* noop */}
+  }, options)
   if (path.basename(functionPath) === "node_modules") {
     return Promise.resolve(null);
   }
+
+  await mkdirp(destFolder)
+
   const zipPath = path.join(
     destFolder,
     path.basename(functionPath).replace(/\.(js|zip)$/, "") + ".zip"
@@ -173,7 +182,8 @@ function zipFunction(functionPath, destFolder, options) {
 function zipFunctions(srcFolder, destFolder, options) {
   options = Object.assign(
     {
-      parallelLimit: 5
+      parallelLimit: 5,
+      logFn: (msg) => {/* noop */}
     },
     options
   );

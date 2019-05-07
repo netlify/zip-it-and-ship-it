@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 const minimist = require("minimist");
 const cliOpts = require("cliclopts");
-const zipIt = require(".");
+const { installAndZipFunctions } = require(".");
 const path = require("path")
-const installFunctionDeps = require("./src/install-deps");
 
 const pkg = require("./package.json");
 
@@ -12,6 +11,13 @@ const allowedOptions = [
     name: "zip-go",
     abbr: "g",
     help: "zip go binaries",
+    boolean: true,
+    default: false
+  },
+  {
+    name: "skip-install",
+    abbr: "s",
+    help: "skip dependency install",
     boolean: true,
     default: false
   },
@@ -51,11 +57,11 @@ if (argv.help || !sourceArg || !destArg) {
 const source = path.resolve(process.cwd(), sourceArg)
 const dest = path.resolve(process.cwd(), destArg)
 
-/* Recursively loop through functions + function folders and install deps */
-installFunctionDeps(source)
-  .then(() => zipIt.zipFunctions(source, dest, { skipGo: true }))
-  .then(console.log)
+installAndZipFunctions(source, dest, {
+  skipGo: !argv['zip-go'],
+  skipInstall: argv['skip-install'],
+  logFn: console.log
+}).then(console.log)
   .catch(err => {
-    console.error(err.toString())
-    process.exit(1)
-  })
+  throw err
+})
