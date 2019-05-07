@@ -9,7 +9,7 @@ const rimraf = promisify(require("rimraf"));
 test.serial("find function files with a package.json", async t => {
   const tmp = tempy.directory();
   const name = "package-json-example";
-  const fixture = path.resolve(__dirname, "./fixtures", name);
+  const fixture = path.resolve(__dirname, "../fixtures", name);
   cpx.copySync(path.join(fixture, "**/*"), tmp);
 
   const files = filesForFunctionZip(
@@ -25,7 +25,7 @@ test.serial("find function files with a package.json", async t => {
 test.serial("find function files without a package.json", async t => {
   const tmp = tempy.directory();
   const name = "no-package-json-example";
-  const fixture = path.resolve(__dirname, "./fixtures", name);
+  const fixture = path.resolve(__dirname, "../fixtures", name);
   cpx.copySync(path.join(fixture, "**/*"), tmp);
 
   const files = filesForFunctionZip(path.join(tmp, "functions", "a-function"));

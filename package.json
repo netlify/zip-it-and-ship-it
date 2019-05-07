@@ -36,8 +36,7 @@
     "mkdirp": "^0.5.1",
     "util.promisify": "^1.0.0",
     "resolve": "^1.10.0",
-    "run-parallel-limit": "^1.0.5",
-    "run-series": "^1.1.8"
+    "run-parallel-limit": "^1.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.3.3",
