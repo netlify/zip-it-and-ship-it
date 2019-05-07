@@ -56,6 +56,23 @@ As of v0.3.0 the serveFunctions capability has been extracted out to [Netlify De
 
 ## API
 
+### `promise(zipped) = installAndZipFunctions(source, destination, [opts])`
+
+Discover all functions found in the `source` path, install any dependencies declared in nested `package.json` files, then zip the results into the `destination` path.  Returns a promise containing a `zipped` array of function objects.
+
+The array of zipped function objects shares the same shape as `zipFunctions`.
+
+`opts` include:
+
+```js
+{
+  skipInstall: false // Skip installing dependencies for nested package.json files
+  logFn: (msg) => {/* noop */} // A function that receives logging events
+}
+```
+
+Additionally, any options that can be passed to `zipFunctions` can also be passed in `installAndZipFunctions`'s options object.
+
 ### `promise(zipped) = zipFunctions(source, destination, [opts])`
 
 Discover and zip all functions found in the `source` path into the `destination`.  Returns a promise containing a `zipped` array of function objects.
@@ -77,7 +94,8 @@ The array of zipped function objects has the following shape:
 ```js
 {
   parallelLimit: 5, // Limit the number of concurrent zipping operations at a time
-  skipGo: false // Don't zip go functions, just move them to the destination path
+  skipGo: false, // Don't zip go functions, just move them to the destination path
+  logFn: (msg) => {/* noop */} // A function that receives logging events
 }
 ```
 
@@ -91,6 +109,7 @@ $ zip-it-and-ship-it --help
 
 Usage: zip-it-and-ship-it [source] [destination] {options}
     --zip-go, -g          zip go binaries (default: false)
+    --skip-install, -s    skip dependency install (default: false)
     --help, -h            show help
     --version, -v         print the version of the program
 ```

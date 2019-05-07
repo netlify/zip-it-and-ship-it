@@ -130,6 +130,8 @@ async function zipFunction(functionPath, destFolder, options) {
     skipGo: false,
     logFn: (msg) => {/* noop */}
   }, options)
+  const { logFn } = options
+
   if (path.basename(functionPath) === "node_modules") {
     return Promise.resolve(null);
   }
@@ -141,6 +143,7 @@ async function zipFunction(functionPath, destFolder, options) {
     path.basename(functionPath).replace(/\.(js|zip)$/, "") + ".zip"
   );
   if (path.extname(functionPath) === ".zip") {
+    logFn(`Copying "${path.basename(functionPath)}"`)
     fs.copyFileSync(functionPath, zipPath);
     return Promise.resolve({
       path: zipPath,
@@ -152,6 +155,7 @@ async function zipFunction(functionPath, destFolder, options) {
     if (!findHandler(functionPath)) {
       return Promise.resolve(null);
     }
+    logFn(`Zipping "${path.basename(functionPath)}"`)
     return zipJs(functionPath, zipPath).then(() => {
       return {
         path: zipPath,
@@ -161,6 +165,7 @@ async function zipFunction(functionPath, destFolder, options) {
   }
   if (isGoExe(functionPath)) {
     if (options && options.skipGo) {
+      logFn(`Copying "${path.basename(functionPath)}"`)
       const goPath = path.join(destFolder, path.basename(functionPath));
       fs.copyFileSync(functionPath, goPath);
       return Promise.resolve({
@@ -168,7 +173,7 @@ async function zipFunction(functionPath, destFolder, options) {
         runtime: "go"
       });
     }
-
+    logFn(`Zipping "${path.basename(functionPath)}"`)
     return zipGoExe(functionPath, zipPath).then(() => {
       return {
         path: zipPath,
