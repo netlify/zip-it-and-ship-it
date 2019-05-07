@@ -73,12 +73,17 @@ function getDependencies(filename, basedir) {
           localFilesToProcess.push(resolved);
           return;
         } catch (e) {
-          throw new Error(`Could not find "${moduleName}" module in file: ${filename.replace(
-            path.dirname(basedir),
-            ""
-          )}. 
-          
-Please ensure "${moduleName}" is installed in the project.`);
+          if (moduleName === "encoding") { // node-fetch has an undeclared peer dependency on encoding
+            // We add an exception for this one module because it is very popular and people complain about it
+            debug(`WARNING missing optional dependency: ${moduleName}`);
+          } else {
+            throw new Error(`Could not find "${moduleName}" module in file: ${filename.replace(
+              path.dirname(basedir),
+              ""
+            )}.
+
+  Please ensure "${moduleName}" is installed in the project.`);
+          }
         }
       }
       throw e;
