@@ -20,8 +20,8 @@ test.serial("install and package nested pacakge.jsons", async t => {
     logFn: t.log
   })
 
-  await t.notThrowsAsync(access(path.join(tmp, 'functions', 'a-function', 'node_modules'), fs.constants.O_DIRECTORY), 'a-function/node_modules is a folder')
-  await t.notThrowsAsync(access(path.join(tmp, 'functions', 'yarn-function', 'node_modules'), fs.constants.O_DIRECTORY), 'yarn-function/node_modules is a folder')
+  await t.notThrowsAsync(access(path.join(tmp, 'functions', 'a-function', 'node_modules')), 'a-function/node_modules is a folder')
+  await t.notThrowsAsync(access(path.join(tmp, 'functions', 'yarn-function', 'node_modules')), 'yarn-function/node_modules is a folder')
 
   t.is(results.length, 2, "Two functions were successfully installed and");
 
