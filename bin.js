@@ -62,7 +62,7 @@ installAndZipFunctions(source, dest, {
   skipInstall: argv['skip-install'],
   logFn: console.log
 }).then(functionObjs => {
-  functionObjs.forEach(fnObj => console.log(`Zipped "${fnObj.path}" (${fnObj.runtime})`))
+  functionObjs.forEach(fnObj => console.log(`Zipped "${path.basename(fnObj.path)}" (${fnObj.runtime})`))
 }).catch(err => {
   throw err
 })
