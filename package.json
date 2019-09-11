@@ -32,6 +32,7 @@
     "p-all": "^2.0.0",
     "precinct": "^6.1.1",
     "read-pkg-up": "^4.0.0",
+    "relative": "^3.0.2",
     "require-package-name": "^2.0.1",
     "resolve": "^1.10.0"
   },
