@@ -5,7 +5,8 @@
   "author": "Netlify, Inc",
   "ava": {
     "files": [
-      "src/**/*.test.js"
+      "src/**/*.test.js",
+      "pkg/**/*.test.js"
     ],
     "compileEnhancements": false,
     "babel": false
@@ -44,20 +45,23 @@
     "cpy": "^7.3.0",
     "del": "^5.1.0",
     "dependency-check": "^3.3.0",
+    "end-of-stream": "^1.4.1",
     "eslint": "^5.14.1",
     "eslint-config-prettier": "^4.0.0",
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-prettier": "^3.0.1",
     "execa": "^2.0.4",
+    "fast-glob": "^3.0.4",
     "gh-release": "^3.5.0",
-    "mkdirp": "^0.5.1",
+    "is-ci": "^2.0.0",
     "npm-run-all": "^4.1.5",
     "nyc": "^14.0.0",
     "path-exists": "^4.0.0",
-    "pkg": "^4.3.7",
+    "pkg": "^4.4.0",
     "prettier": "^1.16.4",
-    "rimraf": "^2.6.3",
+    "readdirp": "^3.1.2",
+    "tar-fs": "^2.0.0",
     "tmp-promise": "^2.0.2",
     "util.promisify": "^1.0.0"
   },
@@ -76,20 +80,14 @@
   ],
   "license": "MIT",
   "main": "index.js",
-  "pkg": {
-    "targets": [
-      "node10"
-    ]
-  },
   "repository": "netlify/zip-it-and-ship-it",
   "scripts": {
-    "pkg": "rimraf build && run-p pkg:*",
-    "pkg:linux": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && pkg . -t node10-linux-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64",
-    "pkg:macos": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64",
-    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
+    "prepublishOnly": "run-s build && git push && git push --tags && run-s assets",
+    "build": "node pkg/main.js",
+    "assets": "node pkg/github.js",
     "test": "run-s test:*",
-    "test:lint": "eslint --fix \"src/**/*.js\" \"*.js\"",
-    "test:prettier": "prettier --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
+    "test:lint": "eslint --fix \"{src/**/,pkg/,}*.js\"",
+    "test:prettier": "prettier --write --loglevel warn \"{src,pkg}/**/*.js\" \"*.{js,md,yml,json}\"",
     "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
     "test:ava": "nyc --reporter=lcov ava --verbose && nyc report",
     "report": "nyc report --reporter=text-lcov | coveralls",
