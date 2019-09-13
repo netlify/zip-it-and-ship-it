@@ -1,10 +1,12 @@
 #!/usr/bin/env node
+const path = require("path");
+
 const minimist = require("minimist");
 const cliOpts = require("cliclopts");
-const zipIt = require(".");
-const path = require("path")
 
 const pkg = require("./package.json");
+
+const zipIt = require(".");
 
 const allowedOptions = [
   {

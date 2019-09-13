@@ -1,10 +1,12 @@
 const path = require("path");
 const fs = require("fs");
+
 const glob = require("glob");
 const archiver = require("archiver");
 const elfTools = require("elf-tools");
-const { getDependencies, findModuleDir, findHandler } = require("./finders");
 const pAll = require("p-all");
+
+const { getDependencies, findModuleDir, findHandler } = require("./finders");
 
 class Zip {
   constructor(path) {

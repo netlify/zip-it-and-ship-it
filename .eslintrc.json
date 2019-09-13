@@ -25,7 +25,8 @@
         "args": "none",
         "ignoreRestSiblings": true
       }
-    ]
+    ],
+    "import/order": [2, { "newlines-between": "always" }]
   },
   "overrides": [
     {
