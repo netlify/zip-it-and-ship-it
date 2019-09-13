@@ -91,6 +91,7 @@
     "test:ava": "nyc --reporter=lcov ava --verbose && nyc report",
     "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
     "test:lint": "eslint src",
+    "report": "nyc report --reporter=text-lcov | coveralls",
     "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
   }
 }

@@ -1,12 +1,11 @@
 language: node_js
-node_js:
-  - "node"
-  - "lts/*"
-sudo: false
+node_js: "12"
+dist: bionic
+jobs:
+  include:
+    - os: windows
+    - os: osx
+    - node_js: "8.5.0"
+    - node_js: "12"
 cache: npm
-install:
-  - npm i
-script:
-  - node --version
-  - npm --version
-  - npm test
+after_success: npm run report
