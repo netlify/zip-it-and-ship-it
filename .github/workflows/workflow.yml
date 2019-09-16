@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [macOS-latest]
-        node: [8.5.0, 13]
+        node: [8.3.0, 13]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
