@@ -24,15 +24,20 @@
   },
   "dependencies": {
     "archiver": "^3.0.0",
+    "common-path-prefix": "^2.0.0",
+    "cp-file": "^7.0.0",
     "debug": "^4.1.1",
     "elf-tools": "^1.1.1",
+    "end-of-stream": "^1.4.1",
     "glob": "^7.1.3",
-    "npm-packlist": "^1.1.12",
-    "p-all": "^2.0.0",
+    "make-dir": "^3.0.0",
+    "p-map": "^3.0.0",
+    "path-exists": "^4.0.0",
+    "pkg-dir": "^4.2.0",
     "precinct": "^6.1.1",
-    "read-pkg-up": "^7.0.0",
     "require-package-name": "^2.0.1",
     "resolve": "^1.10.0",
+    "util.promisify": "^1.0.0",
     "yargs": "^14.2.0"
   },
   "devDependencies": {
@@ -62,11 +67,10 @@
     "pkg": "^4.3.7",
     "prettier": "^1.16.4",
     "rimraf": "^3.0.0",
-    "tmp-promise": "^2.0.2",
-    "util.promisify": "^1.0.0"
+    "tmp-promise": "^2.0.2"
   },
   "engines": {
-    "node": ">=8.5.0"
+    "node": ">=8.3.0"
   },
   "homepage": "https://github.com/netlify/zip-it-and-ship-it#README",
   "keywords": [
@@ -79,7 +83,7 @@
     "static"
   ],
   "license": "MIT",
-  "main": "index.js",
+  "main": "src/main.js",
   "pkg": {
     "targets": [
       "node10"
@@ -93,7 +97,7 @@
     "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
     "test": "run-s test:* test:dev:*",
     "test-ci": "run-s test:* test:ci:*",
-    "test:lint": "eslint --ignore-path .gitignore --fix --cache --format=codeframe --max-warnings=0 \"src/**/*.js\" \"*.js\"",
+    "test:lint": "eslint --ignore-path .gitignore --fix --cache --format=codeframe --max-warnings=0 \"src/**/*.js\"",
     "test:prettier": "prettier --ignore-path .gitignore --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
     "test:dev:ava": "ava",
     "test:ci:ava": "nyc -r lcovonly -r text -r json ava",

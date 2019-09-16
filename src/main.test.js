@@ -60,11 +60,11 @@ test('Throws on missing dependencies with no optionalDependencies', async t => {
   await t.throwsAsync(zipNode(t, 'node-module-missing-package'))
 })
 
-test.skip('Ignore missing optional dependencies', async t => {
+test('Ignore missing optional dependencies', async t => {
   await zipNode(t, 'node-module-optional')
 })
 
-test.skip('Ignore missing whitelisted optional dependencies', async t => {
+test('Ignore missing whitelisted optional dependencies', async t => {
   await zipNode(t, 'node-module-optional-whitelist')
 })
 
@@ -80,7 +80,7 @@ test('Can require local files deeply', async t => {
   await zipNode(t, 'local-deep-require')
 })
 
-test.skip('Can require local files in the parent directories', async t => {
+test('Can require local files in the parent directories', async t => {
   await zipNode(t, 'local-parent-require')
 })
 
@@ -88,23 +88,23 @@ test('Can target a directory with a handler with the same name', async t => {
   await zipNode(t, 'directory-handler')
 })
 
-test.skip('Can target a directory with an index.js file', async t => {
+test('Can target a directory with an index.js file', async t => {
   const { files, tmpDir } = await zipFixture(t, 'index-handler')
   await unzipFiles(files)
-  t.true(require(`${tmpDir}/index.js`))
+  t.true(require(`${tmpDir}/function.js`))
 })
 
-test.skip('Keeps non-required files inside the target directory', async t => {
+test('Keeps non-required files inside the target directory', async t => {
   const { tmpDir } = await zipNode(t, 'keep-dir-files')
-  t.true(await pathExists(`${tmpDir}/file.js`))
+  t.true(await pathExists(`${tmpDir}/function.js`))
 })
 
-test.skip('Ignores non-required node_modules inside the target directory', async t => {
+test('Ignores non-required node_modules inside the target directory', async t => {
   const { tmpDir } = await zipNode(t, 'ignore-dir-node-modules')
   t.false(await pathExists(`${tmpDir}/node_modules`))
 })
 
-test.skip('Ignores deep non-required node_modules inside the target directory', async t => {
+test('Ignores deep non-required node_modules inside the target directory', async t => {
   const { tmpDir } = await zipNode(t, 'ignore-deep-dir-node-modules')
   t.false(await pathExists(`${tmpDir}/deep/node_modules`))
 })
@@ -117,7 +117,7 @@ test('Works with many function files', async t => {
   await zipNode(t, 'many-functions', 6)
 })
 
-test.skip('Throws when the source folder does not exist', async t => {
+test('Throws when the source folder does not exist', async t => {
   await t.throwsAsync(zipNode(t, 'does-not-exist'), /Functions folder does not exist/)
 })
 
@@ -137,14 +137,14 @@ test('Works on empty directories', async t => {
   await zipNode(t, 'empty', 0)
 })
 
-test.skip('Works when no package.json is present', async t => {
+test('Works when no package.json is present', async t => {
   const tmpDir = await tmpName({ prefix: 'zip-it-test' })
   const files = await cpy(`${FIXTURES_DIR}/no-package-json`, `${tmpDir}/no-package-json`, { parents: true })
   const commonDir = commonPathPrefix(files)
   await zipNode(t, 'no-package-json', 1, {}, `${commonDir}/..`)
 })
 
-test.skip('Copies already zipped files', async t => {
+test('Copies already zipped files', async t => {
   const tmpDir = await tmpName({ prefix: 'zip-it-test' })
   const { files } = await zipCheckFunctions(t, 'keep-zip', tmpDir)
 
@@ -195,7 +195,7 @@ test('Can reduce parallelism', async t => {
   await zipNode(t, 'simple', 1, { parallelLimit: 1 })
 })
 
-test.skip('Can use zipFunction()', async t => {
+test('Can use zipFunction()', async t => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const { runtime } = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir)
   t.is(runtime, 'js')
