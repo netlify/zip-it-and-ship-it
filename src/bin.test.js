@@ -22,7 +22,7 @@ test('CLI | --help', async t => {
   t.true(stdout.includes('Options:'))
 })
 
-test.skip('CLI | Normal execution', async t => {
+test('CLI | Normal execution', async t => {
   const tmpDir = await tmpName({ prefix: 'zip-it-test' })
   const { stdout } = await execa.command(`${BINARY_PATH} ${join(FIXTURES_DIR, 'simple')} ${tmpDir}`)
   const zipped = JSON.parse(stdout)
