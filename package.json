@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "archiver": "^3.0.0",
+    "common-path-prefix": "^2.0.0",
     "debug": "^4.1.1",
     "elf-tools": "^1.1.1",
     "glob": "^7.1.3",

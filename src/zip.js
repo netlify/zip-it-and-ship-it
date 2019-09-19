@@ -5,6 +5,7 @@ const glob = require('glob')
 const archiver = require('archiver')
 const elfTools = require('elf-tools')
 const pAll = require('p-all')
+const commonPathPrefix = require('common-path-prefix')
 
 const { getDependencies, findModuleDir, findHandler } = require('./finders')
 
@@ -76,13 +77,6 @@ function isGoExe(file) {
   }
 }
 
-function zipEntryPath(file, basedir, moduledir) {
-  return file
-    .replace(basedir, '')
-    .replace(moduledir, '')
-    .replace(/^\//, '')
-}
-
 function zipGoExe(file, zipPath) {
   const zip = new Zip(zipPath)
   const stat = fs.lstatSync(file)
@@ -95,16 +89,26 @@ function zipGoExe(file, zipPath) {
   return zip.finalize()
 }
 
+function addEntryFile(functionPath, commonPrefix, zip) {
+  const mainFile = fs.lstatSync(functionPath).isDirectory()
+    ? `${functionPath}/${path.basename(functionPath)}.js`
+    : functionPath
+  const entryFile = path.basename(mainFile)
+  const mainPath = mainFile.replace(commonPrefix, 'src/')
+  const content = Buffer.from(`module.exports = require('./${mainPath}')`)
+  zip.archive.append(content, { name: entryFile, date: new Date(0) })
+}
+
 function zipJs(functionPath, zipPath) {
   const zip = new Zip(zipPath)
-  let basedir = functionPath
-  if (fs.lstatSync(functionPath).isFile()) {
-    basedir = path.dirname(basedir)
-  }
-  const moduledir = findModuleDir(basedir)
 
-  filesForFunctionZip(functionPath).forEach(file => {
-    const entryPath = zipEntryPath(file, basedir, moduledir)
+  const files = filesForFunctionZip(functionPath)
+  const commonPrefix = commonPathPrefix([...files])
+
+  addEntryFile(functionPath, commonPrefix, zip)
+
+  files.forEach(file => {
+    const entryPath = file.replace(commonPrefix, 'src/')
     const stat = fs.lstatSync(file)
     zip.addLocalFile(file, {
       name: entryPath,
