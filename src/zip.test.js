@@ -1,10 +1,12 @@
-const test = require("ava");
-const { filesForFunctionZip } = require("./zip");
-const tempy = require("tempy");
 const path = require("path");
+
+const tempy = require("tempy");
+const test = require("ava");
 const promisify = require("util.promisify");
 const cpx = require("cpx");
 const rimraf = promisify(require("rimraf"));
+
+const { filesForFunctionZip } = require("./zip");
 
 test.serial("find function files with a package.json", async t => {
   const tmp = tempy.directory();

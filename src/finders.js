@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs");
+
 const packList = require("npm-packlist");
 const precinct = require("precinct");
 const resolve = require("resolve");
