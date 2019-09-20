@@ -7,11 +7,6 @@
     "files": [
       "src/**/*.test.js"
     ],
-    "cache": true,
-    "concurrency": 5,
-    "failFast": false,
-    "failWithoutAssertions": false,
-    "tap": false,
     "compileEnhancements": false,
     "babel": false
   },
