@@ -1,1 +1,1 @@
-module.exports = { hello: "world" };
+module.exports = { hello: 'world' }

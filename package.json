@@ -83,9 +83,10 @@
     "pkg:macos": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64",
     "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
     "test": "run-s test:*",
-    "test:ava": "nyc --reporter=lcov ava --verbose && nyc report",
+    "test:lint": "eslint --fix \"src/**/*.js\" \"*.js\"",
+    "test:prettier": "prettier --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
     "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
-    "test:lint": "eslint src",
+    "test:ava": "nyc --reporter=lcov ava --verbose && nyc report",
     "report": "nyc report --reporter=text-lcov | coveralls",
     "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
   }

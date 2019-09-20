@@ -2,7 +2,7 @@
 
 [![npm version][npm-img]][npm] [![build status][travis-img]][travis] [![dependencies][david-img]][david] [![downloads][dl-img]][dl]
 
-This module handles zipping up lambda functions with their dependencies before deployment.  You are probably looking for [netlify-cli](https://github.com/netlify/cli) or [js-client](https://github.com/netlify/js-client).
+This module handles zipping up lambda functions with their dependencies before deployment. You are probably looking for [netlify-cli](https://github.com/netlify/cli) or [js-client](https://github.com/netlify/js-client).
 
 ## Installation
 
@@ -13,9 +13,9 @@ npm install zip-it-and-ship-it
 ## Usage
 
 ```js
-const { zipFunctions } = require("@netlify/zip-it-and-ship-it");
+const { zipFunctions } = require('@netlify/zip-it-and-ship-it')
 
-zipFunctions("functions", "functions-dist");
+zipFunctions('functions', 'functions-dist')
 ```
 
 This will take all functions in the `functions` folder and create a matching `.zip` file in the `functions-dist` folder.
@@ -58,14 +58,14 @@ As of v0.3.0 the serveFunctions capability has been extracted out to [Netlify De
 
 ### `promise(zipped) = zipFunctions(source, destination, [opts])`
 
-Discover and zip all functions found in the `source` path into the `destination`.  Returns a promise containing a `zipped` array of function objects.
+Discover and zip all functions found in the `source` path into the `destination`. Returns a promise containing a `zipped` array of function objects.
 
 The array of zipped function objects has the following shape:
 
 ```js
-[
+const zipped = [
   {
-    path,  // Absolute filepath to zipped function
+    path, // Absolute filepath to zipped function
     runtime // 'go' or 'js'
   }
   //...

@@ -15,7 +15,6 @@ $ npm test
 
 You can also use yarn.
 
-
 ## Testing
 
 The following things are tested for:
@@ -34,7 +33,7 @@ $ npm publish
 # This pushes the latest HEAD and tags, and creates a Github Release, then publishes to npm
 ```
 
-The CLI is built with [pkg](https://github.com/zeit/pkg) and uploaded to the [corresponding Github release](https://github.com/netlify/zip-it-and-ship-it/releases).  It is consumed in the buildbot with [binrc](https://github.com/netlify/binrc).
+The CLI is built with [pkg](https://github.com/zeit/pkg) and uploaded to the [corresponding Github release](https://github.com/netlify/zip-it-and-ship-it/releases). It is consumed in the buildbot with [binrc](https://github.com/netlify/binrc).
 
 ## License
 
