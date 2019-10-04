@@ -1,0 +1,5 @@
+{
+  "optionalDependencies": {
+    "consistent-ids": "0.1.1"
+  }
+}
