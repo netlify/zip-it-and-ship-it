@@ -13,6 +13,12 @@
   "bin": {
     "zip-it-and-ship-it": "./src/bin.js"
   },
+  "files": [
+    "src/**/*.js",
+    "!src/helpers",
+    "!src/fixtures",
+    "!src/**/**.test.js"
+  ],
   "bugs": {
     "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
   },
