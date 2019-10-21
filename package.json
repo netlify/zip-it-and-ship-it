@@ -48,7 +48,6 @@
     "common-path-prefix": "^2.0.0",
     "cpy": "^7.3.0",
     "del": "^5.1.0",
-    "dependency-check": "^3.3.0",
     "eslint": "^5.14.1",
     "eslint-config-prettier": "^4.0.0",
     "eslint-plugin-import": "^2.16.0",
@@ -96,7 +95,6 @@
     "test-ci": "run-s test:* test:ci:*",
     "test:lint": "eslint --fix \"src/**/*.js\" \"*.js\"",
     "test:prettier": "prettier --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
-    "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
     "test:dev:ava": "ava",
     "test:ci:ava": "nyc -r lcovonly -r text ava",
     "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
