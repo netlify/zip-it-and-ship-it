@@ -30,7 +30,7 @@
     "npm-packlist": "^1.1.12",
     "p-all": "^2.0.0",
     "precinct": "^6.1.1",
-    "read-pkg-up": "^4.0.0",
+    "read-pkg-up": "^7.0.0",
     "require-package-name": "^2.0.1",
     "resolve": "^1.10.0",
     "yargs": "^14.0.0"
