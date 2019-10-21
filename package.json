@@ -33,7 +33,7 @@
     "read-pkg-up": "^7.0.0",
     "require-package-name": "^2.0.1",
     "resolve": "^1.10.0",
-    "yargs": "^14.0.0"
+    "yargs": "^14.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.6.4",
@@ -61,7 +61,7 @@
     "path-exists": "^4.0.0",
     "pkg": "^4.3.7",
     "prettier": "^1.16.4",
-    "rimraf": "^2.6.3",
+    "rimraf": "^3.0.0",
     "tmp-promise": "^2.0.2",
     "util.promisify": "^1.0.0"
   },
