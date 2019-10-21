@@ -67,7 +67,7 @@
     "util.promisify": "^1.0.0"
   },
   "engines": {
-    "node": ">=8.3.0"
+    "node": ">=8.5.0"
   },
   "homepage": "https://github.com/netlify/zip-it-and-ship-it#README",
   "keywords": [
