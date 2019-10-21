@@ -1,7 +1,5 @@
 node_modules
 yarn-error.log
-package-lock.json
-yarn.lock
 build
 zip-it-and-ship-it*
 !src/fixtures/*/node_modules
