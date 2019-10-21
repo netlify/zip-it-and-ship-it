@@ -36,10 +36,10 @@
     "yargs": "^14.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.3.3",
-    "@babel/plugin-transform-runtime": "^7.1.0",
-    "@babel/preset-env": "^7.3.1",
-    "@babel/runtime": "^7.3.1",
+    "@babel/core": "^7.6.4",
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/preset-env": "^7.6.3",
+    "@babel/runtime": "^7.6.3",
     "adm-zip": "^0.4.13",
     "auto-changelog": "^1.12.0",
     "ava": "^2.4.0",
