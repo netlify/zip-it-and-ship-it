@@ -46,7 +46,6 @@
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.5",
     "common-path-prefix": "^2.0.0",
-    "coveralls": "^3.0.6",
     "cpy": "^7.3.0",
     "del": "^5.1.0",
     "dependency-check": "^3.3.0",
@@ -68,7 +67,7 @@
     "util.promisify": "^1.0.0"
   },
   "engines": {
-    "node": ">=8.3.0"
+    "node": ">=8.5.0"
   },
   "homepage": "https://github.com/netlify/zip-it-and-ship-it#README",
   "keywords": [
@@ -93,12 +92,13 @@
     "pkg:linux": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && pkg . -t node10-linux-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64",
     "pkg:macos": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64",
     "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
-    "test": "run-s test:*",
+    "test": "run-s test:* test:dev:*",
+    "test-ci": "run-s test:* test:ci:*",
     "test:lint": "eslint --fix \"src/**/*.js\" \"*.js\"",
     "test:prettier": "prettier --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
     "test:deps": "dependency-check ./package.json --unused --missing --no-dev --no-peer",
-    "test:ava": "nyc --reporter=lcov ava --verbose && nyc report",
-    "report": "nyc report --reporter=text-lcov | coveralls",
+    "test:dev:ava": "ava",
+    "test:ci:ava": "nyc -r lcovonly -r text ava",
     "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
   }
 }
