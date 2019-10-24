@@ -1,4 +1,5 @@
 const { lstat } = require('fs')
+const { dirname } = require('path')
 
 const pkgDir = require('pkg-dir')
 const glob = require('glob')
@@ -18,7 +19,8 @@ const zipNodeJs = async function(srcPath, srcDir, destPath, filename, handler, s
   const packageRoot = await pkgDir(srcDir)
 
   const files = await filesForFunctionZip(srcPath, filename, handler, packageRoot, stat)
-  const commonPrefix = commonPathPrefix(files)
+  const dirnames = files.map(dirname)
+  const commonPrefix = commonPathPrefix(dirnames)
 
   addEntryFile(srcPath, commonPrefix, archive, filename, handler)
 
@@ -53,8 +55,9 @@ const getTreeFiles = function(srcPath, stat) {
 const addEntryFile = function(srcPath, commonPrefix, archive, filename, handler) {
   const mainPath = handler.replace(commonPrefix, 'src/')
   const content = Buffer.from(`module.exports = require('./${mainPath}')`)
+  const entryFilename = filename.endsWith('.js') ? filename : `${filename}.js`
 
-  addZipContent(archive, content, `${filename}.js`)
+  addZipContent(archive, content, entryFilename)
 }
 
 const zipJsFile = async function(file, commonPrefix, archive) {
