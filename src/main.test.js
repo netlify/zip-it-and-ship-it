@@ -48,6 +48,16 @@ test('Ignore some excluded node modules', async t => {
   t.false(await pathExists(`${tmpDir}/node_modules/aws-sdk`))
 })
 
+test('Include most files from node modules', async t => {
+  const { tmpDir } = await zipNode(t, 'node-module-included')
+  const [mapExists, htmlExists] = await Promise.all([
+    pathExists(`${tmpDir}/src/node_modules/test/test.map`),
+    pathExists(`${tmpDir}/src/node_modules/test/test.html`)
+  ])
+  t.false(mapExists)
+  t.true(htmlExists)
+})
+
 test('Throws on runtime errors', async t => {
   await t.throwsAsync(zipNode(t, 'node-module-error'))
 })
