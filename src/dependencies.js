@@ -113,36 +113,30 @@ const EXCLUDED_MODULES = ['aws-sdk']
 // We use all the files published by the Node.js except some that are not needed
 const getPublishedFiles = async function(modulePath, { files }) {
   const ignore = getIgnoredFiles(modulePath, files)
-  return pGlob(`${modulePath}/**`, {
+  const publishedFiles = await pGlob(`${modulePath}/**`, {
     ignore,
     nodir: true,
     absolute: true,
     dot: true
   })
+  return publishedFiles
 }
 
 const getIgnoredFiles = function(modulePath, files) {
-  const patterns = files === undefined ? [...IGNORED_FILES, ...IGNORED_EXTENSIONS] : IGNORED_FILES
-  return patterns.map(ignoreFile => `${modulePath}/${ignoreFile}`)
+  return IGNORED_FILES.map(ignoreFile => `${modulePath}/${ignoreFile}`)
 }
 
-const IGNORED_FILES = ['node_modules/**', '.npmignore', 'package-lock.json', 'yarn.lock']
-
-// To make the zip archive smaller, we remove those. However we don't do this
-// if the Node.js module `package.json` `files` property is defined, since this
-// means the files might be published for a good reason.
-const IGNORED_EXTENSIONS = [
+// To make the zip archive smaller, we remove those.
+const IGNORED_FILES = [
+  'node_modules/**',
+  '.npmignore',
+  'package-lock.json',
+  'yarn.lock',
   '*.log',
   '*.lock',
-  '*.html',
-  '*.md',
+  '*~',
   '*.map',
   '*.ts',
-  '*.png',
-  '*.jpeg',
-  '*.jpg',
-  '*.gif',
-  '*.css',
   '*.patch'
 ]
 
