@@ -61,7 +61,7 @@ const getImportDependencies = function(dependency, basedir, packageJson, state) 
   return getModuleDependencies(dependency, basedir, state, packageJson)
 }
 
-const LOCAL_IMPORT_REGEXP = /^\.|\//
+const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
 
 // When a file requires another one, we apply the top-level logic recursively
 const getLocalImportDependencies = async function(dependency, basedir, packageJson, state) {
