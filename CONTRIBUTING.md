@@ -29,8 +29,10 @@ The following things are tested for:
 # Make changes
 # Update README docs if they have changed.
 $ npm version [major|minor|patch]
+$ npm run version
+$ git tag vVERSION
 # This bumps the version number and CHANGELOG
-$ npm publish
+$ npm publish [--tag TAG]
 # This pushes the latest HEAD and tags, and creates a Github Release, then publishes to npm
 ```
 
