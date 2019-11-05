@@ -70,12 +70,20 @@ test('Throws on missing dependencies with no optionalDependencies', async t => {
   await t.throwsAsync(zipNode(t, 'node-module-missing-package'))
 })
 
-test('Ignore missing optional dependencies', async t => {
-  await zipNode(t, 'node-module-optional')
+test('Throws on missing conditional dependencies', async t => {
+  await t.throwsAsync(zipNode(t, 'node-module-missing-conditional'))
 })
 
-test('Ignore missing whitelisted optional dependencies', async t => {
-  await zipNode(t, 'node-module-optional-whitelist')
+test("Throws on missing dependencies' dependencies", async t => {
+  await t.throwsAsync(zipNode(t, 'node-module-missing-deep'))
+})
+
+test('Ignore missing optional dependencies', async t => {
+  await zipNode(t, 'node-module-missing-optional')
+})
+
+test('Ignore modules conditional dependencies', async t => {
+  await zipNode(t, 'node-module-deep-conditional')
 })
 
 test.skip('Ignore missing optional peer dependencies', async t => {

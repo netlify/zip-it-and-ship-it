@@ -5,7 +5,6 @@ const resolve = require('resolve')
 const requirePackageName = require('require-package-name')
 const promisify = require('util.promisify')
 const glob = require('glob')
-const debug = require('debug')('@netlify/zip-it-and-ship-it:finders')
 
 const pResolve = promisify(resolve)
 const pGlob = promisify(glob)
@@ -157,24 +156,34 @@ const getNestedDependencies = function({ dependencies = {}, peerDependencies = {
   return [].concat(...deps)
 }
 
-const handleModuleNotFound = function(error, moduleName, optionalDependencies) {
-  if (isOptionalModule(error, moduleName, optionalDependencies)) {
-    debug(`WARNING missing optional dependency: ${moduleName}`)
+// Modules can be required conditionally (inside an `if` or `try`/`catch` block).
+// When a `require()` statement is found but the module is not found, it is
+// possible that that block either always evaluates to:
+//  - `false`: in which case, we should not bundle the dependency
+//  - `true`: in which case, we should report the dependency as missing
+// Those conditional modules might be:
+//  - present in the `package.json` `dependencies`
+//  - present in the `package.json` `optionalDependencies`
+//  - present in the `package.json` `peerDependencies`
+//  - not present in the `package.json`, if the module author wants its users
+//    to explicitly install it as an optional dependency.
+// The current implementation:
+//  - when parsing `require()` statements inside function files, always consider
+//    conditional modules to be included, i.e. report them if not found.
+//    This is because our current parsing logic does not know whether a
+//    `require()` is conditional or not.
+//  - when parsing module dependencies, ignore `require()` statements if not
+//    present in the `package.json` `*dependencies`. I.e. user must manually
+//    install them if the module is used.
+// `optionalDependencies`:
+//  - are not reported when missing
+//  - are included in module dependencies
+const handleModuleNotFound = function(error, moduleName, optionalDependencies = {}) {
+  if (error.code === 'MODULE_NOT_FOUND' && optionalDependencies[moduleName] !== undefined) {
     return []
   }
 
   throw error
 }
-
-const isOptionalModule = function(error, moduleName, optionalDependencies = {}) {
-  return (
-    error.code === 'MODULE_NOT_FOUND' &&
-    (optionalDependencies[moduleName] !== undefined || EXCLUDED_OPTIONAL_MODULES.includes(moduleName))
-  )
-}
-
-// `node-fetch@<3` conditionally requires the `encoding` module, but do not
-// declare it as an optionalDependency
-const EXCLUDED_OPTIONAL_MODULES = ['encoding']
 
 module.exports = { getDependencies }
