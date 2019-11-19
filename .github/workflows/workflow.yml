@@ -1,43 +1,25 @@
-name: Continuous integration
+name: Build
 on: [push]
 env:
-  CI: true
+  CI: 'true'
 jobs:
   build:
     strategy:
       matrix:
         os: [macOS-latest]
-        node: [8.5.0, 10, 12]
+        node: [8.5.0, 13]
       fail-fast: false
-    runs-on: ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Git checkout
         uses: actions/checkout@v1
-      - name: Node.js ${{matrix.node}}
+      - name: Node.js ${{ matrix.node }}
         uses: actions/setup-node@v1
         with:
-          node-version: ${{matrix.node}}
+          node-version: ${{ matrix.node }}
       - name: Install dependencies
         run: npm install
       - name: Tests
         run: npm run test-ci
-      - name: Coveralls test coverage
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{secrets.github_token}}
-          parallel: true
-  coveralls:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v1
-      - name: Node.js 12
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12
-      - name: Coveralls finished
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{secrets.github_token}}
-          parallel-finished: true
+      - name: Codecov test coverage
+        run: bash scripts/coverage.sh "${{ secrets.CODECOV_TOKEN }}" "${{ matrix.os }}" "${{ matrix.node }}"
