@@ -96,7 +96,7 @@
     "test:lint": "eslint --ignore-path .gitignore --fix --cache --format=codeframe --max-warnings=0 \"src/**/*.js\" \"*.js\"",
     "test:prettier": "prettier --ignore-path .gitignore --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
     "test:dev:ava": "ava",
-    "test:ci:ava": "nyc -r lcovonly -r text ava",
+    "test:ci:ava": "nyc -r lcovonly -r text -r json ava",
     "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && git add CHANGELOG.md"
   }
 }
