@@ -1,0 +1,8 @@
+codecov:
+  strict_yaml_branch: master
+coverage:
+  range: [80, 100]
+  parsers:
+    javascript:
+      enable_partials: true
+comment: false
