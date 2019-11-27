@@ -25,7 +25,7 @@ const ignoredExtensions = new Set([
 ])
 
 function ignoreMissing(dependency, optional) {
-  return alwaysIgnored.has(dependency) || (optional && dependency in optional)
+  return alwaysIgnored.has(dependency) || (optional && optional.has(dependency))
 }
 
 function includeModuleFile(packageJson, moduleFilePath) {
@@ -127,7 +127,7 @@ function getDependencies(filename, basedir) {
 
       if (dependencies) {
         Object.keys(dependencies).forEach(dependency => {
-          handle(dependency, currentModulePath, packageJson.optionalDependencies)
+          handle(dependency, currentModulePath, new Set(Object.keys(packageJson.optionalDependencies)))
         })
       }
     })
