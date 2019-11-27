@@ -127,7 +127,17 @@ function getDependencies(filename, basedir) {
 
       if (dependencies) {
         Object.keys(dependencies).forEach(dependency => {
-          handle(dependency, currentModulePath, new Set(Object.keys(packageJson.optionalDependencies)))
+          handle(
+            dependency,
+            currentModulePath,
+            new Set([
+              ...Object.keys(packageJson.optionalDependencies),
+              // Support optional peer dependencies
+              ...Object.entries(packageJson.peerDependenciesMeta)
+                .filter(([_key, { optional }]) => optional)
+                .map(([key]) => key)
+            ])
+          )
         })
       }
     })
