@@ -152,9 +152,21 @@ const getNestedModules = async function(modulePath, state, pkg) {
 }
 
 const getNestedDependencies = function({ dependencies = {}, peerDependencies = {}, optionalDependencies = {} }) {
-  const deps = [dependencies, peerDependencies, optionalDependencies].map(Object.keys)
-  return [].concat(...deps)
+  return [
+    ...Object.keys(dependencies),
+    ...Object.keys(peerDependencies).filter(shouldIncludePeerDependency),
+    ...Object.keys(optionalDependencies)
+  ]
 }
+
+// Workaround for https://github.com/netlify/zip-it-and-ship-it/issues/73
+// TODO: remove this after adding proper modules exclusion as outlined in
+// https://github.com/netlify/zip-it-and-ship-it/issues/68
+const shouldIncludePeerDependency = function(name) {
+  return !EXCLUDED_PEER_DEPENDENCIES.includes(name)
+}
+
+const EXCLUDED_PEER_DEPENDENCIES = ['prisma2']
 
 // Modules can be required conditionally (inside an `if` or `try`/`catch` block).
 // When a `require()` statement is found but the module is not found, it is
