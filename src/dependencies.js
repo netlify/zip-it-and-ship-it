@@ -101,7 +101,7 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
   const pkg = require(packagePath)
 
   const [publishedFiles, depsPaths] = await Promise.all([
-    getPublishedFiles(modulePath, pkg),
+    getPublishedFiles(modulePath),
     getNestedModules(modulePath, state, pkg)
   ])
   return [...publishedFiles, ...depsPaths]
@@ -110,8 +110,8 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
 const EXCLUDED_MODULES = ['aws-sdk']
 
 // We use all the files published by the Node.js except some that are not needed
-const getPublishedFiles = async function(modulePath, { files }) {
-  const ignore = getIgnoredFiles(modulePath, files)
+const getPublishedFiles = async function(modulePath) {
+  const ignore = getIgnoredFiles(modulePath)
   const publishedFiles = await pGlob(`${modulePath}/**`, {
     ignore,
     nodir: true,
@@ -121,7 +121,7 @@ const getPublishedFiles = async function(modulePath, { files }) {
   return publishedFiles
 }
 
-const getIgnoredFiles = function(modulePath, files) {
+const getIgnoredFiles = function(modulePath) {
   return IGNORED_FILES.map(ignoreFile => `${modulePath}/${ignoreFile}`)
 }
 
