@@ -12,7 +12,7 @@ This module handles zipping up lambda functions with their dependencies before d
 ## Installation
 
 ```bash
-npm install zip-it-and-ship-it
+npm install @netlify/zip-it-and-ship-it
 ```
 
 ## Usage
