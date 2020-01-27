@@ -117,6 +117,16 @@ function getDependencies(filename, basedir) {
     const currentModulePath = path.join(currentModule.path, '..')
     const packageJson = currentModule.packageJson
 
+    if (packageJson.peerDependenciesMeta) {
+      packageJson.optionalDependencies = packageJson.optionalDependencies || {}
+
+      for (const depKey in packageJson.peerDependenciesMeta) {
+        if (packageJson.peerDependenciesMeta[depKey].optional) {
+          packageJson.optionalDependencies[depKey] = packageJson.peerDependencies[depKey]
+        }
+      }
+    }
+
     if (modulePaths.has(currentModulePath)) {
       continue
     }
