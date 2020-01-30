@@ -68,6 +68,10 @@ test.skip('Ignore missing whitelisted optional dependencies', async t => {
   await zipNode(t, 'node-module-optional-whitelist')
 })
 
+test.skip('Ignore missing optional peer dependencies', async t => {
+  await zipNode(t, 'node-module-peer-optional')
+})
+
 test('Can require local files', async t => {
   await zipNode(t, 'local-require')
 })

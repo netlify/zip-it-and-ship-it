@@ -1,0 +1,11 @@
+{
+  "peerDependencies": {
+    "consistent-ids": "0.1.1"
+  },
+  "peerDependenciesMeta": {
+  	"consistent-ids": {
+  		"optional": true
+  	}
+  }
+}
+
