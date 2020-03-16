@@ -4,7 +4,7 @@
   },
   "peerDependenciesMeta": {
     "consistent-ids": {
-      "optional": true
+      "optional": false
     }
   }
 }
