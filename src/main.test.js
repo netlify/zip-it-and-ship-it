@@ -86,8 +86,16 @@ test('Ignore modules conditional dependencies', async t => {
   await zipNode(t, 'node-module-deep-conditional')
 })
 
-test.skip('Ignore missing optional peer dependencies', async t => {
+test('Ignore missing optional peer dependencies', async t => {
   await zipNode(t, 'node-module-peer-optional')
+})
+
+test('Throws on missing optional peer dependencies with no peer dependencies', async t => {
+  await t.throwsAsync(zipNode(t, 'node-module-peer-optional-none'))
+})
+
+test('Throws on missing non-optional peer dependencies', async t => {
+  await t.throwsAsync(zipNode(t, 'node-module-peer-not-optional'))
 })
 
 test('Can require local files', async t => {

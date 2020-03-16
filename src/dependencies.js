@@ -71,13 +71,13 @@ const getLocalImportDependencies = async function(dependency, basedir, packageJs
 
 // When a file requires a module, we find its path inside `node_modules` and
 // use all its published files. We also recurse on the module's dependencies.
-const getModuleDependencies = async function(dependency, basedir, state, { optionalDependencies }) {
+const getModuleDependencies = async function(dependency, basedir, state, packageJson) {
   const moduleName = requirePackageName(dependency.replace(BACKSLASH_REGEXP, '/'))
 
   try {
     return await getModuleNameDependencies(moduleName, basedir, state)
   } catch (error) {
-    return handleModuleNotFound(error, moduleName, optionalDependencies)
+    return handleModuleNotFound({ error, moduleName, packageJson })
   }
 }
 
@@ -190,12 +190,24 @@ const EXCLUDED_PEER_DEPENDENCIES = ['prisma2']
 // `optionalDependencies`:
 //  - are not reported when missing
 //  - are included in module dependencies
-const handleModuleNotFound = function(error, moduleName, optionalDependencies = {}) {
-  if (error.code === 'MODULE_NOT_FOUND' && optionalDependencies[moduleName] !== undefined) {
+const handleModuleNotFound = function({ error, moduleName, packageJson }) {
+  if (error.code === 'MODULE_NOT_FOUND' && isOptionalModule(moduleName, packageJson)) {
     return []
   }
 
   throw error
+}
+
+const isOptionalModule = function(
+  moduleName,
+  { optionalDependencies = {}, peerDependenciesMeta = {}, peerDependencies = {} }
+) {
+  return (
+    optionalDependencies[moduleName] !== undefined ||
+    (peerDependenciesMeta[moduleName] &&
+      peerDependenciesMeta[moduleName].optional &&
+      peerDependencies[moduleName] !== undefined)
+  )
 }
 
 module.exports = { getDependencies }
