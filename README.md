@@ -101,7 +101,7 @@ $ zip-it-and-ship-it --help
 @netlify/zip-it-and-ship-it: Zip lambda functions and their dependencies for deployment
 
 Usage: zip-it-and-ship-it [source] [destination] {options}
-    --zip-go, -g          zip go binaries (default: false)
+    --skip-go             do not zip go binaries (default: true)
     --help, -h            show help
     --version, -v         print the version of the program
 ```
