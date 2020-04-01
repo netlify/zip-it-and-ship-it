@@ -11,9 +11,9 @@ const pathExists = require('path-exists')
 const commonPathPrefix = require('common-path-prefix')
 const execa = require('execa')
 
-const { zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main.js')
-
 const { zipFunction } = require('..')
+
+const { zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main.js')
 
 const pReadFile = promisify(readFile)
 const pChmod = promisify(chmod)
