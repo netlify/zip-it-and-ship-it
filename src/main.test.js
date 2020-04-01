@@ -181,7 +181,7 @@ test('Copies already zipped files', async t => {
 })
 
 test('Zips Go function files', async t => {
-  const { files, tmpDir } = await zipFixture(t, 'go-simple')
+  const { files, tmpDir } = await zipFixture(t, 'go-simple', 1, { skipGo: false })
 
   t.true(files.every(({ runtime }) => runtime === 'go'))
 
@@ -203,7 +203,7 @@ test('Zips Go function files', async t => {
 })
 
 test('Can skip zipping Go function files', async t => {
-  const { files } = await zipFixture(t, 'go-simple', 1, { skipGo: true })
+  const { files } = await zipFixture(t, 'go-simple', 1)
 
   t.true(files.every(({ runtime }) => runtime === 'go'))
   t.true(

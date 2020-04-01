@@ -15,7 +15,7 @@ const pLstat = promisify(lstat)
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
-const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, skipGo } = {}) {
+const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, skipGo = true } = {}) {
   const filenames = await listFilenames(srcFolder)
   const srcPaths = filenames.map(filename => resolve(srcFolder, filename))
 
