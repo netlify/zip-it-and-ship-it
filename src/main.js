@@ -15,11 +15,12 @@ const pLstat = promisify(lstat)
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
-const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, skipGo = true } = {}) {
+// TODO: remove `skipGo` option in next major release
+const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, skipGo, zipGo } = {}) {
   const filenames = await listFilenames(srcFolder)
   const srcPaths = filenames.map(filename => resolve(srcFolder, filename))
 
-  const zipped = await pMap(srcPaths, srcPath => zipFunction(srcPath, destFolder, { skipGo }), {
+  const zipped = await pMap(srcPaths, srcPath => zipFunction(srcPath, destFolder, { skipGo, zipGo }), {
     concurrency: parallelLimit
   })
   return zipped.filter(Boolean)
@@ -33,7 +34,7 @@ const listFilenames = async function(srcFolder) {
   }
 }
 
-const zipFunction = async function(srcPath, destFolder, { skipGo } = {}) {
+const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
   const { filename, extension, srcDir, stat, handler, destPath, destCopyPath } = await statFile(srcPath, destFolder)
 
   if (filename === 'node_modules' || (stat.isDirectory() && handler === undefined)) {
@@ -52,7 +53,7 @@ const zipFunction = async function(srcPath, destFolder, { skipGo } = {}) {
 
   const isGoExecutable = await isGoExe(srcPath)
 
-  if (isGoExecutable && skipGo) {
+  if (isGoExecutable && !zipGo) {
     await cpFile(srcPath, destCopyPath)
     return { path: destCopyPath, runtime: 'go' }
   }

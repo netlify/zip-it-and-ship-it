@@ -86,7 +86,7 @@ const zipped = [
 ```js
 {
   parallelLimit: 5, // Limit the number of concurrent zipping operations at a time
-  skipGo: false // Don't zip go functions, just move them to the destination path
+  zipGo: false // Don't zip go functions, just move them to the destination path
 }
 ```
 
@@ -101,7 +101,7 @@ $ zip-it-and-ship-it --help
 @netlify/zip-it-and-ship-it: Zip lambda functions and their dependencies for deployment
 
 Usage: zip-it-and-ship-it [source] [destination] {options}
-    --skip-go             do not zip go binaries (default: true)
+    --zip-go              zip go binaries (default: false)
     --help, -h            show help
     --version, -v         print the version of the program
 ```
