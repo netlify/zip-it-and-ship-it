@@ -7,10 +7,10 @@ const zipIt = require('..')
 
 // CLI entry point
 const runCli = async function() {
-  const { srcFolder, destFolder, zipGo = false, skipGo = !zipGo } = parseArgs()
+  const { srcFolder, destFolder, zipGo } = parseArgs()
 
   try {
-    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, { skipGo })
+    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, { zipGo })
     console.log(JSON.stringify(zipped, null, 2))
   } catch (error) {
     console.error(error.toString())
@@ -28,13 +28,9 @@ const parseArgs = function() {
 }
 
 const OPTIONS = {
-  'skip-go': {
-    boolean: true,
-    describe: 'Whether Go binaries should be copied as is or zipped'
-  },
-  // TODO: deprecated. Remove on the next major release
   'zip-go': {
     boolean: true,
+    default: false,
     describe: 'Whether Go binaries should be zipped or copied as is'
   }
 }
