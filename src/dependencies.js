@@ -1,10 +1,10 @@
 const { dirname } = require('path')
 
-const precinct = require('precinct')
-const resolve = require('resolve')
-const requirePackageName = require('require-package-name')
-const promisify = require('util.promisify')
 const glob = require('glob')
+const precinct = require('precinct')
+const requirePackageName = require('require-package-name')
+const resolve = require('resolve')
+const promisify = require('util.promisify')
 
 const pResolve = promisify(resolve)
 const pGlob = promisify(glob)

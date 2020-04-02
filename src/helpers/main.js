@@ -1,8 +1,8 @@
 /* eslint-disable node/no-unpublished-require */
 const { join } = require('path')
 
-const { dir: getTmpDir } = require('tmp-promise')
 const AdmZip = require('adm-zip')
+const { dir: getTmpDir } = require('tmp-promise')
 const promisify = require('util.promisify')
 
 const { zipFunctions } = require('../..')

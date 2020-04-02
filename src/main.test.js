@@ -3,13 +3,13 @@ const { tmpdir } = require('os')
 const { platform } = require('process')
 
 const test = require('ava')
-const { dir: getTmpDir, tmpName } = require('tmp-promise')
-const del = require('del')
-const cpy = require('cpy')
-const promisify = require('util.promisify')
-const pathExists = require('path-exists')
 const commonPathPrefix = require('common-path-prefix')
+const cpy = require('cpy')
+const del = require('del')
 const execa = require('execa')
+const pathExists = require('path-exists')
+const { dir: getTmpDir, tmpName } = require('tmp-promise')
+const promisify = require('util.promisify')
 
 const { zipFunction } = require('..')
 

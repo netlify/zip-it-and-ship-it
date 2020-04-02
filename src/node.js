@@ -1,10 +1,10 @@
 const { lstat } = require('fs')
 const { dirname } = require('path')
 
-const pkgDir = require('pkg-dir')
-const glob = require('glob')
-const promisify = require('util.promisify')
 const commonPathPrefix = require('common-path-prefix')
+const glob = require('glob')
+const pkgDir = require('pkg-dir')
+const promisify = require('util.promisify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 const { getDependencies } = require('./dependencies')
