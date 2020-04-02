@@ -1,14 +1,14 @@
-const { join, resolve, dirname, basename, extname } = require('path')
 const { readdir, lstat } = require('fs')
+const { join, resolve, dirname, basename, extname } = require('path')
 
-const pMap = require('p-map')
-const promisify = require('util.promisify')
-const pathExists = require('path-exists')
-const makeDir = require('make-dir')
 const cpFile = require('cp-file')
+const makeDir = require('make-dir')
+const pMap = require('p-map')
+const pathExists = require('path-exists')
+const promisify = require('util.promisify')
 
-const { zipNodeJs } = require('./node')
 const { isGoExe, zipGoExe } = require('./go')
+const { zipNodeJs } = require('./node')
 
 const pReaddir = promisify(readdir)
 const pLstat = promisify(lstat)

@@ -1,8 +1,8 @@
 const { join } = require('path')
 
 const test = require('ava')
-const { tmpName } = require('tmp-promise')
 const execa = require('execa')
+const { tmpName } = require('tmp-promise')
 
 const { version } = require('../package.json')
 
