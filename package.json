@@ -59,13 +59,10 @@
     "eslint-plugin-prettier": "^3.1.2",
     "execa": "^3.4.0",
     "gh-release": "^3.5.0",
-    "mkdirp": "^0.5.4",
     "npm-run-all": "^4.1.5",
     "nyc": "^14.0.0",
     "path-exists": "^4.0.0",
-    "pkg": "^4.4.5",
     "prettier": "^1.19.1",
-    "rimraf": "^3.0.2",
     "tmp-promise": "^2.0.2"
   },
   "engines": {
@@ -83,17 +80,9 @@
   ],
   "license": "MIT",
   "main": "src/main.js",
-  "pkg": {
-    "targets": [
-      "node10"
-    ]
-  },
   "repository": "netlify/zip-it-and-ship-it",
   "scripts": {
-    "pkg": "rimraf build && run-p pkg:*",
-    "pkg:linux": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && pkg . -t node10-linux-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_linux_amd64",
-    "pkg:macos": "mkdirp build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && pkg . -t node10-macos-x64 --output build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64 && tar -cvzf build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz --directory=build/ zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64/zip-it-and-ship-it_$(git describe --abbrev=0 --tags | cut -c 2-)_macos_amd64",
-    "prepublishOnly": "run-s pkg && git push && git push --tags && gh-release -a build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_Linux-64bit.tar.gz,build/zip-it-and-ship-it_$(git describe --abbrev=0 --tags)_macOS-64bit.tar.gz",
+    "prepublishOnly": "git push && git push --tags && gh-release",
     "test": "run-s test:* test:dev:*",
     "test-ci": "run-s test:* test:ci:*",
     "test:lint": "eslint --ignore-path .gitignore --fix --cache --format=codeframe --max-warnings=0 \"src/**/*.js\"",
