@@ -1,5 +1,5 @@
 const { lstat } = require('fs')
-const { dirname, normalize } = require('path')
+const { dirname, normalize, sep } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 const glob = require('glob')
@@ -54,7 +54,7 @@ const getTreeFiles = function(srcPath, stat) {
 }
 
 const addEntryFile = function(commonPrefix, archive, filename, handler) {
-  const mainPath = normalizeFilePath(handler.replace(commonPrefix, 'src/'))
+  const mainPath = normalizeFilePath(handler, commonPrefix)
   const content = Buffer.from(`module.exports = require('./${mainPath}')`)
   const entryFilename = filename.endsWith('.js') ? filename : `${filename}.js`
 
@@ -62,17 +62,23 @@ const addEntryFile = function(commonPrefix, archive, filename, handler) {
 }
 
 const zipJsFile = async function(file, commonPrefix, archive) {
-  const filename = normalizeFilePath(file.replace(commonPrefix, 'src/'))
+  const filename = normalizeFilePath(file, commonPrefix)
   const stat = await pLstat(file)
   addZipFile(archive, file, filename, stat)
 }
 
-// `adm-zip` and `require()` except Unix paths.
-// `common-path-prefix` except using normalized paths.
-const normalizeFilePath = function(path) {
-  return normalizePath(path).replace(WINDOWS_DRIVE_REGEXP, '$1')
+// `adm-zip` and `require()` expect Unix paths.
+// We remove the common path prefix.
+// With files on different Windows drives, we keep the drive letter but not the
+// colon `:` since this is forbidden in filenames.
+const normalizeFilePath = function(path, commonPrefix) {
+  const pathA = path.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
+  const pathB = normalizePath(pathA)
+  const pathC = pathB.replace(WINDOWS_DRIVE_REGEXP, '$1')
+  return pathC
 }
 
+const ZIP_ROOT_DIR = 'src'
 const WINDOWS_DRIVE_REGEXP = /^([a-zA-Z]+):/
 
 module.exports = { zipNodeJs }
