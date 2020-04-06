@@ -1,15 +1,8 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "description": "Zip it and ship it",
   "version": "0.4.0-12",
-  "author": "Netlify, Inc",
-  "ava": {
-    "files": [
-      "src/**/*.test.js"
-    ],
-    "compileEnhancements": false,
-    "babel": false
-  },
+  "description": "Zip it and ship it",
+  "main": "./src/main.js",
   "bin": {
     "zip-it-and-ship-it": "./src/bin.js"
   },
@@ -19,6 +12,35 @@
     "!src/fixtures",
     "!src/**/**.test.js"
   ],
+  "scripts": {
+    "prepublishOnly": "git push && git push --tags && gh-release",
+    "test": "npm run format && npm run test:dev",
+    "format": "run-s format:*",
+    "format:lint": "eslint --ignore-path .gitignore --fix --cache --format=codeframe --max-warnings=0 \"src/**/*.js\"",
+    "format:prettier": "prettier --ignore-path .gitignore --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
+    "test:dev": "ava",
+    "test:ci": "nyc -r lcovonly -r text -r json ava",
+    "update-snapshots": "ava -u",
+    "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && npm run format:prettier && git add CHANGELOG.md"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "npm run format"
+    }
+  },
+  "keywords": [
+    "api",
+    "bundler",
+    "cli",
+    "lambda",
+    "lambda functions",
+    "netlify",
+    "static"
+  ],
+  "author": "Netlify, Inc",
+  "license": "MIT",
+  "repository": "netlify/zip-it-and-ship-it",
+  "homepage": "https://github.com/netlify/zip-it-and-ship-it#README",
   "bugs": {
     "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
   },
@@ -59,6 +81,7 @@
     "eslint-plugin-prettier": "^3.1.2",
     "execa": "^3.4.0",
     "gh-release": "^3.5.0",
+    "husky": "^4.2.3",
     "npm-run-all": "^4.1.5",
     "nyc": "^14.0.0",
     "path-exists": "^4.0.0",
@@ -67,28 +90,5 @@
   },
   "engines": {
     "node": ">=8.3.0"
-  },
-  "homepage": "https://github.com/netlify/zip-it-and-ship-it#README",
-  "keywords": [
-    "api",
-    "bundler",
-    "cli",
-    "lambda",
-    "lambda functions",
-    "netlify",
-    "static"
-  ],
-  "license": "MIT",
-  "main": "src/main.js",
-  "repository": "netlify/zip-it-and-ship-it",
-  "scripts": {
-    "prepublishOnly": "git push && git push --tags && gh-release",
-    "test": "run-s test:* test:dev:*",
-    "test-ci": "run-s test:* test:ci:*",
-    "test:lint": "eslint --ignore-path .gitignore --fix --cache --format=codeframe --max-warnings=0 \"src/**/*.js\"",
-    "test:prettier": "prettier --ignore-path .gitignore --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
-    "test:dev:ava": "ava",
-    "test:ci:ava": "nyc -r lcovonly -r text -r json ava",
-    "version": "auto-changelog -p --template keepachangelog --breaking-pattern breaking && npm run test:prettier && git add CHANGELOG.md"
   }
 }

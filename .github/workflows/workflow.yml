@@ -1,5 +1,11 @@
 name: Build
-on: [push]
+on:
+  # Ensure GitHub actions are not run twice for same commits
+  push:
+    branches: [master]
+    tags: ['*']
+  pull_request:
+    types: [opened, synchronize, reopened]
 env:
   CI: 'true'
 jobs:
@@ -19,7 +25,9 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
         run: npm install
+      - name: Linting
+        run: npm run format
       - name: Tests
-        run: npm run test-ci
+        run: npm run test:ci
       - name: Codecov test coverage
-        run: bash scripts/coverage.sh "${{ secrets.CODECOV_TOKEN }}" "${{ matrix.os }}" "${{ matrix.node }}"
+        run: bash scripts/coverage.sh "${{ matrix.os }}" "${{ matrix.node }}"
