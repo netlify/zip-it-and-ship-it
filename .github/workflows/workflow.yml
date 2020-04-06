@@ -12,8 +12,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macOS-latest]
+        os: [ubuntu-latest, macOS-latest]
         node: [8.3.0, 13]
+        exclude:
+          - os: macOS-latest
+            node: 8.3.0
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
