@@ -3,8 +3,8 @@ const { dirname, normalize, sep } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 const glob = require('glob')
-const normalizePath = require('normalize-path')
 const pkgDir = require('pkg-dir')
+const unixify = require('unixify')
 const promisify = require('util.promisify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
@@ -69,17 +69,14 @@ const zipJsFile = async function(file, commonPrefix, archive) {
 
 // `adm-zip` and `require()` expect Unix paths.
 // We remove the common path prefix.
-// With files on different Windows drives, we keep the drive letter but not the
-// colon `:` since this is forbidden in filenames.
+// With files on different Windows drives, we remove the drive letter.
 const normalizeFilePath = function(path, commonPrefix) {
   const pathA = normalize(path)
   const pathB = pathA.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
-  const pathC = normalizePath(pathB)
-  const pathD = pathC.replace(WINDOWS_DRIVE_REGEXP, '$1')
-  return pathD
+  const pathC = unixify(pathB)
+  return pathC
 }
 
 const ZIP_ROOT_DIR = 'src'
-const WINDOWS_DRIVE_REGEXP = /^([a-zA-Z]+):/
 
 module.exports = { zipNodeJs }
