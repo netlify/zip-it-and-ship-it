@@ -1,9 +1,10 @@
 const { lstat } = require('fs')
-const { dirname } = require('path')
+const { dirname, normalize, sep } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 const glob = require('glob')
 const pkgDir = require('pkg-dir')
+const unixify = require('unixify')
 const promisify = require('util.promisify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
@@ -22,7 +23,7 @@ const zipNodeJs = async function(srcPath, srcDir, destPath, filename, handler, s
   const dirnames = files.map(dirname)
   const commonPrefix = commonPathPrefix(dirnames)
 
-  addEntryFile(srcPath, commonPrefix, archive, filename, handler)
+  addEntryFile(commonPrefix, archive, filename, handler)
 
   await Promise.all(files.map(file => zipJsFile(file, commonPrefix, archive)))
 
@@ -34,7 +35,7 @@ const zipNodeJs = async function(srcPath, srcDir, destPath, filename, handler, s
 // has a size limit for the zipped file. It also makes cold starts faster.
 const filesForFunctionZip = async function(srcPath, filename, handler, packageRoot, stat) {
   const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(handler, packageRoot)])
-  const files = [...treeFiles, ...depFiles]
+  const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
   return uniqueFiles
 }
@@ -52,8 +53,8 @@ const getTreeFiles = function(srcPath, stat) {
   })
 }
 
-const addEntryFile = function(srcPath, commonPrefix, archive, filename, handler) {
-  const mainPath = handler.replace(commonPrefix, 'src/')
+const addEntryFile = function(commonPrefix, archive, filename, handler) {
+  const mainPath = normalizeFilePath(handler, commonPrefix)
   const content = Buffer.from(`module.exports = require('./${mainPath}')`)
   const entryFilename = filename.endsWith('.js') ? filename : `${filename}.js`
 
@@ -61,9 +62,21 @@ const addEntryFile = function(srcPath, commonPrefix, archive, filename, handler)
 }
 
 const zipJsFile = async function(file, commonPrefix, archive) {
-  const filename = file.replace(commonPrefix, 'src/')
+  const filename = normalizeFilePath(file, commonPrefix)
   const stat = await pLstat(file)
   addZipFile(archive, file, filename, stat)
 }
+
+// `adm-zip` and `require()` expect Unix paths.
+// We remove the common path prefix.
+// With files on different Windows drives, we remove the drive letter.
+const normalizeFilePath = function(path, commonPrefix) {
+  const pathA = normalize(path)
+  const pathB = pathA.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
+  const pathC = unixify(pathB)
+  return pathC
+}
+
+const ZIP_ROOT_DIR = 'src'
 
 module.exports = { zipNodeJs }

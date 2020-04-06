@@ -3,7 +3,6 @@ const { tmpdir } = require('os')
 const { platform } = require('process')
 
 const test = require('ava')
-const commonPathPrefix = require('common-path-prefix')
 const cpy = require('cpy')
 const del = require('del')
 const execa = require('execa')
@@ -165,9 +164,8 @@ test('Works on empty directories', async t => {
 
 test('Works when no package.json is present', async t => {
   const tmpDir = await tmpName({ prefix: 'zip-it-test' })
-  const files = await cpy(`${FIXTURES_DIR}/no-package-json`, `${tmpDir}/no-package-json`, { parents: true })
-  const commonDir = commonPathPrefix(files)
-  await zipNode(t, 'no-package-json', 1, {}, `${commonDir}/..`)
+  await cpy('**', `${tmpDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
+  await zipNode(t, 'no-package-json', 1, {}, tmpDir)
 })
 
 test('Copies already zipped files', async t => {
