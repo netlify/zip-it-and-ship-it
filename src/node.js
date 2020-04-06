@@ -1,10 +1,10 @@
 const { lstat } = require('fs')
-const { dirname } = require('path')
+const { dirname, normalize } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 const glob = require('glob')
+const normalizePath = require('normalize-path')
 const pkgDir = require('pkg-dir')
-const unixify = require('unixify')
 const promisify = require('util.promisify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
@@ -35,7 +35,7 @@ const zipNodeJs = async function(srcPath, srcDir, destPath, filename, handler, s
 // has a size limit for the zipped file. It also makes cold starts faster.
 const filesForFunctionZip = async function(srcPath, filename, handler, packageRoot, stat) {
   const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(handler, packageRoot)])
-  const files = [...treeFiles, ...depFiles].map(unixify)
+  const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
   return uniqueFiles
 }
@@ -54,7 +54,7 @@ const getTreeFiles = function(srcPath, stat) {
 }
 
 const addEntryFile = function(commonPrefix, archive, filename, handler) {
-  const mainPath = unixify(handler).replace(commonPrefix, 'src/')
+  const mainPath = normalizeFilePath(handler.replace(commonPrefix, 'src/'))
   const content = Buffer.from(`module.exports = require('./${mainPath}')`)
   const entryFilename = filename.endsWith('.js') ? filename : `${filename}.js`
 
@@ -62,9 +62,17 @@ const addEntryFile = function(commonPrefix, archive, filename, handler) {
 }
 
 const zipJsFile = async function(file, commonPrefix, archive) {
-  const filename = file.replace(commonPrefix, 'src/')
+  const filename = normalizeFilePath(file.replace(commonPrefix, 'src/'))
   const stat = await pLstat(file)
   addZipFile(archive, file, filename, stat)
 }
+
+// `adm-zip` and `require()` except Unix paths.
+// `common-path-prefix` except using normalized paths.
+const normalizeFilePath = function(path) {
+  return normalizePath(path).replace(WINDOWS_DRIVE_REGEXP, '$1')
+}
+
+const WINDOWS_DRIVE_REGEXP = /^([a-zA-Z]+):/
 
 module.exports = { zipNodeJs }
