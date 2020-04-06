@@ -1,5 +1,5 @@
 const { readdir, lstat } = require('fs')
-const { join, resolve, dirname, basename, extname, normalize } = require('path')
+const { join, resolve, dirname, basename, extname } = require('path')
 
 const cpFile = require('cp-file')
 const makeDir = require('make-dir')
@@ -90,7 +90,7 @@ const statFile = async function(srcPath, destFolder) {
 // using the same filename as its directory
 const getHandler = async function(srcPath, filename, stat) {
   if (!stat.isDirectory()) {
-    return normalize(srcPath)
+    return srcPath
   }
 
   const namedHandler = join(srcPath, `${filename}.js`)

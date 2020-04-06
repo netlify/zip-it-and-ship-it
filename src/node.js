@@ -72,10 +72,11 @@ const zipJsFile = async function(file, commonPrefix, archive) {
 // With files on different Windows drives, we keep the drive letter but not the
 // colon `:` since this is forbidden in filenames.
 const normalizeFilePath = function(path, commonPrefix) {
-  const pathA = path.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
-  const pathB = normalizePath(pathA)
-  const pathC = pathB.replace(WINDOWS_DRIVE_REGEXP, '$1')
-  return pathC
+  const pathA = normalize(path)
+  const pathB = pathA.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
+  const pathC = normalizePath(pathB)
+  const pathD = pathC.replace(WINDOWS_DRIVE_REGEXP, '$1')
+  return pathD
 }
 
 const ZIP_ROOT_DIR = 'src'
