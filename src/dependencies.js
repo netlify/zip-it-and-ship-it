@@ -84,7 +84,7 @@ const getModuleDependencies = async function(dependency, basedir, state, package
 const BACKSLASH_REGEXP = /\\/g
 
 const getModuleNameDependencies = async function(moduleName, basedir, state) {
-  if (EXCLUDED_MODULES.includes(moduleName)) {
+  if (isExludedModule(moduleName)) {
     return []
   }
 
@@ -107,6 +107,9 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
   return [...publishedFiles, ...depsPaths]
 }
 
+const isExludedModule = function(moduleName) {
+  return EXCLUDED_MODULES.includes(moduleName) || moduleName.startsWith('@types/')
+}
 const EXCLUDED_MODULES = ['aws-sdk']
 
 // We use all the files published by the Node.js except some that are not needed

@@ -47,6 +47,11 @@ test('Ignore some excluded node modules', async t => {
   t.false(await pathExists(`${tmpDir}/node_modules/aws-sdk`))
 })
 
+test('Ignore TypeScript types', async t => {
+  const { tmpDir } = await zipNode(t, 'node-module-typescript-types')
+  t.false(await pathExists(`${tmpDir}/src/node_modules/@types/node`))
+})
+
 test('Include most files from node modules', async t => {
   const { tmpDir } = await zipNode(t, 'node-module-included')
   const [mapExists, htmlExists] = await Promise.all([
