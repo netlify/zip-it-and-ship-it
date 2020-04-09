@@ -44,7 +44,7 @@ test('Can require node modules nested files', async t => {
 
 test('Ignore some excluded node modules', async t => {
   const { tmpDir } = await zipNode(t, 'node-module-excluded')
-  t.false(await pathExists(`${tmpDir}/node_modules/aws-sdk`))
+  t.false(await pathExists(`${tmpDir}/src/node_modules/aws-sdk`))
 })
 
 test('Include most files from node modules', async t => {
@@ -126,12 +126,12 @@ test('Keeps non-required files inside the target directory', async t => {
 
 test('Ignores non-required node_modules inside the target directory', async t => {
   const { tmpDir } = await zipNode(t, 'ignore-dir-node-modules')
-  t.false(await pathExists(`${tmpDir}/node_modules`))
+  t.false(await pathExists(`${tmpDir}/src/node_modules`))
 })
 
 test('Ignores deep non-required node_modules inside the target directory', async t => {
   const { tmpDir } = await zipNode(t, 'ignore-deep-dir-node-modules')
-  t.false(await pathExists(`${tmpDir}/deep/node_modules`))
+  t.false(await pathExists(`${tmpDir}/src/deep/node_modules`))
 })
 
 test('Works with many dependencies', async t => {
