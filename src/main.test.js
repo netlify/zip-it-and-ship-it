@@ -42,6 +42,10 @@ test('Can require node modules nested files', async t => {
   await zipNode(t, 'node-module-path')
 })
 
+test('Can require dynamically generated node modules', async t => {
+  await zipNode(t, 'side-module')
+})
+
 test('Ignore some excluded node modules', async t => {
   const { tmpDir } = await zipNode(t, 'node-module-excluded')
   t.false(await pathExists(`${tmpDir}/src/node_modules/aws-sdk`))
