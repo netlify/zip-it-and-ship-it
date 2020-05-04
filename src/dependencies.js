@@ -100,17 +100,33 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
 
   const pkg = require(packagePath)
 
-  const [publishedFiles, depsPaths] = await Promise.all([
+  const [publishedFiles, sideFiles, depsPaths] = await Promise.all([
     getPublishedFiles(modulePath),
+    getSideFiles(modulePath, moduleName),
     getNestedModules(modulePath, state, pkg)
   ])
-  return [...publishedFiles, ...depsPaths]
+  return [...publishedFiles, ...sideFiles, ...depsPaths]
 }
 
 const isExludedModule = function(moduleName) {
   return EXCLUDED_MODULES.includes(moduleName) || moduleName.startsWith('@types/')
 }
 const EXCLUDED_MODULES = ['aws-sdk']
+
+// Some modules generate source files on `postinstall` that are not located
+// inside the module's directory itself.
+const getSideFiles = function(modulePath, moduleName) {
+  const sideFiles = SIDE_FILES[moduleName]
+  if (sideFiles === undefined) {
+    return []
+  }
+
+  return getPublishedFiles(`${modulePath}/${sideFiles}`)
+}
+
+const SIDE_FILES = {
+  '@prisma/client': '../../.prisma'
+}
 
 // We use all the files published by the Node.js except some that are not needed
 const getPublishedFiles = async function(modulePath) {
