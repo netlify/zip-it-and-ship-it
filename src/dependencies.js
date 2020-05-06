@@ -3,10 +3,10 @@ const { dirname } = require('path')
 const glob = require('glob')
 const precinct = require('precinct')
 const requirePackageName = require('require-package-name')
-const resolve = require('resolve')
 const promisify = require('util.promisify')
 
-const pResolve = promisify(resolve)
+const { resolveLocation } = require('./resolve')
+
 const pGlob = promisify(glob)
 
 // Retrieve all the files recursively required by a Node.js file
@@ -64,7 +64,7 @@ const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
 
 // When a file requires another one, we apply the top-level logic recursively
 const getLocalImportDependencies = async function(dependency, basedir, packageJson, state) {
-  const dependencyPath = await pResolve(dependency, { basedir })
+  const dependencyPath = await resolveLocation(dependency, basedir)
   const depsPath = await getFileDependencies(dependencyPath, packageJson, state)
   return [dependencyPath, ...depsPath]
 }
@@ -89,7 +89,7 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
   }
 
   // Find the Node.js module directory path
-  const packagePath = await pResolve(`${moduleName}/package.json`, { basedir })
+  const packagePath = await resolveLocation(`${moduleName}/package.json`, basedir)
   const modulePath = dirname(packagePath)
 
   if (state.modulePaths.includes(modulePath)) {
