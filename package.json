@@ -57,7 +57,7 @@
     "pkg-dir": "^4.2.0",
     "precinct": "^6.2.0",
     "require-package-name": "^2.0.1",
-    "resolve": "^1.15.1",
+    "resolve": "^2.0.0-next.1",
     "unixify": "^1.0.0",
     "util.promisify": "^1.0.1",
     "yargs": "^15.3.1"
