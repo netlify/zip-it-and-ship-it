@@ -1,4 +1,4 @@
-const { lstat } = require('fs')
+const { stat } = require('fs')
 const { dirname, normalize, sep } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
@@ -11,7 +11,7 @@ const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 const { getDependencies } = require('./dependencies')
 
 const pGlob = promisify(glob)
-const pLstat = promisify(lstat)
+const pStat = promisify(stat)
 
 // Zip a Node.js function file
 const zipNodeJs = async function(srcPath, srcDir, destPath, filename, handler, stat) {
@@ -63,7 +63,7 @@ const addEntryFile = function(commonPrefix, archive, filename, handler) {
 
 const zipJsFile = async function(file, commonPrefix, archive) {
   const filename = normalizeFilePath(file, commonPrefix)
-  const stat = await pLstat(file)
+  const stat = await pStat(file)
   addZipFile(archive, file, filename, stat)
 }
 
