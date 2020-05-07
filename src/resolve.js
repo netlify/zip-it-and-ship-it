@@ -6,7 +6,7 @@ const resolve = require('resolve')
 //   https://github.com/browserify/resolve/issues/151#issuecomment-368210310
 const resolveLocation = function(location, basedir) {
   return new Promise((success, reject) => {
-    resolve(location, { basedir }, (error, resolvedLocation) => {
+    resolve(location, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
       if (error) {
         return reject(error)
       }

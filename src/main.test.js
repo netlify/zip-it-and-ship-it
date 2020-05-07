@@ -1,4 +1,4 @@
-const { readFile, chmod } = require('fs')
+const { readFile, chmod, symlink, unlink } = require('fs')
 const { tmpdir } = require('os')
 const { platform } = require('process')
 
@@ -16,6 +16,8 @@ const { zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = req
 
 const pReadFile = promisify(readFile)
 const pChmod = promisify(chmod)
+const pSymlink = promisify(symlink)
+const pUnlink = promisify(unlink)
 
 test.after(async () => {
   await del(`${tmpdir()}/zip-it-test*`, { force: true })
@@ -117,6 +119,26 @@ test('Can require local files deeply', async t => {
 test('Can require local files in the parent directories', async t => {
   await zipNode(t, 'local-parent-require')
 })
+
+// Need to create symlinks dynamically because they sometimes get lost when
+// committed on Windows
+if (platform !== 'win32') {
+  test('Can require symlinks', async t => {
+    const symlinkDir = `${FIXTURES_DIR}/symlinks/function`
+    const symlinkFile = `${symlinkDir}/file.js`
+    const targetFile = `${symlinkDir}/target.js`
+
+    if (!(await pathExists(symlinkFile))) {
+      await pSymlink(targetFile, symlinkFile)
+    }
+
+    try {
+      await zipNode(t, 'symlinks')
+    } finally {
+      await pUnlink(symlinkFile)
+    }
+  })
+}
 
 test('Can target a directory with a handler with the same name', async t => {
   await zipNode(t, 'directory-handler')
