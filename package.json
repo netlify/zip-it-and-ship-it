@@ -50,6 +50,7 @@
     "cp-file": "^7.0.0",
     "elf-tools": "^1.1.1",
     "end-of-stream": "^1.4.4",
+    "find-up": "^4.1.0",
     "glob": "^7.1.6",
     "make-dir": "^3.0.2",
     "p-map": "^3.0.0",
@@ -58,6 +59,7 @@
     "precinct": "^6.2.0",
     "require-package-name": "^2.0.1",
     "resolve": "^2.0.0-next.1",
+    "semver": "^7.3.2",
     "unixify": "^1.0.0",
     "util.promisify": "^1.0.1",
     "yargs": "^15.3.1"
