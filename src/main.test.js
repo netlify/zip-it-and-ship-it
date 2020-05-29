@@ -108,6 +108,10 @@ test('Throws on missing non-optional peer dependencies', async t => {
   await t.throwsAsync(zipNode(t, 'node-module-peer-not-optional'))
 })
 
+test('Ignore invalid require()', async t => {
+  await zipNode(t, 'invalid-require')
+})
+
 test('Can require local files', async t => {
   await zipNode(t, 'local-require')
 })

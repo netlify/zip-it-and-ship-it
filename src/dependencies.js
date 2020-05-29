@@ -74,6 +74,12 @@ const getLocalImportDependencies = async function(dependency, basedir, packageJs
 const getModuleDependencies = async function(dependency, basedir, state, packageJson) {
   const moduleName = requirePackageName(dependency.replace(BACKSLASH_REGEXP, '/'))
 
+  // Happens when doing require("@scope") (not "@scope/name") or other oddities
+  // Ignore those.
+  if (moduleName === null) {
+    return []
+  }
+
   try {
     return await getModuleNameDependencies(moduleName, basedir, state)
   } catch (error) {
