@@ -72,7 +72,7 @@ const getLocalImportDependencies = async function(dependency, basedir, packageJs
 // When a file requires a module, we find its path inside `node_modules` and
 // use all its published files. We also recurse on the module's dependencies.
 const getModuleDependencies = async function(dependency, basedir, state, packageJson) {
-  const moduleName = requirePackageName(dependency.replace(BACKSLASH_REGEXP, '/'))
+  const moduleName = getModuleName(dependency)
 
   try {
     return await getModuleNameDependencies(moduleName, basedir, state)
@@ -81,6 +81,14 @@ const getModuleDependencies = async function(dependency, basedir, state, package
   }
 }
 
+// When doing require("moduleName/file/path"), only keep `moduleName`
+const getModuleName = function(dependency) {
+  const dependencyA = dependency.replace(BACKSLASH_REGEXP, '/')
+  const moduleName = requirePackageName(dependencyA)
+  return moduleName
+}
+
+// Windows path normalization
 const BACKSLASH_REGEXP = /\\/g
 
 const getModuleNameDependencies = async function(moduleName, basedir, state) {
