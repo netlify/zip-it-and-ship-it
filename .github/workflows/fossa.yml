@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - fix-fossa
 
 defaults:
   run:
@@ -20,10 +21,14 @@ jobs:
         curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
         fossa init
     - name: Set env
-      run: echo ::set-env name=line_number::$(grep -n "project" .fossa.yml | cut -f1 -d:)
+      run: |-
+        echo ::set-env name=line_number::$(grep -n "project" .fossa.yml | cut -f1 -d:)
+        echo ::set-env name=go_simple_line_number::$(grep -m 1 -n "go-simple" .fossa.yml | cut -f1 -d:)
+        echo ::set-env name=go_simple_last_line_number::$(grep -n "go-simple" .fossa.yml | tail -1 | cut -f1 -d:)
     - name: Configuration
       run: |-
         sed -i "${line_number}s|.*|  project: git@github.com:${GITHUB_REPOSITORY}.git|" .fossa.yml
+        sed -i "${go_simple_line_number},${go_simple_last_line_number}d" .fossa.yml
         cat .fossa.yml
     - name: Upload dependencies
       run: fossa analyze --debug
