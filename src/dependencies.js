@@ -92,7 +92,7 @@ const getModuleName = function(dependency) {
 const BACKSLASH_REGEXP = /\\/g
 
 const getModuleNameDependencies = async function(moduleName, basedir, state) {
-  if (isExludedModule(moduleName)) {
+  if (isExcludedModule(moduleName)) {
     return []
   }
 
@@ -116,7 +116,7 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
   return [...publishedFiles, ...sideFiles, ...depsPaths]
 }
 
-const isExludedModule = function(moduleName) {
+const isExcludedModule = function(moduleName) {
   return EXCLUDED_MODULES.includes(moduleName) || moduleName.startsWith('@types/')
 }
 const EXCLUDED_MODULES = ['aws-sdk']
