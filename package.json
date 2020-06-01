@@ -52,6 +52,7 @@
     "end-of-stream": "^1.4.4",
     "find-up": "^4.1.0",
     "glob": "^7.1.6",
+    "junk": "^3.1.0",
     "make-dir": "^3.0.2",
     "p-map": "^3.0.0",
     "path-exists": "^4.0.0",

@@ -1,8 +1,9 @@
 const { stat } = require('fs')
-const { dirname, normalize, sep } = require('path')
+const { dirname, basename, normalize, sep } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 const glob = require('glob')
+const { not: notJunk } = require('junk')
 const pkgDir = require('pkg-dir')
 const unixify = require('unixify')
 const promisify = require('util.promisify')
@@ -37,7 +38,8 @@ const filesForFunctionZip = async function(srcPath, filename, handler, packageRo
   const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(handler, packageRoot)])
   const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
-  return uniqueFiles
+  const filteredFiles = uniqueFiles.filter(isNotJunk)
+  return filteredFiles
 }
 
 // When using a directory, we include all its descendants except `node_modules`
@@ -51,6 +53,11 @@ const getTreeFiles = function(srcPath, stat) {
     nodir: true,
     absolute: true
   })
+}
+
+// Remove temporary files like *~, *.swp, etc.
+const isNotJunk = function(file) {
+  return notJunk(basename(file))
 }
 
 const addEntryFile = function(commonPrefix, archive, filename, handler) {

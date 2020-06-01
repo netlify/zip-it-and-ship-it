@@ -193,6 +193,11 @@ test('Ignore non-handler directories', async t => {
   await zipNode(t, 'ignore-directories')
 })
 
+test('Remove useless files', async t => {
+  const { tmpDir } = await zipNode(t, 'useless')
+  t.false(await pathExists(`${tmpDir}/src/Desktop.ini`))
+})
+
 test('Works on empty directories', async t => {
   await zipNode(t, 'empty', 0)
 })
