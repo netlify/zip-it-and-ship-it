@@ -10,15 +10,15 @@ const { resolvePathPreserveSymlinks, resolvePackage } = require('./resolve')
 const pGlob = promisify(glob)
 
 // Retrieve all the files recursively required by a Node.js file
-const getDependencies = async function(handler, packageRoot) {
+const getDependencies = async function(mainFile, packageRoot) {
   const packageJson = getPackageJson(packageRoot)
 
   const state = { localFiles: [], modulePaths: [] }
 
   try {
-    return await getFileDependencies(handler, packageJson, state)
+    return await getFileDependencies(mainFile, packageJson, state)
   } catch (error) {
-    error.message = `In file "${handler}": ${error.message}`
+    error.message = `In file "${mainFile}": ${error.message}`
     throw error
   }
 }

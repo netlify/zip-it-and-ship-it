@@ -15,16 +15,16 @@ const pGlob = promisify(glob)
 const pStat = promisify(stat)
 
 // Zip a Node.js function file
-const zipNodeJs = async function(srcPath, srcDir, destPath, filename, handler, stat) {
+const zipNodeJs = async function(srcPath, srcDir, destPath, filename, mainFile, stat) {
   const { archive, output } = startZip(destPath)
 
   const packageRoot = await pkgDir(srcDir)
 
-  const files = await filesForFunctionZip(srcPath, filename, handler, packageRoot, stat)
+  const files = await filesForFunctionZip(srcPath, filename, mainFile, packageRoot, stat)
   const dirnames = files.map(dirname)
   const commonPrefix = commonPathPrefix(dirnames)
 
-  addEntryFile(commonPrefix, archive, filename, handler)
+  addEntryFile(commonPrefix, archive, filename, mainFile)
 
   await Promise.all(files.map(file => zipJsFile(file, commonPrefix, archive)))
 
@@ -34,8 +34,8 @@ const zipNodeJs = async function(srcPath, srcDir, destPath, filename, handler, s
 // Retrieve the paths to the files to zip.
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
-const filesForFunctionZip = async function(srcPath, filename, handler, packageRoot, stat) {
-  const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(handler, packageRoot)])
+const filesForFunctionZip = async function(srcPath, filename, mainFile, packageRoot, stat) {
+  const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(mainFile, packageRoot)])
   const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
   const filteredFiles = uniqueFiles.filter(isNotJunk)
@@ -60,8 +60,8 @@ const isNotJunk = function(file) {
   return notJunk(basename(file))
 }
 
-const addEntryFile = function(commonPrefix, archive, filename, handler) {
-  const mainPath = normalizeFilePath(handler, commonPrefix)
+const addEntryFile = function(commonPrefix, archive, filename, mainFile) {
+  const mainPath = normalizeFilePath(mainFile, commonPrefix)
   const content = Buffer.from(`module.exports = require('./${mainPath}')`)
   const entryFilename = filename.endsWith('.js') ? filename : `${filename}.js`
 

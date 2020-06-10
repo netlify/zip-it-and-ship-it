@@ -35,9 +35,9 @@ const listFilenames = async function(srcFolder) {
 }
 
 const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
-  const { filename, extension, srcDir, stat, handler, destPath, destCopyPath } = await statFile(srcPath, destFolder)
+  const { filename, extension, srcDir, stat, mainFile, destPath, destCopyPath } = await statFile(srcPath, destFolder)
 
-  if (filename === 'node_modules' || (stat.isDirectory() && handler === undefined)) {
+  if (filename === 'node_modules' || (stat.isDirectory() && mainFile === undefined)) {
     return
   }
 
@@ -47,7 +47,7 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
   }
 
   if (extension === '.js' || stat.isDirectory()) {
-    await zipNodeJs(srcPath, srcDir, destPath, filename, handler, stat)
+    await zipNodeJs(srcPath, srcDir, destPath, filename, mainFile, stat)
     return { path: destPath, runtime: 'js' }
   }
 
@@ -68,7 +68,7 @@ const statFile = async function(srcPath, destFolder) {
   const filename = basename(srcPath)
   const extension = extname(srcPath)
   const stat = await pLstat(srcPath)
-  const handler = await getHandler(srcPath, filename, stat)
+  const mainFile = await getMainFile(srcPath, filename, stat)
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
 
   await makeDir(destFolder)
@@ -80,7 +80,7 @@ const statFile = async function(srcPath, destFolder) {
     extension,
     srcDir,
     stat,
-    handler,
+    mainFile,
     destCopyPath,
     destPath
   }
@@ -88,19 +88,19 @@ const statFile = async function(srcPath, destFolder) {
 
 // Each `srcPath` can also be a directory with an `index.js` file or a file
 // using the same filename as its directory
-const getHandler = async function(srcPath, filename, stat) {
+const getMainFile = async function(srcPath, filename, stat) {
   if (!stat.isDirectory()) {
     return srcPath
   }
 
-  const namedHandler = join(srcPath, `${filename}.js`)
-  if (await pathExists(namedHandler)) {
-    return namedHandler
+  const namedMainFile = join(srcPath, `${filename}.js`)
+  if (await pathExists(namedMainFile)) {
+    return namedMainFile
   }
 
-  const indexHandler = join(srcPath, 'index.js')
-  if (await pathExists(indexHandler)) {
-    return indexHandler
+  const indexMainFile = join(srcPath, 'index.js')
+  if (await pathExists(indexMainFile)) {
+    return indexMainFile
   }
 }
 
