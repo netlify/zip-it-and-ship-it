@@ -42,7 +42,7 @@ const listFilenames = async function(srcFolder) {
 const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
   const { filename, stat, mainFile, extension, srcDir } = await getSrcInfo(srcPath)
 
-  if (filename === 'node_modules' || (stat.isDirectory() && mainFile === undefined)) {
+  if (mainFile === undefined) {
     return
   }
 
@@ -54,7 +54,7 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
     return { path: destPath, runtime: 'js' }
   }
 
-  if (extension === '.js' || stat.isDirectory()) {
+  if (extension === '.js') {
     const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
     await zipNodeJs(srcPath, srcDir, destPath, filename, mainFile, stat)
     return { path: destPath, runtime: 'js' }
@@ -77,9 +77,17 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
 
 const getSrcInfo = async function(srcPath) {
   const filename = basename(srcPath)
-  const extension = extname(srcPath)
+  if (filename === 'node_modules') {
+    return {}
+  }
+
   const stat = await pLstat(srcPath)
   const mainFile = await getMainFile(srcPath, filename, stat)
+  if (mainFile === undefined) {
+    return {}
+  }
+
+  const extension = extname(mainFile)
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
   return { filename, stat, mainFile, extension, srcDir }
 }
