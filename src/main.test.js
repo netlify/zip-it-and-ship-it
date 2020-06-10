@@ -144,7 +144,7 @@ if (platform !== 'win32') {
   })
 }
 
-test('Can target a directory with a handler with the same name', async t => {
+test('Can target a directory with a main file with the same name', async t => {
   await zipNode(t, 'directory-handler')
 })
 
@@ -189,7 +189,7 @@ test('Do not consider node_modules as a function file', async t => {
   await zipNode(t, 'ignore-node-modules')
 })
 
-test('Ignore non-handler directories', async t => {
+test('Ignore directories without a main file', async t => {
   await zipNode(t, 'ignore-directories')
 })
 
