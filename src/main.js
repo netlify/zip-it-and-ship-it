@@ -25,6 +25,40 @@ const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, 
   return zipped.filter(Boolean)
 }
 
+const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
+  const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
+
+  if (runtime === undefined) {
+    return
+  }
+
+  await makeDir(destFolder)
+
+  if (runtime === 'js') {
+    if (extension === '.zip') {
+      const destPath = join(destFolder, filename)
+      await cpFile(srcPath, destPath)
+      return { path: destPath, runtime }
+    } else {
+      const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
+      await zipNodeJs(srcPath, srcDir, destPath, filename, mainFile, stat)
+      return { path: destPath, runtime }
+    }
+  }
+
+  if (runtime === 'go') {
+    if (zipGo) {
+      const destPath = join(destFolder, `${filename}.zip`)
+      await zipGoExe(srcPath, destPath, filename, stat)
+      return { path: destPath, runtime }
+    } else {
+      const destPath = join(destFolder, filename)
+      await cpFile(srcPath, destPath)
+      return { path: destPath, runtime }
+    }
+  }
+}
+
 const getSrcPaths = async function(srcFolder) {
   const filenames = await listFilenames(srcFolder)
   const srcPaths = filenames.map(filename => resolve(srcFolder, filename))
@@ -39,40 +73,22 @@ const listFilenames = async function(srcFolder) {
   }
 }
 
-const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
+const getFunctionInfo = async function(srcPath) {
   const { filename, stat, mainFile, extension, srcDir } = await getSrcInfo(srcPath)
 
   if (mainFile === undefined) {
-    return
+    return {}
   }
 
-  await makeDir(destFolder)
-
-  if (extension === '.zip') {
-    const destPath = join(destFolder, filename)
-    await cpFile(srcPath, destPath)
-    return { path: destPath, runtime: 'js' }
+  if (extension === '.zip' || extension === '.js') {
+    return { runtime: 'js', filename, stat, mainFile, extension, srcDir }
   }
 
-  if (extension === '.js') {
-    const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
-    await zipNodeJs(srcPath, srcDir, destPath, filename, mainFile, stat)
-    return { path: destPath, runtime: 'js' }
+  if (await isGoExe(srcPath)) {
+    return { runtime: 'go', filename, stat, mainFile, extension, srcDir }
   }
 
-  const isGoExecutable = await isGoExe(srcPath)
-
-  if (isGoExecutable && !zipGo) {
-    const destPath = join(destFolder, filename)
-    await cpFile(srcPath, destPath)
-    return { path: destPath, runtime: 'go' }
-  }
-
-  if (isGoExecutable) {
-    const destPath = join(destFolder, `${filename}.zip`)
-    await zipGoExe(srcPath, destPath, filename, stat)
-    return { path: destPath, runtime: 'go' }
-  }
+  return {}
 }
 
 const getSrcInfo = async function(srcPath) {
