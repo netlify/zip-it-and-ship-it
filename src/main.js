@@ -17,13 +17,18 @@ const pLstat = promisify(lstat)
 // used by AWS Lambda
 // TODO: remove `skipGo` option in next major release
 const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, skipGo, zipGo } = {}) {
-  const filenames = await listFilenames(srcFolder)
-  const srcPaths = filenames.map(filename => resolve(srcFolder, filename))
+  const srcPaths = await getSrcPaths(srcFolder)
 
   const zipped = await pMap(srcPaths, srcPath => zipFunction(srcPath, destFolder, { skipGo, zipGo }), {
     concurrency: parallelLimit
   })
   return zipped.filter(Boolean)
+}
+
+const getSrcPaths = async function(srcFolder) {
+  const filenames = await listFilenames(srcFolder)
+  const srcPaths = filenames.map(filename => resolve(srcFolder, filename))
+  return srcPaths
 }
 
 const listFilenames = async function(srcFolder) {
