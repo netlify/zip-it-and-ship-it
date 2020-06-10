@@ -40,7 +40,7 @@ const listFilenames = async function(srcFolder) {
 }
 
 const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
-  const { filename, extension, srcDir, stat, mainFile } = await statFile(srcPath)
+  const { filename, stat, mainFile, extension, srcDir } = await getSrcInfo(srcPath)
 
   if (filename === 'node_modules' || (stat.isDirectory() && mainFile === undefined)) {
     return
@@ -75,13 +75,13 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
   }
 }
 
-const statFile = async function(srcPath) {
+const getSrcInfo = async function(srcPath) {
   const filename = basename(srcPath)
   const extension = extname(srcPath)
   const stat = await pLstat(srcPath)
   const mainFile = await getMainFile(srcPath, filename, stat)
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
-  return { filename, extension, srcDir, stat, mainFile }
+  return { filename, stat, mainFile, extension, srcDir }
 }
 
 // Each `srcPath` can also be a directory with an `index.js` file or a file
