@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - fix-fossa-2
 
 defaults:
   run:
@@ -34,7 +33,7 @@ jobs:
       run: |-
          echo ::set-env name=fixtures_list_line_number::$(grep -m 1 -n "fixtures/list" .fossa.yml | cut -f1 -d:)
          echo ::set-env name=fixtures_list_last_line_number::$(grep -n "fixtures/list" .fossa.yml | tail -1 | cut -f1 -d:)
-    - name: Remove go-simple module
+    - name: Remove fixtures/list module
       run: sed -i "${fixtures_list_line_number},${fixtures_list_last_line_number}d" .fossa.yml
     - name: View config file
       run: cat .fossa.yml
