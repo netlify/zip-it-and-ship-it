@@ -40,7 +40,7 @@ const listFilenames = async function(srcFolder) {
 }
 
 const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
-  const { filename, extension, srcDir, stat, mainFile, destPath, destCopyPath } = await statFile(srcPath, destFolder)
+  const { filename, extension, srcDir, stat, mainFile } = await statFile(srcPath)
 
   if (filename === 'node_modules' || (stat.isDirectory() && mainFile === undefined)) {
     return
@@ -49,11 +49,13 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
   await makeDir(destFolder)
 
   if (extension === '.zip') {
-    await cpFile(srcPath, destCopyPath)
-    return { path: destCopyPath, runtime: 'js' }
+    const destPath = join(destFolder, filename)
+    await cpFile(srcPath, destPath)
+    return { path: destPath, runtime: 'js' }
   }
 
   if (extension === '.js' || stat.isDirectory()) {
+    const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
     await zipNodeJs(srcPath, srcDir, destPath, filename, mainFile, stat)
     return { path: destPath, runtime: 'js' }
   }
@@ -61,35 +63,25 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
   const isGoExecutable = await isGoExe(srcPath)
 
   if (isGoExecutable && !zipGo) {
-    await cpFile(srcPath, destCopyPath)
-    return { path: destCopyPath, runtime: 'go' }
+    const destPath = join(destFolder, filename)
+    await cpFile(srcPath, destPath)
+    return { path: destPath, runtime: 'go' }
   }
 
   if (isGoExecutable) {
+    const destPath = join(destFolder, `${filename}.zip`)
     await zipGoExe(srcPath, destPath, filename, stat)
     return { path: destPath, runtime: 'go' }
   }
 }
 
-const statFile = async function(srcPath, destFolder) {
+const statFile = async function(srcPath) {
   const filename = basename(srcPath)
   const extension = extname(srcPath)
   const stat = await pLstat(srcPath)
   const mainFile = await getMainFile(srcPath, filename, stat)
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
-
-  const destCopyPath = join(destFolder, filename)
-  const destPath = join(destFolder, `${filename.replace(FUNCTION_EXTENSIONS, '')}.zip`)
-
-  return {
-    filename,
-    extension,
-    srcDir,
-    stat,
-    mainFile,
-    destCopyPath,
-    destPath
-  }
+  return { filename, extension, srcDir, stat, mainFile }
 }
 
 // Each `srcPath` can also be a directory with an `index.js` file or a file
@@ -101,7 +93,5 @@ const getMainFile = function(srcPath, filename, stat) {
 
   return locatePath([join(srcPath, `${filename}.js`), join(srcPath, 'index.js')], { type: 'file' })
 }
-
-const FUNCTION_EXTENSIONS = /\.js$/
 
 module.exports = { zipFunctions, zipFunction }
