@@ -59,6 +59,13 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
   }
 }
 
+// List all Netlify Functions for a specific directory
+const listFunctions = async function(srcFolder) {
+  const srcPaths = await getSrcPaths(srcFolder)
+  const functionInfos = await Promise.all(srcPaths.map(getFunctionInfo))
+  return functionInfos.filter(hasMainFile).map(getListedFunction)
+}
+
 const getSrcPaths = async function(srcFolder) {
   const filenames = await listFilenames(srcFolder)
   const srcPaths = filenames.map(filename => resolve(srcFolder, filename))
@@ -118,4 +125,12 @@ const getMainFile = function(srcPath, filename, stat) {
   return locatePath([join(srcPath, `${filename}.js`), join(srcPath, 'index.js')], { type: 'file' })
 }
 
-module.exports = { zipFunctions, zipFunction }
+const hasMainFile = function({ mainFile }) {
+  return mainFile !== undefined
+}
+
+const getListedFunction = function({ mainFile, runtime, extension }) {
+  return { mainFile, runtime, extension }
+}
+
+module.exports = { zipFunctions, zipFunction, listFunctions }
