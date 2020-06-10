@@ -41,6 +41,8 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
     return
   }
 
+  await makeDir(destFolder)
+
   if (extension === '.zip') {
     await cpFile(srcPath, destCopyPath)
     return { path: destCopyPath, runtime: 'js' }
@@ -71,7 +73,6 @@ const statFile = async function(srcPath, destFolder) {
   const handler = await getHandler(srcPath, filename, stat)
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
 
-  await makeDir(destFolder)
   const destCopyPath = join(destFolder, filename)
   const destPath = join(destFolder, `${filename.replace(FUNCTION_EXTENSIONS, '')}.zip`)
 
