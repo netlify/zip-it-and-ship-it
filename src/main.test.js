@@ -1,5 +1,6 @@
 const { readFile, chmod, symlink, unlink } = require('fs')
 const { tmpdir } = require('os')
+const { normalize } = require('path')
 const { platform } = require('process')
 
 const test = require('ava')
@@ -10,7 +11,7 @@ const pathExists = require('path-exists')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const promisify = require('util.promisify')
 
-const { zipFunction } = require('..')
+const { zipFunction, listFunctions } = require('..')
 
 const { zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main.js')
 
@@ -263,4 +264,24 @@ test('Can use zipFunction()', async t => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const { runtime } = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir)
   t.is(runtime, 'js')
+})
+
+const normalizeMainFile = function(fixtureDir, { mainFile, runtime, extension }) {
+  const mainFileA = normalize(`${fixtureDir}/${mainFile}`)
+  return { mainFile: mainFileA, runtime, extension }
+}
+
+test('Can list function file with listFunctions()', async t => {
+  const fixtureDir = `${FIXTURES_DIR}/list`
+  const functions = await listFunctions(fixtureDir)
+  t.deepEqual(
+    functions,
+    [
+      { mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
+      { mainFile: 'test', runtime: 'go', extension: '' },
+      { mainFile: 'test.js', runtime: 'js', extension: '.js' },
+      { mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
+      { mainFile: 'two/two.js', runtime: 'js', extension: '.js' }
+    ].map(normalizeMainFile.bind(null, fixtureDir))
+  )
 })
