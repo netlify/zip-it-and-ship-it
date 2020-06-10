@@ -2,9 +2,9 @@ const { readdir, lstat } = require('fs')
 const { join, resolve, dirname, basename, extname } = require('path')
 
 const cpFile = require('cp-file')
+const locatePath = require('locate-path')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
-const pathExists = require('path-exists')
 const promisify = require('util.promisify')
 
 const { isGoExe, zipGoExe } = require('./go')
@@ -93,20 +93,12 @@ const statFile = async function(srcPath, destFolder) {
 
 // Each `srcPath` can also be a directory with an `index.js` file or a file
 // using the same filename as its directory
-const getMainFile = async function(srcPath, filename, stat) {
+const getMainFile = function(srcPath, filename, stat) {
   if (!stat.isDirectory()) {
     return srcPath
   }
 
-  const namedMainFile = join(srcPath, `${filename}.js`)
-  if (await pathExists(namedMainFile)) {
-    return namedMainFile
-  }
-
-  const indexMainFile = join(srcPath, 'index.js')
-  if (await pathExists(indexMainFile)) {
-    return indexMainFile
-  }
+  return locatePath([join(srcPath, `${filename}.js`), join(srcPath, 'index.js')], { type: 'file' })
 }
 
 const FUNCTION_EXTENSIONS = /\.js$/
