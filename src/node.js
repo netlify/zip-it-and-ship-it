@@ -4,7 +4,6 @@ const { dirname, basename, normalize, sep } = require('path')
 const commonPathPrefix = require('common-path-prefix')
 const glob = require('glob')
 const { not: notJunk } = require('junk')
-const pkgDir = require('pkg-dir')
 const unixify = require('unixify')
 const promisify = require('util.promisify')
 
@@ -16,9 +15,7 @@ const pStat = promisify(stat)
 
 // Zip a Node.js function file
 const zipNodeJs = async function(srcPath, srcDir, destPath, filename, mainFile, stat) {
-  const packageRoot = await pkgDir(srcDir)
-
-  const files = await filesForFunctionZip(srcPath, filename, mainFile, packageRoot, stat)
+  const files = await filesForFunctionZip(srcPath, srcDir, filename, mainFile, stat)
 
   const { archive, output } = startZip(destPath)
 
@@ -35,8 +32,8 @@ const zipNodeJs = async function(srcPath, srcDir, destPath, filename, mainFile, 
 // Retrieve the paths to the files to zip.
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
-const filesForFunctionZip = async function(srcPath, filename, mainFile, packageRoot, stat) {
-  const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(mainFile, packageRoot)])
+const filesForFunctionZip = async function(srcPath, srcDir, filename, mainFile, stat) {
+  const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(mainFile, srcDir)])
   const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
   const filteredFiles = uniqueFiles.filter(isNotJunk)
