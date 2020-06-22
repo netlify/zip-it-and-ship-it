@@ -16,11 +16,12 @@ const pStat = promisify(stat)
 
 // Zip a Node.js function file
 const zipNodeJs = async function(srcPath, srcDir, destPath, filename, mainFile, stat) {
-  const { archive, output } = startZip(destPath)
-
   const packageRoot = await pkgDir(srcDir)
 
   const files = await filesForFunctionZip(srcPath, filename, mainFile, packageRoot, stat)
+
+  const { archive, output } = startZip(destPath)
+
   const dirnames = files.map(dirname)
   const commonPrefix = commonPathPrefix(dirnames)
 
