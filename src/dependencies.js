@@ -1,6 +1,7 @@
-const { dirname } = require('path')
+const { dirname, basename, normalize } = require('path')
 
 const glob = require('glob')
+const { not: notJunk } = require('junk')
 const pkgDir = require('pkg-dir')
 const precinct = require('precinct')
 const requirePackageName = require('require-package-name')
@@ -9,6 +10,35 @@ const promisify = require('util.promisify')
 const { resolvePathPreserveSymlinks, resolvePackage } = require('./resolve')
 
 const pGlob = promisify(glob)
+
+// Retrieve the paths to the Node.js files to zip.
+// We only include the files actually needed by the function because AWS Lambda
+// has a size limit for the zipped file. It also makes cold starts faster.
+const listNodeFiles = async function(srcPath, filename, mainFile, srcDir, stat) {
+  const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(mainFile, srcDir)])
+  const files = [...treeFiles, ...depFiles].map(normalize)
+  const uniqueFiles = [...new Set(files)]
+  const filteredFiles = uniqueFiles.filter(isNotJunk)
+  return filteredFiles
+}
+
+// When using a directory, we include all its descendants except `node_modules`
+const getTreeFiles = function(srcPath, stat) {
+  if (!stat.isDirectory()) {
+    return [srcPath]
+  }
+
+  return pGlob(`${srcPath}/**`, {
+    ignore: `${srcPath}/**/node_modules/**`,
+    nodir: true,
+    absolute: true
+  })
+}
+
+// Remove temporary files like *~, *.swp, etc.
+const isNotJunk = function(file) {
+  return notJunk(basename(file))
+}
 
 // Retrieve all the files recursively required by a Node.js file
 const getDependencies = async function(mainFile, srcDir) {
@@ -245,4 +275,4 @@ const isOptionalModule = function(
   )
 }
 
-module.exports = { getDependencies }
+module.exports = { listNodeFiles }

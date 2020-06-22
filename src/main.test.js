@@ -266,9 +266,10 @@ test('Can use zipFunction()', async t => {
   t.is(runtime, 'js')
 })
 
-const normalizeMainFile = function(fixtureDir, { mainFile, runtime, extension }) {
+const normalizeFiles = function(fixtureDir, { mainFile, runtime, extension, srcFiles }) {
   const mainFileA = normalize(`${fixtureDir}/${mainFile}`)
-  return { mainFile: mainFileA, runtime, extension }
+  const srcFilesA = srcFiles.map(file => normalize(`${fixtureDir}/${file}`))
+  return { mainFile: mainFileA, runtime, extension, srcFiles: srcFilesA }
 }
 
 test('Can list function file with listFunctions()', async t => {
@@ -277,11 +278,11 @@ test('Can list function file with listFunctions()', async t => {
   t.deepEqual(
     functions,
     [
-      { mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
-      { mainFile: 'test', runtime: 'go', extension: '' },
-      { mainFile: 'test.js', runtime: 'js', extension: '.js' },
-      { mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
-      { mainFile: 'two/two.js', runtime: 'js', extension: '.js' }
-    ].map(normalizeMainFile.bind(null, fixtureDir))
+      { mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFiles: ['one/index.js'] },
+      { mainFile: 'test', runtime: 'go', extension: '', srcFiles: ['test'] },
+      { mainFile: 'test.js', runtime: 'js', extension: '.js', srcFiles: ['test.js'] },
+      { mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFiles: ['test.zip'] },
+      { mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFiles: ['two/three.js', 'two/two.js'] }
+    ].map(normalizeFiles.bind(null, fixtureDir))
   )
 })

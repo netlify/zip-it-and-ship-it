@@ -7,6 +7,7 @@ const makeDir = require('make-dir')
 const pMap = require('p-map')
 const promisify = require('util.promisify')
 
+const { listNodeFiles } = require('./dependencies')
 const { isGoExe, zipGoExe } = require('./go')
 const { zipNodeJs } = require('./node')
 
@@ -26,7 +27,7 @@ const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, 
 }
 
 const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
-  const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
+  const { runtime, filename, extension, stat, mainFile, srcFiles } = await getFunctionInfo(srcPath)
 
   if (runtime === undefined) {
     return
@@ -41,7 +42,7 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
       return { path: destPath, runtime }
     } else {
       const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
-      await zipNodeJs(srcPath, srcDir, destPath, filename, mainFile, stat)
+      await zipNodeJs(srcFiles, destPath, filename, mainFile)
       return { path: destPath, runtime }
     }
   }
@@ -87,12 +88,17 @@ const getFunctionInfo = async function(srcPath) {
     return {}
   }
 
-  if (extension === '.zip' || extension === '.js') {
-    return { runtime: 'js', filename, stat, mainFile, extension, srcDir }
+  if (extension === '.zip') {
+    return { runtime: 'js', filename, stat, mainFile, extension, srcFiles: [srcPath] }
+  }
+
+  if (extension === '.js') {
+    const srcFiles = await listNodeFiles(srcPath, filename, mainFile, srcDir, stat)
+    return { runtime: 'js', filename, stat, mainFile, extension, srcFiles }
   }
 
   if (await isGoExe(srcPath)) {
-    return { runtime: 'go', filename, stat, mainFile, extension, srcDir }
+    return { runtime: 'go', filename, stat, mainFile, extension, srcFiles: [srcPath] }
   }
 
   return {}
@@ -129,8 +135,8 @@ const hasMainFile = function({ mainFile }) {
   return mainFile !== undefined
 }
 
-const getListedFunction = function({ mainFile, runtime, extension }) {
-  return { mainFile, runtime, extension }
+const getListedFunction = function({ mainFile, srcFiles, runtime, extension }) {
+  return { mainFile, srcFiles, runtime, extension }
 }
 
 module.exports = { zipFunctions, zipFunction, listFunctions }
