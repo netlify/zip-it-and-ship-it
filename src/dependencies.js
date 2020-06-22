@@ -1,6 +1,7 @@
 const { dirname } = require('path')
 
 const glob = require('glob')
+const pkgDir = require('pkg-dir')
 const precinct = require('precinct')
 const requirePackageName = require('require-package-name')
 const promisify = require('util.promisify')
@@ -10,7 +11,8 @@ const { resolvePathPreserveSymlinks, resolvePackage } = require('./resolve')
 const pGlob = promisify(glob)
 
 // Retrieve all the files recursively required by a Node.js file
-const getDependencies = async function(mainFile, packageRoot) {
+const getDependencies = async function(mainFile, srcDir) {
+  const packageRoot = await pkgDir(srcDir)
   const packageJson = getPackageJson(packageRoot)
 
   const state = { localFiles: [], modulePaths: [] }
