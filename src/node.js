@@ -1,61 +1,26 @@
 const { stat } = require('fs')
-const { dirname, basename, normalize, sep } = require('path')
+const { dirname, normalize, sep } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
-const glob = require('glob')
-const { not: notJunk } = require('junk')
 const unixify = require('unixify')
 const promisify = require('util.promisify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
-const { getDependencies } = require('./dependencies')
 
-const pGlob = promisify(glob)
 const pStat = promisify(stat)
 
 // Zip a Node.js function file
-const zipNodeJs = async function(srcPath, srcDir, destPath, filename, mainFile, stat) {
-  const files = await filesForFunctionZip(srcPath, srcDir, filename, mainFile, stat)
-
+const zipNodeJs = async function(srcFiles, destPath, filename, mainFile) {
   const { archive, output } = startZip(destPath)
 
-  const dirnames = files.map(dirname)
+  const dirnames = srcFiles.map(dirname)
   const commonPrefix = commonPathPrefix(dirnames)
 
   addEntryFile(commonPrefix, archive, filename, mainFile)
 
-  await Promise.all(files.map(file => zipJsFile(file, commonPrefix, archive)))
+  await Promise.all(srcFiles.map(file => zipJsFile(file, commonPrefix, archive)))
 
   await endZip(archive, output)
-}
-
-// Retrieve the paths to the files to zip.
-// We only include the files actually needed by the function because AWS Lambda
-// has a size limit for the zipped file. It also makes cold starts faster.
-const filesForFunctionZip = async function(srcPath, srcDir, filename, mainFile, stat) {
-  const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(mainFile, srcDir)])
-  const files = [...treeFiles, ...depFiles].map(normalize)
-  const uniqueFiles = [...new Set(files)]
-  const filteredFiles = uniqueFiles.filter(isNotJunk)
-  return filteredFiles
-}
-
-// When using a directory, we include all its descendants except `node_modules`
-const getTreeFiles = function(srcPath, stat) {
-  if (!stat.isDirectory()) {
-    return [srcPath]
-  }
-
-  return pGlob(`${srcPath}/**`, {
-    ignore: `${srcPath}/**/node_modules/**`,
-    nodir: true,
-    absolute: true
-  })
-}
-
-// Remove temporary files like *~, *.swp, etc.
-const isNotJunk = function(file) {
-  return notJunk(basename(file))
 }
 
 const addEntryFile = function(commonPrefix, archive, filename, mainFile) {
