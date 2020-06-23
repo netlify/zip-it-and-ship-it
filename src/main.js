@@ -27,11 +27,13 @@ const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, 
 }
 
 const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
-  const { runtime, filename, extension, stat, mainFile, srcFiles } = await getFunctionInfo(srcPath)
+  const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
 
   if (runtime === undefined) {
     return
   }
+
+  const srcFiles = await getSrcFiles({ runtime, filename, stat, mainFile, extension, srcPath, srcDir })
 
   await makeDir(destFolder)
 
@@ -60,11 +62,25 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
   }
 }
 
-// List all Netlify Functions for a specific directory
+// List all Netlify Functions main entry files for a specific directory
 const listFunctions = async function(srcFolder) {
+  const functionInfos = await getFunctionInfos(srcFolder)
+  const listedFunctions = functionInfos.map(getListedFunction)
+  return listedFunctions
+}
+
+// List all Netlify Functions files for a specific directory
+const listFunctionsFiles = async function(srcFolder) {
+  const functionInfos = await getFunctionInfos(srcFolder)
+  const listedFunctionsFiles = await Promise.all(functionInfos.map(getListedFunctionFiles))
+  return [].concat(...listedFunctionsFiles)
+}
+
+const getFunctionInfos = async function(srcFolder) {
   const srcPaths = await getSrcPaths(srcFolder)
   const functionInfos = await Promise.all(srcPaths.map(getFunctionInfo))
-  return functionInfos.filter(hasMainFile).map(getListedFunction)
+  const functionInfosA = functionInfos.filter(hasMainFile)
+  return functionInfosA
 }
 
 const getSrcPaths = async function(srcFolder) {
@@ -88,17 +104,12 @@ const getFunctionInfo = async function(srcPath) {
     return {}
   }
 
-  if (extension === '.zip') {
-    return { runtime: 'js', filename, stat, mainFile, extension, srcFiles: [srcPath] }
-  }
-
-  if (extension === '.js') {
-    const srcFiles = await listNodeFiles(srcPath, filename, mainFile, srcDir, stat)
-    return { runtime: 'js', filename, stat, mainFile, extension, srcFiles }
+  if (extension === '.zip' || extension === '.js') {
+    return { runtime: 'js', filename, stat, mainFile, extension, srcPath, srcDir }
   }
 
   if (await isGoExe(srcPath)) {
-    return { runtime: 'go', filename, stat, mainFile, extension, srcFiles: [srcPath] }
+    return { runtime: 'go', filename, stat, mainFile, extension, srcPath, srcDir }
   }
 
   return {}
@@ -135,8 +146,21 @@ const hasMainFile = function({ mainFile }) {
   return mainFile !== undefined
 }
 
-const getListedFunction = function({ mainFile, srcFiles, runtime, extension }) {
-  return { mainFile, srcFiles, runtime, extension }
+const getListedFunction = function({ runtime, mainFile, extension }) {
+  return { mainFile, runtime, extension }
 }
 
-module.exports = { zipFunctions, zipFunction, listFunctions }
+const getListedFunctionFiles = async function({ runtime, filename, stat, mainFile, extension, srcPath, srcDir }) {
+  const srcFiles = await getSrcFiles({ runtime, filename, stat, mainFile, extension, srcPath, srcDir })
+  return srcFiles.map(srcFile => ({ srcFile, mainFile, runtime, extension }))
+}
+
+const getSrcFiles = function({ runtime, filename, stat, mainFile, extension, srcPath, srcDir }) {
+  if (runtime === 'js' && extension === '.js') {
+    return listNodeFiles(srcPath, filename, mainFile, srcDir, stat)
+  }
+
+  return [srcPath]
+}
+
+module.exports = { zipFunctions, zipFunction, listFunctions, listFunctionsFiles }

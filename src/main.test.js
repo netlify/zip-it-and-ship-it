@@ -11,7 +11,7 @@ const pathExists = require('path-exists')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const promisify = require('util.promisify')
 
-const { zipFunction, listFunctions } = require('..')
+const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
 const { zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main.js')
 
@@ -266,23 +266,39 @@ test('Can use zipFunction()', async t => {
   t.is(runtime, 'js')
 })
 
-const normalizeFiles = function(fixtureDir, { mainFile, runtime, extension, srcFiles }) {
+const normalizeFiles = function(fixtureDir, { mainFile, runtime, extension, srcFile }) {
   const mainFileA = normalize(`${fixtureDir}/${mainFile}`)
-  const srcFilesA = srcFiles.map(file => normalize(`${fixtureDir}/${file}`))
-  return { mainFile: mainFileA, runtime, extension, srcFiles: srcFilesA }
+  const srcFileA = srcFile === undefined ? {} : { srcFile: normalize(`${fixtureDir}/${srcFile}`) }
+  return { mainFile: mainFileA, runtime, extension, ...srcFileA }
 }
 
-test('Can list function file with listFunctions()', async t => {
+test('Can list function main files with listFunctions()', async t => {
   const fixtureDir = `${FIXTURES_DIR}/list`
   const functions = await listFunctions(fixtureDir)
   t.deepEqual(
     functions,
     [
-      { mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFiles: ['one/index.js'] },
-      { mainFile: 'test', runtime: 'go', extension: '', srcFiles: ['test'] },
-      { mainFile: 'test.js', runtime: 'js', extension: '.js', srcFiles: ['test.js'] },
-      { mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFiles: ['test.zip'] },
-      { mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFiles: ['two/three.js', 'two/two.js'] }
+      { mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
+      { mainFile: 'test', runtime: 'go', extension: '' },
+      { mainFile: 'test.js', runtime: 'js', extension: '.js' },
+      { mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
+      { mainFile: 'two/two.js', runtime: 'js', extension: '.js' }
+    ].map(normalizeFiles.bind(null, fixtureDir))
+  )
+})
+
+test('Can list all function files with listFunctionsFiles()', async t => {
+  const fixtureDir = `${FIXTURES_DIR}/list`
+  const functions = await listFunctionsFiles(fixtureDir)
+  t.deepEqual(
+    functions,
+    [
+      { mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
+      { mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
+      { mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
+      { mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
+      { mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/three.js' },
+      { mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' }
     ].map(normalizeFiles.bind(null, fixtureDir))
   )
 })
