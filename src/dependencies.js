@@ -136,6 +136,11 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
 
   // Find the Node.js module directory path
   const packagePath = await resolvePackage(moduleName, basedir)
+
+  if (packagePath === undefined) {
+    return []
+  }
+
   const modulePath = dirname(packagePath)
 
   if (state.modulePaths.includes(modulePath)) {
