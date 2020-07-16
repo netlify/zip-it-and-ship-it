@@ -71,7 +71,7 @@
     "@babel/plugin-transform-runtime": "^7.10.5",
     "@babel/preset-env": "^7.10.4",
     "@babel/runtime": "^7.10.5",
-    "adm-zip": "^0.4.14",
+    "adm-zip": "^0.4.16",
     "auto-changelog": "^2.2.0",
     "ava": "^2.4.0",
     "babel-eslint": "^10.1.0",
