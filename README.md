@@ -17,15 +17,15 @@ Check Netlify documentation for:
 - [Netlify Functions](https://docs.netlify.com/functions/overview/)
 - [Bundling Functions in the CLI](https://www.netlify.com/docs/cli/#unbundled-javascript-function-deploys)
 
-## Installation
+# Installation
 
 ```bash
 npm install @netlify/zip-it-and-ship-it
 ```
 
-## API
+# Usage (Node.js)
 
-### zipFunctions(srcFolder, destFolder, options?)
+## zipFunctions(srcFolder, destFolder, options?)
 
 `srcFolder`: `string`\
 `destFolder`: `string`\
@@ -100,7 +100,7 @@ _Type_: `string`
 
 Either `"js"` or `"go"`.
 
-### zipFunction(srcPath, destFolder, options?)
+## zipFunction(srcPath, destFolder, options?)
 
 `srcPath`: `string`\
 `destFolder`: `string`\
@@ -178,7 +178,7 @@ _Type_: `string`
 
 Absolute file to the source file.
 
-## CLI
+# Usage (CLI)
 
 ```bash
 $ zip-it-and-ship-it srcFolder destFolder
@@ -191,34 +191,34 @@ The following options are available:
 
 - `--zip-go`: see the [`zipGo`](#zipGo) option
 
-## Troubleshooting
+# Troubleshooting
 
-### Build step
+## Build step
 
 `zip-it-and-ship-it` does not build, transpile nor install the dependencies of the Functions. This needs to be done
 before calling `zip-it-and-ship-it`.
 
-### Missing dependencies
+## Missing dependencies
 
 If a Node module `require()` another Node module but does not list it in its `package.json` (`dependencies`,
 `peerDependencies` or `optionalDependencies`), it is not bundled, which might make the Function fail.
 
 More information in [this issue](https://github.com/netlify/zip-it-and-ship-it/issues/68).
 
-### Conditional require
+## Conditional require
 
 Files required with a `require()` statement inside an `if` or `try`/`catch` block are always bundled.
 
 More information in [this issue](https://github.com/netlify/zip-it-and-ship-it/issues/68).
 
-### Dynamic require
+## Dynamic require
 
 Files required with a `require()` statement whose argument is not a string literal, e.g. `require(variable)`, are never
 bundled.
 
 More information in [this issue](https://github.com/netlify/zip-it-and-ship-it/issues/68).
 
-### Node.js native modules
+## Node.js native modules
 
 If your Function or one of its dependencies uses Node.js native modules, the Node.js version used in AWS Lambda might
 need to be the same as the one used when installing those native modules.
@@ -234,7 +234,7 @@ Note that this problem might not apply for Node.js native modules using the [N-A
 
 More information in [this issue](https://github.com/netlify/zip-it-and-ship-it/issues/69).
 
-### File Serving
+## File Serving
 
 As of `v0.3.0` the `serveFunctions` capability has been extracted out to
 [Netlify Dev](https://github.com/netlify/netlify-dev-plugin/).
