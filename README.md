@@ -3,109 +3,237 @@
 [![npm version](https://img.shields.io/npm/v/@netlify/zip-it-and-ship-it.svg)](https://npmjs.org/package/@netlify/zip-it-and-ship-it)
 [![Coverage Status](https://codecov.io/gh/netlify/zip-it-and-ship-it/branch/master/graph/badge.svg)](https://codecov.io/gh/netlify/zip-it-and-ship-it)
 [![Build](https://github.com/netlify/zip-it-and-ship-it/workflows/Build/badge.svg)](https://github.com/netlify/zip-it-and-ship-it/actions)
-[![Dependencies](https://david-dm.org/netlify/zip-it-and-ship-it/status.svg)](https://david-dm.org/netlify/zip-it-and-ship-it)
 [![Downloads](https://img.shields.io/npm/dm/@netlify/zip-it-and-ship-it.svg)](https://www.npmjs.com/package/@netlify/zip-it-and-ship-it)
 
-This module handles zipping up lambda functions with their dependencies before deployment. You are probably looking for
-[netlify-cli](https://github.com/netlify/cli) or [js-client](https://github.com/netlify/js-client).
+Creates Zip archives from Node.js or Go source files. Those archives are ready to be uploaded to AWS Lambda.
 
-## Installation
+This library is used under the hood by several Netlify features, including
+[production CI builds](https://github.com/netlify/build), [Netlify CLI](https://github.com/netlify/cli) and the
+[JavaScript client](https://github.com/netlify/js-client).
+
+Check Netlify documentation for:
+
+- [Netlify Functions](https://docs.netlify.com/functions/overview/)
+- [Bundling Functions in the CLI](https://www.netlify.com/docs/cli/#unbundled-javascript-function-deploys)
+
+# Installation
 
 ```bash
 npm install @netlify/zip-it-and-ship-it
 ```
 
-## Usage
+# Usage (Node.js)
+
+## zipFunctions(srcFolder, destFolder, options?)
+
+`srcFolder`: `string`\
+`destFolder`: `string`\
+`options`: `object?`\
+_Return value_: `Promise<object[]>`
 
 ```js
 const { zipFunctions } = require('@netlify/zip-it-and-ship-it')
 
-zipFunctions('functions', 'functions-dist')
+const archives = await zipFunctions('functions', 'functions-dist')
 ```
 
-This will take all functions in the `functions` folder and create a matching `.zip` file in the `functions-dist` folder.
+Creates Zip `archives` from Node.js or Go source files. Those `archives` are ready to be uploaded to AWS Lambda.
 
-Each function can either be a single `.js` file that exports a `handler` or a folder with a `.js` with the same name as
-the folder exporting a handler.
+`srcFolder` is the source files directory. It must exist. In Netlify, this is the
+["Functions folder"](https://docs.netlify.com/functions/configure-and-deploy/#configure-the-functions-folder).
 
-The packaging tool will look for the `package.json` closest to the handler and use that for dependency resolution. Make
-sure you've run `npm install` or `yarn` for each `package.json` before using `zip-it-and-ship-it`.
+`srcFolder` can contain:
 
-Ie, the following combinations would all work:
+- Sub-directories with a main file called either `index.js` or `{dir}.js` where `{dir}` is the sub-directory name.
+- `.js` files (Node.js)
+- `.zip` archives with Node.js already ready to upload to AWS Lambda.
+- Go files, already built. If the `options.zipGo` is `true`, those are zipped. Otherwise, those are copied as is.
 
-```console
-/functions/foo.js
-/package.json
-/node_modules/
+When using Node.js files, only the dependencies required by the main file are bundled, in order to keep the archive as
+small as possible, which improves the Function runtime performance:
+
+- All files/directories within the same directory (except `node_modules`) are included
+- All the `require()`'d files are included
+- All the `require()`'d `node_modules` are included, recursively
+- The following modules are never included:
+  - `@types/*` TypeScript definitions
+  - `aws-sdk`
+- Temporary files like `*~`, `*.swp`, etc. are not included
+
+This is done by parsing the JavaScript source in each Function file, and reading the `package.json` of each Node module.
+
+`destFolder` is the directory where each `.zip` archive should be output. It is created if it does not exist. In Netlify
+CI, this is an unspecified temporary directory inside the CI machine. In Netlify CLI, this is a `.netlify/functions`
+directory in your build directory.
+
+### Options
+
+#### zipGo
+
+_Type_: `boolean`\
+_Default value_: `false`
+
+Whether to zip Go files. If `false`, the Go files are copied as is and the filename remains the same.
+
+#### parallelLimit
+
+_Type_: `number`\
+_Default value_: `5`
+
+Maximum number of Functions to bundle at the same time.
+
+### Return value
+
+This returns a `Promise` resolving to an array of objects describing each archive. Each object has the following
+properties.
+
+#### path
+
+_Type_: `string`
+
+Absolute file path to the archive file.
+
+#### runtime
+
+_Type_: `string`
+
+Either `"js"` or `"go"`.
+
+## zipFunction(srcPath, destFolder, options?)
+
+`srcPath`: `string`\
+`destFolder`: `string`\
+`options`: `object?`\
+_Return value_: `object | undefined`
+
+```js
+const { zipFunction } = require('@netlify/zip-it-and-ship-it')
+
+const archive = await zipFunctions('functions/function.js', 'functions-dist')
 ```
 
-```console
-/functions/foo.js
-/functions/bar/bar.js
-/functions/package.json
-/functions/node_modules/
+This is like [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options) except it bundles a single Function.
+
+The return value is `undefined` if the Function is invalid.
+
+## listFunctions(srcFolder)
+
+`srcFolder`: `string`\
+_Return value_: `Promise<object[]>`
+
+Returns the list of Functions to bundle.
+
+```js
+const { listFunctions } = require('@netlify/zip-it-and-ship-it')
+
+const functions = await listFunctions('functions/function.js')
 ```
 
-```console
-/functions/foo.js
-/functions/bar/bar.js
-/functions/bar/package.json
-/functions/bar/node_modules
-/package.json
-/node_modules/
+### Return value
+
+Each object has the following properties.
+
+#### mainFile
+
+_Type_: `string`
+
+Absolute path to the Function's main file. If the Function is a Node.js directory, this is its `index.js` or `{dir}.js`
+file.
+
+#### runtime
+
+_Type_: `string`
+
+Either `"js"` or `"go"`.
+
+#### extension
+
+_Type_: `string`
+
+Source file extension. For Node.js, this is either `.js` or `.zip`. For Go, this can be anything.
+
+## listFunctionsFiles(srcFolder)
+
+`srcFolder`: `string`\
+_Return value_: `Promise<object[]>`
+
+Like [`listFunctions()`](#listfunctionssrcfolder), except it returns not only the Functions main files, but also all
+their required files. This is much slower.
+
+```js
+const { listFunctionsFiles } = require('@netlify/zip-it-and-ship-it')
+
+const functions = await listFunctionsFiles('functions/function.js')
 ```
 
-Zip It and Ship It will only include dependencies in each zip file that's been required from the relevant handler file.
+### Return value
 
-### File Serving
+The return value is the same as [`listFunctions()`](#listfunctionssrcfolder) but with the following additional
+properties.
 
-As of v0.3.0 the serveFunctions capability has been extracted out to
+#### srcFile
+
+_Type_: `string`
+
+Absolute file to the source file.
+
+# Usage (CLI)
+
+```bash
+$ zip-it-and-ship-it srcFolder destFolder
+```
+
+The CLI performs the same logic as [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options). The archives are
+printed on `stdout` as a JSON array.
+
+The following options are available:
+
+- `--zip-go`: see the [`zipGo`](#zipGo) option
+
+# Troubleshooting
+
+## Build step
+
+`zip-it-and-ship-it` does not build, transpile nor install the dependencies of the Functions. This needs to be done
+before calling `zip-it-and-ship-it`.
+
+## Missing dependencies
+
+If a Node module `require()` another Node module but does not list it in its `package.json` (`dependencies`,
+`peerDependencies` or `optionalDependencies`), it is not bundled, which might make the Function fail.
+
+More information in [this issue](https://github.com/netlify/zip-it-and-ship-it/issues/68).
+
+## Conditional require
+
+Files required with a `require()` statement inside an `if` or `try`/`catch` block are always bundled.
+
+More information in [this issue](https://github.com/netlify/zip-it-and-ship-it/issues/68).
+
+## Dynamic require
+
+Files required with a `require()` statement whose argument is not a string literal, e.g. `require(variable)`, are never
+bundled.
+
+More information in [this issue](https://github.com/netlify/zip-it-and-ship-it/issues/68).
+
+## Node.js native modules
+
+If your Function or one of its dependencies uses Node.js native modules, the Node.js version used in AWS Lambda might
+need to be the same as the one used when installing those native modules.
+
+In Netlify, this is done by ensuring that the following Node.js versions are the same:
+
+- Build-time Node.js version: this defaults to Node `10`, but can be
+  [overridden with a `.nvmrc` or `NODE_VERSION` environment variable](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript).
+- Function runtime Node.js version: this defaults to `nodejs12.x` but can be
+  [overriden with a `AWS_LAMBDA_JS_RUNTIME` environment variable](https://docs.netlify.com/functions/build-with-javascript/#runtime-settings).
+
+Note that this problem might not apply for Node.js native modules using the [N-API](https://nodejs.org/api/n-api.html).
+
+More information in [this issue](https://github.com/netlify/zip-it-and-ship-it/issues/69).
+
+## File Serving
+
+As of `v0.3.0` the `serveFunctions` capability has been extracted out to
 [Netlify Dev](https://github.com/netlify/netlify-dev-plugin/).
-
-## API
-
-### `promise(zipped) = zipFunctions(source, destination, [opts])`
-
-Discover and zip all functions found in the `source` path into the `destination`. Returns a promise containing a
-`zipped` array of function objects.
-
-The array of zipped function objects has the following shape:
-
-```js
-const zipped = [
-  {
-    path, // Absolute filepath to zipped function
-    runtime // 'go' or 'js'
-  }
-  //...
-]
-```
-
-`opts` include:
-
-```js
-{
-  parallelLimit: 5, // Limit the number of concurrent zipping operations at a time
-  zipGo: false // Don't zip go functions, just move them to the destination path
-}
-```
-
-## CLI
-
-A minimal CLI version of `zip-it-and-ship-it` is provided for use inside the
-[build-image](https://github.com/netlify/build-image), although this is automatically invoked on users behalf during
-builds and you typically do not need to run this yourself.
-
-```console
-$ zip-it-and-ship-it --help
-@netlify/zip-it-and-ship-it: Zip lambda functions and their dependencies for deployment
-
-Usage: zip-it-and-ship-it [source] [destination] {options}
-    --zip-go              zip go binaries (default: false)
-    --help, -h            show help
-    --version, -v         print the version of the program
-```
-
-## See Also
-
-Check [our official docs here](https://www.netlify.com/docs/cli/#unbundled-javascript-function-deploys).
