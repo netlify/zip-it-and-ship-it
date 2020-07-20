@@ -73,7 +73,7 @@
     "@babel/runtime": "^7.10.5",
     "adm-zip": "^0.4.16",
     "auto-changelog": "^2.2.0",
-    "ava": "^2.4.0",
+    "ava": "^3.0.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
     "common-path-prefix": "^2.0.0",
