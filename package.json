@@ -17,7 +17,7 @@
     "test": "npm run format && npm run test:dev",
     "format": "run-s format:*",
     "format:lint": "eslint --ignore-path .gitignore --fix --cache --format=codeframe --max-warnings=0 \"src/**/*.js\"",
-    "format:prettier": "prettier --ignore-path .gitignore --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\"",
+    "format:prettier": "prettier --ignore-path .gitignore --write --loglevel warn \"src/**/*.js\" \"*.{js,md,yml,json}\" \"!package-lock.json\"",
     "test:dev": "ava",
     "test:ci": "nyc -r lcovonly -r text -r json ava",
     "update-snapshots": "ava -u",
