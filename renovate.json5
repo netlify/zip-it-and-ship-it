@@ -1,0 +1,18 @@
+{
+  extends: ['github>netlify/renovate-config:default'],
+  ignorePresets: [':prHourlyLimit2'],
+  semanticCommits: true,
+  masterIssue: true,
+  automerge: false,
+  ignoreDeps: [
+    // Those cannot be upgraded until we drop support for Node 8
+    'ava',
+    'cp-file',
+    'eslint',
+    'execa',
+    'prettier',
+    'p-map',
+    // Fack dependencies used in tests
+    'test',
+  ],
+}
