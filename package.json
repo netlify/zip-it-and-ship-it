@@ -8,8 +8,8 @@
   },
   "files": [
     "src/**/*.js",
-    "!src/helpers",
     "!src/fixtures",
+    "!src/helpers",
     "!src/**/**.test.js"
   ],
   "scripts": {
