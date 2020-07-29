@@ -12,7 +12,7 @@
     'execa',
     'prettier',
     'p-map',
-    // Fack dependencies used in tests
-    'test',
-  ],
+    // Fake dependencies used in tests
+    'test'
+  ]
 }
