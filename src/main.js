@@ -152,7 +152,7 @@ const getListedFunction = function({ runtime, mainFile, extension }) {
 
 const getListedFunctionFiles = async function({ runtime, filename, stat, mainFile, extension, srcPath, srcDir }) {
   const srcFiles = await getSrcFiles({ runtime, filename, stat, mainFile, extension, srcPath, srcDir })
-  return srcFiles.map(srcFile => ({ srcFile, mainFile, runtime, extension }))
+  return srcFiles.map(srcFile => ({ srcFile, mainFile, runtime, extension: extname(srcFile) }))
 }
 
 const getSrcFiles = function({ runtime, filename, stat, mainFile, extension, srcPath, srcDir }) {
