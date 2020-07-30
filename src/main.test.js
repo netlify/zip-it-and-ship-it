@@ -297,7 +297,7 @@ test('Can list all function files with listFunctionsFiles()', async t => {
       { mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
       { mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
       { mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
-      { mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/three.js' },
+      { mainFile: 'two/two.js', runtime: 'js', extension: '.json', srcFile: 'two/three.json' },
       { mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' }
     ].map(normalizeFiles.bind(null, fixtureDir))
   )

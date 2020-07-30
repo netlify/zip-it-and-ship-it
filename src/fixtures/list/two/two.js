@@ -1,1 +1,1 @@
-module.exports = require('./three')
+module.exports = require('./three.json')
