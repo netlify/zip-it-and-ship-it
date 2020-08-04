@@ -18,7 +18,13 @@ const zipNodeJs = async function(srcFiles, destPath, filename, mainFile) {
 
   addEntryFile(commonPrefix, archive, filename, mainFile)
 
-  await Promise.all(srcFiles.map(file => zipJsFile(file, commonPrefix, archive)))
+  const srcFilesInfos = await Promise.all(srcFiles.map(addStat))
+
+  // We ensure this is not async, so that the archive's checksum is
+  // deterministic. Otherwise it depends on the order the files were added.
+  srcFilesInfos.forEach(({ srcFile, stat }) => {
+    zipJsFile({ srcFile, commonPrefix, archive, stat })
+  })
 
   await endZip(archive, output)
 }
@@ -31,10 +37,14 @@ const addEntryFile = function(commonPrefix, archive, filename, mainFile) {
   addZipContent(archive, content, entryFilename)
 }
 
-const zipJsFile = async function(file, commonPrefix, archive) {
-  const filename = normalizeFilePath(file, commonPrefix)
-  const stat = await pStat(file)
-  addZipFile(archive, file, filename, stat)
+const addStat = async function(srcFile) {
+  const stat = await pStat(srcFile)
+  return { srcFile, stat }
+}
+
+const zipJsFile = function({ srcFile, commonPrefix, archive, stat }) {
+  const filename = normalizeFilePath(srcFile, commonPrefix)
+  addZipFile(archive, srcFile, filename, stat)
 }
 
 // `adm-zip` and `require()` expect Unix paths.

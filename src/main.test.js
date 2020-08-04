@@ -14,6 +14,7 @@ const promisify = require('util.promisify')
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
 const { zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main.js')
+const { computeSha1 } = require('./helpers/sha.js')
 
 const pReadFile = promisify(readFile)
 const pChmod = promisify(chmod)
@@ -177,6 +178,19 @@ test('Works with many dependencies', async t => {
 test('Works with many function files', async t => {
   await zipNode(t, 'many-functions', 6)
 })
+
+test('Produces deterministic checksums', async t => {
+  const [checksumOne, checksumTwo] = await Promise.all([getZipChecksum(t), getZipChecksum(t)])
+  t.is(checksumOne, checksumTwo)
+})
+
+const getZipChecksum = async function(t) {
+  const {
+    files: [{ path }]
+  } = await zipFixture(t, 'many-dependencies')
+  const sha1sum = computeSha1(path)
+  return sha1sum
+}
 
 test('Throws when the source folder does not exist', async t => {
   await t.throwsAsync(zipNode(t, 'does-not-exist'), /Functions folder does not exist/)
