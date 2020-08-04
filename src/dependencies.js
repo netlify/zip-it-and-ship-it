@@ -18,7 +18,9 @@ const listNodeFiles = async function(srcPath, filename, mainFile, srcDir, stat) 
   const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(mainFile, srcDir)])
   const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
-  const filteredFiles = uniqueFiles.filter(isNotJunk)
+
+  // We sort so that the archive's checksum is deterministic.
+  const filteredFiles = uniqueFiles.filter(isNotJunk).sort()
   return filteredFiles
 }
 
