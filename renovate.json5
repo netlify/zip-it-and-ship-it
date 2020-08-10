@@ -6,6 +6,7 @@
   automerge: false,
   ignoreDeps: [
     // Those cannot be upgraded until we drop support for Node 8
+    'archiver',
     'ava',
     'cp-file',
     'eslint',
