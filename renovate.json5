@@ -4,16 +4,29 @@
   semanticCommits: true,
   masterIssue: true,
   automerge: false,
-  ignoreDeps: [
-    // Those cannot be upgraded until we drop support for Node 8
-    'archiver',
-    'ava',
-    'cp-file',
-    'eslint',
-    'execa',
-    'prettier',
-    'p-map',
-    // Fake dependencies used in tests
-    'test'
+  packageRules: [
+    {
+      // Those cannot be upgraded to a major version until we drop support for Node 8
+      packageNames: [
+        'archiver',
+        'ava',
+        'cp-file',
+        'eslint',
+        'execa',
+        'find-up',
+        'get-stream',
+        'locate-path',
+        'p-map',
+        'prettier'
+      ],
+      major: {
+        enabled: false
+      }
+    },
+    {
+      // Fake dependencies used in tests
+      packageNames: ['test'],
+      enabled: false
+    }
   ]
 }
