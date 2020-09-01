@@ -1,4 +1,4 @@
-const { readFile, chmod, symlink, unlink } = require('fs')
+const { readFile, chmod, symlink, unlink, rename } = require('fs')
 const { tmpdir } = require('os')
 const { normalize } = require('path')
 const { platform } = require('process')
@@ -20,6 +20,7 @@ const pReadFile = promisify(readFile)
 const pChmod = promisify(chmod)
 const pSymlink = promisify(symlink)
 const pUnlink = promisify(unlink)
+const pRename = promisify(rename)
 
 test.after(async () => {
   await del(`${tmpdir()}/zip-it-test*`, { force: true })
@@ -108,6 +109,22 @@ test('Throws on missing optional peer dependencies with no peer dependencies', a
 
 test('Throws on missing non-optional peer dependencies', async t => {
   await t.throwsAsync(zipNode(t, 'node-module-peer-not-optional'))
+})
+
+// We persist `package.json` as `package.json.txt` in git. Otherwise ESLint
+// tries to load when linting sibling JavaScript files. In this test, we
+// temporarily rename it to an actual `package.json`.
+test('Throws on invalid package.json', async t => {
+  const invalidPackageJsonDir = `${FIXTURES_DIR}/invalid-package-json`
+  const srcPackageJson = `${invalidPackageJsonDir}/package.json.txt`
+  const distPackageJson = `${invalidPackageJsonDir}/package.json`
+
+  await pRename(srcPackageJson, distPackageJson)
+  try {
+    await t.throwsAsync(zipNode(t, 'invalid-package-json'), /invalid JSON/)
+  } finally {
+    await pRename(distPackageJson, srcPackageJson)
+  }
 })
 
 test('Ignore invalid require()', async t => {
