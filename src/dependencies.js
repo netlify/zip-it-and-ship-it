@@ -62,7 +62,12 @@ const getPackageJson = function(packageRoot) {
     return {}
   }
 
-  return require(`${packageRoot}/package.json`)
+  const packageJsonPath = `${packageRoot}/package.json`
+  try {
+    return require(packageJsonPath)
+  } catch (error) {
+    throw new Error(`${packageJsonPath} is invalid JSON: ${error.message}`)
+  }
 }
 
 const getFileDependencies = async function(path, packageJson, state) {
