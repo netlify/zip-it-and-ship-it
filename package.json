@@ -64,7 +64,7 @@
     "semver": "^7.3.2",
     "unixify": "^1.0.0",
     "util.promisify": "^1.0.1",
-    "yargs": "^15.4.1"
+    "yargs": "^16.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.10.5",
