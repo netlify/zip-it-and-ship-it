@@ -17,7 +17,8 @@
         'get-stream',
         'locate-path',
         'p-map',
-        'prettier'
+        'prettier',
+        'yargs',
       ],
       major: {
         enabled: false
