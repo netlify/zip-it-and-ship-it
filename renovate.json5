@@ -11,6 +11,7 @@
         'archiver',
         'ava',
         'cp-file',
+        'del',
         'eslint',
         'execa',
         'find-up',
