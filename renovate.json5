@@ -18,6 +18,7 @@
         'get-stream',
         'locate-path',
         'p-map',
+        'pkg-dir',
         'prettier',
         'yargs',
       ],
