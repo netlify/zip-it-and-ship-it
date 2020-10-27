@@ -297,10 +297,10 @@ test('Can use zipFunction()', async t => {
   t.is(runtime, 'js')
 })
 
-const normalizeFiles = function(fixtureDir, { mainFile, runtime, extension, srcFile }) {
+const normalizeFiles = function(fixtureDir, { name, mainFile, runtime, extension, srcFile }) {
   const mainFileA = normalize(`${fixtureDir}/${mainFile}`)
   const srcFileA = srcFile === undefined ? {} : { srcFile: normalize(`${fixtureDir}/${srcFile}`) }
-  return { mainFile: mainFileA, runtime, extension, ...srcFileA }
+  return { name, mainFile: mainFileA, runtime, extension, ...srcFileA }
 }
 
 test('Can list function main files with listFunctions()', async t => {
@@ -309,11 +309,12 @@ test('Can list function main files with listFunctions()', async t => {
   t.deepEqual(
     functions,
     [
-      { mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
-      { mainFile: 'test', runtime: 'go', extension: '' },
-      { mainFile: 'test.js', runtime: 'js', extension: '.js' },
-      { mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
-      { mainFile: 'two/two.js', runtime: 'js', extension: '.js' }
+      { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
+      { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
+      { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
+      { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
+      { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
+      { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' }
     ].map(normalizeFiles.bind(null, fixtureDir))
   )
 })
@@ -324,12 +325,13 @@ test('Can list all function files with listFunctionsFiles()', async t => {
   t.deepEqual(
     functions,
     [
-      { mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
-      { mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
-      { mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
-      { mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
-      { mainFile: 'two/two.js', runtime: 'js', extension: '.json', srcFile: 'two/three.json' },
-      { mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' }
+      { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js', srcFile: 'four.js/four.js.js' },
+      { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
+      { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
+      { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
+      { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
+      { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.json', srcFile: 'two/three.json' },
+      { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' }
     ].map(normalizeFiles.bind(null, fixtureDir))
   )
 })

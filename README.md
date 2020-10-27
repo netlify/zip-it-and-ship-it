@@ -133,6 +133,13 @@ const functions = await listFunctions('functions/function.js')
 
 Each object has the following properties.
 
+#### name
+
+_Type_: `string`
+
+Function's name. This is the one used in the Function URL. For example, if a Function is a `myFunc.js` regular file, the
+`name` is `myFunc` and the URL is `https://{hostname}/.netlify/functions/myFunc`.
+
 #### mainFile
 
 _Type_: `string`
