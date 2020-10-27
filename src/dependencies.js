@@ -14,7 +14,7 @@ const pGlob = promisify(glob)
 // Retrieve the paths to the Node.js files to zip.
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
-const listNodeFiles = async function(srcPath, filename, mainFile, srcDir, stat) {
+const listNodeFiles = async function(srcPath, mainFile, srcDir, stat) {
   const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(mainFile, srcDir)])
   const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]

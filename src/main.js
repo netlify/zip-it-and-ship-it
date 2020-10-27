@@ -33,7 +33,7 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
     return
   }
 
-  const srcFiles = await getSrcFiles({ runtime, filename, stat, mainFile, extension, srcPath, srcDir })
+  const srcFiles = await getSrcFiles({ runtime, stat, mainFile, extension, srcPath, srcDir })
 
   await makeDir(destFolder)
 
@@ -98,18 +98,18 @@ const listFilenames = async function(srcFolder) {
 }
 
 const getFunctionInfo = async function(srcPath) {
-  const { filename, stat, mainFile, extension, srcDir } = await getSrcInfo(srcPath)
+  const { name, filename, stat, mainFile, extension, srcDir } = await getSrcInfo(srcPath)
 
   if (mainFile === undefined) {
     return {}
   }
 
   if (extension === '.zip' || extension === '.js') {
-    return { runtime: 'js', filename, stat, mainFile, extension, srcPath, srcDir }
+    return { runtime: 'js', name, filename, stat, mainFile, extension, srcPath, srcDir }
   }
 
   if (await isGoExe(srcPath)) {
-    return { runtime: 'go', filename, stat, mainFile, extension, srcPath, srcDir }
+    return { runtime: 'go', name, filename, stat, mainFile, extension, srcPath, srcDir }
   }
 
   return {}
@@ -128,8 +128,9 @@ const getSrcInfo = async function(srcPath) {
   }
 
   const extension = extname(mainFile)
+  const name = basename(srcPath, extname(srcPath))
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
-  return { filename, stat, mainFile, extension, srcDir }
+  return { name, filename, stat, mainFile, extension, srcDir }
 }
 
 // Each `srcPath` can also be a directory with an `index.js` file or a file
@@ -146,18 +147,18 @@ const hasMainFile = function({ mainFile }) {
   return mainFile !== undefined
 }
 
-const getListedFunction = function({ runtime, mainFile, extension }) {
-  return { mainFile, runtime, extension }
+const getListedFunction = function({ runtime, name, mainFile, extension }) {
+  return { name, mainFile, runtime, extension }
 }
 
-const getListedFunctionFiles = async function({ runtime, filename, stat, mainFile, extension, srcPath, srcDir }) {
-  const srcFiles = await getSrcFiles({ runtime, filename, stat, mainFile, extension, srcPath, srcDir })
-  return srcFiles.map(srcFile => ({ srcFile, mainFile, runtime, extension: extname(srcFile) }))
+const getListedFunctionFiles = async function({ runtime, name, stat, mainFile, extension, srcPath, srcDir }) {
+  const srcFiles = await getSrcFiles({ runtime, stat, mainFile, extension, srcPath, srcDir })
+  return srcFiles.map(srcFile => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
 }
 
-const getSrcFiles = function({ runtime, filename, stat, mainFile, extension, srcPath, srcDir }) {
+const getSrcFiles = function({ runtime, stat, mainFile, extension, srcPath, srcDir }) {
   if (runtime === 'js' && extension === '.js') {
-    return listNodeFiles(srcPath, filename, mainFile, srcDir, stat)
+    return listNodeFiles(srcPath, mainFile, srcDir, stat)
   }
 
   return [srcPath]
