@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "archiver": "^4.0.0",
-    "common-path-prefix": "^2.0.0",
+    "common-path-prefix": "^3.0.0",
     "cp-file": "^7.0.0",
     "elf-tools": "^1.1.1",
     "end-of-stream": "^1.4.4",
@@ -76,7 +76,7 @@
     "ava": "^2.4.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
-    "common-path-prefix": "^2.0.0",
+    "common-path-prefix": "^3.0.0",
     "cpy": "^8.0.0",
     "del": "^5.1.0",
     "eslint": "^6.8.0",
