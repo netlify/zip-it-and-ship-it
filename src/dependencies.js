@@ -52,7 +52,7 @@ const getDependencies = async function(mainFile, srcDir) {
   try {
     return await getFileDependencies(mainFile, packageJson, state)
   } catch (error) {
-    error.message = `In file "${mainFile}": ${error.message}`
+    error.message = `In file "${mainFile}"\n${error.message}`
     throw error
   }
 }
