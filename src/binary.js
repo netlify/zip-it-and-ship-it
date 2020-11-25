@@ -12,7 +12,9 @@ const binaryRuntime = async function(path) {
   try {
     const buffer = await pReadFile(path)
     return RUNTIMES[detect(buffer)]
-  } catch (error) {}
+  } catch (error) {
+    return undefined
+  }
 }
 
 const RUNTIMES = {
