@@ -11,18 +11,13 @@ const pReadFile = promisify(readFile)
 const binaryRuntime = async function(path) {
   try {
     const buffer = await pReadFile(path)
+    return RUNTIMES[detect(buffer)]
+  } catch (error) {}
+}
 
-    switch (detect(buffer)) {
-      case Runtime.Go:
-        return 'go'
-      case Runtime.Rust:
-        return 'rs'
-      default:
-        return undefined
-    }
-  } catch (error) {
-    return undefined
-  }
+const RUNTIMES = {
+  [Runtime.Go]: 'go',
+  [Runtime.Rust]: 'rs'
 }
 
 // Zip a binary function file
