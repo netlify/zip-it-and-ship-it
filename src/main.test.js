@@ -335,3 +335,25 @@ test('Can list all function files with listFunctionsFiles()', async t => {
     ].map(normalizeFiles.bind(null, fixtureDir))
   )
 })
+
+test('Zips Rust function files', async t => {
+  const { files, tmpDir } = await zipFixture(t, 'rust-simple', 1)
+
+  t.true(files.every(({ runtime }) => runtime === 'rs'))
+
+  await unzipFiles(files)
+
+  const unzippedFile = `${tmpDir}/bootstrap`
+
+  await pathExists(unzippedFile)
+
+  // The library we use for unzipping does not keep executable permissions.
+  // https://github.com/cthackers/adm-zip/issues/86
+  // However `chmod()` is not cross-platform
+  if (platform === 'linux') {
+    await pChmod(unzippedFile, 0o755)
+
+    const { stdout } = await execa(unzippedFile)
+    t.is(stdout, 'Hello, world!')
+  }
+})

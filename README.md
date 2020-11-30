@@ -5,7 +5,7 @@
 [![Build](https://github.com/netlify/zip-it-and-ship-it/workflows/Build/badge.svg)](https://github.com/netlify/zip-it-and-ship-it/actions)
 [![Downloads](https://img.shields.io/npm/dm/@netlify/zip-it-and-ship-it.svg)](https://www.npmjs.com/package/@netlify/zip-it-and-ship-it)
 
-Creates Zip archives from Node.js or Go source files. Those archives are ready to be uploaded to AWS Lambda.
+Creates Zip archives from Node.js, Go, and Rust programs. Those archives are ready to be uploaded to AWS Lambda.
 
 This library is used under the hood by several Netlify features, including
 [production CI builds](https://github.com/netlify/build), [Netlify CLI](https://github.com/netlify/cli) and the
@@ -37,7 +37,7 @@ const { zipFunctions } = require('@netlify/zip-it-and-ship-it')
 const archives = await zipFunctions('functions', 'functions-dist')
 ```
 
-Creates Zip `archives` from Node.js or Go source files. Those `archives` are ready to be uploaded to AWS Lambda.
+Creates Zip `archives` from Node.js, Go, and Rust programs. Those `archives` are ready to be uploaded to AWS Lambda.
 
 `srcFolder` is the source files directory. It must exist. In Netlify, this is the
 ["Functions folder"](https://docs.netlify.com/functions/configure-and-deploy/#configure-the-functions-folder).
@@ -47,7 +47,8 @@ Creates Zip `archives` from Node.js or Go source files. Those `archives` are rea
 - Sub-directories with a main file called either `index.js` or `{dir}.js` where `{dir}` is the sub-directory name.
 - `.js` files (Node.js)
 - `.zip` archives with Node.js already ready to upload to AWS Lambda.
-- Go files, already built. If the `options.zipGo` is `true`, those are zipped. Otherwise, those are copied as is.
+- Go programs already compiled. If the `options.zipGo` is `true`, those are zipped. Otherwise, those are copied as is.
+- Rust programs already compiled. These programs are always zipped.
 
 When using Node.js files, only the dependencies required by the main file are bundled, in order to keep the archive as
 small as possible, which improves the Function runtime performance:
@@ -97,7 +98,7 @@ Absolute file path to the archive file.
 
 _Type_: `string`
 
-Either `"js"` or `"go"`.
+Either `"js"`, `"go"`, or `"rs"`.
 
 ## zipFunction(srcPath, destFolder, options?)
 
@@ -151,7 +152,7 @@ file.
 
 _Type_: `string`
 
-Either `"js"` or `"go"`.
+Either `"js"`, `"go"`, or `"rs"`.
 
 #### extension
 

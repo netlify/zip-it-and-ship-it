@@ -7,8 +7,8 @@ const makeDir = require('make-dir')
 const pMap = require('p-map')
 const promisify = require('util.promisify')
 
+const { binaryRuntime, zipBinary } = require('./binary')
 const { listNodeFiles } = require('./dependencies')
-const { isGoExe, zipGoExe } = require('./go')
 const { zipNodeJs } = require('./node')
 
 const pReaddir = promisify(readdir)
@@ -52,13 +52,24 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
   if (runtime === 'go') {
     if (zipGo) {
       const destPath = join(destFolder, `${filename}.zip`)
-      await zipGoExe(srcPath, destPath, filename, stat)
+      await zipBinary(srcPath, destPath, filename, stat)
       return { path: destPath, runtime }
     } else {
       const destPath = join(destFolder, filename)
       await cpFile(srcPath, destPath)
       return { path: destPath, runtime }
     }
+  }
+
+  if (runtime === 'rs') {
+    // Rust functions must always be zipped.
+    // The name of the binary inside the zip file must
+    // always be `bootstrap` because they include the
+    // Lambda runtime, and that's the name that AWS
+    // expects for those kind of functions.
+    const destPath = join(destFolder, `${filename}.zip`)
+    await zipBinary(srcPath, destPath, 'bootstrap', stat)
+    return { path: destPath, runtime }
   }
 }
 
@@ -108,8 +119,9 @@ const getFunctionInfo = async function(srcPath) {
     return { runtime: 'js', name, filename, stat, mainFile, extension, srcPath, srcDir }
   }
 
-  if (await isGoExe(srcPath)) {
-    return { runtime: 'go', name, filename, stat, mainFile, extension, srcPath, srcDir }
+  const runtime = await binaryRuntime(srcPath)
+  if (runtime) {
+    return { runtime, name, filename, stat, mainFile, extension, srcPath, srcDir }
   }
 
   return {}
