@@ -1,8 +1,8 @@
 const { createWriteStream } = require('fs')
+const { promisify } = require('util')
 
 const archiver = require('archiver')
 const endOfStream = require('end-of-stream')
-const promisify = require('util.promisify')
 
 const pEndOfStream = promisify(endOfStream)
 

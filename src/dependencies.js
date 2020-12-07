@@ -1,11 +1,11 @@
 const { dirname, basename, normalize } = require('path')
+const { promisify } = require('util')
 
 const glob = require('glob')
 const { not: notJunk } = require('junk')
 const pkgDir = require('pkg-dir')
 const precinct = require('precinct')
 const requirePackageName = require('require-package-name')
-const promisify = require('util.promisify')
 
 const { resolvePathPreserveSymlinks, resolvePackage } = require('./resolve')
 
