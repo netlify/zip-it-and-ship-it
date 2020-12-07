@@ -1,11 +1,11 @@
 const { readdir, lstat } = require('fs')
 const { join, resolve, dirname, basename, extname } = require('path')
+const { promisify } = require('util')
 
 const cpFile = require('cp-file')
 const locatePath = require('locate-path')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
-const promisify = require('util.promisify')
 
 const { binaryRuntime, zipBinary } = require('./binary')
 const { listNodeFiles } = require('./dependencies')

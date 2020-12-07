@@ -1,7 +1,7 @@
 const { readFile } = require('fs')
+const { promisify } = require('util')
 
 const { detect, Runtime } = require('elf-cam')
-const promisify = require('util.promisify')
 
 const { startZip, addZipFile, endZip } = require('./archive')
 

@@ -1,9 +1,9 @@
 const { stat } = require('fs')
 const { dirname, normalize, sep } = require('path')
+const { promisify } = require('util')
 
 const commonPathPrefix = require('common-path-prefix')
 const unixify = require('unixify')
-const promisify = require('util.promisify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 

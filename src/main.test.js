@@ -2,6 +2,7 @@ const { readFile, chmod, symlink, unlink, rename } = require('fs')
 const { tmpdir } = require('os')
 const { normalize } = require('path')
 const { platform } = require('process')
+const { promisify } = require('util')
 
 const test = require('ava')
 const cpy = require('cpy')
@@ -9,7 +10,6 @@ const del = require('del')
 const execa = require('execa')
 const pathExists = require('path-exists')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
-const promisify = require('util.promisify')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
