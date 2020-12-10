@@ -106,7 +106,6 @@ const isTreeShakable = function(dependency) {
 }
 
 const TREE_SHAKABLE_DEPENDENCIES = new Set([
-  '@next/env',
   'next/dist/compiled/chalk',
   'next/dist/compiled/content-type',
   'next/dist/compiled/cookie',
