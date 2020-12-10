@@ -50,7 +50,7 @@ const getDependencies = async function(mainFile, srcDir) {
   const state = { localFiles: new Set(), modulePaths: new Set() }
 
   try {
-    return await getFileDependencies({ path: mainFile, packageJson, state })
+    return await getFileDependencies(mainFile, packageJson, state)
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
@@ -70,7 +70,7 @@ const getPackageJson = function(packageRoot) {
   }
 }
 
-const getFileDependencies = async function({ path, packageJson, state }) {
+const getFileDependencies = async function(path, packageJson, state) {
   if (state.localFiles.has(path)) {
     return []
   }
@@ -84,14 +84,16 @@ const getFileDependencies = async function({ path, packageJson, state }) {
   const dependencies = precinct.paperwork(path, { includeCore: false })
 
   const depsPaths = await Promise.all(
-    dependencies.map(dependency => getImportDependencies({ dependency, basedir, packageJson, state }))
+    dependencies.map(dependency => getImportDependencies(dependency, basedir, packageJson, state))
   )
   return [].concat(...depsPaths)
 }
 
-const getImportDependencies = function({ dependency, basedir, packageJson, state }) {
-  if (LOCAL_IMPORT_REGEXP.test(dependency)) {
-    return getTreeShakedDependencies({ dependency, basedir, packageJson, state })
+// `require()` statements can be either `require('moduleName')` or
+// `require(path)`
+const getImportDependencies = function(dependency, basedir, packageJson, state) {
+  if (LOCAL_IMPORT_REGEXP.test(dependency) || isTreeShakable(dependency)) {
+    return getTreeShakedDependencies(dependency, basedir, packageJson, state)
   }
 
   return getAllDependencies({ dependency, basedir, state, packageJson })
@@ -99,11 +101,47 @@ const getImportDependencies = function({ dependency, basedir, packageJson, state
 
 const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
 
+const isTreeShakable = function(dependency) {
+  return TREE_SHAKABLE_DEPENDENCIES.has(dependency)
+}
+
+const TREE_SHAKABLE_DEPENDENCIES = new Set([
+  '@next/env',
+  'next/dist/compiled/chalk',
+  'next/dist/compiled/content-type',
+  'next/dist/compiled/cookie',
+  'next/dist/compiled/escape-string-regexp',
+  'next/dist/compiled/etag',
+  'next/dist/compiled/fresh',
+  'next/dist/compiled/jsonwebtoken',
+  'next/dist/compiled/node-fetch',
+  'next/dist/compiled/path-to-regexp',
+  'next/dist/compiled/raw-body',
+  'next/dist/compiled/semver',
+  'next/dist/next-server/lib/constants',
+  'next/dist/next-server/lib/constants.js',
+  'next/dist/next-server/lib/document-context.js',
+  'next/dist/next-server/lib/head.js',
+  'next/dist/next-server/lib/i18n/normalize-locale-path',
+  'next/dist/next-server/lib/router/utils/get-route-from-asset-path',
+  'next/dist/next-server/lib/router/utils/path-match',
+  'next/dist/next-server/lib/router/utils/prepare-destination',
+  'next/dist/next-server/lib/utils',
+  'next/dist/next-server/lib/utils.js',
+  'next/dist/next-server/server/api-utils',
+  'next/dist/next-server/server/denormalize-page-path',
+  'next/dist/next-server/server/get-page-files.js',
+  'next/dist/next-server/server/node-polyfill-fetch',
+  'next/dist/next-server/server/render',
+  'next/dist/next-server/server/send-payload',
+  'next/dist/next-server/server/utils.js'
+])
+
 // When a file requires another one, we apply the top-level logic recursively
-const getTreeShakedDependencies = async function({ dependency, basedir, packageJson, state }) {
-  const path = await resolvePathPreserveSymlinks(dependency, basedir)
-  const depsPath = await getFileDependencies({ path, packageJson, state })
-  return [path, ...depsPath]
+const getTreeShakedDependencies = async function(dependency, basedir, packageJson, state) {
+  const dependencyPath = await resolvePathPreserveSymlinks(dependency, basedir)
+  const depsPath = await getFileDependencies(dependencyPath, packageJson, state)
+  return [dependencyPath, ...depsPath]
 }
 
 // When a file requires a module, we find its path inside `node_modules` and
