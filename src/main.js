@@ -52,7 +52,7 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
   if (runtime === 'go') {
     if (zipGo) {
       const destPath = join(destFolder, `${filename}.zip`)
-      await zipBinary(srcPath, destPath, filename, stat)
+      await zipBinary(srcPath, destPath, filename, stat, runtime)
       return { path: destPath, runtime }
     } else {
       const destPath = join(destFolder, filename)
@@ -68,7 +68,7 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
     // Lambda runtime, and that's the name that AWS
     // expects for those kind of functions.
     const destPath = join(destFolder, `${filename}.zip`)
-    await zipBinary(srcPath, destPath, 'bootstrap', stat)
+    await zipBinary(srcPath, destPath, 'bootstrap', stat, runtime)
     return { path: destPath, runtime }
   }
 }
