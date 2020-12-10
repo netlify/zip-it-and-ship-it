@@ -3,7 +3,7 @@ const { promisify } = require('util')
 
 const { detect, Runtime } = require('elf-cam')
 
-const { startZip, addZipFile, endZip } = require('./archive')
+const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 
 const pReadFile = promisify(readFile)
 
@@ -23,9 +23,10 @@ const RUNTIMES = {
 }
 
 // Zip a binary function file
-const zipBinary = async function(srcPath, destPath, filename, stat) {
+const zipBinary = async function(srcPath, destPath, filename, stat, runtime) {
   const { archive, output } = startZip(destPath)
   addZipFile(archive, srcPath, filename, stat)
+  addZipContent(archive, JSON.stringify({ runtime }), 'netlify-toolchain')
   await endZip(archive, output)
 }
 

@@ -258,8 +258,7 @@ test('Zips Go function files', async t => {
   await unzipFiles(files)
 
   const unzippedFile = `${tmpDir}/test`
-
-  await pathExists(unzippedFile)
+  t.true(await pathExists(unzippedFile))
 
   // The library we use for unzipping does not keep executable permissions.
   // https://github.com/cthackers/adm-zip/issues/86
@@ -270,6 +269,11 @@ test('Zips Go function files', async t => {
     const { stdout } = await execa(unzippedFile)
     t.is(stdout, 'test')
   }
+
+  const tcFile = `${tmpDir}/netlify-toolchain`
+  t.true(await pathExists(tcFile))
+  const tc = (await pReadFile(tcFile, 'utf8')).trim()
+  t.is(tc, '{"runtime":"go"}')
 })
 
 test('Can skip zipping Go function files', async t => {
@@ -344,8 +348,7 @@ test('Zips Rust function files', async t => {
   await unzipFiles(files)
 
   const unzippedFile = `${tmpDir}/bootstrap`
-
-  await pathExists(unzippedFile)
+  t.true(await pathExists(unzippedFile))
 
   // The library we use for unzipping does not keep executable permissions.
   // https://github.com/cthackers/adm-zip/issues/86
@@ -356,4 +359,9 @@ test('Zips Rust function files', async t => {
     const { stdout } = await execa(unzippedFile)
     t.is(stdout, 'Hello, world!')
   }
+
+  const tcFile = `${tmpDir}/netlify-toolchain`
+  t.true(await pathExists(tcFile))
+  const tc = (await pReadFile(tcFile, 'utf8')).trim()
+  t.is(tc, '{"runtime":"rs"}')
 })
