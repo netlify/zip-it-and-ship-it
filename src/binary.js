@@ -26,7 +26,7 @@ const RUNTIMES = {
 const zipBinary = async function(srcPath, destPath, filename, stat, runtime) {
   const { archive, output } = startZip(destPath)
   addZipFile(archive, srcPath, filename, stat)
-  addZipContent(archive, `runtime=${runtime}`, "netlify-toolchain")
+  addZipContent(archive, `runtime=${runtime}`, 'netlify-toolchain')
   await endZip(archive, output)
 }
 
