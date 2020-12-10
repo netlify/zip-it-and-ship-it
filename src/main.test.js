@@ -71,6 +71,18 @@ test('Include most files from node modules', async t => {
   t.true(htmlExists)
 })
 
+test('Include specific Next.js dependencies', async t => {
+  const { tmpDir } = await zipNode(t, 'node-module-next')
+  const [constantsExists, otherExists, indexExists] = await Promise.all([
+    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/index.js`)
+  ])
+  t.true(constantsExists)
+  t.false(otherExists)
+  t.false(indexExists)
+})
+
 test('Throws on runtime errors', async t => {
   await t.throwsAsync(zipNode(t, 'node-module-error'))
 })
