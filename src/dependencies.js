@@ -50,7 +50,7 @@ const getDependencies = async function(mainFile, srcDir) {
   const state = { localFiles: new Set(), modulePaths: new Set() }
 
   try {
-    return await getFileDependencies(mainFile, packageJson, state)
+    return await getFileDependencies({ path: mainFile, packageJson, state })
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
@@ -70,7 +70,7 @@ const getPackageJson = function(packageRoot) {
   }
 }
 
-const getFileDependencies = async function(path, packageJson, state) {
+const getFileDependencies = async function({ path, packageJson, state, treeShakingModule }) {
   if (state.localFiles.has(path)) {
     return []
   }
@@ -84,16 +84,25 @@ const getFileDependencies = async function(path, packageJson, state) {
   const dependencies = precinct.paperwork(path, { includeCore: false })
 
   const depsPaths = await Promise.all(
-    dependencies.map(dependency => getImportDependencies(dependency, basedir, packageJson, state))
+    dependencies.map(dependency =>
+      getImportDependencies({ dependency, basedir, packageJson, state, treeShakingModule })
+    )
   )
   return [].concat(...depsPaths)
 }
 
-// `require()` statements can be either `require('moduleName')` or
-// `require(path)`
-const getImportDependencies = function(dependency, basedir, packageJson, state) {
-  if (LOCAL_IMPORT_REGEXP.test(dependency) || isTreeShakable(dependency)) {
-    return getTreeShakedDependencies(dependency, basedir, packageJson, state)
+const isTreeShakingModule = function({ dependency, treeShakingModule }) {
+  return treeShakingModule === getModuleName(dependency)
+}
+
+const getImportDependencies = function({ dependency, basedir, packageJson, state, treeShakingModule }) {
+  if (LOCAL_IMPORT_REGEXP.test(dependency) || isTreeShakingModule({ dependency, treeShakingModule })) {
+    return getTreeShakedDependencies({ dependency, basedir, packageJson, state, treeShakingModule })
+  }
+
+  if (isTreeShakable(dependency)) {
+    const module = getModuleName(dependency)
+    return getTreeShakedDependencies({ dependency, basedir, packageJson, state, treeShakingModule: module })
   }
 
   return getAllDependencies({ dependency, basedir, state, packageJson })
@@ -106,17 +115,6 @@ const isTreeShakable = function(dependency) {
 }
 
 const TREE_SHAKABLE_DEPENDENCIES = new Set([
-  'next/dist/compiled/chalk',
-  'next/dist/compiled/content-type',
-  'next/dist/compiled/cookie',
-  'next/dist/compiled/escape-string-regexp',
-  'next/dist/compiled/etag',
-  'next/dist/compiled/fresh',
-  'next/dist/compiled/jsonwebtoken',
-  'next/dist/compiled/node-fetch',
-  'next/dist/compiled/path-to-regexp',
-  'next/dist/compiled/raw-body',
-  'next/dist/compiled/semver',
   'next/dist/next-server/lib/constants',
   'next/dist/next-server/lib/constants.js',
   'next/dist/next-server/lib/document-context.js',
@@ -137,10 +135,10 @@ const TREE_SHAKABLE_DEPENDENCIES = new Set([
 ])
 
 // When a file requires another one, we apply the top-level logic recursively
-const getTreeShakedDependencies = async function(dependency, basedir, packageJson, state) {
-  const dependencyPath = await resolvePathPreserveSymlinks(dependency, basedir)
-  const depsPath = await getFileDependencies(dependencyPath, packageJson, state)
-  return [dependencyPath, ...depsPath]
+const getTreeShakedDependencies = async function({ dependency, basedir, packageJson, state, treeShakingModule }) {
+  const path = await resolvePathPreserveSymlinks(dependency, basedir)
+  const depsPath = await getFileDependencies({ path, packageJson, state, treeShakingModule })
+  return [path, ...depsPath]
 }
 
 // When a file requires a module, we find its path inside `node_modules` and
