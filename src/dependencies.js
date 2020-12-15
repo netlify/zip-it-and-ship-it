@@ -91,18 +91,16 @@ const getFileDependencies = async function({ path, packageJson, state, treeShaki
   return [].concat(...depsPaths)
 }
 
-const isTreeShakingModule = function({ dependency, treeShakingModule }) {
-  return treeShakingModule === getModuleName(dependency)
+const isTreeShakingModule = function(moduleName, treeShakingModule) {
+  return moduleName === treeShakingModule
 }
 
 const getImportDependencies = function({ dependency, basedir, packageJson, state, treeShakingModule }) {
-  if (LOCAL_IMPORT_REGEXP.test(dependency) || isTreeShakingModule({ dependency, treeShakingModule })) {
-    return getTreeShakedDependencies({ dependency, basedir, packageJson, state, treeShakingModule })
-  }
-
-  if (isTreeShakable(dependency)) {
-    const module = getModuleName(dependency)
-    return getTreeShakedDependencies({ dependency, basedir, packageJson, state, treeShakingModule: module })
+  const moduleName = getModuleName(dependency)
+  const isLocalImport = LOCAL_IMPORT_REGEXP.test(dependency)
+  if (isLocalImport || isTreeShakingModule(moduleName, treeShakingModule) || isTreeShakable(dependency)) {
+    const treeShakingState = isLocalImport ? { treeShakingModule } : { treeShakingModule: moduleName }
+    return getTreeShakedDependencies({ dependency, basedir, packageJson, state, ...treeShakingState })
   }
 
   return getAllDependencies({ dependency, basedir, state, packageJson })
