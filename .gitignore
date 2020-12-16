@@ -7,3 +7,4 @@ zip-it-and-ship-it*
 .nyc_output
 coverage
 .eslintcache
+.vscode
