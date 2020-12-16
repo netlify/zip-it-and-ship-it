@@ -71,6 +71,34 @@ test('Include most files from node modules', async t => {
   t.true(htmlExists)
 })
 
+test('Includes specific Next.js dependencies when using next-on-netlify', async t => {
+  const { tmpDir } = await zipNode(t, 'node-module-next-on-netlify')
+  const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
+    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/index.js`)
+  ])
+  t.true(constantsExists)
+  t.true(semverExists)
+  t.false(otherExists)
+  t.false(indexExists)
+})
+
+test('Includes all Next.js dependencies when not using next-on-netlify', async t => {
+  const { tmpDir } = await zipNode(t, 'node-module-next')
+  const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
+    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/index.js`)
+  ])
+  t.true(constantsExists)
+  t.true(semverExists)
+  t.true(otherExists)
+  t.true(indexExists)
+})
+
 test('Throws on runtime errors', async t => {
   await t.throwsAsync(zipNode(t, 'node-module-error'))
 })
