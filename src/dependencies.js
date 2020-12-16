@@ -50,7 +50,7 @@ const getDependencies = async function(mainFile, srcDir) {
   const state = { localFiles: new Set(), modulePaths: new Set() }
 
   try {
-    return await getFileDependencies(mainFile, packageJson, state)
+    return await getFileDependencies({ path: mainFile, packageJson, state })
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
@@ -70,7 +70,7 @@ const getPackageJson = function(packageRoot) {
   }
 }
 
-const getFileDependencies = async function(path, packageJson, state) {
+const getFileDependencies = async function({ path, packageJson, state }) {
   if (state.localFiles.has(path)) {
     return []
   }
@@ -84,33 +84,31 @@ const getFileDependencies = async function(path, packageJson, state) {
   const dependencies = precinct.paperwork(path, { includeCore: false })
 
   const depsPaths = await Promise.all(
-    dependencies.map(dependency => getImportDependencies(dependency, basedir, packageJson, state))
+    dependencies.map(dependency => getImportDependencies({ dependency, basedir, packageJson, state }))
   )
   return [].concat(...depsPaths)
 }
 
-// `require()` statements can be either `require('moduleName')` or
-// `require(path)`
-const getImportDependencies = function(dependency, basedir, packageJson, state) {
+const getImportDependencies = function({ dependency, basedir, packageJson, state }) {
   if (LOCAL_IMPORT_REGEXP.test(dependency)) {
-    return getLocalImportDependencies(dependency, basedir, packageJson, state)
+    return getTreeShakedDependencies({ dependency, basedir, packageJson, state })
   }
 
-  return getModuleDependencies(dependency, basedir, state, packageJson)
+  return getAllDependencies({ dependency, basedir, state, packageJson })
 }
 
 const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
 
 // When a file requires another one, we apply the top-level logic recursively
-const getLocalImportDependencies = async function(dependency, basedir, packageJson, state) {
-  const dependencyPath = await resolvePathPreserveSymlinks(dependency, basedir)
-  const depsPath = await getFileDependencies(dependencyPath, packageJson, state)
-  return [dependencyPath, ...depsPath]
+const getTreeShakedDependencies = async function({ dependency, basedir, packageJson, state }) {
+  const path = await resolvePathPreserveSymlinks(dependency, basedir)
+  const depsPath = await getFileDependencies({ path, packageJson, state })
+  return [path, ...depsPath]
 }
 
 // When a file requires a module, we find its path inside `node_modules` and
 // use all its published files. We also recurse on the module's dependencies.
-const getModuleDependencies = async function(dependency, basedir, state, packageJson) {
+const getAllDependencies = async function({ dependency, basedir, state, packageJson }) {
   const moduleName = getModuleName(dependency)
 
   // Happens when doing require("@scope") (not "@scope/name") or other oddities
@@ -156,12 +154,12 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
 
   state.modulePaths.add(modulePath)
 
-  const pkg = require(packagePath)
+  const packageJson = require(packagePath)
 
   const [publishedFiles, sideFiles, depsPaths] = await Promise.all([
     getPublishedFiles(modulePath),
     getSideFiles(modulePath, moduleName),
-    getNestedModules(modulePath, state, pkg)
+    getNestedModules(modulePath, state, packageJson)
   ])
   return [...publishedFiles, ...sideFiles, ...depsPaths]
 }
@@ -219,11 +217,11 @@ const IGNORED_FILES = [
 // Apply the Node.js module logic recursively on its own dependencies, using
 // the `package.json` `dependencies`, `peerDependencies` and
 // `optionalDependencies` keys
-const getNestedModules = async function(modulePath, state, pkg) {
-  const dependencies = getNestedDependencies(pkg)
+const getNestedModules = async function(modulePath, state, packageJson) {
+  const dependencies = getNestedDependencies(packageJson)
 
   const depsPaths = await Promise.all(
-    dependencies.map(dependency => getModuleDependencies(dependency, modulePath, state, pkg))
+    dependencies.map(dependency => getAllDependencies({ dependency, basedir: modulePath, state, packageJson }))
   )
   return [].concat(...depsPaths)
 }
