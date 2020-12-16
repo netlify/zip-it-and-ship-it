@@ -99,7 +99,7 @@ const getImportDependencies = function({ dependency, basedir, packageJson, state
 }
 
 const isNextOnNetlify = function(dependency) {
-  return dependency === './renderNextPage'
+  return basename(dependency, '.js') === 'renderNextPage'
 }
 
 const shouldTreeShake = function(dependency, treeShakeNext) {
