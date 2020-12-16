@@ -70,7 +70,7 @@ const getPackageJson = function(packageRoot) {
   }
 }
 
-const getFileDependencies = async function({ path, packageJson, state, treeShakingModule }) {
+const getFileDependencies = async function({ path, packageJson, state, treeShakeNext }) {
   if (state.localFiles.has(path)) {
     return []
   }
@@ -84,58 +84,38 @@ const getFileDependencies = async function({ path, packageJson, state, treeShaki
   const dependencies = precinct.paperwork(path, { includeCore: false })
 
   const depsPaths = await Promise.all(
-    dependencies.map(dependency =>
-      getImportDependencies({ dependency, basedir, packageJson, state, treeShakingModule })
-    )
+    dependencies.map(dependency => getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext }))
   )
   return [].concat(...depsPaths)
 }
 
-const isTreeShakingModule = function(moduleName, treeShakingModule) {
-  return moduleName === treeShakingModule
-}
-
-const getImportDependencies = function({ dependency, basedir, packageJson, state, treeShakingModule }) {
-  const moduleName = getModuleName(dependency)
-  const isLocalImport = LOCAL_IMPORT_REGEXP.test(dependency)
-  if (isLocalImport || isTreeShakingModule(moduleName, treeShakingModule) || isTreeShakable(dependency)) {
-    const treeShakingState = isLocalImport ? { treeShakingModule } : { treeShakingModule: moduleName }
-    return getTreeShakedDependencies({ dependency, basedir, packageJson, state, ...treeShakingState })
+const getImportDependencies = function({ dependency, basedir, packageJson, state, treeShakeNext }) {
+  const shouldTreeShakeNext = treeShakeNext || isNextOnNetlify(dependency)
+  if (shouldTreeShake(dependency, shouldTreeShakeNext)) {
+    return getTreeShakedDependencies({ dependency, basedir, packageJson, state, treeShakeNext: shouldTreeShakeNext })
   }
 
   return getAllDependencies({ dependency, basedir, state, packageJson })
 }
 
-const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
-
-const isTreeShakable = function(dependency) {
-  return TREE_SHAKABLE_DEPENDENCIES.has(dependency)
+const isNextOnNetlify = function(dependency) {
+  return dependency === './renderNextPage'
 }
 
-const TREE_SHAKABLE_DEPENDENCIES = new Set([
-  'next/dist/next-server/lib/constants',
-  'next/dist/next-server/lib/constants.js',
-  'next/dist/next-server/lib/document-context.js',
-  'next/dist/next-server/lib/head.js',
-  'next/dist/next-server/lib/i18n/normalize-locale-path',
-  'next/dist/next-server/lib/router/utils/get-route-from-asset-path',
-  'next/dist/next-server/lib/router/utils/path-match',
-  'next/dist/next-server/lib/router/utils/prepare-destination',
-  'next/dist/next-server/lib/utils',
-  'next/dist/next-server/lib/utils.js',
-  'next/dist/next-server/server/api-utils',
-  'next/dist/next-server/server/denormalize-page-path',
-  'next/dist/next-server/server/get-page-files.js',
-  'next/dist/next-server/server/node-polyfill-fetch',
-  'next/dist/next-server/server/render',
-  'next/dist/next-server/server/send-payload',
-  'next/dist/next-server/server/utils.js'
-])
+const shouldTreeShake = function(dependency, treeShakeNext) {
+  if (LOCAL_IMPORT_REGEXP.test(dependency)) {
+    return true
+  }
+
+  return treeShakeNext && getModuleName(dependency) === 'next'
+}
+
+const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
 
 // When a file requires another one, we apply the top-level logic recursively
-const getTreeShakedDependencies = async function({ dependency, basedir, packageJson, state, treeShakingModule }) {
+const getTreeShakedDependencies = async function({ dependency, basedir, packageJson, state, treeShakeNext }) {
   const path = await resolvePathPreserveSymlinks(dependency, basedir)
-  const depsPath = await getFileDependencies({ path, packageJson, state, treeShakingModule })
+  const depsPath = await getFileDependencies({ path, packageJson, state, treeShakeNext })
   return [path, ...depsPath]
 }
 
