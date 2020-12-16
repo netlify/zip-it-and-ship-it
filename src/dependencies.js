@@ -47,7 +47,7 @@ const getDependencies = async function(mainFile, srcDir) {
   const packageRoot = await pkgDir(srcDir)
   const packageJson = getPackageJson(packageRoot)
 
-  const state = { localFiles: [], modulePaths: [] }
+  const state = { localFiles: new Set(), modulePaths: new Set() }
 
   try {
     return await getFileDependencies(mainFile, packageJson, state)
@@ -71,11 +71,11 @@ const getPackageJson = function(packageRoot) {
 }
 
 const getFileDependencies = async function(path, packageJson, state) {
-  if (state.localFiles.includes(path)) {
+  if (state.localFiles.has(path)) {
     return []
   }
 
-  state.localFiles.push(path)
+  state.localFiles.add(path)
 
   const basedir = dirname(path)
   // This parses JavaScript in `path` to retrieve all the `require()` statements
@@ -150,11 +150,11 @@ const getModuleNameDependencies = async function(moduleName, basedir, state) {
 
   const modulePath = dirname(packagePath)
 
-  if (state.modulePaths.includes(modulePath)) {
+  if (state.modulePaths.has(modulePath)) {
     return []
   }
 
-  state.modulePaths.push(modulePath)
+  state.modulePaths.add(modulePath)
 
   const pkg = require(packagePath)
 
