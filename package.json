@@ -25,6 +25,7 @@
   },
   "husky": {
     "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
       "pre-push": "npm run format"
     }
   },
@@ -70,6 +71,8 @@
     "@babel/plugin-transform-runtime": "^7.10.5",
     "@babel/preset-env": "^7.10.4",
     "@babel/runtime": "^7.10.5",
+    "@commitlint/cli": "^11.0.0",
+    "@commitlint/config-conventional": "^11.0.0",
     "adm-zip": "^0.5.0",
     "auto-changelog": "^2.2.0",
     "ava": "^2.4.0",
