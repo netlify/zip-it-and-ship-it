@@ -25,10 +25,10 @@ The following things are tested for:
 
 ## Releasing
 
-```console
-$ npm version [major|minor|patch]
-$ npm publish [--tag=TAG]
-```
+1. Merge the release PR
+2. Switch to the default branch `git checkout master`
+3. Pull latest changes `git pull`
+4. Publish the package `npm publish`
 
 ## License
 
