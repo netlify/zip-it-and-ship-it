@@ -3,10 +3,12 @@ const { promisify } = require('util')
 
 const glob = require('glob')
 const { not: notJunk } = require('junk')
-const pkgDir = require('pkg-dir')
 const precinct = require('precinct')
 const requirePackageName = require('require-package-name')
 
+const { getNestedDependencies, handleModuleNotFound } = require('./nested')
+const { getPackageJson } = require('./package_json')
+const { getPublishedFiles } = require('./published')
 const { resolvePathPreserveSymlinks, resolvePackage } = require('./resolve')
 
 const pGlob = promisify(glob)
@@ -46,8 +48,7 @@ const isNotJunk = function (file) {
 
 // Retrieve all the files recursively required by a Node.js file
 const getDependencies = async function (mainFile, srcDir) {
-  const packageRoot = await pkgDir(srcDir)
-  const packageJson = getPackageJson(packageRoot)
+  const packageJson = await getPackageJson(srcDir)
 
   const state = { localFiles: new Set(), modulePaths: new Set() }
 
@@ -56,21 +57,6 @@ const getDependencies = async function (mainFile, srcDir) {
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
-  }
-}
-
-const getPackageJson = function (packageRoot) {
-  if (packageRoot === undefined) {
-    return {}
-  }
-
-  const packageJsonPath = `${packageRoot}/package.json`
-  try {
-    // The path depends on the user's build, i.e. must be dynamic
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require
-    return require(packageJsonPath)
-  } catch (error) {
-    throw new Error(`${packageJsonPath} is invalid JSON: ${error.message}`)
   }
 }
 
@@ -208,39 +194,6 @@ const SIDE_FILES = {
   '@prisma/client': '../../.prisma',
 }
 
-// We use all the files published by the Node.js except some that are not needed
-const getPublishedFiles = async function (modulePath) {
-  const ignore = getIgnoredFiles(modulePath)
-  const publishedFiles = await pGlob(`${modulePath}/**`, {
-    ignore,
-    nodir: true,
-    absolute: true,
-    dot: true,
-  })
-  return publishedFiles
-}
-
-const getIgnoredFiles = function (modulePath) {
-  return IGNORED_FILES.map((ignoreFile) => `${modulePath}/${ignoreFile}`)
-}
-
-// To make the zip archive smaller, we remove those.
-const IGNORED_FILES = [
-  'node_modules/**',
-  '.npmignore',
-  'package-lock.json',
-  'yarn.lock',
-  '*.log',
-  '*.lock',
-  '*~',
-  '*.map',
-  '*.ts',
-  '*.patch',
-]
-
-// Apply the Node.js module logic recursively on its own dependencies, using
-// the `package.json` `dependencies`, `peerDependencies` and
-// `optionalDependencies` keys
 const getNestedModules = async function (modulePath, state, packageJson) {
   const dependencies = getNestedDependencies(packageJson)
 
@@ -248,65 +201,6 @@ const getNestedModules = async function (modulePath, state, packageJson) {
     dependencies.map((dependency) => getAllDependencies({ dependency, basedir: modulePath, state, packageJson })),
   )
   return [].concat(...depsPaths)
-}
-
-const getNestedDependencies = function ({ dependencies = {}, peerDependencies = {}, optionalDependencies = {} }) {
-  return [
-    ...Object.keys(dependencies),
-    ...Object.keys(peerDependencies).filter(shouldIncludePeerDependency),
-    ...Object.keys(optionalDependencies),
-  ]
-}
-
-// Workaround for https://github.com/netlify/zip-it-and-ship-it/issues/73
-// TODO: remove this after adding proper modules exclusion as outlined in
-// https://github.com/netlify/zip-it-and-ship-it/issues/68
-const shouldIncludePeerDependency = function (name) {
-  return !EXCLUDED_PEER_DEPENDENCIES.has(name)
-}
-
-const EXCLUDED_PEER_DEPENDENCIES = new Set(['@prisma/cli', 'prisma2'])
-
-// Modules can be required conditionally (inside an `if` or `try`/`catch` block).
-// When a `require()` statement is found but the module is not found, it is
-// possible that that block either always evaluates to:
-//  - `false`: in which case, we should not bundle the dependency
-//  - `true`: in which case, we should report the dependency as missing
-// Those conditional modules might be:
-//  - present in the `package.json` `dependencies`
-//  - present in the `package.json` `optionalDependencies`
-//  - present in the `package.json` `peerDependencies`
-//  - not present in the `package.json`, if the module author wants its users
-//    to explicitly install it as an optional dependency.
-// The current implementation:
-//  - when parsing `require()` statements inside function files, always consider
-//    conditional modules to be included, i.e. report them if not found.
-//    This is because our current parsing logic does not know whether a
-//    `require()` is conditional or not.
-//  - when parsing module dependencies, ignore `require()` statements if not
-//    present in the `package.json` `*dependencies`. I.e. user must manually
-//    install them if the module is used.
-// `optionalDependencies`:
-//  - are not reported when missing
-//  - are included in module dependencies
-const handleModuleNotFound = function ({ error, moduleName, packageJson }) {
-  if (error.code === 'MODULE_NOT_FOUND' && isOptionalModule(moduleName, packageJson)) {
-    return []
-  }
-
-  throw error
-}
-
-const isOptionalModule = function (
-  moduleName,
-  { optionalDependencies = {}, peerDependenciesMeta = {}, peerDependencies = {} },
-) {
-  return (
-    optionalDependencies[moduleName] !== undefined ||
-    (peerDependenciesMeta[moduleName] &&
-      peerDependenciesMeta[moduleName].optional &&
-      peerDependencies[moduleName] !== undefined)
-  )
 }
 
 module.exports = { listNodeFiles }
