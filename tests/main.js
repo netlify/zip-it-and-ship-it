@@ -221,7 +221,7 @@ test('Works with many dependencies', async (t) => {
 })
 
 test('Works with many function files', async (t) => {
-  await zipNode(t, 'many-functions', 6)
+  await zipNode(t, 'many-functions', { length: 6 })
 })
 
 test('Produces deterministic checksums', async (t) => {
@@ -259,18 +259,18 @@ test('Remove useless files', async (t) => {
 })
 
 test('Works on empty directories', async (t) => {
-  await zipNode(t, 'empty', 0)
+  await zipNode(t, 'empty', { length: 0 })
 })
 
 test('Works when no package.json is present', async (t) => {
-  const tmpDir = await tmpName({ prefix: 'zip-it-test' })
-  await cpy('**', `${tmpDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
-  await zipNode(t, 'no-package-json', 1, {}, tmpDir)
+  const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
+  await cpy('**', `${fixtureDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
+  await zipNode(t, 'no-package-json', { length: 1, fixtureDir })
 })
 
 test('Copies already zipped files', async (t) => {
   const tmpDir = await tmpName({ prefix: 'zip-it-test' })
-  const { files } = await zipCheckFunctions(t, 'keep-zip', tmpDir)
+  const { files } = await zipCheckFunctions(t, 'keep-zip', { tmpDir })
 
   t.true(files.every(({ runtime }) => runtime === 'js'))
   t.true(
@@ -281,7 +281,7 @@ test('Copies already zipped files', async (t) => {
 })
 
 test('Zips Go function files', async (t) => {
-  const { files, tmpDir } = await zipFixture(t, 'go-simple', 1, { zipGo: true })
+  const { files, tmpDir } = await zipFixture(t, 'go-simple', { length: 1, opts: { zipGo: true } })
 
   t.true(files.every(({ runtime }) => runtime === 'go'))
 
@@ -307,7 +307,7 @@ test('Zips Go function files', async (t) => {
 })
 
 test('Can skip zipping Go function files', async (t) => {
-  const { files } = await zipFixture(t, 'go-simple', 1)
+  const { files } = await zipFixture(t, 'go-simple', { length: 1 })
 
   t.true(files.every(({ runtime }) => runtime === 'go'))
   t.true(
@@ -318,11 +318,11 @@ test('Can skip zipping Go function files', async (t) => {
 })
 
 test('Ignore unsupported programming languages', async (t) => {
-  await zipFixture(t, 'unsupported', 0)
+  await zipFixture(t, 'unsupported', { length: 0 })
 })
 
 test('Can reduce parallelism', async (t) => {
-  await zipNode(t, 'simple', 1, { parallelLimit: 1 })
+  await zipNode(t, 'simple', { length: 1, opts: { parallelLimit: 1 } })
 })
 
 test('Can use zipFunction()', async (t) => {
@@ -371,7 +371,7 @@ test('Can list all function files with listFunctionsFiles()', async (t) => {
 })
 
 test('Zips Rust function files', async (t) => {
-  const { files, tmpDir } = await zipFixture(t, 'rust-simple', 1)
+  const { files, tmpDir } = await zipFixture(t, 'rust-simple', { length: 1 })
 
   t.true(files.every(({ runtime }) => runtime === 'rs'))
 
