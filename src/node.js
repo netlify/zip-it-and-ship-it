@@ -1,4 +1,4 @@
-const { stat } = require('fs')
+const fs = require('fs')
 const { dirname, normalize, sep } = require('path')
 const { promisify } = require('util')
 
@@ -7,7 +7,7 @@ const unixify = require('unixify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 
-const pStat = promisify(stat)
+const pStat = promisify(fs.stat)
 
 // Zip a Node.js function file
 const zipNodeJs = async function (srcFiles, destPath, filename, mainFile) {
