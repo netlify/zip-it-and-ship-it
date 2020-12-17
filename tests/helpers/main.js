@@ -8,19 +8,19 @@ const { zipFunctions } = require('../..')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 
-const zipNode = async function (t, fixture, length, opts, fixtureDir) {
-  const { files, tmpDir } = await zipFixture(t, fixture, length, opts, fixtureDir)
+const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
+  const { files, tmpDir } = await zipFixture(t, fixture, { length, fixtureDir, opts })
   await requireExtractedFiles(t, files)
   return { files, tmpDir }
 }
 
-const zipFixture = async function (t, fixture, length, opts, fixtureDir) {
+const zipFixture = async function (t, fixture, { length, fixtureDir, opts } = {}) {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const { files } = await zipCheckFunctions(t, fixture, tmpDir, length, opts, fixtureDir)
+  const { files } = await zipCheckFunctions(t, fixture, { length, fixtureDir, tmpDir, opts })
   return { files, tmpDir }
 }
 
-const zipCheckFunctions = async function (t, fixture, tmpDir, length = 1, opts, fixtureDir = FIXTURES_DIR) {
+const zipCheckFunctions = async function (t, fixture, { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts } = {}) {
   const files = await zipFunctions(`${fixtureDir}/${fixture}`, tmpDir, opts)
 
   t.true(Array.isArray(files))
