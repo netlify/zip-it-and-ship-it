@@ -9,7 +9,6 @@ module.exports = {
     'max-lines': 0,
     'max-statements': 0,
     'no-magic-numbers': 0,
-    'fp/no-mutating-methods': 0,
     'import/no-dynamic-require': 0,
     'node/global-require': 0,
   },
