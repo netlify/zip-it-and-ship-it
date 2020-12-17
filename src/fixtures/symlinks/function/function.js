@@ -1,2 +1,2 @@
-// eslint-disable-next-line node/no-missing-require
+// eslint-disable-next-line node/no-missing-require, import/no-unresolved
 module.exports = require('./file')

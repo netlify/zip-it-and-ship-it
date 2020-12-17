@@ -1,7 +1,1 @@
-{
-  "semi": false,
-  "singleQuote": true,
-  "printWidth": 120,
-  "endOfLine": "lf",
-  "proseWrap": "always"
-}
+"@netlify/eslint-config-node/.prettierrc.json"

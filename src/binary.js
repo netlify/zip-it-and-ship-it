@@ -8,22 +8,20 @@ const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 const pReadFile = promisify(readFile)
 
 // Try to guess the runtime by inspecting the binary file.
-const binaryRuntime = async function(path) {
+const binaryRuntime = async function (path) {
   try {
     const buffer = await pReadFile(path)
     return RUNTIMES[detect(buffer)]
-  } catch (error) {
-    return undefined
-  }
+  } catch (error) {}
 }
 
 const RUNTIMES = {
   [Runtime.Go]: 'go',
-  [Runtime.Rust]: 'rs'
+  [Runtime.Rust]: 'rs',
 }
 
 // Zip a binary function file
-const zipBinary = async function(srcPath, destPath, filename, stat, runtime) {
+const zipBinary = async function (srcPath, destPath, filename, stat, runtime) {
   const { archive, output } = startZip(destPath)
   addZipFile(archive, srcPath, filename, stat)
   addZipContent(archive, JSON.stringify({ runtime }), 'netlify-toolchain')

@@ -6,21 +6,20 @@ on:
     tags: ['*']
   pull_request:
     types: [opened, synchronize, reopened]
-env:
-  CI: 'true'
 jobs:
   build:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        node: [8.3.0, 14]
+        node: [8.17.0, 14.x]
         exclude:
           - os: macOS-latest
-            node: 8.3.0
+            node: 8.17.0
           - os: windows-latest
-            node: 8.3.0
+            node: 8.17.0
       fail-fast: false
-    runs-on: ${{ matrix.os }}
     steps:
       - name: Git checkout
         uses: actions/checkout@v2
@@ -29,10 +28,21 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Linting
-        run: npm run format
+        run: npm run format:ci
+        if: "${{ matrix.node-version == '14.x' }}"
       - name: Tests
         run: npm run test:ci
-      - name: Codecov test coverage
-        run: bash scripts/coverage.sh "${{ matrix.os }}" "${{ matrix.node }}"
+      - name: Get test coverage flags
+        id: test-coverage-flags
+        run: |-
+          os=${{ matrix.os }}
+          node=${{ matrix.node-version }}
+          echo "::set-output name=os::${os/-latest/}"
+          echo "::set-output name=node::node_${node//./}"
+        shell: bash
+      - uses: codecov/codecov-action@v1
+        with:
+          file: coverage/coverage-final.json
+          flags: ${{ steps.test-coverage-flags.outputs.os }},${{ steps.test-coverage-flags.outputs.node }}

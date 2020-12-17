@@ -19,7 +19,7 @@ const { lt: ltVersion } = require('semver')
 // However it does not give helpful error messages.
 //   https://github.com/browserify/resolve/issues/223
 // So, on errors, we fallback to `require.resolve()`
-const resolvePackage = async function(moduleName, basedir) {
+const resolvePackage = async function (moduleName, basedir) {
   try {
     return await resolvePathPreserveSymlinks(`${moduleName}/package.json`, basedir)
   } catch (error) {
@@ -46,7 +46,7 @@ const REQUEST_RESOLVE_MIN_VERSION = '8.9.0'
 // We need to use `new Promise()` due to a bug with `utils.promisify()` on
 // `resolve`:
 //   https://github.com/browserify/resolve/issues/151#issuecomment-368210310
-const resolvePathPreserveSymlinks = function(path, basedir) {
+const resolvePathPreserveSymlinks = function (path, basedir) {
   return new Promise((success, reject) => {
     resolve(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
       if (error) {
@@ -58,7 +58,7 @@ const resolvePathPreserveSymlinks = function(path, basedir) {
   })
 }
 
-const resolvePathFollowSymlinks = function(path, basedir) {
+const resolvePathFollowSymlinks = function (path, basedir) {
   return require.resolve(path, { paths: [basedir] })
 }
 
@@ -70,12 +70,12 @@ const resolvePathFollowSymlinks = function(path, basedir) {
 //   - has a `package.json`
 // Theoritically, this might not the root `package.json`, but this is very
 // unlikely, and we don't have any better alternative.
-const resolvePackageFallback = async function(moduleName, basedir) {
+const resolvePackageFallback = async function (moduleName, basedir) {
   const mainFilePath = resolvePathFollowSymlinks(moduleName, basedir)
   return findUp(isPackageDir.bind(null, moduleName), { cwd: mainFilePath, type: 'directory' })
 }
 
-const isPackageDir = async function(moduleName, dir) {
+const isPackageDir = async function (moduleName, dir) {
   // Need to use `endsWith()` to take into account `@scope/package`.
   // Backslashes need to be converted for Windows.
   if (!dir.replace(BACKSLASH_REGEXP, '/').endsWith(moduleName) || !(await pathExists(`${dir}/package.json`))) {
