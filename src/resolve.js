@@ -29,10 +29,10 @@ const resolvePackage = async function (moduleName, basedir) {
 
     try {
       return resolvePathFollowSymlinks(`${moduleName}/package.json`, basedir)
-    } catch (error) {
+    } catch (error_) {
       const packagePath = resolvePackageFallback(moduleName, basedir)
       if (packagePath === undefined) {
-        throw error
+        throw error_
       }
       return packagePath
     }
