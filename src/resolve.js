@@ -30,11 +30,7 @@ const resolvePackage = async function (moduleName, basedir) {
     try {
       return resolvePathFollowSymlinks(`${moduleName}/package.json`, basedir)
     } catch (error_) {
-      const packagePath = await resolvePackageFallback(moduleName, basedir)
-      if (packagePath === undefined) {
-        throw error_
-      }
-      return packagePath
+      return await resolvePackageFallback(moduleName, basedir, error_)
     }
   }
 }
@@ -70,9 +66,13 @@ const resolvePathFollowSymlinks = function (path, basedir) {
 //   - has a `package.json`
 // Theoritically, this might not the root `package.json`, but this is very
 // unlikely, and we don't have any better alternative.
-const resolvePackageFallback = async function (moduleName, basedir) {
+const resolvePackageFallback = async function (moduleName, basedir, error) {
   const mainFilePath = resolvePathFollowSymlinks(moduleName, basedir)
-  return await findUp(isPackageDir.bind(null, moduleName), { cwd: mainFilePath, type: 'directory' })
+  const packagePath = await findUp(isPackageDir.bind(null, moduleName), { cwd: mainFilePath, type: 'directory' })
+  if (packagePath === undefined) {
+    throw error
+  }
+  return packagePath
 }
 
 const isPackageDir = async function (moduleName, dir) {
