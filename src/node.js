@@ -1,3 +1,4 @@
+const { Buffer } = require('buffer')
 const fs = require('fs')
 const { dirname, normalize, sep } = require('path')
 const { promisify } = require('util')

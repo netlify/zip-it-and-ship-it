@@ -12,7 +12,6 @@ module.exports = {
     'fp/no-mutating-methods': 0,
     'import/no-dynamic-require': 0,
     'node/global-require': 0,
-    'node/prefer-global/buffer': 0,
     'promise/param-names': 0,
   },
   overrides: [...overrides],
