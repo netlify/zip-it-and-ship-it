@@ -2,7 +2,7 @@ const { version: nodeVersion } = require('process')
 
 const findUp = require('find-up')
 const pathExists = require('path-exists')
-const resolve = require('resolve')
+const resolveLib = require('resolve')
 const { lt: ltVersion } = require('semver')
 
 // Find the path to a module's `package.json`
@@ -47,13 +47,13 @@ const REQUEST_RESOLVE_MIN_VERSION = '8.9.0'
 // `resolve`:
 //   https://github.com/browserify/resolve/issues/151#issuecomment-368210310
 const resolvePathPreserveSymlinks = function (path, basedir) {
-  return new Promise((success, reject) => {
-    resolve(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
+  return new Promise((resolve, reject) => {
+    resolveLib(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
       if (error) {
         return reject(error)
       }
 
-      success(resolvedLocation)
+      resolve(resolvedLocation)
     })
   })
 }
