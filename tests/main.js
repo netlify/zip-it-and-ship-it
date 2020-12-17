@@ -198,6 +198,7 @@ test('Can target a directory with a main file with the same name', async (t) => 
 test('Can target a directory with an index.js file', async (t) => {
   const { files, tmpDir } = await zipFixture(t, 'index-handler')
   await unzipFiles(files)
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(require(`${tmpDir}/function.js`))
 })
 

@@ -66,6 +66,8 @@ const getPackageJson = function (packageRoot) {
 
   const packageJsonPath = `${packageRoot}/package.json`
   try {
+    // The path depends on the user's build, i.e. must be dynamic
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
     return require(packageJsonPath)
   } catch (error) {
     throw new Error(`${packageJsonPath} is invalid JSON: ${error.message}`)
@@ -174,6 +176,8 @@ const getModuleNameDependencies = async function (moduleName, basedir, state) {
 
   state.modulePaths.add(modulePath)
 
+  // The path depends on the user's build, i.e. must be dynamic
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const packageJson = require(packagePath)
 
   const [publishedFiles, sideFiles, depsPaths] = await Promise.all([
