@@ -11,3 +11,4 @@ node_modules
 /coverage
 /build
 .vscode
+!tests/fixtures/**/node_modules

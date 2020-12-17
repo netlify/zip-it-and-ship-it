@@ -7,10 +7,7 @@
     "zip-it-and-ship-it": "src/bin.js"
   },
   "files": [
-    "src/**/*.js",
-    "!src/fixtures",
-    "!src/helpers",
-    "!src/**/**.test.js"
+    "src/**/*.js"
   ],
   "scripts": {
     "test": "run-s format test:dev",
@@ -90,7 +87,7 @@
   },
   "ava": {
     "files": [
-      "src/**/*.test.js"
+      "tests/*.js"
     ],
     "compileEnhancements": false,
     "babel": false,
