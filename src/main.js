@@ -37,40 +37,59 @@ const zipFunction = async function (srcPath, destFolder, { skipGo = true, zipGo 
 
   await makeDir(destFolder)
 
-  if (runtime === 'js') {
-    if (extension === '.zip') {
-      const destPath = join(destFolder, filename)
-      await cpFile(srcPath, destPath)
-      return { path: destPath, runtime }
-    }
+  const destPath = await RUNTIMES[runtime]({
+    srcPath,
+    destFolder,
+    mainFile,
+    filename,
+    extension,
+    srcFiles,
+    stat,
+    zipGo,
+    runtime,
+  })
+  return { path: destPath, runtime }
+}
 
-    const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
-    await zipNodeJs(srcFiles, destPath, filename, mainFile)
-    return { path: destPath, runtime }
-  }
-
-  if (runtime === 'go') {
-    if (zipGo) {
-      const destPath = join(destFolder, `${filename}.zip`)
-      await zipBinary({ srcPath, destPath, filename, stat, runtime })
-      return { path: destPath, runtime }
-    }
-
+const zipJsFunction = async function ({ srcPath, destFolder, mainFile, filename, extension, srcFiles }) {
+  if (extension === '.zip') {
     const destPath = join(destFolder, filename)
     await cpFile(srcPath, destPath)
-    return { path: destPath, runtime }
+    return destPath
   }
 
-  if (runtime === 'rs') {
-    // Rust functions must always be zipped.
-    // The name of the binary inside the zip file must
-    // always be `bootstrap` because they include the
-    // Lambda runtime, and that's the name that AWS
-    // expects for those kind of functions.
+  const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
+  await zipNodeJs(srcFiles, destPath, filename, mainFile)
+  return destPath
+}
+
+const zipGoFunction = async function ({ srcPath, destFolder, stat, zipGo, filename, runtime }) {
+  if (zipGo) {
     const destPath = join(destFolder, `${filename}.zip`)
-    await zipBinary({ srcPath, destPath, filename: 'bootstrap', stat, runtime })
-    return { path: destPath, runtime }
+    await zipBinary({ srcPath, destPath, filename, stat, runtime })
+    return destPath
   }
+
+  const destPath = join(destFolder, filename)
+  await cpFile(srcPath, destPath)
+  return destPath
+}
+
+// Rust functions must always be zipped.
+// The name of the binary inside the zip file must
+// always be `bootstrap` because they include the
+// Lambda runtime, and that's the name that AWS
+// expects for those kind of functions.
+const zipRustFunction = async function ({ srcPath, destFolder, stat, filename, runtime }) {
+  const destPath = join(destFolder, `${filename}.zip`)
+  await zipBinary({ srcPath, destPath, filename: 'bootstrap', stat, runtime })
+  return destPath
+}
+
+const RUNTIMES = {
+  js: zipJsFunction,
+  go: zipGoFunction,
+  rs: zipRustFunction,
 }
 
 // List all Netlify Functions main entry files for a specific directory
