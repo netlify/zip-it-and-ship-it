@@ -9,10 +9,12 @@ const pEndOfStream = promisify(endOfStream)
 // Start zipping files
 const startZip = function (destPath) {
   const output = createWriteStream(destPath)
-  const archive = archiver('zip', { level: 9 })
+  const archive = archiver('zip', { level: ZIP_LEVEL })
   archive.pipe(output)
   return { archive, output }
 }
+
+const ZIP_LEVEL = 9
 
 // Add new file to zip
 const addZipFile = function (archive, file, name, stat) {

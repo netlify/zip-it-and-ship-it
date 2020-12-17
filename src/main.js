@@ -17,7 +17,11 @@ const pLstat = promisify(lstat)
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
 // TODO: remove `skipGo` option in next major release
-const zipFunctions = async function (srcFolder, destFolder, { parallelLimit = 5, skipGo, zipGo } = {}) {
+const zipFunctions = async function (
+  srcFolder,
+  destFolder,
+  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo } = {},
+) {
   const srcPaths = await getSrcPaths(srcFolder)
 
   const zipped = await pMap(srcPaths, (srcPath) => zipFunction(srcPath, destFolder, { skipGo, zipGo }), {
@@ -25,6 +29,8 @@ const zipFunctions = async function (srcFolder, destFolder, { parallelLimit = 5,
   })
   return zipped.filter(Boolean)
 }
+
+const DEFAULT_PARALLEL_LIMIT = 5
 
 const zipFunction = async function (srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
   const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)

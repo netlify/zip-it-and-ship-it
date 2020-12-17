@@ -221,8 +221,10 @@ test('Works with many dependencies', async (t) => {
 })
 
 test('Works with many function files', async (t) => {
-  await zipNode(t, 'many-functions', { length: 6 })
+  await zipNode(t, 'many-functions', { length: TEST_FUNCTIONS_LENGTH })
 })
+
+const TEST_FUNCTIONS_LENGTH = 6
 
 test('Produces deterministic checksums', async (t) => {
   const [checksumOne, checksumTwo] = await Promise.all([getZipChecksum(t), getZipChecksum(t)])
@@ -294,7 +296,7 @@ test('Zips Go function files', async (t) => {
   // https://github.com/cthackers/adm-zip/issues/86
   // However `chmod()` is not cross-platform
   if (platform === 'linux') {
-    await pChmod(unzippedFile, 0o755)
+    await pChmod(unzippedFile, EXECUTABLE_PERMISSION)
 
     const { stdout } = await execa(unzippedFile)
     t.is(stdout, 'test')
@@ -384,7 +386,7 @@ test('Zips Rust function files', async (t) => {
   // https://github.com/cthackers/adm-zip/issues/86
   // However `chmod()` is not cross-platform
   if (platform === 'linux') {
-    await pChmod(unzippedFile, 0o755)
+    await pChmod(unzippedFile, EXECUTABLE_PERMISSION)
 
     const { stdout } = await execa(unzippedFile)
     t.is(stdout, 'Hello, world!')
@@ -395,3 +397,5 @@ test('Zips Rust function files', async (t) => {
   const tc = (await pReadFile(tcFile, 'utf8')).trim()
   t.is(tc, '{"runtime":"rs"}')
 })
+
+const EXECUTABLE_PERMISSION = 0o755
