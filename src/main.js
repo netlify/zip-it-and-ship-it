@@ -7,9 +7,9 @@ const locatePath = require('locate-path')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 
-const { binaryRuntime, zipBinary } = require('./binary')
 const { listNodeFiles } = require('./dependencies')
 const { zipNodeJs } = require('./node')
+const { binaryRuntime, zipBinary } = require('./runtime')
 
 const pReaddir = promisify(readdir)
 const pLstat = promisify(lstat)
