@@ -30,7 +30,7 @@ const resolvePackage = async function (moduleName, basedir) {
     try {
       return resolvePathFollowSymlinks(`${moduleName}/package.json`, basedir)
     } catch (error_) {
-      const packagePath = resolvePackageFallback(moduleName, basedir)
+      const packagePath = await resolvePackageFallback(moduleName, basedir)
       if (packagePath === undefined) {
         throw error_
       }
@@ -72,7 +72,7 @@ const resolvePathFollowSymlinks = function (path, basedir) {
 // unlikely, and we don't have any better alternative.
 const resolvePackageFallback = async function (moduleName, basedir) {
   const mainFilePath = resolvePathFollowSymlinks(moduleName, basedir)
-  return findUp(isPackageDir.bind(null, moduleName), { cwd: mainFilePath, type: 'directory' })
+  return await findUp(isPackageDir.bind(null, moduleName), { cwd: mainFilePath, type: 'directory' })
 }
 
 const isPackageDir = async function (moduleName, dir) {
