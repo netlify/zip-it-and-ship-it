@@ -20,6 +20,8 @@ const listNodeFiles = async function (srcPath, mainFile, srcDir, stat) {
   const uniqueFiles = [...new Set(files)]
 
   // We sort so that the archive's checksum is deterministic.
+  // Mutating is fine since `Array.filter()` returns a shallow copy
+  // eslint-disable-next-line fp/no-mutating-methods
   const filteredFiles = uniqueFiles.filter(isNotJunk).sort()
   return filteredFiles
 }
