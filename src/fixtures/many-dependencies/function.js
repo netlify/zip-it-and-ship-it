@@ -1,4 +1,1 @@
-/* eslint-disable node/no-unpublished-require */
-module.exports = [require('@babel/core'), require('ava'), require('eslint'), require('nyc'), require('prettier')].every(
-  Boolean
-)
+module.exports = [require('execa'), require('del'), require('nyc')].every(Boolean)

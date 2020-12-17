@@ -1,7 +1,6 @@
 try {
-  // eslint-disable-next-line node/no-missing-require
+  // eslint-disable-next-line node/no-missing-require, import/no-unresolved, import/no-unassigned-import
   require('@types/node')
-  // eslint-disable-next-line no-empty
 } catch (error) {}
 
 module.exports = true

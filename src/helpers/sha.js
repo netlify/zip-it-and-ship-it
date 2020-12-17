@@ -5,7 +5,7 @@ const getStream = require('get-stream')
 
 // Retrieve the SHA1 checksum of a file.
 // Does it in streaming mode, for best performance.
-const computeSha1 = async function(filePath) {
+const computeSha1 = async function (filePath) {
   const fileStream = createReadStream(filePath)
   const hashStream = createHash('sha1')
   hashStream.setEncoding('hex')

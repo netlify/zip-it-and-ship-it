@@ -10,7 +10,7 @@ const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 const pStat = promisify(stat)
 
 // Zip a Node.js function file
-const zipNodeJs = async function(srcFiles, destPath, filename, mainFile) {
+const zipNodeJs = async function (srcFiles, destPath, filename, mainFile) {
   const { archive, output } = startZip(destPath)
 
   const dirnames = srcFiles.map(dirname)
@@ -29,7 +29,7 @@ const zipNodeJs = async function(srcFiles, destPath, filename, mainFile) {
   await endZip(archive, output)
 }
 
-const addEntryFile = function(commonPrefix, archive, filename, mainFile) {
+const addEntryFile = function (commonPrefix, archive, filename, mainFile) {
   const mainPath = normalizeFilePath(mainFile, commonPrefix)
   const content = Buffer.from(`module.exports = require('./${mainPath}')`)
   const entryFilename = filename.endsWith('.js') ? filename : `${filename}.js`
@@ -37,12 +37,12 @@ const addEntryFile = function(commonPrefix, archive, filename, mainFile) {
   addZipContent(archive, content, entryFilename)
 }
 
-const addStat = async function(srcFile) {
+const addStat = async function (srcFile) {
   const stat = await pStat(srcFile)
   return { srcFile, stat }
 }
 
-const zipJsFile = function({ srcFile, commonPrefix, archive, stat }) {
+const zipJsFile = function ({ srcFile, commonPrefix, archive, stat }) {
   const filename = normalizeFilePath(srcFile, commonPrefix)
   addZipFile(archive, srcFile, filename, stat)
 }
@@ -50,7 +50,7 @@ const zipJsFile = function({ srcFile, commonPrefix, archive, stat }) {
 // `adm-zip` and `require()` expect Unix paths.
 // We remove the common path prefix.
 // With files on different Windows drives, we remove the drive letter.
-const normalizeFilePath = function(path, commonPrefix) {
+const normalizeFilePath = function (path, commonPrefix) {
   const pathA = normalize(path)
   const pathB = pathA.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
   const pathC = unixify(pathB)

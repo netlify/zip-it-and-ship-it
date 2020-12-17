@@ -34,7 +34,10 @@ _Return value_: `Promise<object[]>`
 ```js
 const { zipFunctions } = require('@netlify/zip-it-and-ship-it')
 
-const archives = await zipFunctions('functions', 'functions-dist')
+const zipNetlifyFunctions = async function () {
+  const archives = await zipFunctions('functions', 'functions-dist')
+  return archives
+}
 ```
 
 Creates Zip `archives` from Node.js, Go, and Rust programs. Those `archives` are ready to be uploaded to AWS Lambda.
@@ -110,7 +113,10 @@ _Return value_: `object | undefined`
 ```js
 const { zipFunction } = require('@netlify/zip-it-and-ship-it')
 
-const archive = await zipFunctions('functions/function.js', 'functions-dist')
+const zipNetlifyFunctions = async function () {
+  const archive = await zipFunctions('functions/function.js', 'functions-dist')
+  return archive
+}
 ```
 
 This is like [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options) except it bundles a single Function.
@@ -127,7 +133,10 @@ Returns the list of Functions to bundle.
 ```js
 const { listFunctions } = require('@netlify/zip-it-and-ship-it')
 
-const functions = await listFunctions('functions/function.js')
+const listNetlifyFunctions = async function () {
+  const functions = await listFunctions('functions/function.js')
+  return functions
+}
 ```
 
 ### Return value
@@ -171,7 +180,10 @@ their required files. This is much slower.
 ```js
 const { listFunctionsFiles } = require('@netlify/zip-it-and-ship-it')
 
-const functions = await listFunctionsFiles('functions/function.js')
+const listNetlifyFunctionsFiles = async function () {
+  const functions = await listFunctionsFiles('functions/function.js')
+  return functions
+}
 ```
 
 ### Return value

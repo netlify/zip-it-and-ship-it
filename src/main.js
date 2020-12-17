@@ -17,16 +17,16 @@ const pLstat = promisify(lstat)
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
 // TODO: remove `skipGo` option in next major release
-const zipFunctions = async function(srcFolder, destFolder, { parallelLimit = 5, skipGo, zipGo } = {}) {
+const zipFunctions = async function (srcFolder, destFolder, { parallelLimit = 5, skipGo, zipGo } = {}) {
   const srcPaths = await getSrcPaths(srcFolder)
 
-  const zipped = await pMap(srcPaths, srcPath => zipFunction(srcPath, destFolder, { skipGo, zipGo }), {
-    concurrency: parallelLimit
+  const zipped = await pMap(srcPaths, (srcPath) => zipFunction(srcPath, destFolder, { skipGo, zipGo }), {
+    concurrency: parallelLimit,
   })
   return zipped.filter(Boolean)
 }
 
-const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
+const zipFunction = async function (srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
   const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
 
   if (runtime === undefined) {
@@ -42,11 +42,11 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
       const destPath = join(destFolder, filename)
       await cpFile(srcPath, destPath)
       return { path: destPath, runtime }
-    } else {
-      const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
-      await zipNodeJs(srcFiles, destPath, filename, mainFile)
-      return { path: destPath, runtime }
     }
+
+    const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
+    await zipNodeJs(srcFiles, destPath, filename, mainFile)
+    return { path: destPath, runtime }
   }
 
   if (runtime === 'go') {
@@ -54,11 +54,11 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
       const destPath = join(destFolder, `${filename}.zip`)
       await zipBinary(srcPath, destPath, filename, stat, runtime)
       return { path: destPath, runtime }
-    } else {
-      const destPath = join(destFolder, filename)
-      await cpFile(srcPath, destPath)
-      return { path: destPath, runtime }
     }
+
+    const destPath = join(destFolder, filename)
+    await cpFile(srcPath, destPath)
+    return { path: destPath, runtime }
   }
 
   if (runtime === 'rs') {
@@ -74,33 +74,33 @@ const zipFunction = async function(srcPath, destFolder, { skipGo = true, zipGo =
 }
 
 // List all Netlify Functions main entry files for a specific directory
-const listFunctions = async function(srcFolder) {
+const listFunctions = async function (srcFolder) {
   const functionInfos = await getFunctionInfos(srcFolder)
   const listedFunctions = functionInfos.map(getListedFunction)
   return listedFunctions
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function(srcFolder) {
+const listFunctionsFiles = async function (srcFolder) {
   const functionInfos = await getFunctionInfos(srcFolder)
   const listedFunctionsFiles = await Promise.all(functionInfos.map(getListedFunctionFiles))
   return [].concat(...listedFunctionsFiles)
 }
 
-const getFunctionInfos = async function(srcFolder) {
+const getFunctionInfos = async function (srcFolder) {
   const srcPaths = await getSrcPaths(srcFolder)
   const functionInfos = await Promise.all(srcPaths.map(getFunctionInfo))
   const functionInfosA = functionInfos.filter(hasMainFile)
   return functionInfosA
 }
 
-const getSrcPaths = async function(srcFolder) {
+const getSrcPaths = async function (srcFolder) {
   const filenames = await listFilenames(srcFolder)
-  const srcPaths = filenames.map(filename => resolve(srcFolder, filename))
+  const srcPaths = filenames.map((filename) => resolve(srcFolder, filename))
   return srcPaths
 }
 
-const listFilenames = async function(srcFolder) {
+const listFilenames = async function (srcFolder) {
   try {
     return await pReaddir(srcFolder)
   } catch (error) {
@@ -108,7 +108,7 @@ const listFilenames = async function(srcFolder) {
   }
 }
 
-const getFunctionInfo = async function(srcPath) {
+const getFunctionInfo = async function (srcPath) {
   const { name, filename, stat, mainFile, extension, srcDir } = await getSrcInfo(srcPath)
 
   if (mainFile === undefined) {
@@ -127,7 +127,7 @@ const getFunctionInfo = async function(srcPath) {
   return {}
 }
 
-const getSrcInfo = async function(srcPath) {
+const getSrcInfo = async function (srcPath) {
   const filename = basename(srcPath)
   if (filename === 'node_modules') {
     return {}
@@ -147,7 +147,7 @@ const getSrcInfo = async function(srcPath) {
 
 // Each `srcPath` can also be a directory with an `index.js` file or a file
 // using the same filename as its directory
-const getMainFile = function(srcPath, filename, stat) {
+const getMainFile = function (srcPath, filename, stat) {
   if (!stat.isDirectory()) {
     return srcPath
   }
@@ -155,20 +155,20 @@ const getMainFile = function(srcPath, filename, stat) {
   return locatePath([join(srcPath, `${filename}.js`), join(srcPath, 'index.js')], { type: 'file' })
 }
 
-const hasMainFile = function({ mainFile }) {
+const hasMainFile = function ({ mainFile }) {
   return mainFile !== undefined
 }
 
-const getListedFunction = function({ runtime, name, mainFile, extension }) {
+const getListedFunction = function ({ runtime, name, mainFile, extension }) {
   return { name, mainFile, runtime, extension }
 }
 
-const getListedFunctionFiles = async function({ runtime, name, stat, mainFile, extension, srcPath, srcDir }) {
+const getListedFunctionFiles = async function ({ runtime, name, stat, mainFile, extension, srcPath, srcDir }) {
   const srcFiles = await getSrcFiles({ runtime, stat, mainFile, extension, srcPath, srcDir })
-  return srcFiles.map(srcFile => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
+  return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
 }
 
-const getSrcFiles = function({ runtime, stat, mainFile, extension, srcPath, srcDir }) {
+const getSrcFiles = function ({ runtime, stat, mainFile, extension, srcPath, srcDir }) {
   if (runtime === 'js' && extension === '.js') {
     return listNodeFiles(srcPath, mainFile, srcDir, stat)
   }

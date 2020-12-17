@@ -1,7 +1,6 @@
 try {
-  // eslint-disable-next-line node/no-missing-require
+  // eslint-disable-next-line node/no-missing-require, import/no-unassigned-import, import/no-unresolved
   require('aws-sdk')
-  // eslint-disable-next-line no-empty
 } catch (error) {}
 
 module.exports = true

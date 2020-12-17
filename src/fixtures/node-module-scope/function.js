@@ -1,4 +1,3 @@
-// eslint-disable-next-line node/no-unpublished-require
-const babelCore = require('@babel/core')
+const scopeModule = require('@netlify/eslint-config-node')
 
-module.exports = typeof babelCore === 'object'
+module.exports = typeof scopeModule === 'object'

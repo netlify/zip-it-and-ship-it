@@ -3,10 +3,10 @@ const { exit } = require('process')
 
 const yargs = require('yargs')
 
-const zipIt = require('..')
+const zipIt = require('./main')
 
 // CLI entry point
-const runCli = async function() {
+const runCli = async function () {
   const { srcFolder, destFolder, zipGo } = parseArgs()
 
   try {
@@ -18,21 +18,16 @@ const runCli = async function() {
   }
 }
 
-const parseArgs = function() {
-  return yargs
-    .command('* <srcFolder> <destFolder>')
-    .options(OPTIONS)
-    .usage(USAGE)
-    .strict()
-    .parse()
+const parseArgs = function () {
+  return yargs.command('* <srcFolder> <destFolder>').options(OPTIONS).usage(USAGE).strict().parse()
 }
 
 const OPTIONS = {
   'zip-go': {
     boolean: true,
     default: false,
-    describe: 'Whether Go binaries should be zipped or copied as is'
-  }
+    describe: 'Whether Go binaries should be zipped or copied as is',
+  },
 }
 
 const USAGE = `$0 [OPTIONS...] FUNCTIONS_DIRECTORY OUTPUT_DIRECTORY
