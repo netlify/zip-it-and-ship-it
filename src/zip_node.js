@@ -15,7 +15,7 @@ const zipNodeJs = async function (srcFiles, destPath, filename, mainFile) {
   const { archive, output } = startZip(destPath)
 
   const dirnames = srcFiles.map(dirname)
-  const commonPrefix = commonPathPrefix(dirnames)
+  const commonPrefix = commonPathPrefix(dirnames, sep)
 
   addEntryFile(commonPrefix, archive, filename, mainFile)
 
