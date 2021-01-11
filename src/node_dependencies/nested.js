@@ -1,4 +1,4 @@
-const { satisfies, validRange } = require('semver')
+const { valid: validVersion, validRange, satisfies, gte: greaterThanEqual } = require('semver')
 
 // Apply the Node.js module logic recursively on its own dependencies, using
 // the `package.json` `dependencies`, `peerDependencies` and
@@ -72,11 +72,15 @@ const isExternalCrittersModule = function (moduleName, { dependencies = {}, devD
     return false
   }
   const nextVersion = dependencies.next || devDependencies.next
-  if (!validRange(nextVersion)) {
-    return false
+
+  // can the declared Next.js version resolve to >=10.0.4 ?
+  // test exact versions
+  if (validVersion(nextVersion)) {
+    return greaterThanEqual(nextVersion, '10.0.4')
   }
-  // can the declared Next.js version resolve to 10.0.4 ?
-  return satisfies('10.0.4', nextVersion)
+
+  // test ranges
+  return validRange(nextVersion) && satisfies('10.0.4', nextVersion)
 }
 
 module.exports = { getNestedDependencies, handleModuleNotFound }
