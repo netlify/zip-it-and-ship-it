@@ -26,18 +26,6 @@ jobs:
         run: |-
           sed -i "${line_number}s|.*|  project: git@github.com:${GITHUB_REPOSITORY}.git|" .fossa.yml
           cat .fossa.yml
-      - name: Set env for go-simple
-        run: |-
-          echo "go_simple_line_number=$(grep -m 1 -n "go-simple" .fossa.yml | cut -f1 -d:)" >> $GITHUB_ENV
-          echo "go_simple_last_line_number=$(grep -n "go-simple" .fossa.yml | tail -1 | cut -f1 -d:)" >> $GITHUB_ENV
-      - name: Remove go-simple module
-        run: sed -i "${go_simple_line_number},${go_simple_last_line_number}d" .fossa.yml
-      - name: Set env for fixtures/list
-        run: |-
-          echo "fixtures_list_line_number=$(grep -m 1 -n "fixtures/list" .fossa.yml | cut -f1 -d:)" >> $GITHUB_ENV
-          echo "fixtures_list_last_line_number=$(grep -n "fixtures/list" .fossa.yml | tail -1 | cut -f1 -d:)" >> $GITHUB_ENV
-      - name: Remove fixtures/list module
-        run: sed -i "${fixtures_list_line_number},${fixtures_list_last_line_number}d" .fossa.yml
       - name: Upload dependencies
         run: fossa analyze --debug
         env:
