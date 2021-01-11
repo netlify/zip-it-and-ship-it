@@ -65,6 +65,8 @@ const isOptionalModule = function (
   )
 }
 
+const MIN_NEXT_VERSION = '10.0.4'
+
 // 'critters' is used only in Next.js >= 10.0.4 when enabling an experimental option and has to be installed manually
 // we ignore it if it's missing
 const isExternalCrittersModule = function (moduleName, { dependencies = {}, devDependencies = {} }) {
@@ -76,11 +78,11 @@ const isExternalCrittersModule = function (moduleName, { dependencies = {}, devD
   // can the declared Next.js version resolve to >=10.0.4 ?
   // test exact versions
   if (validVersion(nextVersion)) {
-    return greaterThanEqual(nextVersion, '10.0.4')
+    return greaterThanEqual(nextVersion, MIN_NEXT_VERSION)
   }
 
   // test ranges
-  return validRange(nextVersion) && satisfies('10.0.4', nextVersion)
+  return validRange(nextVersion) && satisfies(MIN_NEXT_VERSION, nextVersion)
 }
 
 module.exports = { getNestedDependencies, handleModuleNotFound }
