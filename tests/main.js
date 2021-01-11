@@ -139,6 +139,14 @@ test('Throws on missing non-optional peer dependencies', async (t) => {
   await t.throwsAsync(zipNode(t, 'node-module-peer-not-optional'))
 })
 
+test('Throws on missing critters dependency for Next.js 9', async (t) => {
+  await t.throwsAsync(zipNode(t, 'node-module-next9-critters'))
+})
+
+test('Ignore missing critters dependency for Next.js 10', async (t) => {
+  await zipNode(t, 'node-module-next10-critters')
+})
+
 // We persist `package.json` as `package.json.txt` in git. Otherwise ESLint
 // tries to load when linting sibling JavaScript files. In this test, we
 // temporarily rename it to an actual `package.json`.
