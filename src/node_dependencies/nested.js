@@ -1,3 +1,5 @@
+const { satisfies, validRange } = require('semver')
+
 // Apply the Node.js module logic recursively on its own dependencies, using
 // the `package.json` `dependencies`, `peerDependencies` and
 // `optionalDependencies` keys
@@ -41,7 +43,10 @@ const EXCLUDED_PEER_DEPENDENCIES = new Set(['@prisma/cli', 'prisma2'])
 //  - are not reported when missing
 //  - are included in module dependencies
 const handleModuleNotFound = function ({ error, moduleName, packageJson }) {
-  if (error.code === 'MODULE_NOT_FOUND' && isOptionalModule(moduleName, packageJson)) {
+  if (
+    error.code === 'MODULE_NOT_FOUND' &&
+    (isOptionalModule(moduleName, packageJson) || isExternalCrittersModule(moduleName, packageJson))
+  ) {
     return []
   }
 
@@ -58,6 +63,20 @@ const isOptionalModule = function (
       peerDependenciesMeta[moduleName].optional &&
       peerDependencies[moduleName] !== undefined)
   )
+}
+
+// 'critters' is used only in Next.js >= 10.0.4 when enabling an experimental option and has to be installed manually
+// we ignore it if it's missing
+const isExternalCrittersModule = function (moduleName, { dependencies = {}, devDependencies = {} }) {
+  if (moduleName !== 'critters') {
+    return false
+  }
+  const nextVersion = dependencies.next || devDependencies.next
+  if (!validRange(nextVersion)) {
+    return false
+  }
+  // can the declared Next.js version resolve to 10.0.4 ?
+  return satisfies('10.0.4', nextVersion)
 }
 
 module.exports = { getNestedDependencies, handleModuleNotFound }
