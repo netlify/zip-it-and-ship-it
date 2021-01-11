@@ -45,7 +45,7 @@ const EXCLUDED_PEER_DEPENDENCIES = new Set(['@prisma/cli', 'prisma2'])
 const handleModuleNotFound = function ({ error, moduleName, packageJson }) {
   if (
     error.code === 'MODULE_NOT_FOUND' &&
-    (isOptionalModule(moduleName, packageJson) || isExternalModule(moduleName, packageJson))
+    (isOptionalModule(moduleName, packageJson) || isExternalCrittersModule(moduleName, packageJson))
   ) {
     return []
   }
@@ -67,7 +67,7 @@ const isOptionalModule = function (
 
 // 'critters' is used only in Next.js >= 10.0.4 when enabling an experimental option and has to be installed manually
 // we ignore it if it's missing
-const isExternalModule = function (moduleName, { dependencies = {}, devDependencies = {} }) {
+const isExternalCrittersModule = function (moduleName, { dependencies = {}, devDependencies = {} }) {
   if (moduleName !== 'critters') {
     return false
   }
@@ -75,6 +75,7 @@ const isExternalModule = function (moduleName, { dependencies = {}, devDependenc
   if (!validRange(nextVersion)) {
     return false
   }
+  // can the declared Next.js version resolve to 10.0.4 ?
   return satisfies('10.0.4', nextVersion)
 }
 
