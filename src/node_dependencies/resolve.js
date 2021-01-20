@@ -1,7 +1,6 @@
 const { version: nodeVersion } = require('process')
 
 const findUp = require('find-up')
-const pWaterfall = require('p-waterfall')
 const pathExists = require('path-exists')
 const resolveLib = require('resolve')
 const { lt: ltVersion } = require('semver')
@@ -44,13 +43,13 @@ const REQUEST_RESOLVE_MIN_VERSION = '8.9.0'
 // `resolve`:
 //   https://github.com/browserify/resolve/issues/151#issuecomment-368210310
 const resolvePathPreserveSymlinksForDir = function (path, basedir) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     resolveLib(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
       if (error) {
-        resolve({ error })
+        reject(error)
       }
 
-      resolve({ resolvedLocation })
+      resolve(resolvedLocation)
     })
   })
 }
@@ -59,24 +58,20 @@ const resolvePathPreserveSymlinksForDir = function (path, basedir) {
 // see https://github.com/browserify/resolve/issues/188#issuecomment-679010477
 // we return the first resolved location or the first error if all failed
 const resolvePathPreserveSymlinks = async function (path, baseDirs) {
-  const tasks = baseDirs.map((basedir) => async (previousValue) => {
-    if (previousValue.resolvedLocation !== undefined) {
-      return previousValue
+  // eslint-disable-next-line fp/no-let
+  let firstError
+  // eslint-disable-next-line fp/no-loops
+  for (const basedir of baseDirs) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      return await resolvePathPreserveSymlinksForDir(path, basedir)
+    } catch (error) {
+      // eslint-disable-next-line fp/no-mutation
+      firstError = firstError || error
     }
-    const { resolvedLocation, error } = await resolvePathPreserveSymlinksForDir(path, basedir)
-    if (resolvedLocation !== undefined) {
-      return { resolvedLocation }
-    }
-    // report the first error
-    return { error: previousValue.error || error }
-  })
-
-  const { resolvedLocation, error } = await pWaterfall(tasks, {})
-  if (resolvedLocation !== undefined) {
-    return resolvedLocation
   }
 
-  throw error
+  throw firstError
 }
 
 const resolvePathFollowSymlinks = function (path, baseDirs) {
