@@ -107,8 +107,8 @@ const RUNTIMES = {
 }
 
 // List all Netlify Functions main entry files for a specific directory
-const listFunctions = async function (srcFolder) {
-  const functionInfos = await getFunctionInfos(srcFolder)
+const listFunctions = async function (srcFolder, { nodeResolvePaths = [] } = {}) {
+  const functionInfos = await getFunctionInfos(srcFolder, { nodeResolvePaths })
   const listedFunctions = functionInfos.map(getListedFunction)
   return listedFunctions
 }
