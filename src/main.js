@@ -15,26 +15,30 @@ const { zipNodeJs } = require('./zip_node')
 const zipFunctions = async function (
   srcFolder,
   destFolder,
-  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo } = {},
+  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo, nodeResolvePaths = [] } = {},
 ) {
   const srcPaths = await getSrcPaths(srcFolder)
 
-  const zipped = await pMap(srcPaths, (srcPath) => zipFunction(srcPath, destFolder, { skipGo, zipGo }), {
-    concurrency: parallelLimit,
-  })
+  const zipped = await pMap(
+    srcPaths,
+    (srcPath) => zipFunction(srcPath, destFolder, { skipGo, zipGo, nodeResolvePaths }),
+    {
+      concurrency: parallelLimit,
+    },
+  )
   return zipped.filter(Boolean)
 }
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
-const zipFunction = async function (srcPath, destFolder, { skipGo = true, zipGo = !skipGo } = {}) {
+const zipFunction = async function (srcPath, destFolder, { skipGo = true, zipGo = !skipGo, nodeResolvePaths } = {}) {
   const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
 
   if (runtime === undefined) {
     return
   }
 
-  const srcFiles = await getSrcFiles({ runtime, stat, mainFile, extension, srcPath, srcDir })
+  const srcFiles = await getSrcFiles({ runtime, stat, mainFile, extension, srcPath, srcDir, nodeResolvePaths })
 
   await makeDir(destFolder)
 
@@ -48,11 +52,20 @@ const zipFunction = async function (srcPath, destFolder, { skipGo = true, zipGo 
     stat,
     zipGo,
     runtime,
+    additionalPrefixes: nodeResolvePaths,
   })
   return { path: destPath, runtime }
 }
 
-const zipJsFunction = async function ({ srcPath, destFolder, mainFile, filename, extension, srcFiles }) {
+const zipJsFunction = async function ({
+  srcPath,
+  destFolder,
+  mainFile,
+  filename,
+  extension,
+  srcFiles,
+  additionalPrefixes,
+}) {
   if (extension === '.zip') {
     const destPath = join(destFolder, filename)
     await cpFile(srcPath, destPath)
@@ -60,7 +73,7 @@ const zipJsFunction = async function ({ srcPath, destFolder, mainFile, filename,
   }
 
   const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
-  await zipNodeJs(srcFiles, destPath, filename, mainFile)
+  await zipNodeJs({ srcFiles, destPath, filename, mainFile, additionalPrefixes })
   return destPath
 }
 
@@ -101,9 +114,11 @@ const listFunctions = async function (srcFolder) {
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (srcFolder) {
+const listFunctionsFiles = async function (srcFolder, { nodeResolvePaths = [] } = {}) {
   const functionInfos = await getFunctionInfos(srcFolder)
-  const listedFunctionsFiles = await Promise.all(functionInfos.map(getListedFunctionFiles))
+  const listedFunctionsFiles = await Promise.all(
+    functionInfos.map((info) => getListedFunctionFiles(info, { nodeResolvePaths })),
+  )
   return [].concat(...listedFunctionsFiles)
 }
 
@@ -111,14 +126,25 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }) {
   return { name, mainFile, runtime, extension }
 }
 
-const getListedFunctionFiles = async function ({ runtime, name, stat, mainFile, extension, srcPath, srcDir }) {
-  const srcFiles = await getSrcFiles({ runtime, stat, mainFile, extension, srcPath, srcDir })
+const getListedFunctionFiles = async function (
+  { runtime, name, stat, mainFile, extension, srcPath, srcDir },
+  { nodeResolvePaths },
+) {
+  const srcFiles = await getSrcFiles({
+    runtime,
+    stat,
+    mainFile,
+    extension,
+    srcPath,
+    srcDir,
+    nodeResolvePaths,
+  })
   return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
 }
 
-const getSrcFiles = function ({ runtime, stat, mainFile, extension, srcPath, srcDir }) {
+const getSrcFiles = function ({ runtime, stat, mainFile, extension, srcPath, srcDir, nodeResolvePaths }) {
   if (runtime === 'js' && extension === '.js') {
-    return listNodeFiles(srcPath, mainFile, srcDir, stat)
+    return listNodeFiles({ srcPath, mainFile, srcDir, stat, nodeResolvePaths })
   }
 
   return [srcPath]

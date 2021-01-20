@@ -7,10 +7,10 @@ const zipIt = require('./main')
 
 // CLI entry point
 const runCli = async function () {
-  const { srcFolder, destFolder, zipGo } = parseArgs()
+  const { srcFolder, destFolder, zipGo, nodeResolvePaths } = parseArgs()
 
   try {
-    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, { zipGo })
+    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, { zipGo, nodeResolvePaths })
     console.log(JSON.stringify(zipped, null, 2))
   } catch (error) {
     console.error(error.toString())
@@ -27,6 +27,11 @@ const OPTIONS = {
     boolean: true,
     default: false,
     describe: 'Whether Go binaries should be zipped or copied as is',
+  },
+  'node-resolve-paths': {
+    array: true,
+    default: [],
+    describe: 'Additional paths to resolve Node.js dependencies from',
   },
 }
 

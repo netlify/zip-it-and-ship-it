@@ -61,6 +61,7 @@
     "locate-path": "^5.0.0",
     "make-dir": "^3.1.0",
     "p-map": "^3.0.0",
+    "p-waterfall": "^2.1.1",
     "path-exists": "^4.0.0",
     "pkg-dir": "^4.2.0",
     "precinct": "^6.3.1",

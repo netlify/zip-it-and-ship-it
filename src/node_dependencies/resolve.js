@@ -1,6 +1,7 @@
 const { version: nodeVersion } = require('process')
 
 const findUp = require('find-up')
+const pWaterfall = require('p-waterfall')
 const pathExists = require('path-exists')
 const resolveLib = require('resolve')
 const { lt: ltVersion } = require('semver')
@@ -19,18 +20,18 @@ const { lt: ltVersion } = require('semver')
 // However it does not give helpful error messages.
 //   https://github.com/browserify/resolve/issues/223
 // So, on errors, we fallback to `require.resolve()`
-const resolvePackage = async function (moduleName, basedir) {
+const resolvePackage = async function (moduleName, baseDirs) {
   try {
-    return await resolvePathPreserveSymlinks(`${moduleName}/package.json`, basedir)
+    return await resolvePathPreserveSymlinks(`${moduleName}/package.json`, baseDirs)
   } catch (error) {
     if (ltVersion(nodeVersion, REQUEST_RESOLVE_MIN_VERSION)) {
       throw error
     }
 
     try {
-      return resolvePathFollowSymlinks(`${moduleName}/package.json`, basedir)
+      return resolvePathFollowSymlinks(`${moduleName}/package.json`, baseDirs)
     } catch (error_) {
-      return await resolvePackageFallback(moduleName, basedir, error_)
+      return await resolvePackageFallback(moduleName, baseDirs, error_)
     }
   }
 }
@@ -42,20 +43,44 @@ const REQUEST_RESOLVE_MIN_VERSION = '8.9.0'
 // We need to use `new Promise()` due to a bug with `utils.promisify()` on
 // `resolve`:
 //   https://github.com/browserify/resolve/issues/151#issuecomment-368210310
-const resolvePathPreserveSymlinks = function (path, basedir) {
-  return new Promise((resolve, reject) => {
+const resolvePathPreserveSymlinksForDir = function (path, basedir) {
+  return new Promise((resolve) => {
     resolveLib(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
       if (error) {
-        return reject(error)
+        resolve({ error })
       }
 
-      resolve(resolvedLocation)
+      resolve({ resolvedLocation })
     })
   })
 }
 
-const resolvePathFollowSymlinks = function (path, basedir) {
-  return require.resolve(path, { paths: [basedir] })
+// the resolve library has a `paths` option but it's not the same as multiple basedirs
+// see https://github.com/browserify/resolve/issues/188#issuecomment-679010477
+// we return the first resolved location or the first error if all failed
+const resolvePathPreserveSymlinks = async function (path, baseDirs) {
+  const tasks = baseDirs.map((basedir) => async (previousValue) => {
+    if (previousValue.resolvedLocation !== undefined) {
+      return previousValue
+    }
+    const { resolvedLocation, error } = await resolvePathPreserveSymlinksForDir(path, basedir)
+    if (resolvedLocation !== undefined) {
+      return { resolvedLocation }
+    }
+    // report the first error
+    return { error: previousValue.error || error }
+  })
+
+  const { resolvedLocation, error } = await pWaterfall(tasks, {})
+  if (resolvedLocation !== undefined) {
+    return resolvedLocation
+  }
+
+  throw error
+}
+
+const resolvePathFollowSymlinks = function (path, baseDirs) {
+  return require.resolve(path, { paths: baseDirs })
 }
 
 // `require.resolve()` on a module's specific file (like `package.json`)
@@ -64,10 +89,10 @@ const resolvePathFollowSymlinks = function (path, basedir) {
 // It looks for the first directory up from a package's `main` file that:
 //   - is named like the package
 //   - has a `package.json`
-// Theoritically, this might not the root `package.json`, but this is very
+// Theoretically, this might not the root `package.json`, but this is very
 // unlikely, and we don't have any better alternative.
-const resolvePackageFallback = async function (moduleName, basedir, error) {
-  const mainFilePath = resolvePathFollowSymlinks(moduleName, basedir)
+const resolvePackageFallback = async function (moduleName, baseDirs, error) {
+  const mainFilePath = resolvePathFollowSymlinks(moduleName, baseDirs)
   const packagePath = await findUp(isPackageDir.bind(null, moduleName), { cwd: mainFilePath, type: 'directory' })
   if (packagePath === undefined) {
     throw error

@@ -10,14 +10,19 @@ const { getNestedDependencies, handleModuleNotFound } = require('./nested')
 const { getPackageJson } = require('./package_json')
 const { getPublishedFiles } = require('./published')
 const { resolvePathPreserveSymlinks, resolvePackage } = require('./resolve')
+const { getSideFiles } = require('./side_files')
 
 const pGlob = promisify(glob)
 
 // Retrieve the paths to the Node.js files to zip.
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
-const listNodeFiles = async function (srcPath, mainFile, srcDir, stat) {
-  const [treeFiles, depFiles] = await Promise.all([getTreeFiles(srcPath, stat), getDependencies(mainFile, srcDir)])
+const listNodeFiles = async function ({ srcPath, mainFile, srcDir, stat, nodeResolvePaths = [] }) {
+  const normalizedResolvedPath = nodeResolvePaths.map(normalize)
+  const [treeFiles, depFiles] = await Promise.all([
+    getTreeFiles(srcPath, stat),
+    getDependencies(mainFile, srcDir, normalizedResolvedPath),
+  ])
   const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
 
@@ -47,20 +52,20 @@ const isNotJunk = function (file) {
 }
 
 // Retrieve all the files recursively required by a Node.js file
-const getDependencies = async function (mainFile, srcDir) {
+const getDependencies = async function (mainFile, srcDir, nodeResolvePaths) {
   const packageJson = await getPackageJson(srcDir)
 
   const state = { localFiles: new Set(), modulePaths: new Set() }
 
   try {
-    return await getFileDependencies({ path: mainFile, packageJson, state })
+    return await getFileDependencies({ path: mainFile, packageJson, state, nodeResolvePaths })
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
   }
 }
 
-const getFileDependencies = async function ({ path, packageJson, state, treeShakeNext }) {
+const getFileDependencies = async function ({ path, packageJson, state, treeShakeNext, nodeResolvePaths }) {
   if (state.localFiles.has(path)) {
     return []
   }
@@ -74,18 +79,27 @@ const getFileDependencies = async function ({ path, packageJson, state, treeShak
   const dependencies = precinct.paperwork(path, { includeCore: false })
 
   const depsPaths = await Promise.all(
-    dependencies.map((dependency) => getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext })),
+    dependencies.map((dependency) =>
+      getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext, nodeResolvePaths }),
+    ),
   )
   return [].concat(...depsPaths)
 }
 
-const getImportDependencies = function ({ dependency, basedir, packageJson, state, treeShakeNext }) {
+const getImportDependencies = function ({ dependency, basedir, packageJson, state, treeShakeNext, nodeResolvePaths }) {
   const shouldTreeShakeNext = treeShakeNext || isNextOnNetlify(dependency)
   if (shouldTreeShake(dependency, shouldTreeShakeNext)) {
-    return getTreeShakedDependencies({ dependency, basedir, packageJson, state, treeShakeNext: shouldTreeShakeNext })
+    return getTreeShakedDependencies({
+      dependency,
+      basedir,
+      packageJson,
+      state,
+      treeShakeNext: shouldTreeShakeNext,
+      nodeResolvePaths,
+    })
   }
 
-  return getAllDependencies({ dependency, basedir, state, packageJson })
+  return getAllDependencies({ dependency, basedir, state, packageJson, nodeResolvePaths })
 }
 
 const isNextOnNetlify = function (dependency) {
@@ -108,15 +122,22 @@ const shouldTreeShake = function (dependency, treeShakeNext) {
 const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
 
 // When a file requires another one, we apply the top-level logic recursively
-const getTreeShakedDependencies = async function ({ dependency, basedir, packageJson, state, treeShakeNext }) {
-  const path = await resolvePathPreserveSymlinks(dependency, basedir)
-  const depsPath = await getFileDependencies({ path, packageJson, state, treeShakeNext })
+const getTreeShakedDependencies = async function ({
+  dependency,
+  basedir,
+  packageJson,
+  state,
+  treeShakeNext,
+  nodeResolvePaths,
+}) {
+  const path = await resolvePathPreserveSymlinks(dependency, [basedir, ...nodeResolvePaths])
+  const depsPath = await getFileDependencies({ path, packageJson, state, treeShakeNext, nodeResolvePaths })
   return [path, ...depsPath]
 }
 
 // When a file requires a module, we find its path inside `node_modules` and
 // use all its published files. We also recurse on the module's dependencies.
-const getAllDependencies = async function ({ dependency, basedir, state, packageJson }) {
+const getAllDependencies = async function ({ dependency, basedir, state, packageJson, nodeResolvePaths }) {
   const moduleName = getModuleName(dependency)
 
   // Happens when doing require("@scope") (not "@scope/name") or other oddities
@@ -126,7 +147,7 @@ const getAllDependencies = async function ({ dependency, basedir, state, package
   }
 
   try {
-    return await getModuleNameDependencies(moduleName, basedir, state)
+    return await getModuleNameDependencies({ moduleName, basedir, state, nodeResolvePaths })
   } catch (error) {
     return handleModuleNotFound({ error, moduleName, packageJson })
   }
@@ -142,13 +163,13 @@ const getModuleName = function (dependency) {
 // Windows path normalization
 const BACKSLASH_REGEXP = /\\/g
 
-const getModuleNameDependencies = async function (moduleName, basedir, state) {
+const getModuleNameDependencies = async function ({ moduleName, basedir, state, nodeResolvePaths }) {
   if (isExcludedModule(moduleName)) {
     return []
   }
 
   // Find the Node.js module directory path
-  const packagePath = await resolvePackage(moduleName, basedir)
+  const packagePath = await resolvePackage(moduleName, [basedir, ...nodeResolvePaths])
 
   if (packagePath === undefined) {
     return []
@@ -169,7 +190,7 @@ const getModuleNameDependencies = async function (moduleName, basedir, state) {
   const [publishedFiles, sideFiles, depsPaths] = await Promise.all([
     getPublishedFiles(modulePath),
     getSideFiles(modulePath, moduleName),
-    getNestedModules(modulePath, state, packageJson),
+    getNestedModules({ modulePath, state, packageJson, nodeResolvePaths }),
   ])
   return [...publishedFiles, ...sideFiles, ...depsPaths]
 }
@@ -179,26 +200,13 @@ const isExcludedModule = function (moduleName) {
 }
 const EXCLUDED_MODULES = new Set(['aws-sdk'])
 
-// Some modules generate source files on `postinstall` that are not located
-// inside the module's directory itself.
-const getSideFiles = function (modulePath, moduleName) {
-  const sideFiles = SIDE_FILES[moduleName]
-  if (sideFiles === undefined) {
-    return []
-  }
-
-  return getPublishedFiles(`${modulePath}/${sideFiles}`)
-}
-
-const SIDE_FILES = {
-  '@prisma/client': '../../.prisma',
-}
-
-const getNestedModules = async function (modulePath, state, packageJson) {
+const getNestedModules = async function ({ modulePath, state, packageJson, nodeResolvePaths }) {
   const dependencies = getNestedDependencies(packageJson)
 
   const depsPaths = await Promise.all(
-    dependencies.map((dependency) => getAllDependencies({ dependency, basedir: modulePath, state, packageJson })),
+    dependencies.map((dependency) =>
+      getAllDependencies({ dependency, basedir: modulePath, state, packageJson, nodeResolvePaths }),
+    ),
   )
   return [].concat(...depsPaths)
 }
