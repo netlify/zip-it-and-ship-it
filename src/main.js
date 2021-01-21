@@ -31,7 +31,11 @@ const zipFunctions = async function (
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
-const zipFunction = async function (srcPath, destFolder, { skipGo = true, zipGo = !skipGo, nodeResolvePaths } = {}) {
+const zipFunction = async function (
+  srcPath,
+  destFolder,
+  { skipGo = true, zipGo = !skipGo, nodeResolvePaths = [] } = {},
+) {
   const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
 
   if (runtime === undefined) {
