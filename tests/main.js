@@ -151,6 +151,10 @@ test('Ignore missing critters dependency for Next.js exact version 10.0.5', asyn
   await zipNode(t, 'node-module-next10-critters-exact')
 })
 
+test('Resolves dependencies from .netlify/plugins/node_modules', async (t) => {
+  await zipNode(t, 'node-module-next-image')
+})
+
 // We persist `package.json` as `package.json.txt` in git. Otherwise ESLint
 // tries to load when linting sibling JavaScript files. In this test, we
 // temporarily rename it to an actual `package.json`.

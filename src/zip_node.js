@@ -11,7 +11,7 @@ const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 const pStat = promisify(fs.stat)
 
 // Zip a Node.js function file
-const zipNodeJs = async function (srcFiles, destPath, filename, mainFile) {
+const zipNodeJs = async function ({ srcFiles, destPath, filename, mainFile, pluginsModulesPath }) {
   const { archive, output } = startZip(destPath)
 
   const dirnames = srcFiles.map(dirname)
@@ -24,7 +24,7 @@ const zipNodeJs = async function (srcFiles, destPath, filename, mainFile) {
   // We ensure this is not async, so that the archive's checksum is
   // deterministic. Otherwise it depends on the order the files were added.
   srcFilesInfos.forEach(({ srcFile, stat }) => {
-    zipJsFile({ srcFile, commonPrefix, archive, stat })
+    zipJsFile({ srcFile, commonPrefix, pluginsModulesPath, archive, stat })
   })
 
   await endZip(archive, output)
@@ -43,19 +43,21 @@ const addStat = async function (srcFile) {
   return { srcFile, stat }
 }
 
-const zipJsFile = function ({ srcFile, commonPrefix, archive, stat }) {
-  const filename = normalizeFilePath(srcFile, commonPrefix)
+const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat }) {
+  const filename = normalizeFilePath(srcFile, commonPrefix, pluginsModulesPath)
   addZipFile(archive, srcFile, filename, stat)
 }
 
 // `adm-zip` and `require()` expect Unix paths.
 // We remove the common path prefix.
 // With files on different Windows drives, we remove the drive letter.
-const normalizeFilePath = function (path, commonPrefix) {
+const normalizeFilePath = function (path, commonPrefix, pluginsModulesPath) {
   const pathA = normalize(path)
-  const pathB = pathA.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
-  const pathC = unixify(pathB)
-  return pathC
+  const pathB =
+    pluginsModulesPath === undefined ? pathA : pathA.replace(pluginsModulesPath, `${ZIP_ROOT_DIR}${sep}node_modules`)
+  const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
+  const pathD = unixify(pathC)
+  return pathD
 }
 
 const ZIP_ROOT_DIR = 'src'
