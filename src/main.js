@@ -10,7 +10,9 @@ const { listNodeFiles } = require('./node_dependencies')
 const { zipBinary } = require('./runtime')
 const { zipNodeJs } = require('./zip_node')
 
-const getPluginsModulesPath = (srcDir) => findUp('.netlify/plugins/node_modules', { cwd: srcDir, type: 'directory' })
+const AUTO_PLUGINS_DIR = '.netlify/plugins/'
+
+const getPluginsModulesPath = (srcDir) => findUp(`${AUTO_PLUGINS_DIR}node_modules`, { cwd: srcDir, type: 'directory' })
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
