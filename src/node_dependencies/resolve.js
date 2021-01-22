@@ -46,7 +46,7 @@ const resolvePathPreserveSymlinksForDir = function (path, basedir) {
   return new Promise((resolve, reject) => {
     resolveLib(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
       if (error) {
-        reject(error)
+        return reject(error)
       }
 
       resolve(resolvedLocation)
