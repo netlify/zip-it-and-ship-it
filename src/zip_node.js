@@ -11,7 +11,7 @@ const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 const pStat = promisify(fs.stat)
 
 // Zip a Node.js function file
-const zipNodeJs = async function ({ srcFiles, destPath, filename, mainFile, additionalPrefixes }) {
+const zipNodeJs = async function ({ srcFiles, destPath, filename, mainFile, pluginsModulesPath }) {
   const { archive, output } = startZip(destPath)
 
   const dirnames = srcFiles.map(dirname)
@@ -24,7 +24,7 @@ const zipNodeJs = async function ({ srcFiles, destPath, filename, mainFile, addi
   // We ensure this is not async, so that the archive's checksum is
   // deterministic. Otherwise it depends on the order the files were added.
   srcFilesInfos.forEach(({ srcFile, stat }) => {
-    zipJsFile({ srcFile, commonPrefix, additionalPrefixes, archive, stat })
+    zipJsFile({ srcFile, commonPrefix, pluginsModulesPath, archive, stat })
   })
 
   await endZip(archive, output)
@@ -43,24 +43,18 @@ const addStat = async function (srcFile) {
   return { srcFile, stat }
 }
 
-const zipJsFile = function ({ srcFile, commonPrefix, additionalPrefixes, archive, stat }) {
-  const filename = normalizeFilePath(srcFile, commonPrefix, additionalPrefixes)
+const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat }) {
+  const filename = normalizeFilePath(srcFile, commonPrefix, pluginsModulesPath)
   addZipFile(archive, srcFile, filename, stat)
 }
 
 // `adm-zip` and `require()` expect Unix paths.
 // We remove the common path prefix.
 // With files on different Windows drives, we remove the drive letter.
-const normalizeFilePath = function (path, commonPrefix, additionalPrefixes = []) {
+const normalizeFilePath = function (path, commonPrefix, pluginsModulesPath) {
   const pathA = normalize(path)
-
-  // additional prefixes are used to write the dependency in the correct location in the zip file
-  // e.g. if we resolved a dependency from .netlify/plugins/node_modules/<path>, the target path should be
-  // src/node_modules/<path>
-  const pathB = additionalPrefixes.reduce(
-    (acc, prefix) => acc.replace(normalize(prefix), `${ZIP_ROOT_DIR}${sep}node_modules`),
-    pathA,
-  )
+  const pathB =
+    pluginsModulesPath === undefined ? pathA : pathA.replace(pluginsModulesPath, `${ZIP_ROOT_DIR}${sep}node_modules`)
   const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
   const pathD = unixify(pathC)
   return pathD

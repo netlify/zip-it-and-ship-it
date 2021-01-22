@@ -86,13 +86,6 @@ _Default value_: `5`
 
 Maximum number of Functions to bundle at the same time.
 
-#### nodeResolvePaths
-
-_Type_: `string[]`\
-_Default value_: `[]`
-
-Additional absolute paths to resolve Node.js functions dependencies from.
-
 ### Return value
 
 This returns a `Promise` resolving to an array of objects describing each archive. Each object has the following
@@ -176,7 +169,7 @@ _Type_: `string`
 
 Source file extension. For Node.js, this is either `.js` or `.zip`. For Go, this can be anything.
 
-## listFunctionsFiles(srcFolder, options?)
+## listFunctionsFiles(srcFolder)
 
 `srcFolder`: `string`\
 _Return value_: `Promise<object[]>`
@@ -192,15 +185,6 @@ const listNetlifyFunctionsFiles = async function () {
   return functions
 }
 ```
-
-### Options
-
-#### nodeResolvePaths
-
-_Type_: `string[]`\
-_Default value_: `[]`
-
-Additional absolute paths to resolve Node.js functions dependencies from.
 
 ### Return value
 

@@ -51,22 +51,3 @@ test('CLI | Should throw on missing destFolder', async (t) => {
   t.is(exitCode, 1)
   t.true(stderr.includes('Not enough non-option arguments'))
 })
-
-test('CLI | node-resolve-paths flag', async (t) => {
-  const tmpDir = await tmpName({ prefix: 'zip-it-test' })
-  const nodeResolvePaths = [
-    `${FIXTURES_DIR}/node-module-next-image/.netlify/plugins/node_modules`,
-    `${FIXTURES_DIR}/external-dependencies/node-module-next-image/node_modules`,
-  ]
-
-  const resolvePathsArgs = [].concat(...nodeResolvePaths.map((resolvePath) => ['--node-resolve-paths', resolvePath]))
-  const { stdout } = await execa(BINARY_PATH, [
-    join(FIXTURES_DIR, 'node-module-next-image'),
-    tmpDir,
-    ...resolvePathsArgs,
-  ])
-  const zipped = JSON.parse(stdout)
-
-  t.is(zipped.length, 1)
-  t.is(zipped[0].runtime, 'js')
-})

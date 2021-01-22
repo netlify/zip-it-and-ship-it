@@ -151,16 +151,8 @@ test('Ignore missing critters dependency for Next.js exact version 10.0.5', asyn
   await zipNode(t, 'node-module-next10-critters-exact')
 })
 
-test('Throws when nodeResolvePaths are not provided', async (t) => {
-  await t.throwsAsync(zipNode(t, 'node-module-next-image'))
-})
-
-test('Resolves dependencies from nodeResolvePaths', async (t) => {
-  const nodeResolvePaths = [
-    `${FIXTURES_DIR}/node-module-next-image/.netlify/plugins/node_modules`,
-    `${FIXTURES_DIR}/external-dependencies/node-module-next-image/node_modules`,
-  ]
-  await zipNode(t, 'node-module-next-image', { opts: { nodeResolvePaths } })
+test('Resolves dependencies from .netlify/plugins/node_modules', async (t) => {
+  await zipNode(t, 'node-module-next-image')
 })
 
 // We persist `package.json` as `package.json.txt` in git. Otherwise ESLint
