@@ -1,4 +1,4 @@
-const { valid: validVersion, validRange, satisfies, gte: greaterThanEqual } = require('semver')
+const { valid: validVersion, validRange, satisfies, gte: greaterThanEqual, ltr: lessThanRange } = require('semver')
 
 // Apply the Node.js module logic recursively on its own dependencies, using
 // the `package.json` `dependencies`, `peerDependencies` and
@@ -67,6 +67,9 @@ const isOptionalModule = function (
 
 const MIN_NEXT_VERSION = '10.0.4'
 
+const satisfiesRange = (range) =>
+  validRange(range) && (satisfies(MIN_NEXT_VERSION, range) || lessThanRange(MIN_NEXT_VERSION, range))
+
 // 'critters' is used only in Next.js >= 10.0.4 when enabling an experimental option and has to be installed manually
 // we ignore it if it's missing
 const isExternalCrittersModule = function (moduleName, { dependencies = {}, devDependencies = {} }) {
@@ -81,8 +84,7 @@ const isExternalCrittersModule = function (moduleName, { dependencies = {}, devD
     return greaterThanEqual(nextVersion, MIN_NEXT_VERSION)
   }
 
-  // test ranges
-  return validRange(nextVersion) && satisfies(MIN_NEXT_VERSION, nextVersion)
+  return satisfiesRange(nextVersion)
 }
 
 module.exports = { getNestedDependencies, handleModuleNotFound }
