@@ -155,6 +155,10 @@ test('Ignore missing critters dependency for Next.js with range ^10.0.5', async 
   await zipNode(t, 'node-module-next10-critters-10.0.5-range')
 })
 
+test(`Ignore missing critters dependency for Next.js with version='latest'`, async (t) => {
+  await zipNode(t, 'node-module-next10-critters-latest')
+})
+
 test('Resolves dependencies from .netlify/plugins/node_modules', async (t) => {
   await zipNode(t, 'node-module-next-image')
 })

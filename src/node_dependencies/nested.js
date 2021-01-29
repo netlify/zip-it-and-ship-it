@@ -78,6 +78,10 @@ const isExternalCrittersModule = function (moduleName, { dependencies = {}, devD
   }
   const nextVersion = dependencies.next || devDependencies.next
 
+  if (nextVersion === 'latest') {
+    return true
+  }
+
   // can the declared Next.js version resolve to >=10.0.4 ?
   // test exact versions
   if (validVersion(nextVersion)) {
