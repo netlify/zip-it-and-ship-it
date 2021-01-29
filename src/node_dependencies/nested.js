@@ -18,7 +18,7 @@ const shouldIncludePeerDependency = function (name) {
   return !EXCLUDED_PEER_DEPENDENCIES.has(name)
 }
 
-const EXCLUDED_PEER_DEPENDENCIES = new Set(['@prisma/cli', 'prisma2'])
+const EXCLUDED_PEER_DEPENDENCIES = new Set(['@prisma/cli', 'prisma2', 'prisma'])
 
 // Modules can be required conditionally (inside an `if` or `try`/`catch` block).
 // When a `require()` statement is found but the module is not found, it is
