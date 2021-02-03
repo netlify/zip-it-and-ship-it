@@ -62,7 +62,7 @@ const zipNodeJsWithEsbuild = async function ({
     external: externalModules,
     outfile: bundledFilePath,
     platform: 'node',
-    target: ['node12.19.0'],
+    target: ['es2017'],
   })
 
   const { archive, output } = startZip(destPath)
