@@ -1,17 +1,32 @@
 const { Buffer } = require('buffer')
 const fs = require('fs')
-const { dirname, normalize, sep } = require('path')
+const { dirname, join, normalize, sep } = require('path')
 const { promisify } = require('util')
 
 const commonPathPrefix = require('common-path-prefix')
+const esbuild = require('esbuild')
 const unixify = require('unixify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 
 const pStat = promisify(fs.stat)
+const pUnlink = promisify(fs.unlink)
 
 // Zip a Node.js function file
-const zipNodeJs = async function ({ srcFiles, destPath, filename, mainFile, pluginsModulesPath }) {
+const zipNodeJs = async function ({
+  destFolder,
+  destPath,
+  externalModules,
+  filename,
+  mainFile,
+  pluginsModulesPath,
+  srcFiles,
+  useEsbuild,
+}) {
+  if (useEsbuild) {
+    return zipNodeJsWithEsbuild({ destFolder, destPath, externalModules, filename, mainFile, pluginsModulesPath })
+  }
+
   const { archive, output } = startZip(destPath)
 
   const dirnames = srcFiles.map(dirname)
@@ -28,6 +43,42 @@ const zipNodeJs = async function ({ srcFiles, destPath, filename, mainFile, plug
   })
 
   await endZip(archive, output)
+}
+
+// Zip a Node.js function file with esbuild
+const zipNodeJsWithEsbuild = async function ({
+  destFolder,
+  destPath,
+  externalModules = [],
+  filename,
+  mainFile,
+  pluginsModulesPath,
+}) {
+  const bundledFilePath = join(destFolder, filename)
+
+  await esbuild.build({
+    bundle: true,
+    entryPoints: [mainFile],
+    external: externalModules,
+    outfile: bundledFilePath,
+    platform: 'node',
+    target: ['node12.19.0'],
+  })
+
+  const { archive, output } = startZip(destPath)
+  const { srcFile, stat } = await addStat(bundledFilePath)
+
+  addEntryFile(destFolder, archive, filename, bundledFilePath)
+
+  zipJsFile({ srcFile, destFolder, pluginsModulesPath, archive, stat })
+
+  await endZip(archive, output)
+
+  try {
+    await pUnlink(bundledFilePath)
+  } catch (_) {
+    // no-op
+  }
 }
 
 const addEntryFile = function (commonPrefix, archive, filename, mainFile) {

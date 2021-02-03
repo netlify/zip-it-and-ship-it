@@ -7,10 +7,15 @@ const zipIt = require('./main')
 
 // CLI entry point
 const runCli = async function () {
-  const { srcFolder, destFolder, zipGo } = parseArgs()
+  const { destFolder, externalModules, zipGo, parallelLimit, srcFolder, useEsbuild } = parseArgs()
 
   try {
-    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, { zipGo })
+    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, {
+      externalModules,
+      parallelLimit,
+      useEsbuild,
+      zipGo,
+    })
     console.log(JSON.stringify(zipped, null, 2))
   } catch (error) {
     console.error(error.toString())
@@ -27,6 +32,21 @@ const OPTIONS = {
     boolean: true,
     default: false,
     describe: 'Whether Go binaries should be zipped or copied as is',
+  },
+  'parallel-limit': {
+    number: true,
+    describe: 'Maximum number of Functions to bundle at the same time',
+  },
+  'use-esbuild': {
+    boolean: true,
+    default: false,
+    describe: 'Whether to use esbuild to bundle JavaScript functions',
+    hidden: true,
+  },
+  'external-modules': {
+    array: true,
+    describe: 'List of Node modules to keep out of the bundle',
+    hidden: true,
   },
 }
 
