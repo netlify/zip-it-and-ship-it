@@ -7,7 +7,7 @@ const zipIt = require('./main')
 
 // CLI entry point
 const runCli = async function () {
-  const { destFolder, externalModules, zipGo, parallelLimit, srcFolder, useEsbuild } = parseArgs()
+  const { destFolder, externalModules, parallelLimit, srcFolder, useEsbuild, zipGo } = parseArgs()
 
   try {
     const zipped = await zipIt.zipFunctions(srcFolder, destFolder, {
