@@ -65,19 +65,21 @@ const zipNodeJsWithEsbuild = async function ({
     target: ['es2017'],
   })
 
-  const { archive, output } = startZip(destPath)
-  const { srcFile, stat } = await addStat(bundledFilePath)
-
-  addEntryFile(destFolder, archive, filename, bundledFilePath)
-
-  zipJsFile({ srcFile, destFolder, pluginsModulesPath, archive, stat })
-
-  await endZip(archive, output)
-
   try {
-    await pUnlink(bundledFilePath)
-  } catch (_) {
-    // no-op
+    const { archive, output } = startZip(destPath)
+    const { srcFile, stat } = await addStat(bundledFilePath)
+
+    addEntryFile(destFolder, archive, filename, bundledFilePath)
+
+    zipJsFile({ archive, commonPrefix: destFolder, pluginsModulesPath, srcFile, stat })
+
+    await endZip(archive, output)
+  } finally {
+    try {
+      await pUnlink(bundledFilePath)
+    } catch (_) {
+      // no-op
+    }
   }
 }
 
