@@ -37,7 +37,7 @@ const getFunctionInfo = async function (srcPath) {
     return {}
   }
 
-  if (extension === '.zip' || extension === '.js') {
+  if (['.js', '.ts', '.zip'].includes(extension)) {
     return { runtime: 'js', name, filename, stat, mainFile, extension, srcPath, srcDir }
   }
 
