@@ -5,5 +5,5 @@ const { zipRustFunction } = require('./rust')
 module.exports = {
   go: zipGoFunction,
   js: zipJsFunction,
-  rust: zipRustFunction,
+  rs: zipRustFunction,
 }
