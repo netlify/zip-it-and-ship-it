@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { exit } = require('process')
+const { env, exit } = require('process')
 
 const yargs = require('yargs')
 
@@ -39,12 +39,13 @@ const OPTIONS = {
   },
   'use-esbuild': {
     boolean: true,
-    default: false,
+    default: Boolean(env.NETLIFY_EXPERIMENTAL_ESBUILD),
     describe: 'Whether to use esbuild to bundle JavaScript functions',
     hidden: true,
   },
   'external-modules': {
     array: true,
+    default: (env.NETLIFY_EXPERIMENTAL_EXTERNAL_MODULES || '').split(','),
     describe: 'List of Node modules to keep out of the bundle',
     hidden: true,
   },

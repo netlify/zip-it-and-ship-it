@@ -1,6 +1,6 @@
 const { Buffer } = require('buffer')
 const fs = require('fs')
-const { dirname, join, normalize, sep } = require('path')
+const { basename, dirname, extname, join, normalize, sep } = require('path')
 const { promisify } = require('util')
 
 const commonPathPrefix = require('common-path-prefix')
@@ -54,7 +54,8 @@ const zipNodeJsWithEsbuild = async function ({
   mainFile,
   pluginsModulesPath,
 }) {
-  const bundledFilePath = join(destFolder, filename)
+  const jsFilename = `${basename(filename, extname(filename))}.js`
+  const bundledFilePath = join(destFolder, jsFilename)
 
   await esbuild.build({
     bundle: true,
@@ -69,7 +70,7 @@ const zipNodeJsWithEsbuild = async function ({
     const { archive, output } = startZip(destPath)
     const { srcFile, stat } = await addStat(bundledFilePath)
 
-    addEntryFile(destFolder, archive, filename, bundledFilePath)
+    addEntryFile(destFolder, archive, jsFilename, bundledFilePath)
 
     zipJsFile({ archive, commonPrefix: destFolder, pluginsModulesPath, srcFile, stat })
 

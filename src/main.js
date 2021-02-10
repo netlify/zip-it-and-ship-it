@@ -1,14 +1,12 @@
-const { join, basename, extname } = require('path')
+const { extname } = require('path')
 
-const cpFile = require('cp-file')
 const findUp = require('find-up')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 
 const { getFunctionInfos, getSrcPaths, getFunctionInfo } = require('./info')
 const { listNodeFiles } = require('./node_dependencies')
-const { zipBinary } = require('./runtime')
-const { zipNodeJs } = require('./zip_node')
+const RUNTIMES = require('./runtimes')
 
 const AUTO_PLUGINS_DIR = '.netlify/plugins/'
 
@@ -49,7 +47,17 @@ const zipFunction = async function (
 
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
-  const srcFiles = await getSrcFiles({ runtime, stat, mainFile, extension, srcPath, srcDir, pluginsModulesPath })
+  const srcFiles = await getSrcFiles({
+    runtime,
+    stat,
+    mainFile,
+    extension,
+    srcPath,
+    srcDir,
+    pluginsModulesPath,
+    useEsbuild,
+    externalModules,
+  })
 
   await makeDir(destFolder)
 
@@ -68,66 +76,6 @@ const zipFunction = async function (
     externalModules,
   })
   return { path: destPath, runtime }
-}
-
-const zipJsFunction = async function ({
-  srcPath,
-  destFolder,
-  mainFile,
-  filename,
-  extension,
-  srcFiles,
-  pluginsModulesPath,
-  useEsbuild,
-  externalModules,
-}) {
-  if (extension === '.zip') {
-    const destPath = join(destFolder, filename)
-    await cpFile(srcPath, destPath)
-    return destPath
-  }
-
-  const destPath = join(destFolder, `${basename(filename, '.js')}.zip`)
-  await zipNodeJs({
-    srcFiles,
-    destFolder,
-    destPath,
-    filename,
-    mainFile,
-    pluginsModulesPath,
-    useEsbuild,
-    externalModules,
-  })
-  return destPath
-}
-
-const zipGoFunction = async function ({ srcPath, destFolder, stat, zipGo, filename, runtime }) {
-  if (zipGo) {
-    const destPath = join(destFolder, `${filename}.zip`)
-    await zipBinary({ srcPath, destPath, filename, stat, runtime })
-    return destPath
-  }
-
-  const destPath = join(destFolder, filename)
-  await cpFile(srcPath, destPath)
-  return destPath
-}
-
-// Rust functions must always be zipped.
-// The name of the binary inside the zip file must
-// always be `bootstrap` because they include the
-// Lambda runtime, and that's the name that AWS
-// expects for those kind of functions.
-const zipRustFunction = async function ({ srcPath, destFolder, stat, filename, runtime }) {
-  const destPath = join(destFolder, `${filename}.zip`)
-  await zipBinary({ srcPath, destPath, filename: 'bootstrap', stat, runtime })
-  return destPath
-}
-
-const RUNTIMES = {
-  js: zipJsFunction,
-  go: zipGoFunction,
-  rs: zipRustFunction,
 }
 
 // List all Netlify Functions main entry files for a specific directory
@@ -169,8 +117,12 @@ const getListedFunctionFiles = async function (
   return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
 }
 
-const getSrcFiles = function ({ runtime, stat, mainFile, extension, srcPath, srcDir, pluginsModulesPath }) {
+const getSrcFiles = function ({ runtime, stat, mainFile, extension, srcPath, srcDir, pluginsModulesPath, useEsbuild }) {
   if (runtime === 'js' && extension === '.js') {
+    if (useEsbuild) {
+      return []
+    }
+
     return listNodeFiles({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
   }
 
