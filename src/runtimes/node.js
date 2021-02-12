@@ -1,38 +1,91 @@
-const { join, basename } = require('path')
+const { basename, dirname, join } = require('path')
 
-const cpFile = require('cp-file')
+const commonPathPrefix = require('common-path-prefix')
 
+const { bundleJsFile } = require('../bundler')
+const { getDependencies, listFilesUsingLegacyBundler } = require('../node_dependencies')
 const { zipNodeJs } = require('../zip_node')
 
-const zipJsFunction = async function ({
-  srcPath,
-  destFolder,
-  mainFile,
-  filename,
-  extension,
-  srcFiles,
-  pluginsModulesPath,
-  useEsbuild,
-  externalModules,
-}) {
-  if (extension === '.zip') {
-    const destPath = join(destFolder, filename)
-    await cpFile(srcPath, destPath)
-    return destPath
+const getSrcFiles = function ({ srcPath, mainFile, srcDir, stat, pluginsModulesPath, useEsbuild, externalModules }) {
+  if (!useEsbuild) {
+    return listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
   }
 
+  if (externalModules.length !== 0) {
+    return getDependencies(mainFile, srcDir, pluginsModulesPath, externalModules)
+  }
+
+  return []
+}
+
+const zipFunction = async function ({
+  destFolder,
+  extension,
+  externalModules,
+  filename,
+  mainFile,
+  pluginsModulesPath,
+  srcDir,
+  srcPath,
+  stat,
+  useEsbuild,
+}) {
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
-  await zipNodeJs({
-    srcFiles,
-    destFolder,
-    destPath,
-    filename,
+  const srcFiles = await getSrcFiles({
+    stat,
     mainFile,
+    extension,
+    srcPath,
+    srcDir,
     pluginsModulesPath,
     useEsbuild,
     externalModules,
   })
+  const dirnames = srcFiles.map(dirname)
+
+  if (!useEsbuild) {
+    await zipNodeJs({
+      basePath: commonPathPrefix(dirnames),
+      destFolder,
+      destPath,
+      filename,
+      mainFile,
+      pluginsModulesPath,
+      srcFiles,
+    })
+
+    return destPath
+  }
+
+  const { bundlePath, cleanTempFiles } = await bundleJsFile({
+    destFilename: filename,
+    destFolder,
+    externalModules,
+    srcFile: mainFile,
+  })
+
+  // We're adding the bundled file to the zip, but we want it to have the same
+  // name and path as the original, unbundled file. For this, we use a rename.
+  const renames = {
+    [bundlePath]: mainFile,
+  }
+
+  try {
+    await zipNodeJs({
+      basePath: commonPathPrefix([...dirnames, mainFile]),
+      destFolder,
+      destPath,
+      filename,
+      mainFile,
+      pluginsModulesPath,
+      renames,
+      srcFiles: [...srcFiles, bundlePath],
+    })
+  } finally {
+    cleanTempFiles()
+  }
+
   return destPath
 }
 
-module.exports = { zipJsFunction }
+module.exports = { getSrcFiles, zipFunction }

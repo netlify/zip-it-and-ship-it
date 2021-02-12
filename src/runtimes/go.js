@@ -4,7 +4,7 @@ const cpFile = require('cp-file')
 
 const { zipBinary } = require('../runtime')
 
-const zipGoFunction = async function ({ srcPath, destFolder, stat, zipGo, filename, runtime }) {
+const zipFunction = async function ({ srcPath, destFolder, stat, zipGo, filename, runtime }) {
   if (zipGo) {
     const destPath = join(destFolder, `${filename}.zip`)
     await zipBinary({ srcPath, destPath, filename, stat, runtime })
@@ -16,4 +16,4 @@ const zipGoFunction = async function ({ srcPath, destFolder, stat, zipGo, filena
   return destPath
 }
 
-module.exports = { zipGoFunction }
+module.exports = { zipFunction }

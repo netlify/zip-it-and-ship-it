@@ -1,9 +1,9 @@
-const { zipGoFunction } = require('./go')
-const { zipJsFunction } = require('./node')
-const { zipRustFunction } = require('./rust')
+const goRuntime = require('./go')
+const jsRuntime = require('./node')
+const rustRuntime = require('./rust')
 
 module.exports = {
-  go: zipGoFunction,
-  js: zipJsFunction,
-  rs: zipRustFunction,
+  go: goRuntime,
+  js: jsRuntime,
+  rs: rustRuntime,
 }

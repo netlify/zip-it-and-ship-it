@@ -2,8 +2,8 @@ const { dirname, basename, normalize } = require('path')
 
 const { not: notJunk } = require('junk')
 const precinct = require('precinct')
-const requirePackageName = require('require-package-name')
 
+const { getModuleName } = require('./module')
 const { getNestedDependencies, handleModuleNotFound } = require('./nested')
 const { getPackageJson } = require('./package_json')
 const { getPublishedFiles } = require('./published')
@@ -14,7 +14,7 @@ const { getTreeFiles } = require('./tree_files')
 // Retrieve the paths to the Node.js files to zip.
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
-const listNodeFiles = async function ({ srcPath, mainFile, srcDir, stat, pluginsModulesPath }) {
+const listFilesUsingLegacyBundler = async function ({ srcPath, mainFile, srcDir, stat, pluginsModulesPath }) {
   const [treeFiles, depFiles] = await Promise.all([
     getTreeFiles(srcPath, stat),
     getDependencies(mainFile, srcDir, pluginsModulesPath),
@@ -35,20 +35,27 @@ const isNotJunk = function (file) {
 }
 
 // Retrieve all the files recursively required by a Node.js file
-const getDependencies = async function (mainFile, srcDir, pluginsModulesPath) {
+const getDependencies = async function (mainFile, srcDir, pluginsModulesPath, moduleAllowList) {
   const packageJson = await getPackageJson(srcDir)
 
   const state = { localFiles: new Set(), modulePaths: new Set() }
 
   try {
-    return await getFileDependencies({ path: mainFile, packageJson, state, pluginsModulesPath })
+    return await getFileDependencies({ path: mainFile, moduleAllowList, packageJson, state, pluginsModulesPath })
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
   }
 }
 
-const getFileDependencies = async function ({ path, packageJson, state, treeShakeNext, pluginsModulesPath }) {
+const getFileDependencies = async function ({
+  moduleAllowList,
+  path,
+  packageJson,
+  state,
+  treeShakeNext,
+  pluginsModulesPath,
+}) {
   if (state.localFiles.has(path)) {
     return []
   }
@@ -60,9 +67,11 @@ const getFileDependencies = async function ({ path, packageJson, state, treeShak
   // TODO: `precinct.paperwork()` uses `fs.readFileSync()` under the hood,
   // but should use `fs.readFile()` instead
   const dependencies = precinct.paperwork(path, { includeCore: false })
-
+  const filteredDependencies = moduleAllowList
+    ? dependencies.filter((dependency) => moduleAllowList.includes(dependency))
+    : dependencies
   const depsPaths = await Promise.all(
-    dependencies.map((dependency) =>
+    filteredDependencies.map((dependency) =>
       getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext, pluginsModulesPath }),
     ),
   )
@@ -143,16 +152,6 @@ const getAllDependencies = async function ({ dependency, basedir, state, package
   }
 }
 
-// When doing require("moduleName/file/path"), only keep `moduleName`
-const getModuleName = function (dependency) {
-  const dependencyA = dependency.replace(BACKSLASH_REGEXP, '/')
-  const moduleName = requirePackageName(dependencyA)
-  return moduleName
-}
-
-// Windows path normalization
-const BACKSLASH_REGEXP = /\\/g
-
 const getModuleNameDependencies = async function ({ moduleName, basedir, state, pluginsModulesPath }) {
   if (isExcludedModule(moduleName)) {
     return []
@@ -201,4 +200,4 @@ const getNestedModules = async function ({ modulePath, state, packageJson, plugi
   return [].concat(...depsPaths)
 }
 
-module.exports = { listNodeFiles }
+module.exports = { getDependencies, listFilesUsingLegacyBundler }
