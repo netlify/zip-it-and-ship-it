@@ -66,6 +66,7 @@ const getFileDependencies = async function ({ path, packageJson, state, treeShak
       getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext, pluginsModulesPath }),
     ),
   )
+  // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
   // eslint-disable-next-line unicorn/prefer-spread
   return [].concat(...depsPaths)
 }
@@ -199,6 +200,7 @@ const getNestedModules = async function ({ modulePath, state, packageJson, plugi
       getAllDependencies({ dependency, basedir: modulePath, state, packageJson, pluginsModulesPath }),
     ),
   )
+  // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
   // eslint-disable-next-line unicorn/prefer-spread
   return [].concat(...depsPaths)
 }
