@@ -94,6 +94,8 @@ const listFunctionsFiles = async function (srcFolder) {
   const listedFunctionsFiles = await Promise.all(
     functionInfos.map((info) => getListedFunctionFiles(info, { pluginsModulesPath })),
   )
+  // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
+  // eslint-disable-next-line unicorn/prefer-spread
   return [].concat(...listedFunctionsFiles)
 }
 
