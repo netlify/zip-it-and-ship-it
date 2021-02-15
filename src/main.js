@@ -19,13 +19,21 @@ const getPluginsModulesPath = (srcDir) => findUp(`${AUTO_PLUGINS_DIR}node_module
 const zipFunctions = async function (
   srcFolder,
   destFolder,
-  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo, useEsbuild, externalModules = [] } = {},
+  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo, useEsbuild, externalModules = [], ignoredModules = [] } = {},
 ) {
   const [srcPaths, pluginsModulesPath] = await Promise.all([getSrcPaths(srcFolder), getPluginsModulesPath(srcFolder)])
 
   const zipped = await pMap(
     srcPaths,
-    (srcPath) => zipFunction(srcPath, destFolder, { skipGo, zipGo, pluginsModulesPath, useEsbuild, externalModules }),
+    (srcPath) =>
+      zipFunction(srcPath, destFolder, {
+        skipGo,
+        zipGo,
+        pluginsModulesPath,
+        useEsbuild,
+        externalModules,
+        ignoredModules,
+      }),
     {
       concurrency: parallelLimit,
     },
@@ -36,7 +44,14 @@ const zipFunctions = async function (
 const zipFunction = async function (
   srcPath,
   destFolder,
-  { skipGo = true, zipGo = !skipGo, pluginsModulesPath: defaultModulesPath, useEsbuild, externalModules } = {},
+  {
+    skipGo = true,
+    zipGo = !skipGo,
+    pluginsModulesPath: defaultModulesPath,
+    useEsbuild,
+    externalModules,
+    ignoredModules,
+  } = {},
 ) {
   const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
 
@@ -71,6 +86,7 @@ const zipFunction = async function (
     pluginsModulesPath,
     useEsbuild,
     externalModules,
+    ignoredModules,
   })
   return { path: destPath, runtime }
 }
@@ -124,6 +140,7 @@ const getSrcFiles = function ({
   pluginsModulesPath,
   useEsbuild,
   externalModules,
+  ignoredModules,
 }) {
   const { getSrcFiles: getRuntimeSrcFiles } = runtimes[runtime]
 
@@ -140,6 +157,7 @@ const getSrcFiles = function ({
     pluginsModulesPath,
     useEsbuild,
     externalModules,
+    ignoredModules,
   })
 }
 

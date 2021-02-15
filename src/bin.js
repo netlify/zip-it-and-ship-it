@@ -7,15 +7,10 @@ const zipIt = require('./main')
 
 // CLI entry point
 const runCli = async function () {
-  const { destFolder, externalModules, parallelLimit, srcFolder, useEsbuild, zipGo } = parseArgs()
+  const { destFolder, srcFolder, ...options } = parseArgs()
 
   try {
-    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, {
-      externalModules,
-      parallelLimit,
-      useEsbuild,
-      zipGo,
-    })
+    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, options)
     console.log(JSON.stringify(zipped, null, 2))
   } catch (error) {
     console.error(error.toString())
@@ -46,6 +41,12 @@ const OPTIONS = {
   'external-modules': {
     array: true,
     default: (env.NETLIFY_EXPERIMENTAL_EXTERNAL_MODULES || '').split(','),
+    describe: 'List of Node modules to include separately inside a node_modules directory',
+    hidden: true,
+  },
+  'ignored-modules': {
+    array: true,
+    default: (env.NETLIFY_EXPERIMENTAL_IGNORED_MODULES || '').split(','),
     describe: 'List of Node modules to keep out of the bundle',
     hidden: true,
   },

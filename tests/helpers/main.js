@@ -8,8 +8,9 @@ const { zipFunctions } = require('../..')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 
-const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
-  const { files, tmpDir } = await zipFixture(t, fixture, { length, fixtureDir, opts })
+const zipNode = async function (t, fixture, { bundler = 'legacy', length, fixtureDir, opts } = {}) {
+  const bundlerOpts = bundler === 'esbuild' ? { useEsbuild: true } : {}
+  const { files, tmpDir } = await zipFixture(t, fixture, { length, fixtureDir, opts: { ...opts, ...bundlerOpts } })
   await requireExtractedFiles(t, files)
   return { files, tmpDir }
 }
@@ -21,8 +22,7 @@ const zipFixture = async function (t, fixture, { length, fixtureDir, opts } = {}
 }
 
 const zipCheckFunctions = async function (t, fixture, { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts } = {}) {
-  // @todo Run each test with both bundling mechanisms.
-  const files = await zipFunctions(`${fixtureDir}/${fixture}`, tmpDir, { ...opts, useEsbuild: true })
+  const files = await zipFunctions(`${fixtureDir}/${fixture}`, tmpDir, opts)
 
   t.true(Array.isArray(files))
   t.is(files.length, length)
