@@ -21,7 +21,8 @@ const zipFixture = async function (t, fixture, { length, fixtureDir, opts } = {}
 }
 
 const zipCheckFunctions = async function (t, fixture, { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts } = {}) {
-  const files = await zipFunctions(`${fixtureDir}/${fixture}`, tmpDir, opts)
+  // @todo Run each test with both bundling mechanisms.
+  const files = await zipFunctions(`${fixtureDir}/${fixture}`, tmpDir, { ...opts, useEsbuild: true })
 
   t.true(Array.isArray(files))
   t.is(files.length, length)
