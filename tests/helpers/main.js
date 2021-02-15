@@ -1,7 +1,8 @@
-const { join } = require('path')
+const { dirname, join, resolve } = require('path')
 const { promisify } = require('util')
 
 const AdmZip = require('adm-zip')
+const precinct = require('precinct')
 const { dir: getTmpDir } = require('tmp-promise')
 
 const { zipFunctions } = require('../..')
@@ -51,7 +52,29 @@ const replaceUnzipPath = function ({ path }) {
   return path.replace('.zip', '.js')
 }
 
+const getRequires = function ({ depth = Number.POSITIVE_INFINITY, filePath }, currentDepth = 1) {
+  const requires = precinct.paperwork(filePath, { includeCore: false })
+
+  if (currentDepth >= depth) {
+    return requires
+  }
+
+  const basePath = dirname(filePath)
+  const childRequires = requires.reduce((result, requirePath) => {
+    if (!requirePath.startsWith('.')) {
+      return result
+    }
+
+    const fullRequirePath = resolve(basePath, requirePath)
+
+    return [...result, ...getRequires({ depth, filePath: fullRequirePath }, currentDepth + 1)]
+  }, [])
+
+  return [...requires, ...childRequires]
+}
+
 module.exports = {
+  getRequires,
   zipNode,
   zipFixture,
   unzipFiles,

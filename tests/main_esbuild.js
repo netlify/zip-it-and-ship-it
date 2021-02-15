@@ -1,6 +1,6 @@
 const { readFile, chmod, symlink, unlink, rename } = require('fs')
 const { tmpdir } = require('os')
-const { normalize } = require('path')
+const { normalize, resolve } = require('path')
 const { platform } = require('process')
 const { promisify } = require('util')
 
@@ -13,7 +13,14 @@ const { dir: getTmpDir, tmpName } = require('tmp-promise')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
-const { zipNode: zipNodeOriginal, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
+const {
+  getRequires,
+  zipNode: zipNodeOriginal,
+  zipFixture,
+  unzipFiles,
+  zipCheckFunctions,
+  FIXTURES_DIR,
+} = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
 
 const pReadFile = promisify(readFile)
@@ -39,8 +46,28 @@ test('Zips Node.js function files', async (t) => {
   t.true(files.every(({ runtime }) => runtime === 'js'))
 })
 
-test('Zips node modules', async (t) => {
-  await zipNode(t, 'node-module')
+test('Inlines node modules in the bundle', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-included-try-catch')
+  const requires = await getRequires({ depth: Number.POSITIVE_INFINITY, filePath: resolve(tmpDir, 'function.js') })
+
+  t.false(requires.includes('test'))
+  t.false(await pathExists(`${tmpDir}/src/node_modules/test`))
+})
+
+test('Does not inline node modules and includes them in a `node_modules` directory if they are defined in `externalModules`', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', { opts: { externalModules: ['test'] } })
+  const requires = await getRequires({ depth: Number.POSITIVE_INFINITY, filePath: resolve(tmpDir, 'function.js') })
+
+  t.true(requires.includes('test'))
+  t.true(await pathExists(`${tmpDir}/src/node_modules/test`))
+})
+
+test('Does not inline node modules and excludes them from the bundle if they are defined in `ignoredModules`', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', { opts: { ignoredModules: ['test'] } })
+  const requires = await getRequires({ depth: Number.POSITIVE_INFINITY, filePath: resolve(tmpDir, 'function.js') })
+
+  t.true(requires.includes('test'))
+  t.false(await pathExists(`${tmpDir}/src/node_modules/test`))
 })
 
 test('Can require node modules', async (t) => {
@@ -195,7 +222,7 @@ test('Can require local files', async (t) => {
   await zipNode(t, 'local-require')
 })
 
-test.only('Can require local files with ES Modules', async (t) => {
+test('Can require local files with ES Modules', async (t) => {
   await zipNode(t, 'local-require-esm')
 })
 
