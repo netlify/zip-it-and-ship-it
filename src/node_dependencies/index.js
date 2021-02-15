@@ -66,6 +66,7 @@ const getFileDependencies = async function ({ path, packageJson, state, treeShak
       getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext, pluginsModulesPath }),
     ),
   )
+  // eslint-disable-next-line unicorn/prefer-spread
   return [].concat(...depsPaths)
 }
 
@@ -198,6 +199,7 @@ const getNestedModules = async function ({ modulePath, state, packageJson, plugi
       getAllDependencies({ dependency, basedir: modulePath, state, packageJson, pluginsModulesPath }),
     ),
   )
+  // eslint-disable-next-line unicorn/prefer-spread
   return [].concat(...depsPaths)
 }
 

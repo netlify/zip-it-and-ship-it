@@ -94,6 +94,7 @@ const listFunctionsFiles = async function (srcFolder) {
   const listedFunctionsFiles = await Promise.all(
     functionInfos.map((info) => getListedFunctionFiles(info, { pluginsModulesPath })),
   )
+  // eslint-disable-next-line unicorn/prefer-spread
   return [].concat(...listedFunctionsFiles)
 }
 
