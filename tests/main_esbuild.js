@@ -48,7 +48,7 @@ test('Zips Node.js function files', async (t) => {
 
 test('Inlines node modules in the bundle', async (t) => {
   const { tmpDir } = await zipNode(t, 'node-module-included-try-catch')
-  const requires = await getRequires({ depth: Number.POSITIVE_INFINITY, filePath: resolve(tmpDir, 'function.js') })
+  const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
   t.false(requires.includes('test'))
   t.false(await pathExists(`${tmpDir}/src/node_modules/test`))
@@ -56,7 +56,7 @@ test('Inlines node modules in the bundle', async (t) => {
 
 test('Does not inline node modules and includes them in a `node_modules` directory if they are defined in `externalModules`', async (t) => {
   const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', { opts: { externalModules: ['test'] } })
-  const requires = await getRequires({ depth: Number.POSITIVE_INFINITY, filePath: resolve(tmpDir, 'function.js') })
+  const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
   t.true(requires.includes('test'))
   t.true(await pathExists(`${tmpDir}/src/node_modules/test`))
@@ -64,7 +64,7 @@ test('Does not inline node modules and includes them in a `node_modules` directo
 
 test('Does not inline node modules and excludes them from the bundle if they are defined in `ignoredModules`', async (t) => {
   const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', { opts: { ignoredModules: ['test'] } })
-  const requires = await getRequires({ depth: Number.POSITIVE_INFINITY, filePath: resolve(tmpDir, 'function.js') })
+  const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
   t.true(requires.includes('test'))
   t.false(await pathExists(`${tmpDir}/src/node_modules/test`))

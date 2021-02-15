@@ -52,6 +52,9 @@ const replaceUnzipPath = function ({ path }) {
   return path.replace('.zip', '.js')
 }
 
+// Returns a list of paths included using `require` calls. Relative requires
+// will be traversed recursively up to a depth defined by `depth`. All the
+// required paths — relative or not — will be returned in a flattened array.
 const getRequires = function ({ depth = Number.POSITIVE_INFINITY, filePath }, currentDepth = 1) {
   const requires = precinct.paperwork(filePath, { includeCore: false })
 
