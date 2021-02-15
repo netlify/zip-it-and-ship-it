@@ -74,17 +74,20 @@ const zipFunction = async function ({
   }
   const basePath = commonPathPrefix([...dirnames, dirname(mainFile)])
 
-  await zipNodeJs({
-    basePath,
-    destFolder,
-    destPath,
-    filename,
-    mainFile,
-    pluginsModulesPath,
-    renames,
-    srcFiles: [...srcFiles, bundlePath],
-  })
-  await cleanTempFiles()
+  try {
+    await zipNodeJs({
+      basePath,
+      destFolder,
+      destPath,
+      filename,
+      mainFile,
+      pluginsModulesPath,
+      renames,
+      srcFiles: [...srcFiles, bundlePath],
+    })
+  } finally {
+    await cleanTempFiles()
+  }
 
   return destPath
 }
