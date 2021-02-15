@@ -50,11 +50,12 @@ const zipFunction = async function (
   await makeDir(destFolder)
 
   // If the file is a zip, we assume the function is bundled and ready to go.
-  // We simply copy it to the destination path with no further processing.
+  // We assume its runtime to be JavaScript and simply copy it to the
+  // destination path with no further processing.
   if (extension === '.zip') {
     const destPath = join(destFolder, filename)
     await cpFile(srcPath, destPath)
-    return destPath
+    return { path: destPath, runtime: 'js' }
   }
 
   const destPath = await runtimes[runtime].zipFunction({
