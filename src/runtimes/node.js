@@ -58,6 +58,7 @@ const zipFunction = async function ({
   }
 
   const { bundlePath, cleanTempFiles } = await bundleJsFile({
+    additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     destFilename: filename,
     destFolder,
     externalModules,
