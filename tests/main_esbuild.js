@@ -38,7 +38,7 @@ const zipNode = function (t, fixture, parameters = {}) {
 }
 
 test.after(async () => {
-  await del(`${tmpdir()}/zip-it-test*`, { force: true })
+  await del(`${tmpdir()}/zip-it-test-esbuild*`, { force: true })
 })
 
 test('Zips Node.js function files', async (t) => {
@@ -329,13 +329,13 @@ test('Works on empty directories', async (t) => {
 })
 
 test('Works when no package.json is present', async (t) => {
-  const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
+  const fixtureDir = await tmpName({ prefix: 'zip-it-test-esbuild' })
   await cpy('**', `${fixtureDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
   await zipNode(t, 'no-package-json', { length: 1, fixtureDir })
 })
 
 test('Copies already zipped files', async (t) => {
-  const tmpDir = await tmpName({ prefix: 'zip-it-test' })
+  const tmpDir = await tmpName({ prefix: 'zip-it-test-esbuild' })
   const { files } = await zipCheckFunctions(t, 'keep-zip', { tmpDir })
 
   t.true(files.every(({ runtime }) => runtime === 'js'))
@@ -392,7 +392,7 @@ test('Can reduce parallelism', async (t) => {
 })
 
 test('Can use zipFunction()', async (t) => {
-  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test-esbuild' })
   const { runtime } = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir)
   t.is(runtime, 'js')
 })

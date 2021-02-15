@@ -23,7 +23,7 @@ const pUnlink = promisify(unlink)
 const pRename = promisify(rename)
 
 test.after(async () => {
-  await del(`${tmpdir()}/zip-it-test*`, { force: true })
+  await del(`${tmpdir()}/zip-it-test-legacy*`, { force: true })
 })
 
 test('Zips Node.js function files', async (t) => {
@@ -167,13 +167,13 @@ test('Resolves dependencies from .netlify/plugins/node_modules', async (t) => {
 // tries to load when linting sibling JavaScript files. In this test, we
 // temporarily rename it to an actual `package.json`.
 test('Throws on invalid package.json', async (t) => {
-  const invalidPackageJsonDir = `${FIXTURES_DIR}/invalid-package-json`
+  const invalidPackageJsonDir = `${FIXTURES_DIR}/invalid-package-json-legacy`
   const srcPackageJson = `${invalidPackageJsonDir}/package.json.txt`
   const distPackageJson = `${invalidPackageJsonDir}/package.json`
 
   await pRename(srcPackageJson, distPackageJson)
   try {
-    await t.throwsAsync(zipNode(t, 'invalid-package-json'), /invalid JSON/)
+    await t.throwsAsync(zipNode(t, 'invalid-package-json-legacy'), /invalid JSON/)
   } finally {
     await pRename(distPackageJson, srcPackageJson)
   }
@@ -199,7 +199,7 @@ test('Can require local files in the parent directories', async (t) => {
 // committed on Windows
 if (platform !== 'win32') {
   test('Can require symlinks', async (t) => {
-    const symlinkDir = `${FIXTURES_DIR}/symlinks/function`
+    const symlinkDir = `${FIXTURES_DIR}/symlinks-legacy/function`
     const symlinkFile = `${symlinkDir}/file.js`
     const targetFile = `${symlinkDir}/target.js`
 
@@ -208,7 +208,7 @@ if (platform !== 'win32') {
     }
 
     try {
-      await zipNode(t, 'symlinks')
+      await zipNode(t, 'symlinks-legacy')
     } finally {
       await pUnlink(symlinkFile)
     }
@@ -290,13 +290,13 @@ test('Works on empty directories', async (t) => {
 })
 
 test('Works when no package.json is present', async (t) => {
-  const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
+  const fixtureDir = await tmpName({ prefix: 'zip-it-test-legacy' })
   await cpy('**', `${fixtureDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
   await zipNode(t, 'no-package-json', { length: 1, fixtureDir })
 })
 
 test('Copies already zipped files', async (t) => {
-  const tmpDir = await tmpName({ prefix: 'zip-it-test' })
+  const tmpDir = await tmpName({ prefix: 'zip-it-test-legacy' })
   const { files } = await zipCheckFunctions(t, 'keep-zip', { tmpDir })
 
   t.true(files.every(({ runtime }) => runtime === 'js'))
@@ -353,7 +353,7 @@ test('Can reduce parallelism', async (t) => {
 })
 
 test('Can use zipFunction()', async (t) => {
-  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test-legacy' })
   const { runtime } = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir)
   t.is(runtime, 'js')
 })
