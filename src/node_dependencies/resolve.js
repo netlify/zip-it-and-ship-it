@@ -44,6 +44,7 @@ const REQUEST_RESOLVE_MIN_VERSION = '8.9.0'
 //   https://github.com/browserify/resolve/issues/151#issuecomment-368210310
 const resolvePathPreserveSymlinksForDir = function (path, basedir) {
   return new Promise((resolve, reject) => {
+    // eslint-disable-next-line promise/prefer-await-to-callbacks
     resolveLib(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
       if (error) {
         return reject(error)
