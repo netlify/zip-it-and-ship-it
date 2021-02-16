@@ -3,19 +3,47 @@ const { basename, dirname, join } = require('path')
 const commonPathPrefix = require('common-path-prefix')
 
 const { bundleJsFile } = require('../bundler')
-const { getDependencies, listFilesUsingLegacyBundler } = require('../node_dependencies')
+const { getDependencyNamesAndPathsForDependencies, listFilesUsingLegacyBundler } = require('../node_dependencies')
 const { zipNodeJs } = require('../zip_node')
 
-const getSrcFiles = function ({ srcPath, mainFile, srcDir, stat, pluginsModulesPath, useEsbuild, externalModules }) {
+const getSrcFiles = async function (options) {
+  const { paths } = await getSrcFilesAndExternalModules(options)
+
+  return paths
+}
+
+const getSrcFilesAndExternalModules = async function ({
+  srcPath,
+  mainFile,
+  srcDir,
+  stat,
+  pluginsModulesPath,
+  useEsbuild,
+  externalModules,
+}) {
   if (!useEsbuild) {
-    return listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
+    const paths = await listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
+
+    return {
+      moduleNames: [],
+      paths,
+    }
   }
 
   if (externalModules.length !== 0) {
-    return getDependencies(mainFile, srcDir, pluginsModulesPath, externalModules)
+    const { moduleNames, paths } = await getDependencyNamesAndPathsForDependencies({
+      dependencies: externalModules,
+      basedir: srcDir,
+      pluginsModulesPath,
+    })
+
+    return { moduleNames, paths }
   }
 
-  return []
+  return {
+    moduleNames: externalModules,
+    paths: [],
+  }
 }
 
 const zipFunction = async function ({
@@ -32,7 +60,16 @@ const zipFunction = async function ({
   useEsbuild,
 }) {
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
-  const srcFiles = await getSrcFiles({
+
+  // When a module is added to `externalModules`, we will traverse its main
+  // file recursively and look for all its dependencies, so that we can ship
+  // their files separately, inside a `node_modules` directory. Whenever we
+  // process a module this way, we can also flag it as external with esbuild
+  // since its source is already part of the artifact and there's no point in
+  // inlining it again in the bundle.
+  // As such, the dependency traversal logic will compile the names of these
+  // modules in `additionalExternalModules`.
+  const { moduleNames: additionalExternalModules = [], paths: srcFiles } = await getSrcFilesAndExternalModules({
     stat,
     mainFile,
     extension,
@@ -62,7 +99,7 @@ const zipFunction = async function ({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     destFilename: filename,
     destFolder,
-    externalModules,
+    externalModules: [...externalModules, ...additionalExternalModules],
     ignoredModules,
     srcFile: mainFile,
   })
