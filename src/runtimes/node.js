@@ -1,4 +1,4 @@
-const { basename, dirname, join } = require('path')
+const { basename, dirname, join, normalize } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 
@@ -79,7 +79,7 @@ const zipFunction = async function ({
     useEsbuild,
     externalModules,
   })
-  const dirnames = srcFiles.map(dirname)
+  const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
   if (!useEsbuild) {
     await zipNodeJs({
