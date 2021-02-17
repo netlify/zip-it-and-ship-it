@@ -6,7 +6,7 @@ const esbuild = require('esbuild')
 
 const pUnlink = promisify(fs.unlink)
 
-const bundleJsFile = async function ({
+const bundleJsFile = function ({
   additionalModulePaths,
   destFilename,
   destFolder,
@@ -18,7 +18,14 @@ const bundleJsFile = async function ({
   const external = [...new Set([...externalModules, ...ignoredModules])]
   const jsFilename = `${basename(destFilename, extname(destFilename))}.js`
   const bundlePath = join(destFolder, jsFilename)
-  const data = await esbuild.build({
+
+  // We use the synchronous entry point of the esbuild API because it's more
+  // performant, works with Node 8, and there are no obvious downsides since
+  // we don't need to be performing other work simultaneously.
+  // See https://esbuild.github.io/api/#js-specific-details.
+  //
+  // eslint-disable-next-line node/no-sync
+  const data = esbuild.buildSync({
     bundle: true,
     entryPoints: [srcFile],
     external,
