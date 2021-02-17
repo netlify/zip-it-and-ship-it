@@ -5,6 +5,7 @@ const findUp = require('find-up')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 
+require('./utils/polyfills')
 const { getFunctionInfos, getSrcPaths, getFunctionInfo } = require('./info')
 const runtimes = require('./runtimes')
 

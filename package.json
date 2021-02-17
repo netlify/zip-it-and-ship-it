@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "archiver": "^4.0.0",
+    "array-flat-polyfill": "^1.0.1",
     "common-path-prefix": "^2.0.0",
     "cp-file": "^7.0.0",
     "elf-cam": "^0.1.1",

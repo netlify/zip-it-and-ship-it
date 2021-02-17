@@ -53,15 +53,8 @@ const getDependencyNamesAndPathsForDependencies = async function ({
       }),
     ),
   )
-  const { moduleNames, paths } = dependencies.reduce(
-    (aggregate, dependency) => {
-      dependency.moduleNames.forEach(aggregate.moduleNames.add, aggregate.moduleNames)
-      dependency.paths.forEach(aggregate.paths.add, aggregate.paths)
-
-      return aggregate
-    },
-    { moduleNames: new Set(), paths: new Set() },
-  )
+  const moduleNames = new Set(dependencies.flatMap((dependency) => [...dependency.moduleNames]))
+  const paths = new Set(dependencies.flatMap((dependency) => [...dependency.paths]))
 
   return {
     moduleNames: [...moduleNames],
