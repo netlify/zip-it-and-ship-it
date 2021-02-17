@@ -22,7 +22,7 @@ const pSymlink = promisify(symlink)
 const pUnlink = promisify(unlink)
 const pRename = promisify(rename)
 
-const BUNDLERS = ['legacy', 'esbuild']
+const BUNDLERS = ['esbuild']
 const EXECUTABLE_PERMISSION = 0o755
 
 const normalizeFiles = function (fixtureDir, { name, mainFile, runtime, extension, srcFile }) {
