@@ -39,13 +39,13 @@ const getZipChecksum = async function (t) {
   return sha1sum
 }
 
+test.after.always(async () => {
+  await del(`${tmpdir()}/zip-it-test*`, { force: true })
+})
+
 // Common tests.
 BUNDLERS.forEach((bundler) => {
   const zipNodeWithBundler = (t, fixture, options = {}) => zipNode(t, fixture, { bundler, ...options })
-
-  test.after.always(async () => {
-    await del(`${tmpdir()}/zip-it-test*`, { force: true })
-  })
 
   test(`[bundler: ${bundler}] Zips Node.js function files`, async (t) => {
     const { files } = await zipNode(t, 'simple')
