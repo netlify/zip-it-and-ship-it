@@ -9,7 +9,7 @@ const { zipFunctions } = require('../..')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 
-const zipNode = async function (t, fixture, { bundler = 'legacy', length, fixtureDir, opts } = {}) {
+const zipNode = async function (t, fixture, { bundler, length, fixtureDir, opts } = {}) {
   const bundlerOpts = bundler === 'esbuild' ? { useEsbuild: true } : {}
   const { files, tmpDir } = await zipFixture(t, fixture, {
     bundler,

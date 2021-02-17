@@ -20,8 +20,8 @@
     "format:check-fix:prettier": "run-e format:check:prettier format:fix:prettier",
     "format:check:prettier": "cross-env-shell prettier --check $npm_package_config_prettier",
     "format:fix:prettier": "cross-env-shell prettier --write $npm_package_config_prettier",
-    "test:dev": "ava --serial",
-    "test:ci": "nyc -r lcovonly -r text -r json ava --serial"
+    "test:dev": "ava",
+    "test:ci": "nyc -r lcovonly -r text -r json ava"
   },
   "config": {
     "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{js,md,html}\" \"*.{js,md,html}\" \".*.{js,md,html}\"",
