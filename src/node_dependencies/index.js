@@ -38,26 +38,19 @@ const isNotJunk = function (file) {
 }
 
 // Retrieve all the files recursively required by a Node.js file
-const getDependencies = async function (mainFile, srcDir, pluginsModulesPath, moduleAllowList) {
+const getDependencies = async function (mainFile, srcDir, pluginsModulesPath) {
   const packageJson = await getPackageJson(srcDir)
   const state = getNewCache()
 
   try {
-    return await getFileDependencies({ path: mainFile, moduleAllowList, packageJson, state, pluginsModulesPath })
+    return await getFileDependencies({ path: mainFile, packageJson, state, pluginsModulesPath })
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
   }
 }
 
-const getFileDependencies = async function ({
-  moduleAllowList,
-  path,
-  packageJson,
-  state,
-  treeShakeNext,
-  pluginsModulesPath,
-}) {
+const getFileDependencies = async function ({ path, packageJson, pluginsModulesPath, state, treeShakeNext }) {
   if (state.localFiles.has(path)) {
     return []
   }
@@ -69,11 +62,8 @@ const getFileDependencies = async function ({
   // TODO: `precinct.paperwork()` uses `fs.readFileSync()` under the hood,
   // but should use `fs.readFile()` instead
   const dependencies = precinct.paperwork(path, { includeCore: false })
-  const filteredDependencies = moduleAllowList
-    ? dependencies.filter((dependency) => moduleAllowList.includes(dependency))
-    : dependencies
   const depsPaths = await Promise.all(
-    filteredDependencies.map((dependency) =>
+    dependencies.map((dependency) =>
       getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext, pluginsModulesPath }),
     ),
   )
