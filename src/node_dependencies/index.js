@@ -5,6 +5,7 @@ const precinct = require('precinct')
 
 const { getPackageJson } = require('./package_json')
 const { resolvePathPreserveSymlinks } = require('./resolve')
+const { getExternalAndIgnoredModulesFromSpecialCases } = require('./special_cases')
 const {
   getDependencyPathsForDependency,
   getDependencyNamesAndPathsForDependencies,
@@ -117,5 +118,6 @@ module.exports = {
   getDependencyPathsForDependency,
   getDependencyNamesAndPathsForDependencies,
   getDependencyNamesAndPathsForDependency,
+  getExternalAndIgnoredModulesFromSpecialCases,
   listFilesUsingLegacyBundler,
 }

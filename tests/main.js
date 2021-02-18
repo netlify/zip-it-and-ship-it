@@ -162,6 +162,22 @@ BUNDLERS.forEach((bundler) => {
     await zipNodeWithBundler(t, 'local-parent-require')
   })
 
+  test(`[bundler: ${bundler}] Ignore missing critters dependency for Next.js 10`, async (t) => {
+    await zipNodeWithBundler(t, 'node-module-next10-critters')
+  })
+
+  test(`[bundler: ${bundler}] Ignore missing critters dependency for Next.js exact version 10.0.5`, async (t) => {
+    await zipNodeWithBundler(t, 'node-module-next10-critters-exact')
+  })
+
+  test(`[bundler: ${bundler}] Ignore missing critters dependency for Next.js with range ^10.0.5`, async (t) => {
+    await zipNodeWithBundler(t, 'node-module-next10-critters-10.0.5-range')
+  })
+
+  test(`[bundler: ${bundler}] Ignore missing critters dependency for Next.js with version='latest'`, async (t) => {
+    await zipNodeWithBundler(t, 'node-module-next10-critters-latest')
+  })
+
   // Need to create symlinks dynamically because they sometimes get lost when
   // committed on Windows
   if (platform !== 'win32') {
@@ -406,22 +422,6 @@ test('[bundler: legacy] Include most files from node modules', async (t) => {
 
 test('[bundler: legacy] Throws on missing critters dependency for Next.js 9', async (t) => {
   await t.throwsAsync(zipNode(t, 'node-module-next9-critters', { bundler: 'legacy' }))
-})
-
-test('[bundler: legacy] Ignore missing critters dependency for Next.js 10', async (t) => {
-  await zipNode(t, 'node-module-next10-critters', { bundler: 'legacy' })
-})
-
-test('[bundler: legacy] Ignore missing critters dependency for Next.js exact version 10.0.5', async (t) => {
-  await zipNode(t, 'node-module-next10-critters-exact', { bundler: 'legacy' })
-})
-
-test('[bundler: legacy] Ignore missing critters dependency for Next.js with range ^10.0.5', async (t) => {
-  await zipNode(t, 'node-module-next10-critters-10.0.5-range', { bundler: 'legacy' })
-})
-
-test("[bundler: legacy] Ignore missing critters dependency for Next.js with version='latest'", async (t) => {
-  await zipNode(t, 'node-module-next10-critters-latest', { bundler: 'legacy' })
 })
 
 test('[bundler: legacy] Includes specific Next.js dependencies when using next-on-netlify', async (t) => {
