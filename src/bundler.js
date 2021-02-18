@@ -1,12 +1,14 @@
 const fs = require('fs')
 const { basename, extname, join } = require('path')
+const process = require('process')
 const { promisify } = require('util')
 
 const esbuild = require('esbuild')
+const semver = require('semver')
 
 const pUnlink = promisify(fs.unlink)
 
-const bundleJsFile = function ({
+const bundleJsFile = async function ({
   additionalModulePaths,
   destFilename,
   destFolder,
@@ -19,13 +21,13 @@ const bundleJsFile = function ({
   const jsFilename = `${basename(destFilename, extname(destFilename))}.js`
   const bundlePath = join(destFolder, jsFilename)
 
-  // We use the synchronous entry point of the esbuild API because it's more
-  // performant, works with Node 8, and there are no obvious downsides since
-  // we don't need to be performing other work simultaneously.
-  // See https://esbuild.github.io/api/#js-specific-details.
-  //
+  // esbuild's async build API throws on Node 8.x, so we switch to the sync
+  // version for that version range.
+  const shouldUseAsyncAPI = semver.satisfies(process.version, '>=9.x')
+
   // eslint-disable-next-line node/no-sync
-  const data = esbuild.buildSync({
+  const buildFunction = shouldUseAsyncAPI ? esbuild.build : esbuild.buildSync
+  const data = await buildFunction({
     bundle: true,
     entryPoints: [srcFile],
     external,
