@@ -1,14 +1,16 @@
-const { extname } = require('path')
+const { extname, join } = require('path')
 
+const cpFile = require('cp-file')
 const findUp = require('find-up')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 
+require('./utils/polyfills')
 const { getFunctionInfos, getSrcPaths, getFunctionInfo } = require('./info')
-const { listNodeFiles } = require('./node_dependencies')
-const RUNTIMES = require('./runtimes')
+const runtimes = require('./runtimes')
 
 const AUTO_PLUGINS_DIR = '.netlify/plugins/'
+const DEFAULT_PARALLEL_LIMIT = 5
 
 const getPluginsModulesPath = (srcDir) => findUp(`${AUTO_PLUGINS_DIR}node_modules`, { cwd: srcDir, type: 'directory' })
 
@@ -18,13 +20,21 @@ const getPluginsModulesPath = (srcDir) => findUp(`${AUTO_PLUGINS_DIR}node_module
 const zipFunctions = async function (
   srcFolder,
   destFolder,
-  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo, useEsbuild, externalModules = [] } = {},
+  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo, useEsbuild, externalModules = [], ignoredModules = [] } = {},
 ) {
   const [srcPaths, pluginsModulesPath] = await Promise.all([getSrcPaths(srcFolder), getPluginsModulesPath(srcFolder)])
 
   const zipped = await pMap(
     srcPaths,
-    (srcPath) => zipFunction(srcPath, destFolder, { skipGo, zipGo, pluginsModulesPath, useEsbuild, externalModules }),
+    (srcPath) =>
+      zipFunction(srcPath, destFolder, {
+        skipGo,
+        zipGo,
+        pluginsModulesPath,
+        useEsbuild,
+        externalModules,
+        ignoredModules,
+      }),
     {
       concurrency: parallelLimit,
     },
@@ -32,12 +42,17 @@ const zipFunctions = async function (
   return zipped.filter(Boolean)
 }
 
-const DEFAULT_PARALLEL_LIMIT = 5
-
 const zipFunction = async function (
   srcPath,
   destFolder,
-  { skipGo = true, zipGo = !skipGo, pluginsModulesPath: defaultModulesPath, useEsbuild, externalModules } = {},
+  {
+    skipGo = true,
+    zipGo = !skipGo,
+    pluginsModulesPath: defaultModulesPath,
+    useEsbuild,
+    externalModules,
+    ignoredModules,
+  } = {},
 ) {
   const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
 
@@ -47,33 +62,32 @@ const zipFunction = async function (
 
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
-  const srcFiles = await getSrcFiles({
-    runtime,
-    stat,
-    mainFile,
-    extension,
-    srcPath,
-    srcDir,
-    pluginsModulesPath,
-    useEsbuild,
-    externalModules,
-  })
 
   await makeDir(destFolder)
 
-  const destPath = await RUNTIMES[runtime]({
+  // If the file is a zip, we assume the function is bundled and ready to go.
+  // We assume its runtime to be JavaScript and simply copy it to the
+  // destination path with no further processing.
+  if (extension === '.zip') {
+    const destPath = join(destFolder, filename)
+    await cpFile(srcPath, destPath)
+    return { path: destPath, runtime: 'js' }
+  }
+
+  const destPath = await runtimes[runtime].zipFunction({
     srcPath,
     destFolder,
     mainFile,
     filename,
     extension,
-    srcFiles,
+    srcDir,
     stat,
     zipGo,
     runtime,
     pluginsModulesPath,
     useEsbuild,
     externalModules,
+    ignoredModules,
   })
   return { path: destPath, runtime }
 }
@@ -119,16 +133,35 @@ const getListedFunctionFiles = async function (
   return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
 }
 
-const getSrcFiles = function ({ runtime, stat, mainFile, extension, srcPath, srcDir, pluginsModulesPath, useEsbuild }) {
-  if (runtime === 'js' && extension === '.js') {
-    if (useEsbuild) {
-      return []
-    }
+const getSrcFiles = function ({
+  runtime,
+  stat,
+  mainFile,
+  extension,
+  srcPath,
+  srcDir,
+  pluginsModulesPath,
+  useEsbuild,
+  externalModules,
+  ignoredModules,
+}) {
+  const { getSrcFiles: getRuntimeSrcFiles } = runtimes[runtime]
 
-    return listNodeFiles({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
+  if (extension === '.zip' || typeof getRuntimeSrcFiles !== 'function') {
+    return [srcPath]
   }
 
-  return [srcPath]
+  return getRuntimeSrcFiles({
+    extension,
+    srcPath,
+    mainFile,
+    srcDir,
+    stat,
+    pluginsModulesPath,
+    useEsbuild,
+    externalModules,
+    ignoredModules,
+  })
 }
 
 module.exports = { zipFunctions, zipFunction, listFunctions, listFunctionsFiles }

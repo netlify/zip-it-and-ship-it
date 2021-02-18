@@ -1,87 +1,29 @@
 const { Buffer } = require('buffer')
 const fs = require('fs')
-const { basename, dirname, extname, join, normalize, sep } = require('path')
+const { normalize, sep } = require('path')
 const { promisify } = require('util')
 
-const commonPathPrefix = require('common-path-prefix')
-const esbuild = require('esbuild')
 const unixify = require('unixify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 
 const pStat = promisify(fs.stat)
-const pUnlink = promisify(fs.unlink)
 
 // Zip a Node.js function file
-const zipNodeJs = async function ({
-  destFolder,
-  destPath,
-  externalModules,
-  filename,
-  mainFile,
-  pluginsModulesPath,
-  srcFiles,
-  useEsbuild,
-}) {
-  if (useEsbuild) {
-    return zipNodeJsWithEsbuild({ destFolder, destPath, externalModules, filename, mainFile, pluginsModulesPath })
-  }
-
+const zipNodeJs = async function ({ basePath, destPath, filename, mainFile, pluginsModulesPath, renames, srcFiles }) {
   const { archive, output } = startZip(destPath)
 
-  const dirnames = srcFiles.map(dirname)
-  const commonPrefix = commonPathPrefix(dirnames)
-
-  addEntryFile(commonPrefix, archive, filename, mainFile)
+  addEntryFile(basePath, archive, filename, mainFile)
 
   const srcFilesInfos = await Promise.all(srcFiles.map(addStat))
 
   // We ensure this is not async, so that the archive's checksum is
   // deterministic. Otherwise it depends on the order the files were added.
   srcFilesInfos.forEach(({ srcFile, stat }) => {
-    zipJsFile({ srcFile, commonPrefix, pluginsModulesPath, archive, stat })
+    zipJsFile({ srcFile, commonPrefix: basePath, pluginsModulesPath, archive, stat, renames })
   })
 
   await endZip(archive, output)
-}
-
-// Zip a Node.js function file with esbuild
-const zipNodeJsWithEsbuild = async function ({
-  destFolder,
-  destPath,
-  externalModules = [],
-  filename,
-  mainFile,
-  pluginsModulesPath,
-}) {
-  const jsFilename = `${basename(filename, extname(filename))}.js`
-  const bundledFilePath = join(destFolder, jsFilename)
-
-  await esbuild.build({
-    bundle: true,
-    entryPoints: [mainFile],
-    external: externalModules,
-    outfile: bundledFilePath,
-    platform: 'node',
-    target: ['es2017'],
-  })
-
-  try {
-    const { archive, output } = startZip(destPath)
-    const { srcFile, stat } = await addStat(bundledFilePath)
-
-    addEntryFile(destFolder, archive, jsFilename, bundledFilePath)
-
-    zipJsFile({ archive, commonPrefix: destFolder, pluginsModulesPath, srcFile, stat })
-
-    await endZip(archive, output)
-  } finally {
-    try {
-      await pUnlink(bundledFilePath)
-    } catch (_) {
-      // no-op
-    }
-  }
 }
 
 const addEntryFile = function (commonPrefix, archive, filename, mainFile) {
@@ -97,9 +39,10 @@ const addStat = async function (srcFile) {
   return { srcFile, stat }
 }
 
-const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat }) {
-  const filename = normalizeFilePath(srcFile, commonPrefix, pluginsModulesPath)
-  addZipFile(archive, srcFile, filename, stat)
+const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat, renames = {} }) {
+  const filename = renames[srcFile] || srcFile
+  const normalizedFilename = normalizeFilePath(filename, commonPrefix, pluginsModulesPath)
+  addZipFile(archive, srcFile, normalizedFilename, stat)
 }
 
 // `adm-zip` and `require()` expect Unix paths.

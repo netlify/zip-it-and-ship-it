@@ -5,6 +5,8 @@ const pathExists = require('path-exists')
 const resolveLib = require('resolve')
 const { lt: ltVersion } = require('semver')
 
+const BACKSLASH_REGEXP = /\\/g
+
 // Find the path to a module's `package.json`
 // We need to use `resolve` instead of `require.resolve()` because:
 //  - it is async
@@ -105,7 +107,5 @@ const isPackageDir = async function (moduleName, dir) {
 
   return dir
 }
-
-const BACKSLASH_REGEXP = /\\/g
 
 module.exports = { resolvePackage, resolvePathPreserveSymlinks }

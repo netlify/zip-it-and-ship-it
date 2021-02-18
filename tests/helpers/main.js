@@ -1,21 +1,28 @@
-const { join } = require('path')
+const { dirname, join, resolve } = require('path')
 const { promisify } = require('util')
 
 const AdmZip = require('adm-zip')
+const precinct = require('precinct')
 const { dir: getTmpDir } = require('tmp-promise')
 
 const { zipFunctions } = require('../..')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 
-const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
-  const { files, tmpDir } = await zipFixture(t, fixture, { length, fixtureDir, opts })
+const zipNode = async function (t, fixture, { bundler, length, fixtureDir, opts } = {}) {
+  const bundlerOpts = bundler === 'esbuild' ? { useEsbuild: true } : {}
+  const { files, tmpDir } = await zipFixture(t, fixture, {
+    bundler,
+    length,
+    fixtureDir,
+    opts: { ...opts, ...bundlerOpts },
+  })
   await requireExtractedFiles(t, files)
   return { files, tmpDir }
 }
 
-const zipFixture = async function (t, fixture, { length, fixtureDir, opts } = {}) {
-  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+const zipFixture = async function (t, fixture, { bundler, length, fixtureDir, opts } = {}) {
+  const { path: tmpDir } = await getTmpDir({ prefix: `zip-it-test-${bundler}` })
   const { files } = await zipCheckFunctions(t, fixture, { length, fixtureDir, tmpDir, opts })
   return { files, tmpDir }
 }
@@ -50,7 +57,32 @@ const replaceUnzipPath = function ({ path }) {
   return path.replace('.zip', '.js')
 }
 
+// Returns a list of paths included using `require` calls. Relative requires
+// will be traversed recursively up to a depth defined by `depth`. All the
+// required paths — relative or not — will be returned in a flattened array.
+const getRequires = function ({ depth = Number.POSITIVE_INFINITY, filePath }, currentDepth = 1) {
+  const requires = precinct.paperwork(filePath, { includeCore: false })
+
+  if (currentDepth >= depth) {
+    return requires
+  }
+
+  const basePath = dirname(filePath)
+  const childRequires = requires.reduce((result, requirePath) => {
+    if (!requirePath.startsWith('.')) {
+      return result
+    }
+
+    const fullRequirePath = resolve(basePath, requirePath)
+
+    return [...result, ...getRequires({ depth, filePath: fullRequirePath }, currentDepth + 1)]
+  }, [])
+
+  return [...requires, ...childRequires]
+}
+
 module.exports = {
+  getRequires,
   zipNode,
   zipFixture,
   unzipFiles,

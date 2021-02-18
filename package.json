@@ -51,11 +51,12 @@
   },
   "dependencies": {
     "archiver": "^4.0.0",
+    "array-flat-polyfill": "^1.0.1",
     "common-path-prefix": "^2.0.0",
     "cp-file": "^7.0.0",
     "elf-cam": "^0.1.1",
     "end-of-stream": "^1.4.4",
-    "esbuild": "^0.8.36",
+    "esbuild": "^0.8.46",
     "find-up": "^4.1.0",
     "glob": "^7.1.6",
     "junk": "^3.1.0",

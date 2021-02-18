@@ -1,6 +1,6 @@
-try {
-  // eslint-disable-next-line import/no-unassigned-import, import/no-unresolved, node/global-require
-  require('consistent-ids')
-} catch (error) {}
+// eslint-disable-next-line import/no-unresolved
+const module = require('consistent-ids')
+
+console.log(module)
 
 module.exports = true
