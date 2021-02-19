@@ -1,4 +1,4 @@
 module.exports = {
-  JS_BUNDLER_LEGACY: 1,
-  JS_BUNDLER_ESBUILD: 2,
+  JS_BUNDLER_LEGACY: 'zisi',
+  JS_BUNDLER_ESBUILD: 'esbuild',
 }

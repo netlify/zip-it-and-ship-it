@@ -32,9 +32,9 @@ const OPTIONS = {
     number: true,
     describe: 'Maximum number of Functions to bundle at the same time',
   },
-  'js-bundler-version': {
-    number: true,
-    describe: 'The version of the JavaScript bundling mechanism',
+  'js-bundler': {
+    string: true,
+    describe: 'The bundler to use when processing JavaScript functions',
   },
   'js-external-modules': {
     array: true,

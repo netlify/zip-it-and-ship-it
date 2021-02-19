@@ -10,7 +10,7 @@ const { zipBinary } = require('../runtime')
 const zipFunction = async function ({ srcPath, destFolder, stat, filename, runtime }) {
   const destPath = join(destFolder, `${filename}.zip`)
   await zipBinary({ srcPath, destPath, filename: 'bootstrap', stat, runtime })
-  return destPath
+  return { path: destPath }
 }
 
 module.exports = { zipFunction }

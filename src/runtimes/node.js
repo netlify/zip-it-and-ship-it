@@ -18,7 +18,7 @@ const getSrcFiles = async function (options) {
 }
 
 const getSrcFilesAndExternalModules = async function ({
-  jsBundlerVersion,
+  jsBundler,
   jsExternalModules = [],
   srcPath,
   mainFile,
@@ -26,7 +26,7 @@ const getSrcFilesAndExternalModules = async function ({
   stat,
   pluginsModulesPath,
 }) {
-  if (jsBundlerVersion === JS_BUNDLER_LEGACY) {
+  if (jsBundler === JS_BUNDLER_LEGACY) {
     const paths = await listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
 
     return {
@@ -55,7 +55,7 @@ const zipFunction = async function ({
   destFolder,
   extension,
   filename,
-  jsBundlerVersion,
+  jsBundler,
   jsExternalModules: externalModulesFromConfig = [],
   jsIgnoredModules: ignoredModulesFromConfig = [],
   mainFile,
@@ -81,12 +81,12 @@ const zipFunction = async function ({
     srcPath,
     srcDir,
     pluginsModulesPath,
-    jsBundlerVersion,
+    jsBundler,
     jsExternalModules: externalModulesFromConfig,
   })
   const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
-  if (jsBundlerVersion === JS_BUNDLER_LEGACY) {
+  if (jsBundler === JS_BUNDLER_LEGACY) {
     await zipNodeJs({
       basePath: commonPathPrefix(dirnames),
       destFolder,
@@ -97,7 +97,7 @@ const zipFunction = async function ({
       srcFiles,
     })
 
-    return destPath
+    return { bundlerVersion: JS_BUNDLER_LEGACY, path: destPath }
   }
 
   const {
@@ -105,7 +105,7 @@ const zipFunction = async function ({
     ignoredModules: ignoredModulesFromSpecialCases,
   } = await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
 
-  const { bundlePath, cleanTempFiles } = await bundleJsFile({
+  const { bundlePath, data, cleanTempFiles } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     destFilename: filename,
     destFolder,
@@ -117,6 +117,7 @@ const zipFunction = async function ({
     ignoredModules: [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases],
     srcFile: mainFile,
   })
+  const bundlerWarnings = data.warnings.length === 0 ? undefined : [data.warnings]
 
   // We're adding the bundled file to the zip, but we want it to have the same
   // name and path as the original, unbundled file. For this, we use an alias..
@@ -140,20 +141,22 @@ const zipFunction = async function ({
     await cleanTempFiles()
   }
 
-  return destPath
+  return { bundlerVersion: JS_BUNDLER_ESBUILD, bundlerWarnings, path: destPath }
 }
 
 const zipWithFunctionWithFallback = async (parameters) => {
   // If a specific JS bundler version is specified, we'll use it.
-  if (parameters.jsBundlerVersion) {
+  if (parameters.jsBundler) {
     return zipFunction(parameters)
   }
 
   // Otherwise, we'll try to bundle with v2 and, if that fails, fallback to v1.
   try {
-    return await zipFunction({ ...parameters, jsBundlerVersion: JS_BUNDLER_ESBUILD })
-  } catch (_) {
-    return zipFunction({ ...parameters, jsBundlerVersion: JS_BUNDLER_LEGACY })
+    return await zipFunction({ ...parameters, jsBundler: JS_BUNDLER_ESBUILD })
+  } catch (error) {
+    const data = await zipFunction({ ...parameters, jsBundler: JS_BUNDLER_LEGACY })
+
+    return { ...data, bundlerErrors: error.errors }
   }
 }
 

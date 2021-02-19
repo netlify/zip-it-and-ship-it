@@ -8,6 +8,7 @@ const pMap = require('p-map')
 require('./utils/polyfills')
 const { getFunctionInfos, getSrcPaths, getFunctionInfo } = require('./info')
 const runtimes = require('./runtimes')
+const { removeFalsy } = require('./utils/remove_falsy')
 
 const AUTO_PLUGINS_DIR = '.netlify/plugins/'
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -21,7 +22,7 @@ const zipFunctions = async function (
   srcFolder,
   destFolder,
   {
-    jsBundlerVersion,
+    jsBundler,
     jsExternalModules = [],
     jsIgnoredModules = [],
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
@@ -35,7 +36,7 @@ const zipFunctions = async function (
     srcPaths,
     (srcPath) =>
       zipFunction(srcPath, destFolder, {
-        jsBundlerVersion,
+        jsBundler,
         jsExternalModules,
         jsIgnoredModules,
         pluginsModulesPath,
@@ -53,7 +54,7 @@ const zipFunction = async function (
   srcPath,
   destFolder,
   {
-    jsBundlerVersion,
+    jsBundler,
     jsExternalModules,
     jsIgnoredModules,
     pluginsModulesPath: defaultModulesPath,
@@ -81,8 +82,8 @@ const zipFunction = async function (
     return { path: destPath, runtime: 'js' }
   }
 
-  const destPath = await runtimes[runtime].zipFunction({
-    jsBundlerVersion,
+  const { bundlerErrors, bundlerVersion, bundlerWarnings, path } = await runtimes[runtime].zipFunction({
+    jsBundler,
     jsExternalModules,
     jsIgnoredModules,
     srcPath,
@@ -96,7 +97,7 @@ const zipFunction = async function (
     runtime,
     pluginsModulesPath,
   })
-  return { path: destPath, runtime }
+  return removeFalsy({ bundlerErrors, bundlerVersion, bundlerWarnings, path, runtime })
 }
 
 // List all Netlify Functions main entry files for a specific directory
@@ -107,14 +108,14 @@ const listFunctions = async function (srcFolder) {
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (srcFolder, { jsBundlerVersion, jsExternalModules, jsIgnoredModules } = {}) {
+const listFunctionsFiles = async function (srcFolder, { jsBundler, jsExternalModules, jsIgnoredModules } = {}) {
   const [functionInfos, pluginsModulesPath] = await Promise.all([
     getFunctionInfos(srcFolder),
     getPluginsModulesPath(srcFolder),
   ])
   const listedFunctionsFiles = await Promise.all(
     functionInfos.map((info) =>
-      getListedFunctionFiles(info, { jsBundlerVersion, jsExternalModules, jsIgnoredModules, pluginsModulesPath }),
+      getListedFunctionFiles(info, { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath }),
     ),
   )
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
@@ -128,7 +129,7 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }) {
 
 const getListedFunctionFiles = async function (
   { runtime, name, stat, mainFile, extension, srcPath, srcDir },
-  { jsBundlerVersion, jsExternalModules, jsIgnoredModules, pluginsModulesPath },
+  { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath },
 ) {
   const srcFiles = await getSrcFiles({
     runtime,
@@ -138,7 +139,7 @@ const getListedFunctionFiles = async function (
     srcPath,
     srcDir,
     pluginsModulesPath,
-    jsBundlerVersion,
+    jsBundler,
     jsExternalModules,
     jsIgnoredModules,
   })
@@ -146,7 +147,7 @@ const getListedFunctionFiles = async function (
 }
 
 const getSrcFiles = function ({
-  jsBundlerVersion,
+  jsBundler,
   jsExternalModules,
   jsIgnoredModules,
   runtime,
@@ -164,7 +165,7 @@ const getSrcFiles = function ({
   }
 
   return getRuntimeSrcFiles({
-    jsBundlerVersion,
+    jsBundler,
     jsExternalModules,
     jsIgnoredModules,
     extension,

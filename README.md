@@ -86,12 +86,14 @@ _Default value_: `5`
 
 Maximum number of Functions to bundle at the same time.
 
-#### jsBundlerVersion
+#### jsBundler
 
 _Type_: `number`\
 _Default value_: `undefined`
 
-The version number of the JavaScript bundling mechanism.
+The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`.
+
+When `undefined`, `esbuild` will be used with a fallback to `zisi` in case of an error.
 
 #### jsExternalModules
 
@@ -100,7 +102,7 @@ _Default value_: `[]`
 
 List of Node modules to include separately inside a node_modules directory.
 
-Applicable only when `jsBundlerVersion` is `2`.
+Applicable only when `jsBundler` is `esbuild`.
 
 #### jsIgnoredModules
 
@@ -109,7 +111,7 @@ _Default value_: `[]`
 
 List of Node modules to keep out of the bundle.
 
-Applicable only when `jsBundlerVersion` is `2`.
+Applicable only when `jsBundler` is `esbuild`.
 
 ### Return value
 

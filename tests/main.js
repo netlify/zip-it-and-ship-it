@@ -37,7 +37,7 @@ const normalizeFiles = function (fixtureDir, { name, mainFile, runtime, extensio
 const getZipChecksum = async function (t, bundler) {
   const {
     files: [{ path }],
-  } = await zipFixture(t, 'many-dependencies', { opts: { jsBundlerVersion: bundler } })
+  } = await zipFixture(t, 'many-dependencies', { opts: { jsBundler: bundler } })
   const sha1sum = computeSha1(path)
   return sha1sum
 }
@@ -50,99 +50,99 @@ test.after.always(async () => {
 const testBundlers = makeTestBundlers(test)
 
 testBundlers('Zips Node.js function files', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  const { files } = await zipNode(t, 'simple', { opts: { jsBundlerVersion: bundler } })
+  const { files } = await zipNode(t, 'simple', { opts: { jsBundler: bundler } })
   t.true(files.every(({ runtime }) => runtime === 'js'))
 })
 
 testBundlers('Handles Node module with native bindings', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
   const jsExternalModules = bundler === ESBUILD ? ['test'] : undefined
   const { files } = await zipNode(t, 'node-module-native', {
-    opts: { jsBundlerVersion: bundler, jsExternalModules },
+    opts: { jsBundler: bundler, jsExternalModules },
   })
   t.true(files.every(({ runtime }) => runtime === 'js'))
 })
 
 testBundlers('Can require node modules', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'local-node-module', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'local-node-module', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Can require scoped node modules', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'node-module-scope', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'node-module-scope', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Can require node modules nested files', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'node-module-path', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'node-module-path', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Can require dynamically generated node modules', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'side-module', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'side-module', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Ignore some excluded node modules', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-excluded', { opts: { jsBundlerVersion: bundler } })
+  const { tmpDir } = await zipNode(t, 'node-module-excluded', { opts: { jsBundler: bundler } })
   t.false(await pathExists(`${tmpDir}/src/node_modules/aws-sdk`))
 })
 
 testBundlers('Ignore TypeScript types', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
   const { tmpDir } = await zipNode(t, 'node-module-typescript-types', {
-    opts: { jsBundlerVersion: bundler },
+    opts: { jsBundler: bundler },
   })
   t.false(await pathExists(`${tmpDir}/src/node_modules/@types/node`))
 })
 
 testBundlers('Throws on runtime errors', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(zipNode(t, 'node-module-error', { opts: { jsBundlerVersion: bundler } }))
+  await t.throwsAsync(zipNode(t, 'node-module-error', { opts: { jsBundler: bundler } }))
 })
 
 testBundlers('Throws on missing dependencies', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(zipNode(t, 'node-module-missing', { opts: { jsBundlerVersion: bundler } }))
+  await t.throwsAsync(zipNode(t, 'node-module-missing', { opts: { jsBundler: bundler } }))
 })
 
 testBundlers(
   'Throws on missing dependencies with no optionalDependencies',
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
-    await t.throwsAsync(zipNode(t, 'node-module-missing-package', { opts: { jsBundlerVersion: bundler } }))
+    await t.throwsAsync(zipNode(t, 'node-module-missing-package', { opts: { jsBundler: bundler } }))
   },
 )
 
 testBundlers('Throws on missing conditional dependencies', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(zipNode(t, 'node-module-missing-conditional', { opts: { jsBundlerVersion: bundler } }))
+  await t.throwsAsync(zipNode(t, 'node-module-missing-conditional', { opts: { jsBundler: bundler } }))
 })
 
 testBundlers("Throws on missing dependencies' dependencies", [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(zipNode(t, 'node-module-missing-deep', { opts: { jsBundlerVersion: bundler } }))
+  await t.throwsAsync(zipNode(t, 'node-module-missing-deep', { opts: { jsBundler: bundler } }))
 })
 
 testBundlers('Ignore missing optional dependencies', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'node-module-missing-optional', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'node-module-missing-optional', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Ignore modules conditional dependencies', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'node-module-deep-conditional', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'node-module-deep-conditional', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Ignore missing optional peer dependencies', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'node-module-peer-optional', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'node-module-peer-optional', { opts: { jsBundler: bundler } })
 })
 
 testBundlers(
   'Throws on missing optional peer dependencies with no peer dependencies',
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
-    await t.throwsAsync(zipNode(t, 'node-module-peer-optional-none', { opts: { jsBundlerVersion: bundler } }))
+    await t.throwsAsync(zipNode(t, 'node-module-peer-optional-none', { opts: { jsBundler: bundler } }))
   },
 )
 
 testBundlers('Throws on missing non-optional peer dependencies', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(zipNode(t, 'node-module-peer-not-optional', { opts: { jsBundlerVersion: bundler } }))
+  await t.throwsAsync(zipNode(t, 'node-module-peer-not-optional', { opts: { jsBundler: bundler } }))
 })
 
 testBundlers(
   'Resolves dependencies from .netlify/plugins/node_modules',
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
-    await zipNode(t, 'node-module-next-image', { opts: { jsBundlerVersion: bundler } })
+    await zipNode(t, 'node-module-next-image', { opts: { jsBundler: bundler } })
   },
 )
 
@@ -165,7 +165,7 @@ testBundlers('Throws on invalid package.json', [ESBUILD, LEGACY, DEFAULT], async
   await pRename(srcPackageJson, distPackageJson)
   try {
     await t.throwsAsync(
-      zipNode(t, 'invalid-package-json', { opts: { jsBundlerVersion: bundler }, fixtureDir }),
+      zipNode(t, 'invalid-package-json', { opts: { jsBundler: bundler }, fixtureDir }),
       expectedErrorRegex,
     )
   } finally {
@@ -174,30 +174,30 @@ testBundlers('Throws on invalid package.json', [ESBUILD, LEGACY, DEFAULT], async
 })
 
 testBundlers('Ignore invalid require()', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'invalid-require', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'invalid-require', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Can require local files', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'local-require', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'local-require', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Can require local files deeply', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'local-deep-require', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'local-deep-require', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Can require local files in the parent directories', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'local-parent-require', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'local-parent-require', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Ignore missing critters dependency for Next.js 10', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'node-module-next10-critters', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'node-module-next10-critters', { opts: { jsBundler: bundler } })
 })
 
 testBundlers(
   'Ignore missing critters dependency for Next.js exact version 10.0.5',
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
-    await zipNode(t, 'node-module-next10-critters-exact', { opts: { jsBundlerVersion: bundler } })
+    await zipNode(t, 'node-module-next10-critters-exact', { opts: { jsBundler: bundler } })
   },
 )
 
@@ -205,7 +205,7 @@ testBundlers(
   'Ignore missing critters dependency for Next.js with range ^10.0.5',
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
-    await zipNode(t, 'node-module-next10-critters-10.0.5-range', { opts: { jsBundlerVersion: bundler } })
+    await zipNode(t, 'node-module-next10-critters-10.0.5-range', { opts: { jsBundler: bundler } })
   },
 )
 
@@ -213,7 +213,7 @@ testBundlers(
   "Ignore missing critters dependency for Next.js with version='latest'",
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
-    await zipNode(t, 'node-module-next10-critters-latest', { opts: { jsBundlerVersion: bundler } })
+    await zipNode(t, 'node-module-next10-critters-latest', { opts: { jsBundler: bundler } })
   },
 )
 
@@ -236,7 +236,7 @@ if (platform !== 'win32') {
     }
 
     try {
-      await zipNode(t, 'symlinks', { opts: { jsBundlerVersion: bundler }, fixtureDir })
+      await zipNode(t, 'symlinks', { opts: { jsBundler: bundler }, fixtureDir })
     } finally {
       await pUnlink(symlinkFile)
     }
@@ -247,19 +247,19 @@ testBundlers(
   'Can target a directory with a main file with the same name',
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
-    await zipNode(t, 'directory-handler', { opts: { jsBundlerVersion: bundler } })
+    await zipNode(t, 'directory-handler', { opts: { jsBundler: bundler } })
   },
 )
 
 testBundlers('Can target a directory with an index.js file', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  const { files, tmpDir } = await zipFixture(t, 'index-handler', { opts: { jsBundlerVersion: bundler } })
+  const { files, tmpDir } = await zipFixture(t, 'index-handler', { opts: { jsBundler: bundler } })
   await unzipFiles(files)
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(require(`${tmpDir}/function.js`))
 })
 
 testBundlers('Keeps non-required files inside the target directory', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  const { tmpDir } = await zipNode(t, 'keep-dir-files', { opts: { jsBundlerVersion: bundler } })
+  const { tmpDir } = await zipNode(t, 'keep-dir-files', { opts: { jsBundler: bundler } })
   t.true(await pathExists(`${tmpDir}/function.js`))
 })
 
@@ -267,7 +267,7 @@ testBundlers(
   'Ignores non-required node_modules inside the target directory',
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
-    const { tmpDir } = await zipNode(t, 'ignore-dir-node-modules', { opts: { jsBundlerVersion: bundler } })
+    const { tmpDir } = await zipNode(t, 'ignore-dir-node-modules', { opts: { jsBundler: bundler } })
     t.false(await pathExists(`${tmpDir}/src/node_modules`))
   },
 )
@@ -277,19 +277,19 @@ testBundlers(
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
     const { tmpDir } = await zipNode(t, 'ignore-deep-dir-node-modules', {
-      opts: { jsBundlerVersion: bundler },
+      opts: { jsBundler: bundler },
     })
     t.false(await pathExists(`${tmpDir}/src/deep/node_modules`))
   },
 )
 
 testBundlers('Works with many dependencies', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'many-dependencies', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'many-dependencies', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Works with many function files', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'many-functions', {
-    opts: { jsBundlerVersion: bundler },
+    opts: { jsBundler: bundler },
     length: TEST_FUNCTIONS_LENGTH,
   })
 })
@@ -302,37 +302,34 @@ testBundlers('Produces deterministic checksums', [ESBUILD, LEGACY, DEFAULT], asy
 })
 
 testBundlers('Throws when the source folder does not exist', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(
-    zipNode(t, 'does-not-exist', { opts: { jsBundlerVersion: bundler } }),
-    /Functions folder does not exist/,
-  )
+  await t.throwsAsync(zipNode(t, 'does-not-exist', { opts: { jsBundler: bundler } }), /Functions folder does not exist/)
 })
 
 testBundlers('Works even if destination folder does not exist', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'simple', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'simple', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Do not consider node_modules as a function file', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'ignore-node-modules', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'ignore-node-modules', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Ignore directories without a main file', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'ignore-directories', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'ignore-directories', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Remove useless files', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  const { tmpDir } = await zipNode(t, 'useless', { opts: { jsBundlerVersion: bundler } })
+  const { tmpDir } = await zipNode(t, 'useless', { opts: { jsBundler: bundler } })
   t.false(await pathExists(`${tmpDir}/src/Desktop.ini`))
 })
 
 testBundlers('Works on empty directories', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'empty', { opts: { jsBundlerVersion: bundler }, length: 0 })
+  await zipNode(t, 'empty', { opts: { jsBundler: bundler }, length: 0 })
 })
 
 testBundlers('Works when no package.json is present', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
   const fixtureDir = await tmpName({ prefix: `zip-it-test-bundler-${bundler}` })
   await cpy('**', `${fixtureDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
-  await zipNode(t, 'no-package-json', { opts: { jsBundlerVersion: bundler }, length: 1, fixtureDir })
+  await zipNode(t, 'no-package-json', { opts: { jsBundler: bundler }, length: 1, fixtureDir })
 })
 
 testBundlers('Copies already zipped files', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
@@ -348,16 +345,16 @@ testBundlers('Copies already zipped files', [ESBUILD, LEGACY, DEFAULT], async (b
 })
 
 testBundlers('Ignore unsupported programming languages', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipFixture(t, 'unsupported', { length: 0, opts: { jsBundlerVersion: bundler } })
+  await zipFixture(t, 'unsupported', { length: 0, opts: { jsBundler: bundler } })
 })
 
 testBundlers('Can reduce parallelism', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'simple', { length: 1, opts: { jsBundlerVersion: bundler, parallelLimit: 1 } })
+  await zipNode(t, 'simple', { length: 1, opts: { jsBundler: bundler, parallelLimit: 1 } })
 })
 
 testBundlers('Can use zipFunction()', [ESBUILD, LEGACY, DEFAULT], async (bundler, t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const { runtime } = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, { jsBundlerVersion: bundler })
+  const { runtime } = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, { jsBundler: bundler })
   t.is(runtime, 'js')
 })
 
@@ -382,7 +379,7 @@ testBundlers(
   [ESBUILD, LEGACY, DEFAULT],
   async (bundler, t) => {
     const fixtureDir = `${FIXTURES_DIR}/list`
-    const functions = await listFunctionsFiles(fixtureDir, { jsBundlerVersion: bundler })
+    const functions = await listFunctionsFiles(fixtureDir, { jsBundler: bundler })
     t.deepEqual(
       functions,
       [
@@ -417,11 +414,11 @@ testBundlers(
 )
 
 testBundlers('Zips node modules', [LEGACY], async (bundler, t) => {
-  await zipNode(t, 'node-module', { opts: { jsBundlerVersion: bundler } })
+  await zipNode(t, 'node-module', { opts: { jsBundler: bundler } })
 })
 
 testBundlers('Include most files from node modules', [LEGACY], async (bundler, t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-included', { opts: { jsBundlerVersion: bundler } })
+  const { tmpDir } = await zipNode(t, 'node-module-included', { opts: { jsBundler: bundler } })
   const [mapExists, htmlExists] = await Promise.all([
     pathExists(`${tmpDir}/src/node_modules/test/test.map`),
     pathExists(`${tmpDir}/src/node_modules/test/test.html`),
@@ -431,11 +428,11 @@ testBundlers('Include most files from node modules', [LEGACY], async (bundler, t
 })
 
 testBundlers('Throws on missing critters dependency for Next.js 9', [LEGACY], async (bundler, t) => {
-  await t.throwsAsync(zipNode(t, 'node-module-next9-critters', { opts: { jsBundlerVersion: bundler } }))
+  await t.throwsAsync(zipNode(t, 'node-module-next9-critters', { opts: { jsBundler: bundler } }))
 })
 
 testBundlers('Includes specific Next.js dependencies when using next-on-netlify', [LEGACY], async (bundler, t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-next-on-netlify', { opts: { jsBundlerVersion: bundler } })
+  const { tmpDir } = await zipNode(t, 'node-module-next-on-netlify', { opts: { jsBundler: bundler } })
   const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
     pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
     pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
@@ -449,7 +446,7 @@ testBundlers('Includes specific Next.js dependencies when using next-on-netlify'
 })
 
 testBundlers('Includes all Next.js dependencies when not using next-on-netlify', [LEGACY], async (bundler, t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-next', { opts: { jsBundlerVersion: bundler } })
+  const { tmpDir } = await zipNode(t, 'node-module-next', { opts: { jsBundler: bundler } })
   const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
     pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
     pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
@@ -463,7 +460,7 @@ testBundlers('Includes all Next.js dependencies when not using next-on-netlify',
 })
 
 testBundlers('Inlines node modules in the bundle', [ESBUILD, DEFAULT], async (bundler, t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', { opts: { jsBundlerVersion: bundler } })
+  const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', { opts: { jsBundler: bundler } })
   const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
   t.false(requires.includes('test'))
@@ -475,7 +472,7 @@ testBundlers(
   [ESBUILD, DEFAULT],
   async (bundler, t) => {
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
-      opts: { jsBundlerVersion: bundler, jsExternalModules: ['test'] },
+      opts: { jsBundler: bundler, jsExternalModules: ['test'] },
     })
     const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
@@ -489,7 +486,7 @@ testBundlers(
   [ESBUILD, DEFAULT],
   async (bundler, t) => {
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
-      opts: { jsBundlerVersion: bundler, jsIgnoredModules: ['test'] },
+      opts: { jsBundler: bundler, jsIgnoredModules: ['test'] },
     })
     const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
@@ -503,7 +500,7 @@ testBundlers(
   [ESBUILD, DEFAULT],
   async (bundler, t) => {
     const { tmpDir } = await zipNode(t, 'node-module-included', {
-      opts: { jsBundlerVersion: bundler, jsExternalModules: ['test'] },
+      opts: { jsBundler: bundler, jsExternalModules: ['test'] },
     })
     const [mapExists, htmlExists] = await Promise.all([
       pathExists(`${tmpDir}/src/node_modules/test/test.map`),
@@ -519,7 +516,7 @@ testBundlers(
   [ESBUILD, DEFAULT],
   async (bundler, t) => {
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
-      opts: { jsBundlerVersion: bundler, jsExternalModules: ['i-do-not-exist'] },
+      opts: { jsBundler: bundler, jsExternalModules: ['i-do-not-exist'] },
     })
 
     t.false(await pathExists(`${tmpDir}/src/node_modules/i-do-not-exist`))

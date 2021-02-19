@@ -1,7 +1,7 @@
 const makeTestBundlers = (test) => {
   const testBundlers = (title, bundlers, assertions, testFn = test) => {
     bundlers.forEach((bundler) => {
-      const testTitle = bundler ? `${title} [forcing JS bundler to v${bundler}]` : title
+      const testTitle = bundler ? `${title} [JS bundler: ${bundler}]` : title
 
       testFn(testTitle, assertions.bind(null, bundler))
     })
