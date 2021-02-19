@@ -8,6 +8,7 @@ const {
   getExternalAndIgnoredModulesFromSpecialCases,
   listFilesUsingLegacyBundler,
 } = require('../node_dependencies')
+const { JS_BUNDLER_ESBUILD, JS_BUNDLER_LEGACY } = require('../utils/consts')
 const { zipNodeJs } = require('../zip_node')
 
 const getSrcFiles = async function (options) {
@@ -17,15 +18,15 @@ const getSrcFiles = async function (options) {
 }
 
 const getSrcFilesAndExternalModules = async function ({
+  jsBundlerVersion,
+  jsExternalModules = [],
   srcPath,
   mainFile,
   srcDir,
   stat,
   pluginsModulesPath,
-  useEsbuild,
-  externalModules,
 }) {
-  if (!useEsbuild) {
+  if (jsBundlerVersion === JS_BUNDLER_LEGACY) {
     const paths = await listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
 
     return {
@@ -34,34 +35,34 @@ const getSrcFilesAndExternalModules = async function ({
     }
   }
 
-  if (externalModules.length !== 0) {
+  if (jsExternalModules.length !== 0) {
     const { moduleNames, paths } = await getDependencyNamesAndPathsForDependencies({
-      dependencies: externalModules,
+      dependencies: jsExternalModules,
       basedir: srcDir,
       pluginsModulesPath,
     })
 
-    return { moduleNames, paths }
+    return { moduleNames, paths: [...paths, mainFile] }
   }
 
   return {
-    moduleNames: externalModules,
-    paths: [],
+    moduleNames: jsExternalModules,
+    paths: [mainFile],
   }
 }
 
 const zipFunction = async function ({
   destFolder,
   extension,
-  externalModules: externalModulesFromConfig,
   filename,
-  ignoredModules: ignoredModulesFromConfig,
+  jsBundlerVersion,
+  jsExternalModules: externalModulesFromConfig = [],
+  jsIgnoredModules: ignoredModulesFromConfig = [],
   mainFile,
   pluginsModulesPath,
   srcDir,
   srcPath,
   stat,
-  useEsbuild,
 }) {
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
 
@@ -80,12 +81,12 @@ const zipFunction = async function ({
     srcPath,
     srcDir,
     pluginsModulesPath,
-    useEsbuild,
-    externalModules: externalModulesFromConfig,
+    jsBundlerVersion,
+    jsExternalModules: externalModulesFromConfig,
   })
   const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
-  if (!useEsbuild) {
+  if (jsBundlerVersion === JS_BUNDLER_LEGACY) {
     await zipNodeJs({
       basePath: commonPathPrefix(dirnames),
       destFolder,
@@ -118,22 +119,22 @@ const zipFunction = async function ({
   })
 
   // We're adding the bundled file to the zip, but we want it to have the same
-  // name and path as the original, unbundled file. For this, we use a rename.
-  const renames = {
-    [bundlePath]: mainFile,
+  // name and path as the original, unbundled file. For this, we use an alias..
+  const aliases = {
+    [mainFile]: bundlePath,
   }
   const basePath = commonPathPrefix([...dirnames, dirname(mainFile)])
 
   try {
     await zipNodeJs({
+      aliases,
       basePath,
       destFolder,
       destPath,
       filename,
       mainFile,
       pluginsModulesPath,
-      renames,
-      srcFiles: [...srcFiles, bundlePath],
+      srcFiles,
     })
   } finally {
     await cleanTempFiles()
@@ -142,4 +143,18 @@ const zipFunction = async function ({
   return destPath
 }
 
-module.exports = { getSrcFiles, zipFunction }
+const zipWithFunctionWithFallback = async (parameters) => {
+  // If a specific JS bundler version is specified, we'll use it.
+  if (parameters.jsBundlerVersion) {
+    return zipFunction(parameters)
+  }
+
+  // Otherwise, we'll try to bundle with v2 and, if that fails, fallback to v1.
+  try {
+    return await zipFunction({ ...parameters, jsBundlerVersion: JS_BUNDLER_ESBUILD })
+  } catch (_) {
+    return zipFunction({ ...parameters, jsBundlerVersion: JS_BUNDLER_LEGACY })
+  }
+}
+
+module.exports = { getSrcFiles, zipFunction: zipWithFunctionWithFallback }

@@ -86,6 +86,31 @@ _Default value_: `5`
 
 Maximum number of Functions to bundle at the same time.
 
+#### jsBundlerVersion
+
+_Type_: `number`\
+_Default value_: `undefined`
+
+The version number of the JavaScript bundling mechanism.
+
+#### jsExternalModules
+
+_Type_: `array<string>`\
+_Default value_: `[]`
+
+List of Node modules to include separately inside a node_modules directory.
+
+Applicable only when `jsBundlerVersion` is `2`.
+
+#### jsIgnoredModules
+
+_Type_: `array<string>`\
+_Default value_: `[]`
+
+List of Node modules to keep out of the bundle.
+
+Applicable only when `jsBundlerVersion` is `2`.
+
 ### Return value
 
 This returns a `Promise` resolving to an array of objects describing each archive. Each object has the following

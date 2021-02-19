@@ -20,7 +20,14 @@ const getPluginsModulesPath = (srcDir) => findUp(`${AUTO_PLUGINS_DIR}node_module
 const zipFunctions = async function (
   srcFolder,
   destFolder,
-  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo, useEsbuild, externalModules = [], ignoredModules = [] } = {},
+  {
+    jsBundlerVersion,
+    jsExternalModules = [],
+    jsIgnoredModules = [],
+    parallelLimit = DEFAULT_PARALLEL_LIMIT,
+    skipGo,
+    zipGo,
+  } = {},
 ) {
   const [srcPaths, pluginsModulesPath] = await Promise.all([getSrcPaths(srcFolder), getPluginsModulesPath(srcFolder)])
 
@@ -28,12 +35,12 @@ const zipFunctions = async function (
     srcPaths,
     (srcPath) =>
       zipFunction(srcPath, destFolder, {
+        jsBundlerVersion,
+        jsExternalModules,
+        jsIgnoredModules,
+        pluginsModulesPath,
         skipGo,
         zipGo,
-        pluginsModulesPath,
-        useEsbuild,
-        externalModules,
-        ignoredModules,
       }),
     {
       concurrency: parallelLimit,
@@ -46,12 +53,12 @@ const zipFunction = async function (
   srcPath,
   destFolder,
   {
+    jsBundlerVersion,
+    jsExternalModules,
+    jsIgnoredModules,
+    pluginsModulesPath: defaultModulesPath,
     skipGo = true,
     zipGo = !skipGo,
-    pluginsModulesPath: defaultModulesPath,
-    useEsbuild,
-    externalModules,
-    ignoredModules,
   } = {},
 ) {
   const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
@@ -75,6 +82,9 @@ const zipFunction = async function (
   }
 
   const destPath = await runtimes[runtime].zipFunction({
+    jsBundlerVersion,
+    jsExternalModules,
+    jsIgnoredModules,
     srcPath,
     destFolder,
     mainFile,
@@ -85,9 +95,6 @@ const zipFunction = async function (
     zipGo,
     runtime,
     pluginsModulesPath,
-    useEsbuild,
-    externalModules,
-    ignoredModules,
   })
   return { path: destPath, runtime }
 }
@@ -100,13 +107,15 @@ const listFunctions = async function (srcFolder) {
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (srcFolder) {
+const listFunctionsFiles = async function (srcFolder, { jsBundlerVersion, jsExternalModules, jsIgnoredModules } = {}) {
   const [functionInfos, pluginsModulesPath] = await Promise.all([
     getFunctionInfos(srcFolder),
     getPluginsModulesPath(srcFolder),
   ])
   const listedFunctionsFiles = await Promise.all(
-    functionInfos.map((info) => getListedFunctionFiles(info, { pluginsModulesPath })),
+    functionInfos.map((info) =>
+      getListedFunctionFiles(info, { jsBundlerVersion, jsExternalModules, jsIgnoredModules, pluginsModulesPath }),
+    ),
   )
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
   // eslint-disable-next-line unicorn/prefer-spread
@@ -119,7 +128,7 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }) {
 
 const getListedFunctionFiles = async function (
   { runtime, name, stat, mainFile, extension, srcPath, srcDir },
-  { pluginsModulesPath },
+  { jsBundlerVersion, jsExternalModules, jsIgnoredModules, pluginsModulesPath },
 ) {
   const srcFiles = await getSrcFiles({
     runtime,
@@ -129,11 +138,17 @@ const getListedFunctionFiles = async function (
     srcPath,
     srcDir,
     pluginsModulesPath,
+    jsBundlerVersion,
+    jsExternalModules,
+    jsIgnoredModules,
   })
   return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
 }
 
 const getSrcFiles = function ({
+  jsBundlerVersion,
+  jsExternalModules,
+  jsIgnoredModules,
   runtime,
   stat,
   mainFile,
@@ -141,9 +156,6 @@ const getSrcFiles = function ({
   srcPath,
   srcDir,
   pluginsModulesPath,
-  useEsbuild,
-  externalModules,
-  ignoredModules,
 }) {
   const { getSrcFiles: getRuntimeSrcFiles } = runtimes[runtime]
 
@@ -152,15 +164,15 @@ const getSrcFiles = function ({
   }
 
   return getRuntimeSrcFiles({
+    jsBundlerVersion,
+    jsExternalModules,
+    jsIgnoredModules,
     extension,
     srcPath,
     mainFile,
     srcDir,
     stat,
     pluginsModulesPath,
-    useEsbuild,
-    externalModules,
-    ignoredModules,
   })
 }
 

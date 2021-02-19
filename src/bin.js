@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { env, exit } = require('process')
+const { exit } = require('process')
 
 const yargs = require('yargs')
 
@@ -32,23 +32,19 @@ const OPTIONS = {
     number: true,
     describe: 'Maximum number of Functions to bundle at the same time',
   },
-  'use-esbuild': {
-    boolean: true,
-    default: Boolean(env.NETLIFY_EXPERIMENTAL_ESBUILD),
-    describe: 'Whether to use esbuild to bundle JavaScript functions',
-    hidden: true,
+  'js-bundler-version': {
+    number: true,
+    describe: 'The version of the JavaScript bundling mechanism',
   },
-  'external-modules': {
+  'js-external-modules': {
     array: true,
-    default: (env.NETLIFY_EXPERIMENTAL_EXTERNAL_MODULES || '').split(','),
+    default: [],
     describe: 'List of Node modules to include separately inside a node_modules directory',
-    hidden: true,
   },
-  'ignored-modules': {
+  'js-ignored-modules': {
     array: true,
-    default: (env.NETLIFY_EXPERIMENTAL_IGNORED_MODULES || '').split(','),
+    default: [],
     describe: 'List of Node modules to keep out of the bundle',
-    hidden: true,
   },
 }
 
