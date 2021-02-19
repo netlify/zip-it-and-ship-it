@@ -162,6 +162,22 @@ BUNDLERS.forEach((bundler) => {
     await zipNodeWithBundler(t, 'local-parent-require')
   })
 
+  test(`[bundler: ${bundler}] Ignore missing critters dependency for Next.js 10`, async (t) => {
+    await zipNodeWithBundler(t, 'node-module-next10-critters')
+  })
+
+  test(`[bundler: ${bundler}] Ignore missing critters dependency for Next.js exact version 10.0.5`, async (t) => {
+    await zipNodeWithBundler(t, 'node-module-next10-critters-exact')
+  })
+
+  test(`[bundler: ${bundler}] Ignore missing critters dependency for Next.js with range ^10.0.5`, async (t) => {
+    await zipNodeWithBundler(t, 'node-module-next10-critters-10.0.5-range')
+  })
+
+  test(`[bundler: ${bundler}] Ignore missing critters dependency for Next.js with version='latest'`, async (t) => {
+    await zipNodeWithBundler(t, 'node-module-next10-critters-latest')
+  })
+
   // Need to create symlinks dynamically because they sometimes get lost when
   // committed on Windows
   if (platform !== 'win32') {
@@ -408,20 +424,32 @@ test('[bundler: legacy] Throws on missing critters dependency for Next.js 9', as
   await t.throwsAsync(zipNode(t, 'node-module-next9-critters', { bundler: 'legacy' }))
 })
 
-test('[bundler: legacy] Ignore missing critters dependency for Next.js 10', async (t) => {
-  await zipNode(t, 'node-module-next10-critters', { bundler: 'legacy' })
+test('[bundler: legacy] Includes specific Next.js dependencies when using next-on-netlify', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-next-on-netlify', { bundler: 'legacy' })
+  const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
+    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/index.js`),
+  ])
+  t.true(constantsExists)
+  t.true(semverExists)
+  t.false(otherExists)
+  t.false(indexExists)
 })
 
-test('[bundler: legacy] Ignore missing critters dependency for Next.js exact version 10.0.5', async (t) => {
-  await zipNode(t, 'node-module-next10-critters-exact', { bundler: 'legacy' })
-})
-
-test('[bundler: legacy] Ignore missing critters dependency for Next.js with range ^10.0.5', async (t) => {
-  await zipNode(t, 'node-module-next10-critters-10.0.5-range', { bundler: 'legacy' })
-})
-
-test("[bundler: legacy] Ignore missing critters dependency for Next.js with version='latest'", async (t) => {
-  await zipNode(t, 'node-module-next10-critters-latest', { bundler: 'legacy' })
+test('[bundler: legacy] Includes all Next.js dependencies when not using next-on-netlify', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-next', { bundler: 'legacy' })
+  const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
+    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
+    pathExists(`${tmpDir}/src/node_modules/next/index.js`),
+  ])
+  t.true(constantsExists)
+  t.true(semverExists)
+  t.true(otherExists)
+  t.true(indexExists)
 })
 
 // esbuild bundler tests.
@@ -468,30 +496,11 @@ test('[bundler: esbuild] Include most files from node modules present in `extern
   t.true(htmlExists)
 })
 
-test('[bundler: legacy] Includes specific Next.js dependencies when using next-on-netlify', async (t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-next-on-netlify', { bundler: 'legacy' })
-  const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
-    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/index.js`),
-  ])
-  t.true(constantsExists)
-  t.true(semverExists)
-  t.false(otherExists)
-  t.false(indexExists)
-})
+test('[bundler: esbuild] Does not throw if one of the modules defined in `externalModules` does not exist', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
+    bundler: 'esbuild',
+    opts: { externalModules: ['i-do-not-exist'] },
+  })
 
-test('[bundler: legacy] Includes all Next.js dependencies when not using next-on-netlify', async (t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-next', { bundler: 'legacy' })
-  const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
-    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/index.js`),
-  ])
-  t.true(constantsExists)
-  t.true(semverExists)
-  t.true(otherExists)
-  t.true(indexExists)
+  t.false(await pathExists(`${tmpDir}/src/node_modules/i-do-not-exist`))
 })

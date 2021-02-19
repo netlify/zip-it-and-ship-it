@@ -3,7 +3,11 @@ const { basename, dirname, join, normalize } = require('path')
 const commonPathPrefix = require('common-path-prefix')
 
 const { bundleJsFile } = require('../bundler')
-const { getDependencyNamesAndPathsForDependencies, listFilesUsingLegacyBundler } = require('../node_dependencies')
+const {
+  getDependencyNamesAndPathsForDependencies,
+  getExternalAndIgnoredModulesFromSpecialCases,
+  listFilesUsingLegacyBundler,
+} = require('../node_dependencies')
 const { zipNodeJs } = require('../zip_node')
 
 const getSrcFiles = async function (options) {
@@ -49,9 +53,9 @@ const getSrcFilesAndExternalModules = async function ({
 const zipFunction = async function ({
   destFolder,
   extension,
-  externalModules,
+  externalModules: externalModulesFromConfig,
   filename,
-  ignoredModules,
+  ignoredModules: ignoredModulesFromConfig,
   mainFile,
   pluginsModulesPath,
   srcDir,
@@ -69,7 +73,7 @@ const zipFunction = async function ({
   // inlining it again in the bundle.
   // As such, the dependency traversal logic will compile the names of these
   // modules in `additionalExternalModules`.
-  const { moduleNames: additionalExternalModules = [], paths: srcFiles } = await getSrcFilesAndExternalModules({
+  const { moduleNames: externalModulesFromTraversal = [], paths: srcFiles } = await getSrcFilesAndExternalModules({
     stat,
     mainFile,
     extension,
@@ -77,7 +81,7 @@ const zipFunction = async function ({
     srcDir,
     pluginsModulesPath,
     useEsbuild,
-    externalModules,
+    externalModules: externalModulesFromConfig,
   })
   const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
@@ -95,12 +99,21 @@ const zipFunction = async function ({
     return destPath
   }
 
+  const {
+    externalModules: externalModulesFromSpecialCases,
+    ignoredModules: ignoredModulesFromSpecialCases,
+  } = await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
+
   const { bundlePath, cleanTempFiles } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     destFilename: filename,
     destFolder,
-    externalModules: [...externalModules, ...additionalExternalModules],
-    ignoredModules,
+    externalModules: [
+      ...externalModulesFromConfig,
+      ...externalModulesFromSpecialCases,
+      ...externalModulesFromTraversal,
+    ],
+    ignoredModules: [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases],
     srcFile: mainFile,
   })
 

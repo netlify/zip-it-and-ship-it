@@ -2,6 +2,7 @@ const { dirname } = require('path')
 
 const { getModuleName } = require('./module')
 const { getNestedDependencies, handleModuleNotFound } = require('./nested')
+const { getPackageJson } = require('./package_json')
 const { getPublishedFiles } = require('./published')
 const { resolvePackage } = require('./resolve')
 const { getSideFiles } = require('./side_files')
@@ -39,9 +40,9 @@ const getDependencyNamesAndPathsForDependencies = async function ({
   dependencies: dependencyNames,
   basedir,
   state = getNewCache(),
-  packageJson,
   pluginsModulesPath,
 }) {
+  const packageJson = await getPackageJson(basedir)
   const dependencies = await Promise.all(
     dependencyNames.map((dependencyName) =>
       getDependencyNamesAndPathsForDependency({
@@ -53,8 +54,9 @@ const getDependencyNamesAndPathsForDependencies = async function ({
       }),
     ),
   )
-  const moduleNames = new Set(dependencies.flatMap((dependency) => [...dependency.moduleNames]))
-  const paths = new Set(dependencies.flatMap((dependency) => [...dependency.paths]))
+  const filteredDependencies = dependencies.filter(Boolean)
+  const moduleNames = new Set(filteredDependencies.flatMap((dependency) => [...dependency.moduleNames]))
+  const paths = new Set(filteredDependencies.flatMap((dependency) => [...dependency.paths]))
 
   return {
     moduleNames: [...moduleNames],
@@ -69,11 +71,22 @@ const getDependencyNamesAndPathsForDependency = async function ({
   packageJson,
   pluginsModulesPath,
 }) {
-  const paths = await getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath })
+  try {
+    const paths = await getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath })
 
-  return {
-    moduleNames: [...state.moduleNames],
-    paths,
+    return {
+      moduleNames: [...state.moduleNames],
+      paths,
+    }
+  } catch (error) {
+    if (error.code === 'MODULE_NOT_FOUND') {
+      return {
+        moduleNames: [],
+        paths: [],
+      }
+    }
+
+    throw error
   }
 }
 
