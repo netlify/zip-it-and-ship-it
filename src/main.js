@@ -82,7 +82,7 @@ const zipFunction = async function (
     return { path: destPath, runtime: 'js' }
   }
 
-  const { bundlerErrors, bundlerVersion, bundlerWarnings, path } = await runtimes[runtime].zipFunction({
+  const { bundler, bundlerErrors, bundlerWarnings, path } = await runtimes[runtime].zipFunction({
     jsBundler,
     jsExternalModules,
     jsIgnoredModules,
@@ -97,7 +97,7 @@ const zipFunction = async function (
     runtime,
     pluginsModulesPath,
   })
-  return removeFalsy({ bundlerErrors, bundlerVersion, bundlerWarnings, path, runtime })
+  return removeFalsy({ bundler, bundlerErrors, bundlerWarnings, path, runtime })
 }
 
 // List all Netlify Functions main entry files for a specific directory

@@ -8,7 +8,7 @@ const {
   getExternalAndIgnoredModulesFromSpecialCases,
   listFilesUsingLegacyBundler,
 } = require('../node_dependencies')
-const { JS_BUNDLER_ESBUILD, JS_BUNDLER_LEGACY } = require('../utils/consts')
+const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ZISI } = require('../utils/consts')
 const { zipNodeJs } = require('../zip_node')
 
 const getSrcFiles = async function (options) {
@@ -26,7 +26,7 @@ const getSrcFilesAndExternalModules = async function ({
   stat,
   pluginsModulesPath,
 }) {
-  if (jsBundler === JS_BUNDLER_LEGACY) {
+  if (jsBundler === JS_BUNDLER_ZISI) {
     const paths = await listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
 
     return {
@@ -86,7 +86,7 @@ const zipFunction = async function ({
   })
   const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
-  if (jsBundler === JS_BUNDLER_LEGACY) {
+  if (jsBundler === JS_BUNDLER_ZISI) {
     await zipNodeJs({
       basePath: commonPathPrefix(dirnames),
       destFolder,
@@ -97,7 +97,7 @@ const zipFunction = async function ({
       srcFiles,
     })
 
-    return { bundlerVersion: JS_BUNDLER_LEGACY, path: destPath }
+    return { bundler: JS_BUNDLER_ZISI, path: destPath }
   }
 
   const {
@@ -117,7 +117,7 @@ const zipFunction = async function ({
     ignoredModules: [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases],
     srcFile: mainFile,
   })
-  const bundlerWarnings = data.warnings.length === 0 ? undefined : [data.warnings]
+  const bundlerWarnings = data.warnings.length === 0 ? undefined : data.warnings
 
   // We're adding the bundled file to the zip, but we want it to have the same
   // name and path as the original, unbundled file. For this, we use an alias..
@@ -141,7 +141,7 @@ const zipFunction = async function ({
     await cleanTempFiles()
   }
 
-  return { bundlerVersion: JS_BUNDLER_ESBUILD, bundlerWarnings, path: destPath }
+  return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, path: destPath }
 }
 
 const zipWithFunctionWithFallback = async (parameters) => {
@@ -150,13 +150,18 @@ const zipWithFunctionWithFallback = async (parameters) => {
     return zipFunction(parameters)
   }
 
-  // Otherwise, we'll try to bundle with v2 and, if that fails, fallback to v1.
+  // Otherwise, we'll try to bundle with esbuild and, if that fails, fallback
+  // to zisi.
   try {
     return await zipFunction({ ...parameters, jsBundler: JS_BUNDLER_ESBUILD })
-  } catch (error) {
-    const data = await zipFunction({ ...parameters, jsBundler: JS_BUNDLER_LEGACY })
+  } catch (esbuildError) {
+    try {
+      const data = await zipFunction({ ...parameters, jsBundler: JS_BUNDLER_ZISI })
 
-    return { ...data, bundlerErrors: error.errors }
+      return { ...data, bundlerErrors: esbuildError.errors }
+    } catch (zisiError) {
+      throw esbuildError
+    }
   }
 }
 
