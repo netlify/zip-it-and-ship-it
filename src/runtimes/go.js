@@ -8,12 +8,12 @@ const zipFunction = async function ({ srcPath, destFolder, stat, zipGo, filename
   if (zipGo) {
     const destPath = join(destFolder, `${filename}.zip`)
     await zipBinary({ srcPath, destPath, filename, stat, runtime })
-    return destPath
+    return { path: destPath }
   }
 
   const destPath = join(destFolder, filename)
   await cpFile(srcPath, destPath)
-  return destPath
+  return { path: destPath }
 }
 
 module.exports = { zipFunction }

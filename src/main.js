@@ -1,96 +1,11 @@
-const { extname, join } = require('path')
-
-const cpFile = require('cp-file')
-const findUp = require('find-up')
-const makeDir = require('make-dir')
-const pMap = require('p-map')
+const { extname } = require('path')
 
 require('./utils/polyfills')
-const { getFunctionInfos, getSrcPaths, getFunctionInfo } = require('./info')
+const { getFunctionInfos } = require('./info')
+const { getPluginsModulesPath } = require('./node_dependencies')
 const runtimes = require('./runtimes')
-
-const AUTO_PLUGINS_DIR = '.netlify/plugins/'
-const DEFAULT_PARALLEL_LIMIT = 5
-
-const getPluginsModulesPath = (srcDir) => findUp(`${AUTO_PLUGINS_DIR}node_modules`, { cwd: srcDir, type: 'directory' })
-
-// Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
-// used by AWS Lambda
-// TODO: remove `skipGo` option in next major release
-const zipFunctions = async function (
-  srcFolder,
-  destFolder,
-  { parallelLimit = DEFAULT_PARALLEL_LIMIT, skipGo, zipGo, useEsbuild, externalModules = [], ignoredModules = [] } = {},
-) {
-  const [srcPaths, pluginsModulesPath] = await Promise.all([getSrcPaths(srcFolder), getPluginsModulesPath(srcFolder)])
-
-  const zipped = await pMap(
-    srcPaths,
-    (srcPath) =>
-      zipFunction(srcPath, destFolder, {
-        skipGo,
-        zipGo,
-        pluginsModulesPath,
-        useEsbuild,
-        externalModules,
-        ignoredModules,
-      }),
-    {
-      concurrency: parallelLimit,
-    },
-  )
-  return zipped.filter(Boolean)
-}
-
-const zipFunction = async function (
-  srcPath,
-  destFolder,
-  {
-    skipGo = true,
-    zipGo = !skipGo,
-    pluginsModulesPath: defaultModulesPath,
-    useEsbuild,
-    externalModules,
-    ignoredModules,
-  } = {},
-) {
-  const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
-
-  if (runtime === undefined) {
-    return
-  }
-
-  const pluginsModulesPath =
-    defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
-
-  await makeDir(destFolder)
-
-  // If the file is a zip, we assume the function is bundled and ready to go.
-  // We assume its runtime to be JavaScript and simply copy it to the
-  // destination path with no further processing.
-  if (extension === '.zip') {
-    const destPath = join(destFolder, filename)
-    await cpFile(srcPath, destPath)
-    return { path: destPath, runtime: 'js' }
-  }
-
-  const destPath = await runtimes[runtime].zipFunction({
-    srcPath,
-    destFolder,
-    mainFile,
-    filename,
-    extension,
-    srcDir,
-    stat,
-    zipGo,
-    runtime,
-    pluginsModulesPath,
-    useEsbuild,
-    externalModules,
-    ignoredModules,
-  })
-  return { path: destPath, runtime }
-}
+const { JS_BUNDLER_ZISI } = require('./utils/consts')
+const { zipFunction, zipFunctions } = require('./zip')
 
 // List all Netlify Functions main entry files for a specific directory
 const listFunctions = async function (srcFolder) {
@@ -100,13 +15,18 @@ const listFunctions = async function (srcFolder) {
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (srcFolder) {
+const listFunctionsFiles = async function (
+  srcFolder,
+  { jsBundler = JS_BUNDLER_ZISI, jsExternalModules, jsIgnoredModules } = {},
+) {
   const [functionInfos, pluginsModulesPath] = await Promise.all([
     getFunctionInfos(srcFolder),
     getPluginsModulesPath(srcFolder),
   ])
   const listedFunctionsFiles = await Promise.all(
-    functionInfos.map((info) => getListedFunctionFiles(info, { pluginsModulesPath })),
+    functionInfos.map((info) =>
+      getListedFunctionFiles(info, { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath }),
+    ),
   )
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
   // eslint-disable-next-line unicorn/prefer-spread
@@ -119,7 +39,7 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }) {
 
 const getListedFunctionFiles = async function (
   { runtime, name, stat, mainFile, extension, srcPath, srcDir },
-  { pluginsModulesPath },
+  { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath },
 ) {
   const srcFiles = await getSrcFiles({
     runtime,
@@ -129,11 +49,17 @@ const getListedFunctionFiles = async function (
     srcPath,
     srcDir,
     pluginsModulesPath,
+    jsBundler,
+    jsExternalModules,
+    jsIgnoredModules,
   })
   return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
 }
 
 const getSrcFiles = function ({
+  jsBundler,
+  jsExternalModules,
+  jsIgnoredModules,
   runtime,
   stat,
   mainFile,
@@ -141,9 +67,6 @@ const getSrcFiles = function ({
   srcPath,
   srcDir,
   pluginsModulesPath,
-  useEsbuild,
-  externalModules,
-  ignoredModules,
 }) {
   const { getSrcFiles: getRuntimeSrcFiles } = runtimes[runtime]
 
@@ -152,15 +75,15 @@ const getSrcFiles = function ({
   }
 
   return getRuntimeSrcFiles({
+    jsBundler,
+    jsExternalModules,
+    jsIgnoredModules,
     extension,
     srcPath,
     mainFile,
     srcDir,
     stat,
     pluginsModulesPath,
-    useEsbuild,
-    externalModules,
-    ignoredModules,
   })
 }
 

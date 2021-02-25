@@ -54,9 +54,8 @@ const getDependencyNamesAndPathsForDependencies = async function ({
       }),
     ),
   )
-  const filteredDependencies = dependencies.filter(Boolean)
-  const moduleNames = new Set(filteredDependencies.flatMap((dependency) => [...dependency.moduleNames]))
-  const paths = new Set(filteredDependencies.flatMap((dependency) => [...dependency.paths]))
+  const moduleNames = new Set(dependencies.flatMap((dependency) => [...dependency.moduleNames]))
+  const paths = new Set(dependencies.flatMap((dependency) => [...dependency.paths]))
 
   return {
     moduleNames: [...moduleNames],

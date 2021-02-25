@@ -9,20 +9,18 @@ const { zipFunctions } = require('../..')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 
-const zipNode = async function (t, fixture, { bundler, length, fixtureDir, opts } = {}) {
-  const bundlerOpts = bundler === 'esbuild' ? { useEsbuild: true } : {}
+const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
   const { files, tmpDir } = await zipFixture(t, fixture, {
-    bundler,
     length,
     fixtureDir,
-    opts: { ...opts, ...bundlerOpts },
+    opts,
   })
   await requireExtractedFiles(t, files)
   return { files, tmpDir }
 }
 
-const zipFixture = async function (t, fixture, { bundler, length, fixtureDir, opts } = {}) {
-  const { path: tmpDir } = await getTmpDir({ prefix: `zip-it-test-${bundler}` })
+const zipFixture = async function (t, fixture, { length, fixtureDir, opts = {} } = {}) {
+  const { path: tmpDir } = await getTmpDir({ prefix: `zip-it-test-bundler-${opts.jsBundler}` })
   const { files } = await zipCheckFunctions(t, fixture, { length, fixtureDir, tmpDir, opts })
   return { files, tmpDir }
 }

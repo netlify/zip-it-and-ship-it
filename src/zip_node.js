@@ -10,7 +10,7 @@ const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
 const pStat = promisify(fs.stat)
 
 // Zip a Node.js function file
-const zipNodeJs = async function ({ basePath, destPath, filename, mainFile, pluginsModulesPath, renames, srcFiles }) {
+const zipNodeJs = async function ({ basePath, destPath, filename, mainFile, pluginsModulesPath, aliases, srcFiles }) {
   const { archive, output } = startZip(destPath)
 
   addEntryFile(basePath, archive, filename, mainFile)
@@ -20,7 +20,7 @@ const zipNodeJs = async function ({ basePath, destPath, filename, mainFile, plug
   // We ensure this is not async, so that the archive's checksum is
   // deterministic. Otherwise it depends on the order the files were added.
   srcFilesInfos.forEach(({ srcFile, stat }) => {
-    zipJsFile({ srcFile, commonPrefix: basePath, pluginsModulesPath, archive, stat, renames })
+    zipJsFile({ srcFile, commonPrefix: basePath, pluginsModulesPath, archive, stat, aliases })
   })
 
   await endZip(archive, output)
@@ -39,10 +39,10 @@ const addStat = async function (srcFile) {
   return { srcFile, stat }
 }
 
-const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat, renames = {} }) {
-  const filename = renames[srcFile] || srcFile
-  const normalizedFilename = normalizeFilePath(filename, commonPrefix, pluginsModulesPath)
-  addZipFile(archive, srcFile, normalizedFilename, stat)
+const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat, aliases = {} }) {
+  const srcPath = aliases[srcFile] || srcFile
+  const normalizedFilename = normalizeFilePath(srcFile, commonPrefix, pluginsModulesPath)
+  addZipFile(archive, srcPath, normalizedFilename, stat)
 }
 
 // `adm-zip` and `require()` expect Unix paths.
