@@ -10,8 +10,9 @@ const getPackageJsonIfAvailable = async (srcDir) => {
   }
 }
 
-const getModulesForNextJs = ({ dependencies }) => {
-  const externalModules = dependencies.next ? ['critters', 'nanoid'] : []
+const getModulesForNextJs = ({ dependencies, devDependencies }) => {
+  const allDependencies = { ...dependencies, ...devDependencies }
+  const externalModules = allDependencies.next ? ['critters', 'nanoid'] : []
   const ignoredModules = []
 
   return {
@@ -21,8 +22,8 @@ const getModulesForNextJs = ({ dependencies }) => {
 }
 
 const getExternalAndIgnoredModulesFromSpecialCases = async ({ srcDir }) => {
-  const { dependencies = {} } = await getPackageJsonIfAvailable(srcDir)
-  const { externalModules, ignoredModules } = getModulesForNextJs({ dependencies })
+  const { dependencies = {}, devDependencies = {} } = await getPackageJsonIfAvailable(srcDir)
+  const { externalModules, ignoredModules } = getModulesForNextJs({ dependencies, devDependencies })
 
   return {
     externalModules,
