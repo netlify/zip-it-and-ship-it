@@ -89,11 +89,11 @@ Maximum number of Functions to bundle at the same time.
 #### jsBundler
 
 _Type_: `number`\
-_Default value_: `undefined`
+_Default value_: `zisi`
 
-The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`.
+The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`, `esbuild_zisi`.
 
-When `undefined`, `esbuild` will be used with a fallback to `zisi` in case of an error.
+When the value is `esbuild_zisi`, `esbuild` will be used with a fallback to `zisi` in case of an error.
 
 #### jsExternalModules
 

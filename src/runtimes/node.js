@@ -8,7 +8,7 @@ const {
   getExternalAndIgnoredModulesFromSpecialCases,
   listFilesUsingLegacyBundler,
 } = require('../node_dependencies')
-const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ZISI } = require('../utils/consts')
+const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI } = require('../utils/consts')
 const { zipNodeJs } = require('../zip_node')
 
 const getSrcFiles = async function (options) {
@@ -55,7 +55,7 @@ const zipFunction = async function ({
   destFolder,
   extension,
   filename,
-  jsBundler,
+  jsBundler = JS_BUNDLER_ZISI,
   jsExternalModules: externalModulesFromConfig = [],
   jsIgnoredModules: ignoredModulesFromConfig = [],
   mainFile,
@@ -144,10 +144,10 @@ const zipFunction = async function ({
   return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, path: destPath }
 }
 
-const zipWithFunctionWithFallback = async (parameters) => {
+const zipWithFunctionWithFallback = async ({ jsBundler, ...parameters }) => {
   // If a specific JS bundler version is specified, we'll use it.
-  if (parameters.jsBundler) {
-    return zipFunction(parameters)
+  if (jsBundler !== JS_BUNDLER_ESBUILD_ZISI) {
+    return zipFunction({ ...parameters, jsBundler })
   }
 
   // Otherwise, we'll try to bundle with esbuild and, if that fails, fallback

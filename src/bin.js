@@ -4,6 +4,7 @@ const { exit } = require('process')
 const yargs = require('yargs')
 
 const zipIt = require('./main')
+const { JS_BUNDLER_ZISI } = require('./utils/consts')
 
 // CLI entry point
 const runCli = async function () {
@@ -34,6 +35,7 @@ const OPTIONS = {
   },
   'js-bundler': {
     string: true,
+    default: JS_BUNDLER_ZISI,
     describe: 'The bundler to use when processing JavaScript functions',
   },
   'js-external-modules': {
