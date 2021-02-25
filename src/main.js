@@ -9,6 +9,7 @@ require('./utils/polyfills')
 const { getFunctionInfos, getSrcPaths, getFunctionInfo } = require('./info')
 const runtimes = require('./runtimes')
 const { removeFalsy } = require('./utils/remove_falsy')
+const { JS_BUNDLER_ZISI } = require('./utils/consts')
 
 const AUTO_PLUGINS_DIR = '.netlify/plugins/'
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -108,7 +109,10 @@ const listFunctions = async function (srcFolder) {
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (srcFolder, { jsBundler, jsExternalModules, jsIgnoredModules } = {}) {
+const listFunctionsFiles = async function (
+  srcFolder,
+  { jsBundler = JS_BUNDLER_ZISI, jsExternalModules, jsIgnoredModules } = {},
+) {
   const [functionInfos, pluginsModulesPath] = await Promise.all([
     getFunctionInfos(srcFolder),
     getPluginsModulesPath(srcFolder),
