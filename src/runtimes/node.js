@@ -86,7 +86,7 @@ const zipFunction = async function ({
     srcDir,
     pluginsModulesPath,
     jsBundler,
-    jsExternalModules: [...externalModulesFromConfig, ...externalModulesFromSpecialCases],
+    jsExternalModules: [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])],
   })
   const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
