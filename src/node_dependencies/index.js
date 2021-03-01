@@ -69,9 +69,11 @@ const getFileDependencies = async function ({ path, packageJson, pluginsModulesP
   // but should use `fs.readFile()` instead
   const dependencies = precinct.paperwork(path, { includeCore: false })
   const depsPaths = await Promise.all(
-    dependencies.map((dependency) =>
-      getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext, pluginsModulesPath }),
-    ),
+    dependencies
+      .filter(Boolean)
+      .map((dependency) =>
+        getImportDependencies({ dependency, basedir, packageJson, state, treeShakeNext, pluginsModulesPath }),
+      ),
   )
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
   // eslint-disable-next-line unicorn/prefer-spread

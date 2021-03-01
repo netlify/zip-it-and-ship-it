@@ -181,6 +181,14 @@ testBundlers('Ignore invalid require()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async
   await zipNode(t, 'invalid-require', { opts: { jsBundler: bundler } })
 })
 
+testBundlers('Can use dynamic import() with esbuild', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
+  await zipNode(t, 'dynamic-import', { opts: { jsBundler: bundler } })
+})
+
+testBundlers('Bundling does not crash with dynamic import() with zisi', [DEFAULT], async (bundler, t) => {
+  await t.throwsAsync(zipNode(t, 'dynamic-import', { opts: { jsBundler: bundler } }), /export/)
+})
+
 testBundlers('Can require local files', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-require', { opts: { jsBundler: bundler } })
 })
