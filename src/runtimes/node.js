@@ -2,7 +2,7 @@ const { basename, dirname, join, normalize } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 
-const { bundleJsFile } = require('../bundler')
+const { bundleJsFile } = require('../node_bundler')
 const {
   getDependencyNamesAndPathsForDependencies,
   getExternalAndIgnoredModulesFromSpecialCases,

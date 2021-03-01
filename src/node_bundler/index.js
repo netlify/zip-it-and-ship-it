@@ -6,6 +6,8 @@ const { promisify } = require('util')
 const esbuild = require('esbuild')
 const semver = require('semver')
 
+const { getPlugins } = require('./plugins')
+
 const pUnlink = promisify(fs.unlink)
 
 const bundleJsFile = async function ({
@@ -35,6 +37,7 @@ const bundleJsFile = async function ({
     outfile: bundlePath,
     nodePaths: additionalModulePaths,
     platform: 'node',
+    plugins: getPlugins({ additionalModulePaths }),
     target: ['es2017'],
   })
   const cleanTempFiles = async () => {

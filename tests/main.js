@@ -557,6 +557,17 @@ testBundlers(
   },
 )
 
+testBundlers(
+  'Exposes the main export of `node-fetch` when imported using `require()`',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-fetch', { opts: { jsBundler: bundler } })
+    await unzipFiles(files)
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    t.true(typeof require(`${tmpDir}/function.js`) === 'function')
+  },
+)
+
 test('Zips Rust function files', async (t) => {
   const { files, tmpDir } = await zipFixture(t, 'rust-simple', { length: 1 })
 
