@@ -1,7 +1,7 @@
 const { readFile, chmod, symlink, unlink, rename } = require('fs')
 const { tmpdir } = require('os')
 const { normalize, resolve } = require('path')
-const { platform } = require('process')
+const { platform, version } = require('process')
 const { promisify } = require('util')
 
 const test = require('ava')
@@ -9,6 +9,7 @@ const cpy = require('cpy')
 const del = require('del')
 const execa = require('execa')
 const pathExists = require('path-exists')
+const semver = require('semver')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
@@ -557,9 +558,12 @@ testBundlers(
   },
 )
 
+// This test relies on esbuild plugins, which aren't supported in Node 8.
+const nodeFetchBundlers = semver.satisfies(version, '>=9.x') ? [ESBUILD, ESBUILD_ZISI, DEFAULT] : [DEFAULT]
+
 testBundlers(
   'Exposes the main export of `node-fetch` when imported using `require()`',
-  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  nodeFetchBundlers,
   async (bundler, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-fetch', { opts: { jsBundler: bundler } })
     await unzipFiles(files)

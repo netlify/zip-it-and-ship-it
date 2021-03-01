@@ -25,10 +25,13 @@ const bundleJsFile = async function ({
 
   // esbuild's async build API throws on Node 8.x, so we switch to the sync
   // version for that version range.
-  const shouldUseAsyncAPI = semver.satisfies(process.version, '>=9.x')
+  const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
+
+  // The sync API does not support plugins.
+  const plugins = supportsAsyncAPI ? getPlugins({ additionalModulePaths }) : undefined
 
   // eslint-disable-next-line node/no-sync
-  const buildFunction = shouldUseAsyncAPI ? esbuild.build : esbuild.buildSync
+  const buildFunction = supportsAsyncAPI ? esbuild.build : esbuild.buildSync
   const data = await buildFunction({
     bundle: true,
     entryPoints: [srcFile],
@@ -37,7 +40,7 @@ const bundleJsFile = async function ({
     outfile: bundlePath,
     nodePaths: additionalModulePaths,
     platform: 'node',
-    plugins: getPlugins({ additionalModulePaths }),
+    plugins,
     target: ['es2017'],
   })
   const cleanTempFiles = async () => {
