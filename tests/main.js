@@ -163,14 +163,12 @@ testBundlers('Throws on invalid package.json', [ESBUILD, ESBUILD_ZISI, DEFAULT],
   const invalidPackageJsonDir = `${fixtureDir}/invalid-package-json`
   const srcPackageJson = `${invalidPackageJsonDir}/package.json.txt`
   const distPackageJson = `${invalidPackageJsonDir}/package.json`
-  const expectedErrorRegex =
-    bundler === DEFAULT ? /invalid JSON/ : /package.json:1:1: error: Expected string but found "{"/
 
   await pRename(srcPackageJson, distPackageJson)
   try {
     await t.throwsAsync(
       zipNode(t, 'invalid-package-json', { opts: { jsBundler: bundler }, fixtureDir }),
-      expectedErrorRegex,
+      /(invalid JSON|package.json:1:1: error: Expected string but found "{")/,
     )
   } finally {
     await pRename(distPackageJson, srcPackageJson)

@@ -65,6 +65,10 @@ const zipFunction = async function ({
   stat,
 }) {
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
+  const {
+    externalModules: externalModulesFromSpecialCases,
+    ignoredModules: ignoredModulesFromSpecialCases,
+  } = await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
 
   // When a module is added to `externalModules`, we will traverse its main
   // file recursively and look for all its dependencies, so that we can ship
@@ -82,7 +86,7 @@ const zipFunction = async function ({
     srcDir,
     pluginsModulesPath,
     jsBundler,
-    jsExternalModules: externalModulesFromConfig,
+    jsExternalModules: [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])],
   })
   const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
@@ -99,11 +103,6 @@ const zipFunction = async function ({
 
     return { bundler: JS_BUNDLER_ZISI, path: destPath }
   }
-
-  const {
-    externalModules: externalModulesFromSpecialCases,
-    ignoredModules: ignoredModulesFromSpecialCases,
-  } = await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
 
   const { bundlePath, data, cleanTempFiles } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
