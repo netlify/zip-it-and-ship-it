@@ -51,6 +51,7 @@ const getSrcFilesAndExternalModules = async function ({
   }
 }
 
+// eslint-disable-next-line max-statements
 const zipFunction = async function ({
   destFolder,
   extension,
@@ -80,9 +81,10 @@ const zipFunction = async function ({
     jsBundler,
     jsExternalModules: externalModules,
   })
-  const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
   if (jsBundler === JS_BUNDLER_ZISI) {
+    const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
+
     await zipNodeJs({
       basePath: commonPathPrefix(dirnames),
       destFolder,
@@ -96,30 +98,38 @@ const zipFunction = async function ({
     return { bundler: JS_BUNDLER_ZISI, path: destPath }
   }
 
+  const mainFilePath = dirname(mainFile)
   const { bundlePath, data, cleanTempFiles } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
+    basePath: mainFilePath,
     destFilename: filename,
     destFolder,
     externalModules,
     ignoredModules: [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases],
+    srcDir,
     srcFile: mainFile,
   })
   const bundlerWarnings = data.warnings.length === 0 ? undefined : data.warnings
 
+  // We're adding the bundled file to the zip, but we want it to have the same
+  // name and path as the original, unbundled file. For this, we use an alias..
+  const aliases = {
+    [mainFile]: bundlePath,
+  }
+  const srcFilesAfterBundling = [...srcFiles, ...data.additionalSrcFiles]
+  const dirnames = srcFilesAfterBundling.map((filePath) => normalize(dirname(filePath)))
+  const basePath = commonPathPrefix([...dirnames, mainFilePath])
+
   try {
     await zipNodeJs({
-      // We're adding the bundled file to the zip, but we want it to have the same
-      // name and path as the original, unbundled file. For this, we use an alias..
-      aliases: {
-        [mainFile]: bundlePath,
-      },
-      basePath: commonPathPrefix([...dirnames, dirname(mainFile)]),
+      aliases,
+      basePath,
       destFolder,
       destPath,
       filename,
       mainFile,
       pluginsModulesPath,
-      srcFiles,
+      srcFiles: srcFilesAfterBundling,
     })
   } finally {
     await cleanTempFiles()

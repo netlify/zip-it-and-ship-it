@@ -12,6 +12,7 @@ const pUnlink = promisify(fs.unlink)
 
 const bundleJsFile = async function ({
   additionalModulePaths,
+  basePath,
   destFilename,
   destFolder,
   externalModules = [],
@@ -22,13 +23,14 @@ const bundleJsFile = async function ({
   const external = [...new Set([...externalModules, ...ignoredModules])]
   const jsFilename = `${basename(destFilename, extname(destFilename))}.js`
   const bundlePath = join(destFolder, jsFilename)
+  const pluginContext = {}
 
   // esbuild's async build API throws on Node 8.x, so we switch to the sync
   // version for that version range.
   const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
 
   // The sync API does not support plugins.
-  const plugins = supportsAsyncAPI ? getPlugins({ additionalModulePaths }) : undefined
+  const plugins = supportsAsyncAPI ? getPlugins({ additionalModulePaths, basePath, context: pluginContext }) : undefined
 
   // eslint-disable-next-line node/no-sync
   const buildFunction = supportsAsyncAPI ? esbuild.build : esbuild.buildSync
@@ -41,6 +43,7 @@ const bundleJsFile = async function ({
     nodePaths: additionalModulePaths,
     platform: 'node',
     plugins,
+    resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
     target: ['es2017'],
   })
   const cleanTempFiles = async () => {
@@ -50,8 +53,9 @@ const bundleJsFile = async function ({
       // no-op
     }
   }
+  const additionalSrcFiles = [...pluginContext.nodeBindings]
 
-  return { bundlePath, cleanTempFiles, data }
+  return { bundlePath, cleanTempFiles, data: { ...data, additionalSrcFiles } }
 }
 
 module.exports = { bundleJsFile }

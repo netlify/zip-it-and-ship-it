@@ -56,11 +56,19 @@ testBundlers('Zips Node.js function files', [ESBUILD, ESBUILD_ZISI, DEFAULT], as
 })
 
 testBundlers('Handles Node module with native bindings', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
-  const jsExternalModules = bundler === ESBUILD || bundler === ESBUILD ? ['test'] : undefined
-  const { files } = await zipNode(t, 'node-module-native', {
-    opts: { jsBundler: bundler, jsExternalModules },
+  const { files, tmpDir } = await zipNode(t, 'node-module-native', {
+    opts: { jsBundler: bundler },
   })
+  const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+
   t.true(files.every(({ runtime }) => runtime === 'js'))
+  t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
+
+  if (bundler === ESBUILD_ZISI || bundler === ESBUILD) {
+    t.true(requires.includes('./node_modules/test/native.node'))
+  } else {
+    t.true(requires.includes('test'))
+  }
 })
 
 testBundlers('Can require node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
