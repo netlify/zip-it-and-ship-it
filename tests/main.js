@@ -61,6 +61,8 @@ testBundlers('Handles Node module with native bindings', [ESBUILD, ESBUILD_ZISI,
   })
   const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
 
+  console.log(requires)
+
   t.true(files.every(({ runtime }) => runtime === 'js'))
   t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
 
