@@ -11,6 +11,7 @@ const execa = require('execa')
 const pathExists = require('path-exists')
 const semver = require('semver')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
+const unixify = require('unixify')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 const { JS_BUNDLER_ESBUILD: ESBUILD, JS_BUNDLER_ESBUILD_ZISI: ESBUILD_ZISI } = require('../src/utils/consts')
@@ -24,6 +25,8 @@ const pChmod = promisify(chmod)
 const pSymlink = promisify(symlink)
 const pUnlink = promisify(unlink)
 const pRename = promisify(rename)
+
+const supportsEsbuildPlugins = semver.satisfies(version, '>=9.x')
 
 // Alias for the default bundler.
 const DEFAULT = undefined
@@ -55,23 +58,29 @@ testBundlers('Zips Node.js function files', [ESBUILD, ESBUILD_ZISI, DEFAULT], as
   t.true(files.every(({ runtime }) => runtime === 'js'))
 })
 
-testBundlers('Handles Node module with native bindings', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
-  const { files, tmpDir } = await zipNode(t, 'node-module-native', {
-    opts: { jsBundler: bundler },
-  })
-  const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+// Bundling modules with native bindings with esbuild is expected to fail on
+// Node 8 because esbuild plugins are not supported. The ZISI fallback should
+// kick in.
+testBundlers(
+  'Handles Node module with native bindings',
+  [ESBUILD_ZISI, DEFAULT, supportsEsbuildPlugins && ESBUILD].filter(Boolean),
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipNode(t, 'node-module-native', {
+      opts: { jsBundler: bundler },
+    })
+    const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+    const normalizedRequires = new Set(requires.map(unixify))
 
-  console.log(requires)
+    t.true(files.every(({ runtime }) => runtime === 'js'))
+    t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
 
-  t.true(files.every(({ runtime }) => runtime === 'js'))
-  t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
-
-  if (bundler === ESBUILD_ZISI || bundler === ESBUILD) {
-    t.true(requires.includes('./node_modules/test/native.node'))
-  } else {
-    t.true(requires.includes('test'))
-  }
-})
+    if (files[0].bundler === 'esbuild') {
+      t.true(normalizedRequires.has('node_modules/test/native.node'))
+    } else {
+      t.true(normalizedRequires.has('test'))
+    }
+  },
+)
 
 testBundlers('Can require node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-node-module', { opts: { jsBundler: bundler } })
@@ -568,12 +577,9 @@ testBundlers(
   },
 )
 
-// This test relies on esbuild plugins, which aren't supported in Node 8.
-const nodeFetchBundlers = semver.satisfies(version, '>=9.x') ? [ESBUILD, ESBUILD_ZISI, DEFAULT] : [DEFAULT]
-
 testBundlers(
   'Exposes the main export of `node-fetch` when imported using `require()`',
-  nodeFetchBundlers,
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-fetch', { opts: { jsBundler: bundler } })
     await unzipFiles(files)

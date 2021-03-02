@@ -11,7 +11,7 @@ const getNodeBindingHandlerPlugin = ({ basePath, context }) => ({
 
       return {
         external: true,
-        path: `./${resolvedPath}`,
+        path: resolvedPath,
       }
     })
   },
