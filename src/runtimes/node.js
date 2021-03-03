@@ -2,7 +2,7 @@ const { basename, dirname, join, normalize } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 
-const { bundleJsFile } = require('../bundler')
+const { bundleJsFile } = require('../node_bundler')
 const {
   getDependencyNamesAndPathsForDependencies,
   getExternalAndIgnoredModulesFromSpecialCases,
@@ -51,6 +51,7 @@ const getSrcFilesAndExternalModules = async function ({
   }
 }
 
+// eslint-disable-next-line max-statements
 const zipFunction = async function ({
   destFolder,
   extension,
@@ -69,16 +70,8 @@ const zipFunction = async function ({
     externalModules: externalModulesFromSpecialCases,
     ignoredModules: ignoredModulesFromSpecialCases,
   } = await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
-
-  // When a module is added to `externalModules`, we will traverse its main
-  // file recursively and look for all its dependencies, so that we can ship
-  // their files separately, inside a `node_modules` directory. Whenever we
-  // process a module this way, we can also flag it as external with esbuild
-  // since its source is already part of the artifact and there's no point in
-  // inlining it again in the bundle.
-  // As such, the dependency traversal logic will compile the names of these
-  // modules in `additionalExternalModules`.
-  const { moduleNames: externalModulesFromTraversal = [], paths: srcFiles } = await getSrcFilesAndExternalModules({
+  const externalModules = [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])]
+  const { paths: srcFiles } = await getSrcFilesAndExternalModules({
     stat,
     mainFile,
     extension,
@@ -86,11 +79,12 @@ const zipFunction = async function ({
     srcDir,
     pluginsModulesPath,
     jsBundler,
-    jsExternalModules: [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])],
+    jsExternalModules: externalModules,
   })
-  const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
 
   if (jsBundler === JS_BUNDLER_ZISI) {
+    const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
+
     await zipNodeJs({
       basePath: commonPathPrefix(dirnames),
       destFolder,
@@ -104,16 +98,15 @@ const zipFunction = async function ({
     return { bundler: JS_BUNDLER_ZISI, path: destPath }
   }
 
+  const mainFilePath = dirname(mainFile)
   const { bundlePath, data, cleanTempFiles } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
+    basePath: mainFilePath,
     destFilename: filename,
     destFolder,
-    externalModules: [
-      ...externalModulesFromConfig,
-      ...externalModulesFromSpecialCases,
-      ...externalModulesFromTraversal,
-    ],
+    externalModules,
     ignoredModules: [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases],
+    srcDir,
     srcFile: mainFile,
   })
   const bundlerWarnings = data.warnings.length === 0 ? undefined : data.warnings
@@ -123,7 +116,9 @@ const zipFunction = async function ({
   const aliases = {
     [mainFile]: bundlePath,
   }
-  const basePath = commonPathPrefix([...dirnames, dirname(mainFile)])
+  const srcFilesAfterBundling = [...srcFiles, ...data.additionalSrcFiles]
+  const dirnames = srcFilesAfterBundling.map((filePath) => normalize(dirname(filePath)))
+  const basePath = commonPathPrefix([...dirnames, mainFilePath])
 
   try {
     await zipNodeJs({
@@ -134,7 +129,7 @@ const zipFunction = async function ({
       filename,
       mainFile,
       pluginsModulesPath,
-      srcFiles,
+      srcFiles: srcFilesAfterBundling,
     })
   } finally {
     await cleanTempFiles()
