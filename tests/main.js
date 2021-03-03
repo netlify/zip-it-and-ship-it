@@ -1,7 +1,7 @@
 const { readFile, chmod, symlink, unlink, rename } = require('fs')
 const { tmpdir } = require('os')
 const { normalize, resolve } = require('path')
-const { platform, version } = require('process')
+const { platform } = require('process')
 const { promisify } = require('util')
 
 const test = require('ava')
@@ -9,7 +9,6 @@ const cpy = require('cpy')
 const del = require('del')
 const execa = require('execa')
 const pathExists = require('path-exists')
-const semver = require('semver')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
@@ -25,8 +24,6 @@ const pChmod = promisify(chmod)
 const pSymlink = promisify(symlink)
 const pUnlink = promisify(unlink)
 const pRename = promisify(rename)
-
-const supportsEsbuildPlugins = semver.satisfies(version, '>=9.x')
 
 // Alias for the default bundler.
 const DEFAULT = undefined
@@ -58,29 +55,17 @@ testBundlers('Zips Node.js function files', [ESBUILD, ESBUILD_ZISI, DEFAULT], as
   t.true(files.every(({ runtime }) => runtime === 'js'))
 })
 
-// Bundling modules with native bindings with esbuild is expected to fail on
-// Node 8 because esbuild plugins are not supported. The ZISI fallback should
-// kick in.
-testBundlers(
-  'Handles Node module with native bindings',
-  [ESBUILD_ZISI, DEFAULT, supportsEsbuildPlugins && ESBUILD].filter(Boolean),
-  async (bundler, t) => {
-    const { files, tmpDir } = await zipNode(t, 'node-module-native', {
-      opts: { jsBundler: bundler },
-    })
-    const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
-    const normalizedRequires = new Set(requires.map(unixify))
+testBundlers('Handles Node module with native bindings', [ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
+  const { files, tmpDir } = await zipNode(t, 'node-module-native', {
+    opts: { jsBundler: bundler },
+  })
+  const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+  const normalizedRequires = new Set(requires.map(unixify))
 
-    t.true(files.every(({ runtime }) => runtime === 'js'))
-    t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
-
-    if (files[0].bundler === 'esbuild') {
-      t.true(normalizedRequires.has('node_modules/test/native.node'))
-    } else {
-      t.true(normalizedRequires.has('test'))
-    }
-  },
-)
+  t.true(files.every(({ runtime }) => runtime === 'js'))
+  t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
+  t.true(normalizedRequires.has('test'))
+})
 
 testBundlers('Can require node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-node-module', { opts: { jsBundler: bundler } })

@@ -6,13 +6,10 @@ const { promisify } = require('util')
 const esbuild = require('esbuild')
 const semver = require('semver')
 
-const { getPlugins } = require('./plugins')
-
 const pUnlink = promisify(fs.unlink)
 
 const bundleJsFile = async function ({
   additionalModulePaths,
-  basePath,
   destFilename,
   destFolder,
   externalModules = [],
@@ -31,9 +28,6 @@ const bundleJsFile = async function ({
   // version for that version range.
   const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
 
-  // The sync API does not support plugins.
-  const plugins = supportsAsyncAPI ? getPlugins({ additionalModulePaths, basePath, context: pluginContext }) : undefined
-
   // eslint-disable-next-line node/no-sync
   const buildFunction = supportsAsyncAPI ? esbuild.build : esbuild.buildSync
   const data = await buildFunction({
@@ -44,7 +38,6 @@ const bundleJsFile = async function ({
     outfile: bundlePath,
     nodePaths: additionalModulePaths,
     platform: 'node',
-    plugins,
     resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
     target: ['es2017'],
   })
