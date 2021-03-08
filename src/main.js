@@ -21,8 +21,10 @@ const listFunctionsFiles = async function (
   { jsBundler = JS_BUNDLER_ZISI, jsExternalModules, jsIgnoredModules } = {},
 ) {
   const paths = await listFunctionsDirectory(srcFolder)
-  const functions = await runtimes.getFunctionsFromPaths(paths)
-  const pluginsModulesPath = await getPluginsModulesPath(srcFolder)
+  const [functions, pluginsModulesPath] = await Promise.all([
+    runtimes.getFunctionsFromPaths(paths),
+    getPluginsModulesPath(srcFolder),
+  ])
   const listedFunctionsFiles = await Promise.all(
     [...functions.values()].map((info) =>
       getListedFunctionFiles(info, { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath }),

@@ -33,8 +33,10 @@ const zipFunctions = async function (
   await makeDir(destFolder)
 
   const paths = await listFunctionsDirectory(srcFolder)
-  const functions = await runtimes.getFunctionsFromPaths(paths, { dedupe: true })
-  const pluginsModulesPath = await getPluginsModulesPath(srcFolder)
+  const [functions, pluginsModulesPath] = await Promise.all([
+    runtimes.getFunctionsFromPaths(paths, { dedupe: true }),
+    getPluginsModulesPath(srcFolder),
+  ])
   const zipped = await pMap(
     functions.values(),
     async (func) => {
