@@ -8,6 +8,13 @@ const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
+// Takes the result of zipping a function and formats it for output.
+const formatZipResult = (result) => {
+  const { bundler, bundlerErrors, bundlerWarnings, path, runtime } = result
+
+  return removeFalsy({ bundler, bundlerErrors, bundlerWarnings, path, runtime: runtime.name })
+}
+
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
 // TODO: remove `skipGo` option in next major release
@@ -19,7 +26,7 @@ const zipFunctions = async function (
     jsExternalModules = [],
     jsIgnoredModules = [],
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
-    skipGo,
+    skipGo = true,
     zipGo,
   } = {},
 ) {
@@ -30,8 +37,9 @@ const zipFunctions = async function (
   const pluginsModulesPath = await getPluginsModulesPath(srcFolder)
   const zipped = await pMap(
     functions.values(),
-    (func) =>
-      zipFunction(func.srcPath, destFolder, {
+    async (func) => {
+      const zipResult = await func.runtime.zipFunction({
+        destFolder,
         extension: func.extension,
         filename: func.filename,
         jsBundler,
@@ -41,15 +49,18 @@ const zipFunctions = async function (
         pluginsModulesPath,
         runtime: func.runtime,
         srcDir: func.srcDir,
+        srcPath: func.srcPath,
         stat: func.stat,
-        skipGo,
-        zipGo,
-      }),
+        zipGo: zipGo === undefined ? !skipGo : zipGo,
+      })
+
+      return { ...zipResult, runtime: func.runtime }
+    },
     {
       concurrency: parallelLimit,
     },
   )
-  return zipped.filter(Boolean)
+  return zipped.filter(Boolean).map(formatZipResult)
 }
 
 const zipFunction = async function (
@@ -76,7 +87,7 @@ const zipFunction = async function (
 
   await makeDir(destFolder)
 
-  const { bundler, bundlerErrors, bundlerWarnings, path } = await runtime.zipFunction({
+  const zipResult = await runtime.zipFunction({
     jsBundler,
     jsExternalModules,
     jsIgnoredModules,
@@ -92,7 +103,7 @@ const zipFunction = async function (
     pluginsModulesPath,
   })
 
-  return removeFalsy({ bundler, bundlerErrors, bundlerWarnings, path, runtime: runtime.name })
+  return formatZipResult({ ...zipResult, runtime })
 }
 
 module.exports = { zipFunction, zipFunctions }
