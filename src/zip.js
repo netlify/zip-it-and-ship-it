@@ -1,12 +1,9 @@
-const { join } = require('path')
-
-const cpFile = require('cp-file')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 
-const { getSrcPaths, getFunctionInfo } = require('./info')
 const { getPluginsModulesPath } = require('./node_dependencies')
 const runtimes = require('./runtimes')
+const { listFunctionsDirectory } = require('./utils/fs')
 const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -26,16 +23,25 @@ const zipFunctions = async function (
     zipGo,
   } = {},
 ) {
-  const [srcPaths, pluginsModulesPath] = await Promise.all([getSrcPaths(srcFolder), getPluginsModulesPath(srcFolder)])
+  await makeDir(destFolder)
 
+  const paths = await listFunctionsDirectory(srcFolder)
+  const functions = await runtimes.getFunctionsFromPaths(paths, { dedupe: true })
+  const pluginsModulesPath = await getPluginsModulesPath(srcFolder)
   const zipped = await pMap(
-    srcPaths,
-    (srcPath) =>
-      zipFunction(srcPath, destFolder, {
+    functions.values(),
+    (func) =>
+      zipFunction(func.srcPath, destFolder, {
+        extension: func.extension,
+        filename: func.filename,
         jsBundler,
         jsExternalModules,
         jsIgnoredModules,
+        mainFile: func.mainFile,
         pluginsModulesPath,
+        runtime: func.runtime,
+        srcDir: func.srcDir,
+        stat: func.stat,
         skipGo,
         zipGo,
       }),
@@ -58,27 +64,19 @@ const zipFunction = async function (
     zipGo = !skipGo,
   } = {},
 ) {
-  const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
+  const functions = await runtimes.getFunctionsFromPaths([srcPath], { dedupe: true })
 
-  if (runtime === undefined) {
+  if (functions.size === 0) {
     return
   }
 
+  const { extension, filename, mainFile, runtime, srcDir, stat } = functions.values().next().value
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
 
   await makeDir(destFolder)
 
-  // If the file is a zip, we assume the function is bundled and ready to go.
-  // We assume its runtime to be JavaScript and simply copy it to the
-  // destination path with no further processing.
-  if (extension === '.zip') {
-    const destPath = join(destFolder, filename)
-    await cpFile(srcPath, destPath)
-    return { path: destPath, runtime: 'js' }
-  }
-
-  const { bundler, bundlerErrors, bundlerWarnings, path } = await runtimes[runtime].zipFunction({
+  const { bundler, bundlerErrors, bundlerWarnings, path } = await runtime.zipFunction({
     jsBundler,
     jsExternalModules,
     jsIgnoredModules,
@@ -93,7 +91,8 @@ const zipFunction = async function (
     runtime,
     pluginsModulesPath,
   })
-  return removeFalsy({ bundler, bundlerErrors, bundlerWarnings, path, runtime })
+
+  return removeFalsy({ bundler, bundlerErrors, bundlerWarnings, path, runtime: runtime.name })
 }
 
 module.exports = { zipFunction, zipFunctions }

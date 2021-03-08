@@ -402,12 +402,12 @@ testBundlers(
     t.deepEqual(
       functions,
       [
-        { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
-        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
-        { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
         { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
         { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
+        { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
+        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
         { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
+        { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
       ].map(normalizeFiles.bind(null, fixtureDir)),
     )
   },
@@ -422,6 +422,8 @@ testBundlers(
     t.deepEqual(
       functions,
       [
+        { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
+        { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
         {
           name: 'four',
           mainFile: 'four.js/four.js.js',
@@ -430,9 +432,6 @@ testBundlers(
           srcFile: 'four.js/four.js.js',
         },
         { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
-        { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
-        { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
-        { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
 
         // The JSON file should only be present when using the legacy bundler,
         // since esbuild will inline it within the main file.
@@ -443,8 +442,8 @@ testBundlers(
           extension: '.json',
           srcFile: 'two/three.json',
         },
-
         { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' },
+        { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
       ]
         .filter(Boolean)
         .map(normalizeFiles.bind(null, fixtureDir)),
@@ -572,6 +571,60 @@ testBundlers(
     t.true(typeof require(`${tmpDir}/function.js`) === 'function')
   },
 )
+
+testBundlers(
+  '{name}/{name}.js takes precedence over {name}.js and {name}/index.js',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'conflicting-names-1', { opts: { jsBundler: bundler } })
+    await unzipFiles(files)
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    t.is(require(`${tmpDir}/function.js`), 'function-js-file-in-directory')
+  },
+)
+
+testBundlers(
+  '{name}/index.js takes precedence over {name}.js',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'conflicting-names-2', { opts: { jsBundler: bundler } })
+    await unzipFiles(files)
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    t.is(require(`${tmpDir}/function.js`), 'index-js-file-in-directory')
+  },
+)
+
+testBundlers(
+  '{name}/index.js takes precedence over {name}/index.ts',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'conflicting-names-3', { opts: { jsBundler: bundler } })
+    await unzipFiles(files)
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    t.is(require(`${tmpDir}/function.js`).type, 'index-js-file-in-directory')
+  },
+)
+
+testBundlers('Handles a TypeScript function ({name}.ts)', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
+  const { files, tmpDir } = await zipFixture(t, 'node-typescript', { opts: { jsBundler: bundler } })
+  await unzipFiles(files)
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+})
+
+testBundlers('Handles a TypeScript function ({name}/{name}.ts)', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
+  const { files, tmpDir } = await zipFixture(t, 'node-typescript-directory-1', { opts: { jsBundler: bundler } })
+  await unzipFiles(files)
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+})
+
+testBundlers('Handles a TypeScript function ({name}/index.ts)', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
+  const { files, tmpDir } = await zipFixture(t, 'node-typescript-directory-2', { opts: { jsBundler: bundler } })
+  await unzipFiles(files)
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+})
 
 test('Zips Rust function files', async (t) => {
   const { files, tmpDir } = await zipFixture(t, 'rust-simple', { length: 1 })

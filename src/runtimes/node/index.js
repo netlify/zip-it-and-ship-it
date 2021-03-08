@@ -1,15 +1,18 @@
-const { basename, dirname, join, normalize } = require('path')
+const { basename, dirname, format, join, normalize, parse } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
+const cpFile = require('cp-file')
 
-const { bundleJsFile } = require('../node_bundler')
+const { bundleJsFile } = require('../../node_bundler')
 const {
   getDependencyNamesAndPathsForDependencies,
   getExternalAndIgnoredModulesFromSpecialCases,
   listFilesUsingLegacyBundler,
-} = require('../node_dependencies')
-const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI } = require('../utils/consts')
-const { zipNodeJs } = require('../zip_node')
+} = require('../../node_dependencies')
+const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
+const { zipNodeJs } = require('../../zip_node')
+
+const { findFunctionsInPaths } = require('./finder')
 
 const getSrcFiles = async function (options) {
   const { paths } = await getSrcFilesAndExternalModules(options)
@@ -65,6 +68,14 @@ const zipFunction = async function ({
   srcPath,
   stat,
 }) {
+  // If the file is a zip, we assume the function is bundled and ready to go.
+  // We simply copy it to the destination path with no further processing.
+  if (extension === '.zip') {
+    const destPath = join(destFolder, filename)
+    await cpFile(srcPath, destPath)
+    return { path: destPath }
+  }
+
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
   const {
     externalModules: externalModulesFromSpecialCases,
@@ -98,10 +109,8 @@ const zipFunction = async function ({
     return { bundler: JS_BUNDLER_ZISI, path: destPath }
   }
 
-  const mainFilePath = dirname(mainFile)
   const { bundlePath, data, cleanTempFiles } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
-    basePath: mainFilePath,
     destFilename: filename,
     destFolder,
     externalModules,
@@ -111,14 +120,22 @@ const zipFunction = async function ({
   })
   const bundlerWarnings = data.warnings.length === 0 ? undefined : data.warnings
 
+  // We want to remove `mainFile` from `srcFiles` because it represents the
+  // path of the original, pre-bundling function file. We'll add the actual
+  // bundled file further below.
+  const supportingSrcFiles = srcFiles.filter((path) => path !== mainFile)
+
+  // Normalizing the main file so that it has a .js extension.
+  const normalizedMainFile = format({ ...parse(mainFile), base: undefined, ext: '.js' })
+
   // We're adding the bundled file to the zip, but we want it to have the same
-  // name and path as the original, unbundled file. For this, we use an alias..
+  // name and path as the original, unbundled file. For this, we use an alias.
   const aliases = {
-    [mainFile]: bundlePath,
+    [bundlePath]: normalizedMainFile,
   }
-  const srcFilesAfterBundling = [...srcFiles, ...data.additionalSrcFiles]
-  const dirnames = srcFilesAfterBundling.map((filePath) => normalize(dirname(filePath)))
-  const basePath = commonPathPrefix([...dirnames, mainFilePath])
+
+  const dirnames = supportingSrcFiles.map((filePath) => normalize(dirname(filePath)))
+  const basePath = commonPathPrefix([...dirnames, normalize(dirname(mainFile))])
 
   try {
     await zipNodeJs({
@@ -127,9 +144,9 @@ const zipFunction = async function ({
       destFolder,
       destPath,
       filename,
-      mainFile,
+      mainFile: normalizedMainFile,
       pluginsModulesPath,
-      srcFiles: srcFilesAfterBundling,
+      srcFiles: [...supportingSrcFiles, bundlePath],
     })
   } finally {
     await cleanTempFiles()
@@ -159,4 +176,4 @@ const zipWithFunctionWithFallback = async ({ jsBundler, ...parameters }) => {
   }
 }
 
-module.exports = { getSrcFiles, zipFunction: zipWithFunctionWithFallback }
+module.exports = { findFunctionsInPaths, getSrcFiles, name: RUNTIME_JS, zipFunction: zipWithFunctionWithFallback }

@@ -20,9 +20,6 @@ const bundleJsFile = async function ({
   const external = [...new Set([...externalModules, ...ignoredModules])]
   const jsFilename = `${basename(destFilename, extname(destFilename))}.js`
   const bundlePath = join(destFolder, jsFilename)
-  const pluginContext = {
-    nodeBindings: new Set(),
-  }
 
   // esbuild's async build API throws on Node 8.x, so we switch to the sync
   // version for that version range.
@@ -47,9 +44,8 @@ const bundleJsFile = async function ({
       // no-op
     }
   }
-  const additionalSrcFiles = [...pluginContext.nodeBindings]
 
-  return { bundlePath, cleanTempFiles, data: { ...data, additionalSrcFiles } }
+  return { bundlePath, cleanTempFiles, data }
 }
 
 module.exports = { bundleJsFile }
