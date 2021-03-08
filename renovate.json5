@@ -21,6 +21,7 @@
         'pkg-dir',
         'prettier',
         'precinct',
+        'semver',
         'yargs',
       ],
       major: {
