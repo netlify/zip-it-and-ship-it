@@ -2,7 +2,7 @@ const makeDir = require('make-dir')
 const pMap = require('p-map')
 
 const { getPluginsModulesPath } = require('./node_dependencies')
-const runtimes = require('./runtimes')
+const { getFunctionsFromPaths } = require('./runtimes')
 const { listFunctionsDirectory } = require('./utils/fs')
 const { removeFalsy } = require('./utils/remove_falsy')
 
@@ -34,7 +34,7 @@ const zipFunctions = async function (
 
   const paths = await listFunctionsDirectory(srcFolder)
   const [functions, pluginsModulesPath] = await Promise.all([
-    runtimes.getFunctionsFromPaths(paths, { dedupe: true }),
+    getFunctionsFromPaths(paths, { dedupe: true }),
     getPluginsModulesPath(srcFolder),
   ])
   const zipped = await pMap(
@@ -77,7 +77,7 @@ const zipFunction = async function (
     zipGo = !skipGo,
   } = {},
 ) {
-  const functions = await runtimes.getFunctionsFromPaths([srcPath], { dedupe: true })
+  const functions = await getFunctionsFromPaths([srcPath], { dedupe: true })
 
   if (functions.size === 0) {
     return

@@ -2,7 +2,7 @@ const { extname } = require('path')
 
 require('./utils/polyfills')
 const { getPluginsModulesPath } = require('./node_dependencies')
-const runtimes = require('./runtimes')
+const { getFunctionsFromPaths } = require('./runtimes')
 const { JS_BUNDLER_ZISI } = require('./utils/consts')
 const { listFunctionsDirectory } = require('./utils/fs')
 const { zipFunction, zipFunctions } = require('./zip')
@@ -10,7 +10,7 @@ const { zipFunction, zipFunctions } = require('./zip')
 // List all Netlify Functions main entry files for a specific directory
 const listFunctions = async function (srcFolder) {
   const paths = await listFunctionsDirectory(srcFolder)
-  const functions = await runtimes.getFunctionsFromPaths(paths)
+  const functions = await getFunctionsFromPaths(paths)
   const listedFunctions = [...functions.values()].map(getListedFunction)
   return listedFunctions
 }
@@ -22,7 +22,7 @@ const listFunctionsFiles = async function (
 ) {
   const paths = await listFunctionsDirectory(srcFolder)
   const [functions, pluginsModulesPath] = await Promise.all([
-    runtimes.getFunctionsFromPaths(paths),
+    getFunctionsFromPaths(paths),
     getPluginsModulesPath(srcFolder),
   ])
   const listedFunctionsFiles = await Promise.all(

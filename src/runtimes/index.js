@@ -77,7 +77,4 @@ const getFunctionsFromPaths = async (paths, { dedupe = false } = {}) => {
 
 module.exports = {
   getFunctionsFromPaths,
-  go: goRuntime,
-  js: jsRuntime,
-  rs: rustRuntime,
 }
