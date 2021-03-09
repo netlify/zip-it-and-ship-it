@@ -1,6 +1,6 @@
 const { Buffer } = require('buffer')
 const fs = require('fs')
-const { normalize, sep } = require('path')
+const { basename, extname, normalize, sep } = require('path')
 const { promisify } = require('util')
 
 const unixify = require('unixify')
@@ -29,7 +29,8 @@ const zipNodeJs = async function ({ basePath, destPath, filename, mainFile, plug
 const addEntryFile = function (commonPrefix, archive, filename, mainFile) {
   const mainPath = normalizeFilePath(mainFile, commonPrefix)
   const content = Buffer.from(`module.exports = require('./${mainPath}')`)
-  const entryFilename = filename.endsWith('.js') ? filename : `${filename}.js`
+  const extension = extname(filename)
+  const entryFilename = `${basename(filename, extension)}.js`
 
   addZipContent(archive, content, entryFilename)
 }
@@ -40,9 +41,9 @@ const addStat = async function (srcFile) {
 }
 
 const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat, aliases = {} }) {
-  const srcPath = aliases[srcFile] || srcFile
-  const normalizedFilename = normalizeFilePath(srcFile, commonPrefix, pluginsModulesPath)
-  addZipFile(archive, srcPath, normalizedFilename, stat)
+  const filename = aliases[srcFile] || srcFile
+  const normalizedFilename = normalizeFilePath(filename, commonPrefix, pluginsModulesPath)
+  addZipFile(archive, srcFile, normalizedFilename, stat)
 }
 
 // `adm-zip` and `require()` expect Unix paths.

@@ -1,16 +1,17 @@
 const { extname } = require('path')
 
 require('./utils/polyfills')
-const { getFunctionInfos } = require('./info')
 const { getPluginsModulesPath } = require('./node_dependencies')
-const runtimes = require('./runtimes')
+const { getFunctionsFromPaths } = require('./runtimes')
 const { JS_BUNDLER_ZISI } = require('./utils/consts')
+const { listFunctionsDirectory } = require('./utils/fs')
 const { zipFunction, zipFunctions } = require('./zip')
 
 // List all Netlify Functions main entry files for a specific directory
 const listFunctions = async function (srcFolder) {
-  const functionInfos = await getFunctionInfos(srcFolder)
-  const listedFunctions = functionInfos.map(getListedFunction)
+  const paths = await listFunctionsDirectory(srcFolder)
+  const functions = await getFunctionsFromPaths(paths)
+  const listedFunctions = [...functions.values()].map(getListedFunction)
   return listedFunctions
 }
 
@@ -19,22 +20,24 @@ const listFunctionsFiles = async function (
   srcFolder,
   { jsBundler = JS_BUNDLER_ZISI, jsExternalModules, jsIgnoredModules } = {},
 ) {
-  const [functionInfos, pluginsModulesPath] = await Promise.all([
-    getFunctionInfos(srcFolder),
+  const paths = await listFunctionsDirectory(srcFolder)
+  const [functions, pluginsModulesPath] = await Promise.all([
+    getFunctionsFromPaths(paths),
     getPluginsModulesPath(srcFolder),
   ])
   const listedFunctionsFiles = await Promise.all(
-    functionInfos.map((info) =>
+    [...functions.values()].map((info) =>
       getListedFunctionFiles(info, { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath }),
     ),
   )
+
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
   // eslint-disable-next-line unicorn/prefer-spread
   return [].concat(...listedFunctionsFiles)
 }
 
 const getListedFunction = function ({ runtime, name, mainFile, extension }) {
-  return { name, mainFile, runtime, extension }
+  return { name, mainFile, runtime: runtime.name, extension }
 }
 
 const getListedFunctionFiles = async function (
@@ -53,7 +56,7 @@ const getListedFunctionFiles = async function (
     jsExternalModules,
     jsIgnoredModules,
   })
-  return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime, extension: extname(srcFile) }))
+  return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime: runtime.name, extension: extname(srcFile) }))
 }
 
 const getSrcFiles = function ({
@@ -68,7 +71,7 @@ const getSrcFiles = function ({
   srcDir,
   pluginsModulesPath,
 }) {
-  const { getSrcFiles: getRuntimeSrcFiles } = runtimes[runtime]
+  const { getSrcFiles: getRuntimeSrcFiles } = runtime
 
   if (extension === '.zip' || typeof getRuntimeSrcFiles !== 'function') {
     return [srcPath]

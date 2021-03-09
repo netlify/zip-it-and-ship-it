@@ -1,6 +1,36 @@
-const { join } = require('path')
+const { lstat } = require('fs')
+const { join, extname, dirname, basename } = require('path')
+const { promisify } = require('util')
 
-const { zipBinary } = require('../runtime')
+const pLstat = promisify(lstat)
+
+const { RUNTIME_RUST } = require('../utils/consts')
+const { zipBinary } = require('../zip_binary')
+
+const { detectBinaryRuntime } = require('./detect_runtime')
+
+const findFunctionsInPaths = async function (paths) {
+  const functions = await Promise.all(
+    paths.map(async (path) => {
+      const runtime = await detectBinaryRuntime(path)
+
+      if (runtime !== RUNTIME_RUST) return
+
+      const stat = await pLstat(path)
+      const name = basename(path, extname(path))
+
+      return {
+        mainFile: path,
+        name,
+        srcDir: dirname(path),
+        srcPath: path,
+        stat,
+      }
+    }),
+  )
+
+  return functions.filter(Boolean)
+}
 
 // Rust functions must always be zipped.
 // The name of the binary inside the zip file must
@@ -13,4 +43,4 @@ const zipFunction = async function ({ srcPath, destFolder, stat, filename, runti
   return { path: destPath }
 }
 
-module.exports = { zipFunction }
+module.exports = { findFunctionsInPaths, name: RUNTIME_RUST, zipFunction }

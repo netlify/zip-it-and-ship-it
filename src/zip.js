@@ -1,15 +1,19 @@
-const { join } = require('path')
-
-const cpFile = require('cp-file')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 
-const { getSrcPaths, getFunctionInfo } = require('./info')
 const { getPluginsModulesPath } = require('./node_dependencies')
-const runtimes = require('./runtimes')
+const { getFunctionsFromPaths } = require('./runtimes')
+const { listFunctionsDirectory } = require('./utils/fs')
 const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
+
+// Takes the result of zipping a function and formats it for output.
+const formatZipResult = (result) => {
+  const { bundler, bundlerErrors, bundlerWarnings, path, runtime } = result
+
+  return removeFalsy({ bundler, bundlerErrors, bundlerWarnings, path, runtime: runtime.name })
+}
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
@@ -22,28 +26,41 @@ const zipFunctions = async function (
     jsExternalModules = [],
     jsIgnoredModules = [],
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
-    skipGo,
+    skipGo = true,
     zipGo,
   } = {},
 ) {
-  const [srcPaths, pluginsModulesPath] = await Promise.all([getSrcPaths(srcFolder), getPluginsModulesPath(srcFolder)])
-
+  const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
+  const [functions, pluginsModulesPath] = await Promise.all([
+    getFunctionsFromPaths(paths, { dedupe: true }),
+    getPluginsModulesPath(srcFolder),
+  ])
   const zipped = await pMap(
-    srcPaths,
-    (srcPath) =>
-      zipFunction(srcPath, destFolder, {
+    functions.values(),
+    async (func) => {
+      const zipResult = await func.runtime.zipFunction({
+        destFolder,
+        extension: func.extension,
+        filename: func.filename,
         jsBundler,
         jsExternalModules,
         jsIgnoredModules,
+        mainFile: func.mainFile,
         pluginsModulesPath,
-        skipGo,
-        zipGo,
-      }),
+        runtime: func.runtime,
+        srcDir: func.srcDir,
+        srcPath: func.srcPath,
+        stat: func.stat,
+        zipGo: zipGo === undefined ? !skipGo : zipGo,
+      })
+
+      return { ...zipResult, runtime: func.runtime }
+    },
     {
       concurrency: parallelLimit,
     },
   )
-  return zipped.filter(Boolean)
+  return zipped.filter(Boolean).map(formatZipResult)
 }
 
 const zipFunction = async function (
@@ -58,27 +75,19 @@ const zipFunction = async function (
     zipGo = !skipGo,
   } = {},
 ) {
-  const { runtime, filename, extension, srcDir, stat, mainFile } = await getFunctionInfo(srcPath)
+  const functions = await getFunctionsFromPaths([srcPath], { dedupe: true })
 
-  if (runtime === undefined) {
+  if (functions.size === 0) {
     return
   }
 
+  const { extension, filename, mainFile, runtime, srcDir, stat } = functions.values().next().value
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
 
   await makeDir(destFolder)
 
-  // If the file is a zip, we assume the function is bundled and ready to go.
-  // We assume its runtime to be JavaScript and simply copy it to the
-  // destination path with no further processing.
-  if (extension === '.zip') {
-    const destPath = join(destFolder, filename)
-    await cpFile(srcPath, destPath)
-    return { path: destPath, runtime: 'js' }
-  }
-
-  const { bundler, bundlerErrors, bundlerWarnings, path } = await runtimes[runtime].zipFunction({
+  const zipResult = await runtime.zipFunction({
     jsBundler,
     jsExternalModules,
     jsIgnoredModules,
@@ -93,7 +102,8 @@ const zipFunction = async function (
     runtime,
     pluginsModulesPath,
   })
-  return removeFalsy({ bundler, bundlerErrors, bundlerWarnings, path, runtime })
+
+  return formatZipResult({ ...zipResult, runtime })
 }
 
 module.exports = { zipFunction, zipFunctions }
