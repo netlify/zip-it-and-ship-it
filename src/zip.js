@@ -30,9 +30,7 @@ const zipFunctions = async function (
     zipGo,
   } = {},
 ) {
-  await makeDir(destFolder)
-
-  const paths = await listFunctionsDirectory(srcFolder)
+  const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
   const [functions, pluginsModulesPath] = await Promise.all([
     getFunctionsFromPaths(paths, { dedupe: true }),
     getPluginsModulesPath(srcFolder),
