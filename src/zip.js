@@ -1,3 +1,5 @@
+const { resolve } = require('path')
+
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 
@@ -19,7 +21,7 @@ const formatZipResult = (result) => {
 // used by AWS Lambda
 // TODO: remove `skipGo` option in next major release
 const zipFunctions = async function (
-  srcFolder,
+  relativeSrcFolder,
   destFolder,
   {
     jsBundler,
@@ -30,6 +32,7 @@ const zipFunctions = async function (
     zipGo,
   } = {},
 ) {
+  const srcFolder = resolve(relativeSrcFolder)
   const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
   const [functions, pluginsModulesPath] = await Promise.all([
     getFunctionsFromPaths(paths, { dedupe: true }),
@@ -64,7 +67,7 @@ const zipFunctions = async function (
 }
 
 const zipFunction = async function (
-  srcPath,
+  relativeSrcPath,
   destFolder,
   {
     jsBundler,
@@ -75,6 +78,7 @@ const zipFunction = async function (
     zipGo = !skipGo,
   } = {},
 ) {
+  const srcPath = resolve(relativeSrcPath)
   const functions = await getFunctionsFromPaths([srcPath], { dedupe: true })
 
   if (functions.size === 0) {
