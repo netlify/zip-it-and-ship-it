@@ -605,26 +605,34 @@ testBundlers(
   },
 )
 
-testBundlers('Handles a TypeScript function ({name}.ts)', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
+testBundlers('Handles a TypeScript function ({name}.ts)', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   const { files, tmpDir } = await zipFixture(t, 'node-typescript', { opts: { jsBundler: bundler } })
   await unzipFiles(files)
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
 })
 
-testBundlers('Handles a TypeScript function ({name}/{name}.ts)', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
-  const { files, tmpDir } = await zipFixture(t, 'node-typescript-directory-1', { opts: { jsBundler: bundler } })
-  await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
-  t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
-})
+testBundlers(
+  'Handles a TypeScript function ({name}/{name}.ts)',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-typescript-directory-1', { opts: { jsBundler: bundler } })
+    await unzipFiles(files)
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+  },
+)
 
-testBundlers('Handles a TypeScript function ({name}/index.ts)', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
-  const { files, tmpDir } = await zipFixture(t, 'node-typescript-directory-2', { opts: { jsBundler: bundler } })
-  await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
-  t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
-})
+testBundlers(
+  'Handles a TypeScript function ({name}/index.ts)',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-typescript-directory-2', { opts: { jsBundler: bundler } })
+    await unzipFiles(files)
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+  },
+)
 
 test('Zips Rust function files', async (t) => {
   const { files, tmpDir } = await zipFixture(t, 'rust-simple', { length: 1 })
