@@ -7,7 +7,6 @@ const pLstat = promisify(lstat)
 const cpFile = require('cp-file')
 
 const { RUNTIME_GO } = require('../utils/consts')
-const { zipBinary } = require('../zip_binary')
 
 const { detectBinaryRuntime } = require('./detect_runtime')
 
@@ -34,13 +33,7 @@ const findFunctionsInPaths = async function (paths) {
   return functions.filter(Boolean)
 }
 
-const zipFunction = async function ({ srcPath, destFolder, stat, zipGo, filename, runtime }) {
-  if (zipGo) {
-    const destPath = join(destFolder, `${filename}.zip`)
-    await zipBinary({ srcPath, destPath, filename, stat, runtime })
-    return { path: destPath }
-  }
-
+const zipFunction = async function ({ srcPath, destFolder, filename }) {
   const destPath = join(destFolder, filename)
   await cpFile(srcPath, destPath)
   return { path: destPath }
