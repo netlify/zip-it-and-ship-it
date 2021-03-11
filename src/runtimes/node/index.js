@@ -17,7 +17,7 @@ const zipFunction = async function ({
   destFolder,
   extension,
   filename,
-  jsBundler: explicitJsBundler,
+  jsBundler = getDefaultBundler({ extension }),
   jsExternalModules,
   jsIgnoredModules,
   mainFile,
@@ -34,7 +34,6 @@ const zipFunction = async function ({
     return { path: destPath }
   }
 
-  const jsBundler = explicitJsBundler || getDefaultBundler({ extension })
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
 
   if (jsBundler === JS_BUNDLER_ZISI) {
