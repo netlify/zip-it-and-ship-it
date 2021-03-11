@@ -2,11 +2,11 @@ const { dirname, format, normalize, parse } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 
-const { bundleJsFile } = require('../../node_bundler')
 const { getExternalAndIgnoredModulesFromSpecialCases } = require('../../node_dependencies')
 const { JS_BUNDLER_ESBUILD } = require('../../utils/consts')
 const { zipNodeJs } = require('../../zip_node')
 
+const { bundleJsFile } = require('./bundler')
 const { getSrcFilesAndExternalModules } = require('./src_files')
 
 const zipEsbuild = async ({
