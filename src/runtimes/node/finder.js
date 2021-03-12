@@ -6,7 +6,16 @@ const locatePath = require('locate-path')
 
 const pLstat = promisify(lstat)
 
-const allowedExtensions = new Set(['.cjs', '.js', '.mjs', '.ts', '.zip'])
+// List of extensions that the Node runtime will look for, in order of
+// precedence.
+const allowedExtensions = ['.js', '.zip', '.cjs', '.mjs', '.ts']
+
+const sortByExtension = (fA, fB) => {
+  const indexA = allowedExtensions.indexOf(fA.extension)
+  const indexB = allowedExtensions.indexOf(fB.extension)
+
+  return indexB - indexA
+}
 
 const findFunctionsInPaths = async function (paths) {
   const functions = await Promise.all(paths.map(getFunctionAtPath))
@@ -22,17 +31,10 @@ const findFunctionsInPaths = async function (paths) {
       return directorySort
     }
 
-    // We know that we're dealing with two files or two directories, so we sort
-    // them by the full path, in descending order. This conveniently means that
-    // when several files have the same name and different extensions, we place
-    // `.zip` and `.ts` files before `.js` files, which means that JavaScript
-    // files will take precedence once the array is flattened into a Map.
-    if (fA.srcPath < fB.srcPath) {
-      return 1
-    }
-
-    if (fA.srcPath > fB.srcPath) {
-      return -1
+    // If the functions have the same name, we sort them according to the order
+    // defined in `allowedExtensions`.
+    if (fA.name === fB.name) {
+      return sortByExtension(fA, fB)
     }
 
     return 0
@@ -55,10 +57,11 @@ const getFunctionAtPath = async function (srcPath) {
     return
   }
 
+  const extension = extname(srcPath)
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
   const name = basename(srcPath, extname(srcPath))
 
-  return { mainFile, name, srcDir, srcPath, stat }
+  return { extension, mainFile, name, srcDir, srcPath, stat }
 }
 
 // Each `srcPath` can also be a directory with an `index` file or a file using
@@ -78,7 +81,7 @@ const getMainFile = function (srcPath, filename, stat) {
 
   const extension = extname(srcPath)
 
-  if (allowedExtensions.has(extension)) {
+  if (allowedExtensions.includes(extension)) {
     return srcPath
   }
 }

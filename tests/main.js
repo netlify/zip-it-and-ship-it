@@ -404,9 +404,9 @@ testBundlers(
       [
         { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
         { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
-        { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
-        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
         { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
+        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
+        { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
         { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
       ].map(normalizeFiles.bind(null, fixtureDir)),
     )
@@ -424,6 +424,14 @@ testBundlers(
       [
         { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
         { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
+        {
+          name: 'four',
+          mainFile: 'four.js/four.js.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: 'four.js/four.js.js',
+        },
+        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
 
         // The JSON file should only be present when using the legacy bundler,
         // since esbuild will inline it within the main file.
@@ -435,14 +443,6 @@ testBundlers(
           srcFile: 'two/three.json',
         },
         { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' },
-        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
-        {
-          name: 'four',
-          mainFile: 'four.js/four.js.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'four.js/four.js.js',
-        },
         { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
       ]
         .filter(Boolean)
