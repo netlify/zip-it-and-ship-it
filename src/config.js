@@ -11,11 +11,17 @@ const getConfigForFunction = ({ config, func }) => {
   const matches = Object.keys(config)
     .filter((expression) => minimatch(func.name, expression))
     .map((expression) => {
-      const starCount = [...expression].filter((char) => char === '*').length
+      const wildcardCount = [...expression].filter((char) => char === '*').length
+
+      // The weight increases with the number of hardcoded (i.e. non-wildcard)
+      // characters — e.g. "netlify" has a higher weight than "net*". We do a
+      // subtraction of 1 if there is at least one wildcard character, so that
+      // "netlify" has a higher weight than "netlify*".
+      const weight = expression.length - wildcardCount - (wildcardCount ? 1 : 0)
 
       return {
         expression,
-        weight: expression.length - starCount - (starCount ? 1 : 0),
+        weight,
       }
     })
     .sort((fA, fB) => fA.weight - fB.weight)
