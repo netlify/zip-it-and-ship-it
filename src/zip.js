@@ -24,6 +24,7 @@ const zipFunctions = async function (
   relativeSrcFolder,
   destFolder,
   {
+    config = {},
     jsBundler,
     jsExternalModules = [],
     jsIgnoredModules = [],
@@ -35,13 +36,14 @@ const zipFunctions = async function (
   const srcFolder = resolve(relativeSrcFolder)
   const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
   const [functions, pluginsModulesPath] = await Promise.all([
-    getFunctionsFromPaths(paths, { dedupe: true }),
+    getFunctionsFromPaths(paths, { config, dedupe: true }),
     getPluginsModulesPath(srcFolder),
   ])
   const zipped = await pMap(
     functions.values(),
     async (func) => {
       const zipResult = await func.runtime.zipFunction({
+        config: func.config,
         destFolder,
         extension: func.extension,
         filename: func.filename,
@@ -69,14 +71,7 @@ const zipFunctions = async function (
 const zipFunction = async function (
   relativeSrcPath,
   destFolder,
-  {
-    jsBundler,
-    jsExternalModules,
-    jsIgnoredModules,
-    pluginsModulesPath: defaultModulesPath,
-    skipGo = true,
-    zipGo = !skipGo,
-  } = {},
+  { jsBundler, pluginsModulesPath: defaultModulesPath, skipGo = true, zipGo = !skipGo } = {},
 ) {
   const srcPath = resolve(relativeSrcPath)
   const functions = await getFunctionsFromPaths([srcPath], { dedupe: true })
@@ -85,16 +80,15 @@ const zipFunction = async function (
     return
   }
 
-  const { extension, filename, mainFile, runtime, srcDir, stat } = functions.values().next().value
+  const { config, extension, filename, mainFile, runtime, srcDir, stat } = functions.values().next().value
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
 
   await makeDir(destFolder)
 
   const zipResult = await runtime.zipFunction({
+    config,
     jsBundler,
-    jsExternalModules,
-    jsIgnoredModules,
     srcPath,
     destFolder,
     mainFile,
