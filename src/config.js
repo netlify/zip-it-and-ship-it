@@ -17,7 +17,7 @@ const getConfigForFunction = ({ config, func }) => {
       // characters — e.g. "netlify" has a higher weight than "net*". We do a
       // subtraction of 1 if there is at least one wildcard character, so that
       // "netlify" has a higher weight than "netlify*".
-      const weight = expression.length - wildcardCount - (wildcardCount !== 0 ? 1 : 0)
+      const weight = expression.length - wildcardCount - (wildcardCount === 0 ? 0 : 1)
 
       return {
         expression,
