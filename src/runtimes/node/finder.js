@@ -30,7 +30,7 @@ const findFunctionsInPaths = async function (paths) {
     // that `{name}/{name}.js` takes precedence over `{name}.js`.
     const directorySort = Number(fA.stat.isDirectory()) - Number(fB.stat.isDirectory())
 
-    if (directorySort) {
+    if (directorySort !== 0) {
       return directorySort
     }
 
