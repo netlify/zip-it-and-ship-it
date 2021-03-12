@@ -6,10 +6,13 @@ const locatePath = require('locate-path')
 
 const pLstat = promisify(lstat)
 
-// List of extensions that the Node runtime will look for, in order of
-// precedence.
+// List of extensions that this runtime will look for, in order of precedence.
 const allowedExtensions = ['.js', '.zip', '.cjs', '.mjs', '.ts']
 
+// Sorting function, compatible with the callback of Array.sort, which sorts
+// entries by extension according to their position in `allowedExtensions`.
+// It places extensions with a higher precedence last in the array, so that
+// they "win" when the array is flattened into a Map.
 const sortByExtension = (fA, fB) => {
   const indexA = allowedExtensions.indexOf(fA.extension)
   const indexB = allowedExtensions.indexOf(fB.extension)
