@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        node-version: [8.17.0, 15.5.0]
+        node-version: [8.17.0, 15.x]
         exclude:
           - os: macOS-latest
             node-version: 8.17.0
@@ -31,7 +31,7 @@ jobs:
         run: npm ci
       - name: Linting
         run: npm run format:ci
-        if: "${{ matrix.node-version == '15.5.0' }}"
+        if: "${{ matrix.node-version == '15.x' }}"
       - name: Tests
         run: npm run test:ci
       - name: Get test coverage flags
