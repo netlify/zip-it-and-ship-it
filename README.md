@@ -105,23 +105,17 @@ matches one of the expressions, it inherits the configuration properties.
 
 The following properties are accepted:
 
-##### jsExternalModules
+- `jsExternalModules`
 
-_Type_: `array<string>`\
-_Default value_: `[]`
+  _Type_: `array<string>`\
 
-List of Node modules to include separately inside a node_modules directory.
+  List of Node modules to include separately inside a node_modules directory.
 
-Applicable only when `jsBundler` is `esbuild`.
+- `jsIgnoredModules`
 
-##### jsIgnoredModules
+  _Type_: `array<string>`\
 
-_Type_: `array<string>`\
-_Default value_: `[]`
-
-List of Node modules to keep out of the bundle.
-
-Applicable only when `jsBundler` is `esbuild`.
+  List of Node modules to keep out of the bundle.
 
 ### Return value
 
