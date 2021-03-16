@@ -31,6 +31,7 @@ const bundleJsFile = async function ({
     bundle: true,
     entryPoints: [srcFile],
     external,
+    logLevel: 'warning',
     outfile: bundlePath,
     nodePaths: additionalModulePaths,
     platform: 'node',
