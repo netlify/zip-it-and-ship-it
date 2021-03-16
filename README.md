@@ -105,13 +105,13 @@ matches one of the expressions, it inherits the configuration properties.
 
 The following properties are accepted:
 
-- `jsExternalModules`
+- `externalNodeModules`
 
   _Type_: `array<string>`\
 
   List of Node modules to include separately inside a node_modules directory.
 
-- `jsIgnoredModules`
+- `ignoredNodeModules`
 
   _Type_: `array<string>`\
 

@@ -12,7 +12,10 @@ const { getSrcFilesAndExternalModules } = require('./src_files')
 // Convenience method for retrieving external and ignored modules from
 // different places and merging them together.
 const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
-  const { jsExternalModules: externalModulesFromConfig = [], jsIgnoredModules: ignoredModulesFromConfig = [] } = config
+  const {
+    externalNodeModules: externalModulesFromConfig = [],
+    ignoredNodeModules: ignoredModulesFromConfig = [],
+  } = config
   const {
     externalModules: externalModulesFromSpecialCases,
     ignoredModules: ignoredModulesFromSpecialCases,
@@ -38,8 +41,8 @@ const zipEsbuild = async ({
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
     extension,
+    externalNodeModules: externalModules,
     jsBundler: JS_BUNDLER_ESBUILD,
-    jsExternalModules: externalModules,
     mainFile,
     srcPath,
     srcDir,

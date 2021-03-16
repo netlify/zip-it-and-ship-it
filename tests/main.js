@@ -506,12 +506,12 @@ testBundlers('Inlines node modules in the bundle', [ESBUILD, ESBUILD_ZISI], asyn
 })
 
 testBundlers(
-  'Does not inline node modules and includes them in a `node_modules` directory if they are defined in `externalModules`',
+  'Does not inline node modules and includes them in a `node_modules` directory if they are defined in `externalNodeModules`',
   [ESBUILD, ESBUILD_ZISI],
   async (bundler, t) => {
     const config = {
       function: {
-        jsExternalModules: ['test'],
+        externalNodeModules: ['test'],
       },
     }
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
@@ -525,12 +525,12 @@ testBundlers(
 )
 
 testBundlers(
-  'Does not inline node modules and excludes them from the bundle if they are defined in `ignoredModules`',
+  'Does not inline node modules and excludes them from the bundle if they are defined in `ignoredNodeModules`',
   [ESBUILD, ESBUILD_ZISI],
   async (bundler, t) => {
     const config = {
       function: {
-        jsIgnoredModules: ['test'],
+        ignoredNodeModules: ['test'],
       },
     }
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
@@ -544,12 +544,12 @@ testBundlers(
 )
 
 testBundlers(
-  'Include most files from node modules present in `externalModules`',
+  'Include most files from node modules present in `externalNodeModules`',
   [ESBUILD, ESBUILD_ZISI],
   async (bundler, t) => {
     const config = {
       function: {
-        jsExternalModules: ['test'],
+        externalNodeModules: ['test'],
       },
     }
     const { tmpDir } = await zipNode(t, 'node-module-included', {
@@ -565,12 +565,12 @@ testBundlers(
 )
 
 testBundlers(
-  'Does not throw if one of the modules defined in `externalModules` does not exist',
+  'Does not throw if one of the modules defined in `externalNodeModules` does not exist',
   [ESBUILD, ESBUILD_ZISI],
   async (bundler, t) => {
     const config = {
       function: {
-        jsExternalModules: ['i-do-not-exist'],
+        externalNodeModules: ['i-do-not-exist'],
       },
     }
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
@@ -677,15 +677,15 @@ testBundlers(
   async (bundler, t) => {
     const config = {
       '*': {
-        jsExternalModules: ['test-1'],
+        externalNodeModules: ['test-1'],
       },
 
       function_one: {
-        jsExternalModules: ['test-3'],
+        externalNodeModules: ['test-3'],
       },
 
       'function_*': {
-        jsExternalModules: ['test-2'],
+        externalNodeModules: ['test-2'],
       },
     }
 
