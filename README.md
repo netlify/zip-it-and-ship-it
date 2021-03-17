@@ -86,15 +86,6 @@ _Default value_: `5`
 
 Maximum number of Functions to bundle at the same time.
 
-#### jsBundler
-
-_Type_: `string`\
-_Default value_: `zisi`
-
-The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`, `esbuild_zisi`.
-
-When the value is `esbuild_zisi`, `esbuild` will be used with a fallback to `zisi` in case of an error.
-
 #### config
 
 _Type_: `object`\
@@ -116,6 +107,15 @@ The following properties are accepted:
   _Type_: `array<string>`\
 
   List of Node modules to keep out of the bundle.
+
+- `nodeBundler`
+
+  _Type_: `string`\
+  _Default value_: `zisi`
+
+  The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`, `esbuild_zisi`.
+
+  When the value is `esbuild_zisi`, `esbuild` will be used with a fallback to `zisi` in case of an error.
 
 ### Return value
 

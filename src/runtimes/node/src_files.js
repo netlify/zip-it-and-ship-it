@@ -1,22 +1,26 @@
 const { getDependencyNamesAndPathsForDependencies, listFilesUsingLegacyBundler } = require('../../node_dependencies')
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
 
-const getSrcFiles = async function (options) {
-  const { paths } = await getSrcFilesAndExternalModules(options)
+const getSrcFiles = async function ({ config, ...parameters }) {
+  const { paths } = await getSrcFilesAndExternalModules({
+    ...parameters,
+    bundler: config.nodeBundler || JS_BUNDLER_ZISI,
+    externalNodeModules: config.externalNodeModules,
+  })
 
   return paths
 }
 
 const getSrcFilesAndExternalModules = async function ({
+  bundler,
   externalNodeModules = [],
-  jsBundler,
   srcPath,
   mainFile,
   srcDir,
   stat,
   pluginsModulesPath,
 }) {
-  if (jsBundler === JS_BUNDLER_ZISI) {
+  if (bundler === JS_BUNDLER_ZISI) {
     const paths = await listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
 
     return {

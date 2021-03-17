@@ -42,7 +42,7 @@ const zipEsbuild = async ({
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
     extension,
     externalNodeModules: externalModules,
-    jsBundler: JS_BUNDLER_ESBUILD,
+    bundler: JS_BUNDLER_ESBUILD,
     mainFile,
     srcPath,
     srcDir,
@@ -93,7 +93,7 @@ const zipEsbuild = async ({
     await cleanTempFiles()
   }
 
-  return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, path: destPath }
+  return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, config, path: destPath }
 }
 
 module.exports = { zipEsbuild }

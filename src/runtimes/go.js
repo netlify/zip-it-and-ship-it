@@ -34,16 +34,16 @@ const findFunctionsInPaths = async function (paths) {
   return functions.filter(Boolean)
 }
 
-const zipFunction = async function ({ srcPath, destFolder, stat, zipGo, filename, runtime }) {
+const zipFunction = async function ({ config, srcPath, destFolder, stat, zipGo, filename, runtime }) {
   if (zipGo) {
     const destPath = join(destFolder, `${filename}.zip`)
     await zipBinary({ srcPath, destPath, filename, stat, runtime })
-    return { path: destPath }
+    return { config, path: destPath }
   }
 
   const destPath = join(destFolder, filename)
   await cpFile(srcPath, destPath)
-  return { path: destPath }
+  return { config, path: destPath }
 }
 
 module.exports = { findFunctionsInPaths, name: RUNTIME_GO, zipFunction }
