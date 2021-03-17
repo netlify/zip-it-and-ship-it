@@ -755,6 +755,15 @@ testBundlers(
   },
 )
 
+test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
+  const { files, tmpDir } = await zipNode(t, 'local-node-module')
+  const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+
+  t.deepEqual(requires, ['test'])
+  t.is(files[0].bundler, 'zisi')
+  t.deepEqual(files[0].config, {})
+})
+
 test('Zips Rust function files', async (t) => {
   const { files, tmpDir } = await zipFixture(t, 'rust-simple', { length: 1 })
 
