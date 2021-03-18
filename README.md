@@ -50,8 +50,8 @@ Creates Zip `archives` from Node.js, Go, and Rust programs. Those `archives` are
 - Sub-directories with a main file called either `index.js` or `{dir}.js` where `{dir}` is the sub-directory name.
 - `.js` files (Node.js)
 - `.zip` archives with Node.js already ready to upload to AWS Lambda.
-- Go programs already compiled. If the `options.zipGo` is `true`, those are zipped. Otherwise, those are copied as is.
-- Rust programs already compiled. These programs are always zipped.
+- Go programs already compiled. Those are copied as is.
+- Rust programs already compiled. Those are zipped.
 
 When using Node.js files, only the dependencies required by the main file are bundled, in order to keep the archive as
 small as possible, which improves the Function runtime performance:
@@ -71,20 +71,6 @@ CI, this is an unspecified temporary directory inside the CI machine. In Netlify
 directory in your build directory.
 
 ### Options
-
-#### zipGo
-
-_Type_: `boolean`\
-_Default value_: `false`
-
-Whether to zip Go files. If `false`, the Go files are copied as is and the filename remains the same.
-
-#### parallelLimit
-
-_Type_: `number`\
-_Default value_: `5`
-
-Maximum number of Functions to bundle at the same time.
 
 #### config
 
@@ -116,6 +102,13 @@ The following properties are accepted:
   The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`, `esbuild_zisi`.
 
   When the value is `esbuild_zisi`, `esbuild` will be used with a fallback to `zisi` in case of an error.
+
+#### parallelLimit
+
+_Type_: `number`\
+_Default value_: `5`
+
+Maximum number of Functions to bundle at the same time.
 
 ### Return value
 
@@ -236,10 +229,6 @@ $ zip-it-and-ship-it srcFolder destFolder
 
 The CLI performs the same logic as [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options). The archives are
 printed on `stdout` as a JSON array.
-
-The following options are available:
-
-- `--zip-go`: see the [`zipGo`](#zipGo) option
 
 # Troubleshooting
 
