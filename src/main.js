@@ -19,7 +19,7 @@ const listFunctions = async function (relativeSrcFolder) {
 // List all Netlify Functions files for a specific directory
 const listFunctionsFiles = async function (
   relativeSrcFolder,
-  { jsBundler = JS_BUNDLER_ZISI, jsExternalModules, jsIgnoredModules } = {},
+  { externalNodeModules, ignoredNodeModules, jsBundler = JS_BUNDLER_ZISI } = {},
 ) {
   const srcFolder = resolve(relativeSrcFolder)
   const paths = await listFunctionsDirectory(srcFolder)
@@ -29,7 +29,7 @@ const listFunctionsFiles = async function (
   ])
   const listedFunctionsFiles = await Promise.all(
     [...functions.values()].map((info) =>
-      getListedFunctionFiles(info, { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath }),
+      getListedFunctionFiles(info, { externalNodeModules, ignoredNodeModules, jsBundler, pluginsModulesPath }),
     ),
   )
 
@@ -44,7 +44,7 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }) {
 
 const getListedFunctionFiles = async function (
   { runtime, name, stat, mainFile, extension, srcPath, srcDir },
-  { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath },
+  { externalNodeModules, ignoredNodeModules, jsBundler, pluginsModulesPath },
 ) {
   const srcFiles = await getSrcFiles({
     runtime,
@@ -55,16 +55,16 @@ const getListedFunctionFiles = async function (
     srcDir,
     pluginsModulesPath,
     jsBundler,
-    jsExternalModules,
-    jsIgnoredModules,
+    externalNodeModules,
+    ignoredNodeModules,
   })
   return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime: runtime.name, extension: extname(srcFile) }))
 }
 
 const getSrcFiles = function ({
   jsBundler,
-  jsExternalModules,
-  jsIgnoredModules,
+  externalNodeModules,
+  ignoredNodeModules,
   runtime,
   stat,
   mainFile,
@@ -80,9 +80,9 @@ const getSrcFiles = function ({
   }
 
   return getRuntimeSrcFiles({
+    externalNodeModules,
+    ignoredNodeModules,
     jsBundler,
-    jsExternalModules,
-    jsIgnoredModules,
     extension,
     srcPath,
     mainFile,

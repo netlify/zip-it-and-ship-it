@@ -81,30 +81,34 @@ Maximum number of Functions to bundle at the same time.
 
 #### jsBundler
 
-_Type_: `number`\
+_Type_: `string`\
 _Default value_: `zisi`
 
 The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`, `esbuild_zisi`.
 
 When the value is `esbuild_zisi`, `esbuild` will be used with a fallback to `zisi` in case of an error.
 
-#### jsExternalModules
+#### config
 
-_Type_: `array<string>`\
-_Default value_: `[]`
+_Type_: `object`\
+_Default value_: `{}`
 
-List of Node modules to include separately inside a node_modules directory.
+An object matching glob-like expressions to objects containing configuration properties. Whenever a function name
+matches one of the expressions, it inherits the configuration properties.
 
-Applicable only when `jsBundler` is `esbuild`.
+The following properties are accepted:
 
-#### jsIgnoredModules
+- `externalNodeModules`
 
-_Type_: `array<string>`\
-_Default value_: `[]`
+  _Type_: `array<string>`\
 
-List of Node modules to keep out of the bundle.
+  List of Node modules to include separately inside a node_modules directory.
 
-Applicable only when `jsBundler` is `esbuild`.
+- `ignoredNodeModules`
+
+  _Type_: `array<string>`\
+
+  List of Node modules to keep out of the bundle.
 
 ### Return value
 

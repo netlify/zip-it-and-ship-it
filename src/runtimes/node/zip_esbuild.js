@@ -9,28 +9,40 @@ const { zipNodeJs } = require('../../zip_node')
 const { bundleJsFile } = require('./bundler')
 const { getSrcFilesAndExternalModules } = require('./src_files')
 
+// Convenience method for retrieving external and ignored modules from
+// different places and merging them together.
+const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
+  const {
+    externalNodeModules: externalModulesFromConfig = [],
+    ignoredNodeModules: ignoredModulesFromConfig = [],
+  } = config
+  const {
+    externalModules: externalModulesFromSpecialCases,
+    ignoredModules: ignoredModulesFromSpecialCases,
+  } = await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
+  const externalModules = [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])]
+  const ignoredModules = [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases]
+
+  return { externalModules, ignoredModules }
+}
+
 const zipEsbuild = async ({
+  config = {},
   destFolder,
   destPath,
   extension,
   filename,
-  jsExternalModules: externalModulesFromConfig = [],
-  jsIgnoredModules: ignoredModulesFromConfig = [],
   mainFile,
   pluginsModulesPath,
   srcDir,
   srcPath,
   stat,
 }) => {
-  const {
-    externalModules: externalModulesFromSpecialCases,
-    ignoredModules: ignoredModulesFromSpecialCases,
-  } = await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
-  const externalModules = [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])]
+  const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
     extension,
+    externalNodeModules: externalModules,
     jsBundler: JS_BUNDLER_ESBUILD,
-    jsExternalModules: externalModules,
     mainFile,
     srcPath,
     srcDir,
@@ -43,7 +55,7 @@ const zipEsbuild = async ({
     destFilename: filename,
     destFolder,
     externalModules,
-    ignoredModules: [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases],
+    ignoredModules,
     srcDir,
     srcFile: mainFile,
   })

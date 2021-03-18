@@ -1,5 +1,7 @@
 const { extname, basename } = require('path')
 
+const { getConfigForFunction } = require('../config')
+
 const goRuntime = require('./go')
 const jsRuntime = require('./node')
 const rustRuntime = require('./rust')
@@ -41,11 +43,12 @@ const findFunctionsInRuntime = async function ({ dedupe = false, paths, runtime 
 /**
  * Gets a list of functions found in a list of paths.
  *
+ * @param   {Object} config
  * @param   {Boolean} dedupe
  * @param   {String} path
  * @returns {Promise<Map>}
  */
-const getFunctionsFromPaths = async (paths, { dedupe = false } = {}) => {
+const getFunctionsFromPaths = async (paths, { config, dedupe = false } = {}) => {
   // The order of this array determines the priority of the runtimes. If a path
   // is used by the first time, it won't be made available to the subsequent
   // runtimes.
@@ -71,8 +74,12 @@ const getFunctionsFromPaths = async (paths, { dedupe = false } = {}) => {
     },
     { functions: [], remainingPaths: paths },
   )
+  const functionsWithConfig = functions.map(([name, func]) => [
+    name,
+    { ...func, config: getConfigForFunction({ config, func }) },
+  ])
 
-  return new Map(functions)
+  return new Map(functionsWithConfig)
 }
 
 module.exports = {

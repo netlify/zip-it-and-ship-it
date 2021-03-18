@@ -506,11 +506,16 @@ testBundlers('Inlines node modules in the bundle', [ESBUILD, ESBUILD_ZISI], asyn
 })
 
 testBundlers(
-  'Does not inline node modules and includes them in a `node_modules` directory if they are defined in `externalModules`',
+  'Does not inline node modules and includes them in a `node_modules` directory if they are defined in `externalNodeModules`',
   [ESBUILD, ESBUILD_ZISI],
   async (bundler, t) => {
+    const config = {
+      function: {
+        externalNodeModules: ['test'],
+      },
+    }
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
-      opts: { jsBundler: bundler, jsExternalModules: ['test'] },
+      opts: { config, jsBundler: bundler },
     })
     const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
@@ -520,11 +525,16 @@ testBundlers(
 )
 
 testBundlers(
-  'Does not inline node modules and excludes them from the bundle if they are defined in `ignoredModules`',
+  'Does not inline node modules and excludes them from the bundle if they are defined in `ignoredNodeModules`',
   [ESBUILD, ESBUILD_ZISI],
   async (bundler, t) => {
+    const config = {
+      function: {
+        ignoredNodeModules: ['test'],
+      },
+    }
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
-      opts: { jsBundler: bundler, jsIgnoredModules: ['test'] },
+      opts: { config, jsBundler: bundler },
     })
     const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
@@ -534,11 +544,16 @@ testBundlers(
 )
 
 testBundlers(
-  'Include most files from node modules present in `externalModules`',
+  'Include most files from node modules present in `externalNodeModules`',
   [ESBUILD, ESBUILD_ZISI],
   async (bundler, t) => {
+    const config = {
+      function: {
+        externalNodeModules: ['test'],
+      },
+    }
     const { tmpDir } = await zipNode(t, 'node-module-included', {
-      opts: { jsBundler: bundler, jsExternalModules: ['test'] },
+      opts: { config, jsBundler: bundler },
     })
     const [mapExists, htmlExists] = await Promise.all([
       pathExists(`${tmpDir}/src/node_modules/test/test.map`),
@@ -550,11 +565,16 @@ testBundlers(
 )
 
 testBundlers(
-  'Does not throw if one of the modules defined in `externalModules` does not exist',
+  'Does not throw if one of the modules defined in `externalNodeModules` does not exist',
   [ESBUILD, ESBUILD_ZISI],
   async (bundler, t) => {
+    const config = {
+      function: {
+        externalNodeModules: ['i-do-not-exist'],
+      },
+    }
     const { tmpDir } = await zipNode(t, 'node-module-included-try-catch', {
-      opts: { jsBundler: bundler, jsExternalModules: ['i-do-not-exist'] },
+      opts: { config, jsBundler: bundler },
     })
 
     t.false(await pathExists(`${tmpDir}/src/node_modules/i-do-not-exist`))
@@ -645,6 +665,40 @@ testBundlers(
     await unzipFiles(files)
     // eslint-disable-next-line import/no-dynamic-require, node/global-require
     t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+  },
+)
+
+// We're not running this test for the `DEFAULT` bundler — not because it's not
+// supported, but because the legacy bundler doesn't use any of the available
+// configuration properties and therefore there is nothing we could test.
+testBundlers(
+  'Applies the configuration parameters supplied in the `config` property',
+  [ESBUILD, ESBUILD_ZISI],
+  async (bundler, t) => {
+    const config = {
+      '*': {
+        externalNodeModules: ['test-1'],
+      },
+
+      function_one: {
+        externalNodeModules: ['test-3'],
+      },
+
+      'function_*': {
+        externalNodeModules: ['test-2'],
+      },
+    }
+
+    const { tmpDir } = await zipNode(t, 'config-apply-1', { length: 3, opts: { config, jsBundler: bundler } })
+    const requires = await Promise.all([
+      getRequires({ filePath: resolve(tmpDir, 'src/another_function.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'src/function_two.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'src/function_one.js') }),
+    ])
+
+    t.deepEqual(requires[0], ['test-1'])
+    t.deepEqual(requires[1], ['test-1', 'test-2'])
+    t.deepEqual(requires[2], ['test-1', 'test-2', 'test-3'])
   },
 )
 

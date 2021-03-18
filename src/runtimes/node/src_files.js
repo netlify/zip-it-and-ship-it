@@ -8,8 +8,8 @@ const getSrcFiles = async function (options) {
 }
 
 const getSrcFilesAndExternalModules = async function ({
+  externalNodeModules = [],
   jsBundler,
-  jsExternalModules = [],
   srcPath,
   mainFile,
   srcDir,
@@ -25,9 +25,9 @@ const getSrcFilesAndExternalModules = async function ({
     }
   }
 
-  if (jsExternalModules.length !== 0) {
+  if (externalNodeModules.length !== 0) {
     const { moduleNames, paths } = await getDependencyNamesAndPathsForDependencies({
-      dependencies: jsExternalModules,
+      dependencies: externalNodeModules,
       basedir: srcDir,
       pluginsModulesPath,
     })
@@ -36,7 +36,7 @@ const getSrcFilesAndExternalModules = async function ({
   }
 
   return {
-    moduleNames: jsExternalModules,
+    moduleNames: externalNodeModules,
     paths: [mainFile],
   }
 }

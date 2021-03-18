@@ -14,12 +14,11 @@ const { zipZisi } = require('./zip_zisi')
 const getDefaultBundler = ({ extension }) => (extension === '.ts' ? JS_BUNDLER_ESBUILD : JS_BUNDLER_ZISI)
 
 const zipFunction = async function ({
+  config,
   destFolder,
   extension,
   filename,
   jsBundler = getDefaultBundler({ extension }),
-  jsExternalModules,
-  jsIgnoredModules,
   mainFile,
   pluginsModulesPath,
   srcDir,
@@ -38,6 +37,7 @@ const zipFunction = async function ({
 
   if (jsBundler === JS_BUNDLER_ZISI) {
     return zipZisi({
+      config,
       destFolder,
       destPath,
       extension,
@@ -51,12 +51,11 @@ const zipFunction = async function ({
   }
 
   return zipEsbuild({
+    config,
     destFolder,
     destPath,
     extension,
     filename,
-    jsExternalModules,
-    jsIgnoredModules,
     mainFile,
     pluginsModulesPath,
     srcDir,
