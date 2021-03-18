@@ -755,6 +755,45 @@ testBundlers(
   },
 )
 
+testBundlers(
+  'Ignores `undefined` values when computing the configuration object for a function',
+  [ESBUILD],
+  async (bundler, t) => {
+    const externalNodeModules = ['test-1', 'test-2', 'test-3']
+    const config = {
+      '*': {
+        externalNodeModules,
+        nodeBundler: bundler,
+      },
+
+      function_one: {
+        externalNodeModules: undefined,
+        nodeBundler: undefined,
+      },
+    }
+
+    const { files, tmpDir } = await zipNode(t, 'config-apply-1', { length: 3, opts: { config } })
+    const requires = await Promise.all([
+      getRequires({ filePath: resolve(tmpDir, 'src/another_function.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'src/function_two.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'src/function_one.js') }),
+    ])
+
+    t.deepEqual(requires[0], externalNodeModules)
+    t.deepEqual(requires[1], externalNodeModules)
+    t.deepEqual(requires[2], externalNodeModules)
+
+    const matches = ['another_function.zip', 'function_two.zip', 'function_one.zip'].map((zipName) =>
+      // eslint-disable-next-line max-nested-callbacks
+      files.find(({ path }) => path.endsWith(zipName)),
+    )
+
+    t.deepEqual(matches[0].config, { externalNodeModules, nodeBundler: 'esbuild' })
+    t.deepEqual(matches[1].config, { externalNodeModules, nodeBundler: 'esbuild' })
+    t.deepEqual(matches[2].config, { externalNodeModules, nodeBundler: 'esbuild' })
+  },
+)
+
 test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
   const { files, tmpDir } = await zipNode(t, 'local-node-module')
   const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })

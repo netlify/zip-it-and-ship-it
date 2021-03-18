@@ -27,7 +27,7 @@ const getConfigForFunction = ({ config, func }) => {
     .sort(({ weight: weightA }, { weight: weightB }) => weightA - weightB)
     .map(({ expression }) => config[expression])
 
-  return mergeOptions.apply({ concatArrays: true }, matches)
+  return mergeOptions.apply({ concatArrays: true, ignoreUndefined: true }, matches)
 }
 
 module.exports = { getConfigForFunction }
