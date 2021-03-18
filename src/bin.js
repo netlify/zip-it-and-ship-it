@@ -23,11 +23,6 @@ const parseArgs = function () {
 }
 
 const OPTIONS = {
-  'zip-go': {
-    boolean: true,
-    default: false,
-    describe: 'Whether Go binaries should be zipped or copied as is',
-  },
   'parallel-limit': {
     number: true,
     describe: 'Maximum number of Functions to bundle at the same time',

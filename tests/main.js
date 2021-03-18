@@ -674,33 +674,7 @@ test('Zips Rust function files', async (t) => {
   t.is(tc, '{"runtime":"rs"}')
 })
 
-test('Zips Go function files', async (t) => {
-  const { files, tmpDir } = await zipFixture(t, 'go-simple', { length: 1, opts: { zipGo: true } })
-
-  t.true(files.every(({ runtime }) => runtime === 'go'))
-
-  await unzipFiles(files)
-
-  const unzippedFile = `${tmpDir}/test`
-  t.true(await pathExists(unzippedFile))
-
-  // The library we use for unzipping does not keep executable permissions.
-  // https://github.com/cthackers/adm-zip/issues/86
-  // However `chmod()` is not cross-platform
-  if (platform === 'linux') {
-    await pChmod(unzippedFile, EXECUTABLE_PERMISSION)
-
-    const { stdout } = await execa(unzippedFile)
-    t.is(stdout, 'test')
-  }
-
-  const tcFile = `${tmpDir}/netlify-toolchain`
-  t.true(await pathExists(tcFile))
-  const tc = (await pReadFile(tcFile, 'utf8')).trim()
-  t.is(tc, '{"runtime":"go"}')
-})
-
-test('Can skip zipping Go function files', async (t) => {
+test('Does not zip Go function files', async (t) => {
   const { files } = await zipFixture(t, 'go-simple', { length: 1 })
 
   t.true(files.every(({ runtime }) => runtime === 'go'))

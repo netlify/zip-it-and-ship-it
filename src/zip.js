@@ -19,18 +19,10 @@ const formatZipResult = (result) => {
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
-// TODO: remove `skipGo` option in next major release
 const zipFunctions = async function (
   relativeSrcFolder,
   destFolder,
-  {
-    jsBundler,
-    jsExternalModules = [],
-    jsIgnoredModules = [],
-    parallelLimit = DEFAULT_PARALLEL_LIMIT,
-    skipGo = true,
-    zipGo,
-  } = {},
+  { jsBundler, jsExternalModules = [], jsIgnoredModules = [], parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
 ) {
   const srcFolder = resolve(relativeSrcFolder)
   const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
@@ -54,7 +46,6 @@ const zipFunctions = async function (
         srcDir: func.srcDir,
         srcPath: func.srcPath,
         stat: func.stat,
-        zipGo: zipGo === undefined ? !skipGo : zipGo,
       })
 
       return { ...zipResult, runtime: func.runtime }
@@ -69,14 +60,7 @@ const zipFunctions = async function (
 const zipFunction = async function (
   relativeSrcPath,
   destFolder,
-  {
-    jsBundler,
-    jsExternalModules,
-    jsIgnoredModules,
-    pluginsModulesPath: defaultModulesPath,
-    skipGo = true,
-    zipGo = !skipGo,
-  } = {},
+  { jsBundler, jsExternalModules, jsIgnoredModules, pluginsModulesPath: defaultModulesPath } = {},
 ) {
   const srcPath = resolve(relativeSrcPath)
   const functions = await getFunctionsFromPaths([srcPath], { dedupe: true })
@@ -102,7 +86,6 @@ const zipFunction = async function (
     extension,
     srcDir,
     stat,
-    zipGo,
     runtime,
     pluginsModulesPath,
   })
