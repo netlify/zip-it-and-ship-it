@@ -8,6 +8,7 @@ const { zipNodeJs } = require('../../zip_node')
 const { getSrcFilesAndExternalModules } = require('./src_files')
 
 const zipZisi = async ({
+  config,
   destFolder,
   destPath,
   extension,
@@ -19,8 +20,8 @@ const zipZisi = async ({
   stat,
 }) => {
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
+    bundler: JS_BUNDLER_ZISI,
     extension,
-    jsBundler: JS_BUNDLER_ZISI,
     mainFile,
     pluginsModulesPath,
     srcDir,
@@ -39,7 +40,7 @@ const zipZisi = async ({
     srcFiles,
   })
 
-  return { bundler: JS_BUNDLER_ZISI, path: destPath }
+  return { bundler: JS_BUNDLER_ZISI, config, path: destPath }
 }
 
 module.exports = { zipZisi }

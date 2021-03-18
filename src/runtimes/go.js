@@ -33,10 +33,10 @@ const findFunctionsInPaths = async function (paths) {
   return functions.filter(Boolean)
 }
 
-const zipFunction = async function ({ srcPath, destFolder, filename }) {
+const zipFunction = async function ({ config, srcPath, destFolder, filename }) {
   const destPath = join(destFolder, filename)
   await cpFile(srcPath, destPath)
-  return { path: destPath }
+  return { config, path: destPath }
 }
 
 module.exports = { findFunctionsInPaths, name: RUNTIME_GO, zipFunction }

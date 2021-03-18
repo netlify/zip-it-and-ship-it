@@ -3,7 +3,6 @@ const { extname, resolve } = require('path')
 require('./utils/polyfills')
 const { getPluginsModulesPath } = require('./node_dependencies')
 const { getFunctionsFromPaths } = require('./runtimes')
-const { JS_BUNDLER_ZISI } = require('./utils/consts')
 const { listFunctionsDirectory } = require('./utils/fs')
 const { zipFunction, zipFunctions } = require('./zip')
 
@@ -17,20 +16,15 @@ const listFunctions = async function (relativeSrcFolder) {
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (
-  relativeSrcFolder,
-  { externalNodeModules, ignoredNodeModules, jsBundler = JS_BUNDLER_ZISI } = {},
-) {
+const listFunctionsFiles = async function (relativeSrcFolder, { config } = {}) {
   const srcFolder = resolve(relativeSrcFolder)
   const paths = await listFunctionsDirectory(srcFolder)
   const [functions, pluginsModulesPath] = await Promise.all([
-    getFunctionsFromPaths(paths),
+    getFunctionsFromPaths(paths, { config }),
     getPluginsModulesPath(srcFolder),
   ])
   const listedFunctionsFiles = await Promise.all(
-    [...functions.values()].map((info) =>
-      getListedFunctionFiles(info, { externalNodeModules, ignoredNodeModules, jsBundler, pluginsModulesPath }),
-    ),
+    [...functions.values()].map((func) => getListedFunctionFiles(func, { pluginsModulesPath })),
   )
 
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
@@ -43,8 +37,8 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }) {
 }
 
 const getListedFunctionFiles = async function (
-  { runtime, name, stat, mainFile, extension, srcPath, srcDir },
-  { externalNodeModules, ignoredNodeModules, jsBundler, pluginsModulesPath },
+  { config, runtime, name, stat, mainFile, extension, srcPath, srcDir },
+  { pluginsModulesPath },
 ) {
   const srcFiles = await getSrcFiles({
     runtime,
@@ -54,25 +48,12 @@ const getListedFunctionFiles = async function (
     srcPath,
     srcDir,
     pluginsModulesPath,
-    jsBundler,
-    externalNodeModules,
-    ignoredNodeModules,
+    config,
   })
   return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime: runtime.name, extension: extname(srcFile) }))
 }
 
-const getSrcFiles = function ({
-  jsBundler,
-  externalNodeModules,
-  ignoredNodeModules,
-  runtime,
-  stat,
-  mainFile,
-  extension,
-  srcPath,
-  srcDir,
-  pluginsModulesPath,
-}) {
+const getSrcFiles = function ({ config, runtime, stat, mainFile, extension, srcPath, srcDir, pluginsModulesPath }) {
   const { getSrcFiles: getRuntimeSrcFiles } = runtime
 
   if (extension === '.zip' || typeof getRuntimeSrcFiles !== 'function') {
@@ -80,9 +61,7 @@ const getSrcFiles = function ({
   }
 
   return getRuntimeSrcFiles({
-    externalNodeModules,
-    ignoredNodeModules,
-    jsBundler,
+    config,
     extension,
     srcPath,
     mainFile,

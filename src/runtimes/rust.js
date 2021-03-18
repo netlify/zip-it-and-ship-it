@@ -37,10 +37,10 @@ const findFunctionsInPaths = async function (paths) {
 // always be `bootstrap` because they include the
 // Lambda runtime, and that's the name that AWS
 // expects for those kind of functions.
-const zipFunction = async function ({ srcPath, destFolder, stat, filename, runtime }) {
+const zipFunction = async function ({ config, srcPath, destFolder, stat, filename, runtime }) {
   const destPath = join(destFolder, `${filename}.zip`)
   await zipBinary({ srcPath, destPath, filename: 'bootstrap', stat, runtime })
-  return { path: destPath }
+  return { config, path: destPath }
 }
 
 module.exports = { findFunctionsInPaths, name: RUNTIME_RUST, zipFunction }
