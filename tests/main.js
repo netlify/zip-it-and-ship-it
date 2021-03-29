@@ -711,6 +711,32 @@ testBundlers(
   },
 )
 
+testBundlers(
+  'Loads a tsconfig.json placed in the same directory as the function',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-typescript-tsconfig-sibling', {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+    await unzipFiles(files)
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    t.true(require(`${tmpDir}/function.js`).value)
+  },
+)
+
+testBundlers(
+  'Loads a tsconfig.json placed in a parent directory',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-typescript-tsconfig-parent/functions', {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+    await unzipFiles(files)
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    t.true(require(`${tmpDir}/function.js`).value)
+  },
+)
+
 // We're not running this test for the `DEFAULT` bundler — not because it's not
 // supported, but because the legacy bundler doesn't use any of the available
 // configuration properties and therefore there is nothing we could test.
