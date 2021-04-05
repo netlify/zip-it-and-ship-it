@@ -14,6 +14,7 @@ const bundleJsFile = async function ({
   destFolder,
   externalModules = [],
   ignoredModules = [],
+  name,
   srcFile,
 }) {
   // De-duping external and ignored modules.
@@ -50,7 +51,7 @@ const bundleJsFile = async function ({
 
     return { bundlePath, cleanTempFiles, data }
   } catch (error) {
-    error.errorInfo = { type: 'functionsBundling' }
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName: name } }
 
     throw error
   }

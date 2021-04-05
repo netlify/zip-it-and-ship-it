@@ -33,6 +33,7 @@ const zipEsbuild = async ({
   extension,
   filename,
   mainFile,
+  name,
   pluginsModulesPath,
   srcDir,
   srcPath,
@@ -56,6 +57,7 @@ const zipEsbuild = async ({
     destFolder,
     externalModules,
     ignoredModules,
+    name,
     srcDir,
     srcFile: mainFile,
   })

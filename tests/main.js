@@ -828,7 +828,7 @@ test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) =>
 
     t.fail('Function did not throw')
   } catch (error) {
-    t.deepEqual(error.errorInfo, { type: 'functionsBundling' })
+    t.deepEqual(error.customErrorInfo, { type: 'functionsBundling', location: { functionName: 'function' } })
   }
 })
 
