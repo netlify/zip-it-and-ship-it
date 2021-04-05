@@ -41,6 +41,7 @@ const zipFunctions = async function (
         filename: func.filename,
         ignoredNodeModules,
         mainFile: func.mainFile,
+        name: func.name,
         pluginsModulesPath,
         runtime: func.runtime,
         srcDir: func.srcDir,

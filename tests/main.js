@@ -820,6 +820,18 @@ testBundlers(
   },
 )
 
+test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) => {
+  try {
+    await zipNode(t, 'node-module-native', {
+      opts: { config: { '*': { nodeBundler: ESBUILD } } },
+    })
+
+    t.fail('Function did not throw')
+  } catch (error) {
+    t.deepEqual(error.customErrorInfo, { type: 'functionsBundling', location: { functionName: 'function' } })
+  }
+})
+
 test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
   const { files, tmpDir } = await zipNode(t, 'local-node-module')
   const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })

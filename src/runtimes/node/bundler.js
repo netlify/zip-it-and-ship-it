@@ -14,6 +14,7 @@ const bundleJsFile = async function ({
   destFolder,
   externalModules = [],
   ignoredModules = [],
+  name,
   srcFile,
 }) {
   // De-duping external and ignored modules.
@@ -27,17 +28,6 @@ const bundleJsFile = async function ({
 
   // eslint-disable-next-line node/no-sync
   const buildFunction = supportsAsyncAPI ? esbuild.build : esbuild.buildSync
-  const data = await buildFunction({
-    bundle: true,
-    entryPoints: [srcFile],
-    external,
-    logLevel: 'warning',
-    outfile: bundlePath,
-    nodePaths: additionalModulePaths,
-    platform: 'node',
-    resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
-    target: ['es2017'],
-  })
   const cleanTempFiles = async () => {
     try {
       await pUnlink(bundlePath)
@@ -46,7 +36,25 @@ const bundleJsFile = async function ({
     }
   }
 
-  return { bundlePath, cleanTempFiles, data }
+  try {
+    const data = await buildFunction({
+      bundle: true,
+      entryPoints: [srcFile],
+      external,
+      logLevel: 'warning',
+      outfile: bundlePath,
+      nodePaths: additionalModulePaths,
+      platform: 'node',
+      resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
+      target: ['es2017'],
+    })
+
+    return { bundlePath, cleanTempFiles, data }
+  } catch (error) {
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName: name } }
+
+    throw error
+  }
 }
 
 module.exports = { bundleJsFile }
