@@ -1,4 +1,4 @@
-const { basename, join } = require('path')
+const { join } = require('path')
 
 const cpFile = require('cp-file')
 
@@ -36,14 +36,11 @@ const zipFunction = async function ({
     return { config, path: destPath }
   }
 
-  const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
-
   if (bundler === JS_BUNDLER_ZISI) {
     return zipZisi({
       archiveFormat,
       config,
       destFolder,
-      destPath,
       extension,
       filename,
       mainFile,
@@ -58,7 +55,6 @@ const zipFunction = async function ({
     archiveFormat,
     config,
     destFolder,
-    destPath,
     extension,
     filename,
     mainFile,
