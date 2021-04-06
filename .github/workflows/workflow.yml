@@ -2,7 +2,7 @@ name: Build
 on:
   # Ensure GitHub actions are not run twice for same commits
   push:
-    branches: [master]
+    branches: [main]
     tags: ['*']
   pull_request:
     types: [opened, synchronize, reopened]
