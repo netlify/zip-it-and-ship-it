@@ -1,0 +1,9 @@
+{
+  "name": "zip-it-and-ship-it-fixtures",
+  "dependencies": {
+    "d3": "^6.6.2",
+    "jquery": "^3.6.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.1"
+  }
+}
