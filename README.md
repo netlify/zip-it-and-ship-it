@@ -74,7 +74,8 @@ directory in your build directory.
 
 #### archiveFormat
 
-_Type_: `string` _Default value_: `zip`
+_Type_: `string`\
+_Default value_: `zip`
 
 Format of the archive created for each function. Defaults to ZIP archives.
 
@@ -82,7 +83,8 @@ If set to `none`, the output of each function will be a directory containing all
 
 #### config
 
-_Type_: `object` _Default value_: `{}`
+_Type_: `object`\
+_Default value_: `{}`
 
 An object matching glob-like expressions to objects containing configuration properties. Whenever a function name
 matches one of the expressions, it inherits the configuration properties.
@@ -111,7 +113,8 @@ The following properties are accepted:
 
 #### parallelLimit
 
-_Type_: `number` _Default value_: `5`
+_Type_: `number`\
+_Default value_: `5`
 
 Maximum number of Functions to bundle at the same time.
 
