@@ -1,7 +1,7 @@
 # zip-it-and-ship-it
 
 [![npm version](https://img.shields.io/npm/v/@netlify/zip-it-and-ship-it.svg)](https://npmjs.org/package/@netlify/zip-it-and-ship-it)
-[![Coverage Status](https://codecov.io/gh/netlify/zip-it-and-ship-it/branch/master/graph/badge.svg)](https://codecov.io/gh/netlify/zip-it-and-ship-it)
+[![Coverage Status](https://codecov.io/gh/netlify/zip-it-and-ship-it/branch/main/graph/badge.svg)](https://codecov.io/gh/netlify/zip-it-and-ship-it)
 [![Build](https://github.com/netlify/zip-it-and-ship-it/workflows/Build/badge.svg)](https://github.com/netlify/zip-it-and-ship-it/actions)
 [![Downloads](https://img.shields.io/npm/dm/@netlify/zip-it-and-ship-it.svg)](https://www.npmjs.com/package/@netlify/zip-it-and-ship-it)
 
