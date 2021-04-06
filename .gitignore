@@ -12,3 +12,5 @@ node_modules
 /build
 .vscode
 !tests/fixtures/**/node_modules
+benchmarks/fixtures/*/package*.json
+.delta-t.json

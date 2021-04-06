@@ -46,3 +46,5 @@ jobs:
         with:
           file: coverage/coverage-final.json
           flags: ${{ steps.test-coverage-flags.outputs.os }},${{ steps.test-coverage-flags.outputs.node }}
+      - run: npm run benchmark
+        if: "${{ matrix.node-version == '15.x' && matrix.os == 'ubuntu-latest'}}"
