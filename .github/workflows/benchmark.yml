@@ -1,0 +1,26 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.1.5
+
+      - name: Run benchmarks
+        run: npm run benchmark
+
+      - name: Delta-T
+        uses: eduardoboucas/delta-t-action@main
+        with:
+          title: '⏱ Benchmark results'
+          token: ${{ secrets.GITHUB_TOKEN }}
