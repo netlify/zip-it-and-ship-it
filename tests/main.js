@@ -820,6 +820,30 @@ testBundlers(
   },
 )
 
+testBundlers(
+  'Generates a directory if `archiveFormat` is set to `none`',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files } = await zipNode(t, 'node-module-included', {
+      opts: { archiveFormat: 'none', config: { '*': { nodeBundler: bundler } } },
+    })
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const functionEntry = require(`${files[0].path}/function.js`)
+
+    t.true(functionEntry)
+  },
+)
+
+test('Throws an error if the `archiveFormat` property contains an invalid value`', async (t) => {
+  await t.throwsAsync(
+    zipNode(t, 'node-module-included', {
+      opts: { archiveFormat: 'gzip' },
+    }),
+    `Invalid archive format: gzip`,
+  )
+})
+
 test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) => {
   try {
     await zipNode(t, 'node-module-native', {
