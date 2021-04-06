@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-(cd benchmarks/fixtures && npm ci);
+npm ci --prefix benchmarks/fixtures
 node benchmarks/index.js > .delta-t.json
