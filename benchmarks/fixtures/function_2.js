@@ -3,7 +3,6 @@ const jquery = require('jquery')
 const lodash = require('lodash')
 const moment = require('moment')
 
-// eslint-disable-next-line require-await
 const handler = async function () {
   return {
     statusCode: 200,
