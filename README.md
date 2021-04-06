@@ -105,7 +105,8 @@ The following properties are accepted:
 
 - `nodeBundler`
 
-  _Type_: `string` _Default value_: `zisi`
+  _Type_: `string`\
+  _Default value_: `zisi`
 
   The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`, `esbuild_zisi`.
 
