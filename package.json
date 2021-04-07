@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "prepublishOnly": "npm ci && npm test",
+    "benchmark": "./benchmarks/run.sh",
     "test": "run-s format test:dev",
     "format": "run-s format:check-fix:*",
     "format:ci": "run-s format:check:*",
@@ -27,6 +28,9 @@
     "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{js,md,html}\" \"*.{js,md,html}\" \".*.{js,md,html}\"",
     "prettier": "--ignore-path .gitignore --loglevel=warn \"{src,tests,.github}/**/*.{js,md,yml,json,html}\" \"*.{js,yml,json,html}\" \".*.{js,yml,json,html}\" \"!package-lock.json\""
   },
+  "eslintIgnore": [
+    "benchmarks/fixtures/**"
+  ],
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
