@@ -8,9 +8,9 @@ const { zipNodeJs } = require('../../zip_node')
 const { getSrcFilesAndExternalModules } = require('./src_files')
 
 const zipZisi = async ({
+  archiveFormat,
   config,
   destFolder,
-  destPath,
   extension,
   filename,
   mainFile,
@@ -29,18 +29,18 @@ const zipZisi = async ({
     stat,
   })
   const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
-
-  await zipNodeJs({
+  const path = await zipNodeJs({
+    archiveFormat,
     basePath: commonPathPrefix(dirnames),
     destFolder,
-    destPath,
+    extension,
     filename,
     mainFile,
     pluginsModulesPath,
     srcFiles,
   })
 
-  return { bundler: JS_BUNDLER_ZISI, config, path: destPath }
+  return { bundler: JS_BUNDLER_ZISI, config, path }
 }
 
 module.exports = { zipZisi }

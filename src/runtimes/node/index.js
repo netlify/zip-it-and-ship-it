@@ -1,4 +1,4 @@
-const { basename, join } = require('path')
+const { join } = require('path')
 
 const cpFile = require('cp-file')
 
@@ -14,6 +14,7 @@ const { zipZisi } = require('./zip_zisi')
 const getDefaultBundler = ({ extension }) => (extension === '.ts' ? JS_BUNDLER_ESBUILD : JS_BUNDLER_ZISI)
 
 const zipFunction = async function ({
+  archiveFormat,
   config = {},
   destFolder,
   extension,
@@ -35,13 +36,11 @@ const zipFunction = async function ({
     return { config, path: destPath }
   }
 
-  const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
-
   if (bundler === JS_BUNDLER_ZISI) {
     return zipZisi({
+      archiveFormat,
       config,
       destFolder,
-      destPath,
       extension,
       filename,
       mainFile,
@@ -53,9 +52,9 @@ const zipFunction = async function ({
   }
 
   return zipEsbuild({
+    archiveFormat,
     config,
     destFolder,
-    destPath,
     extension,
     filename,
     mainFile,

@@ -6,6 +6,7 @@ const precinct = require('precinct')
 const { dir: getTmpDir } = require('tmp-promise')
 
 const { zipFunctions } = require('../..')
+const { ARCHIVE_FORMAT_ZIP } = require('../../src/utils/consts')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 
@@ -15,7 +16,12 @@ const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
     fixtureDir,
     opts,
   })
-  await requireExtractedFiles(t, files)
+  const { archiveFormat } = opts || {}
+
+  if (archiveFormat === undefined || archiveFormat === ARCHIVE_FORMAT_ZIP) {
+    await requireExtractedFiles(t, files)
+  }
+
   return { files, tmpDir }
 }
 

@@ -27,9 +27,9 @@ const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
 }
 
 const zipEsbuild = async ({
+  archiveFormat,
   config = {},
   destFolder,
-  destPath,
   extension,
   filename,
   mainFile,
@@ -41,7 +41,6 @@ const zipEsbuild = async ({
 }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
-    extension,
     externalNodeModules: externalModules,
     bundler: JS_BUNDLER_ESBUILD,
     mainFile,
@@ -81,21 +80,22 @@ const zipEsbuild = async ({
   const basePath = commonPathPrefix([...dirnames, normalize(dirname(mainFile))])
 
   try {
-    await zipNodeJs({
+    const path = await zipNodeJs({
       aliases,
+      archiveFormat,
       basePath,
       destFolder,
-      destPath,
+      extension,
       filename,
       mainFile: normalizedMainFile,
       pluginsModulesPath,
       srcFiles: [...supportingSrcFiles, bundlePath],
     })
+
+    return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, config, path }
   } finally {
     await cleanTempFiles()
   }
-
-  return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, config, path: destPath }
 }
 
 module.exports = { zipEsbuild }

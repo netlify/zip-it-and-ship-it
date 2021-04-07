@@ -5,10 +5,17 @@ const pMap = require('p-map')
 
 const { getPluginsModulesPath } = require('./node_dependencies')
 const { getFunctionsFromPaths } = require('./runtimes')
+const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
 const { listFunctionsDirectory } = require('./utils/fs')
 const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
+
+const validateArchiveFormat = (archiveFormat) => {
+  if (![ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP].includes(archiveFormat)) {
+    throw new Error(`Invalid archive format: ${archiveFormat}`)
+  }
+}
 
 // Takes the result of zipping a function and formats it for output.
 const formatZipResult = (result) => {
@@ -22,8 +29,10 @@ const formatZipResult = (result) => {
 const zipFunctions = async function (
   relativeSrcFolder,
   destFolder,
-  { config = {}, externalNodeModules = [], ignoredNodeModules = [], parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
+  { archiveFormat = ARCHIVE_FORMAT_ZIP, config = {}, parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
 ) {
+  validateArchiveFormat(archiveFormat)
+
   const srcFolder = resolve(relativeSrcFolder)
   const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
   const [functions, pluginsModulesPath] = await Promise.all([
@@ -34,12 +43,11 @@ const zipFunctions = async function (
     functions.values(),
     async (func) => {
       const zipResult = await func.runtime.zipFunction({
+        archiveFormat,
         config: func.config,
         destFolder,
         extension: func.extension,
-        externalNodeModules,
         filename: func.filename,
-        ignoredNodeModules,
         mainFile: func.mainFile,
         name: func.name,
         pluginsModulesPath,
@@ -58,9 +66,15 @@ const zipFunctions = async function (
   return zipped.filter(Boolean).map(formatZipResult)
 }
 
-const zipFunction = async function (relativeSrcPath, destFolder, { pluginsModulesPath: defaultModulesPath } = {}) {
+const zipFunction = async function (
+  relativeSrcPath,
+  destFolder,
+  { archiveFormat = ARCHIVE_FORMAT_ZIP, config: inputConfig = {}, pluginsModulesPath: defaultModulesPath } = {},
+) {
+  validateArchiveFormat(archiveFormat)
+
   const srcPath = resolve(relativeSrcPath)
-  const functions = await getFunctionsFromPaths([srcPath], { dedupe: true })
+  const functions = await getFunctionsFromPaths([srcPath], { config: inputConfig, dedupe: true })
 
   if (functions.size === 0) {
     return
@@ -73,6 +87,7 @@ const zipFunction = async function (relativeSrcPath, destFolder, { pluginsModule
   await makeDir(destFolder)
 
   const zipResult = await runtime.zipFunction({
+    archiveFormat,
     config,
     srcPath,
     destFolder,
