@@ -22,8 +22,8 @@ jobs:
       - name: Run benchmarks
         run: npm run benchmark
 
-      - name: Delta-T
-        uses: eduardoboucas/delta-t-action@main
+      - name: Run Delta
+        uses: netlify/delta-action@main
         with:
           title: '⏱ Benchmark results'
           token: ${{ secrets.GITHUB_TOKEN }}
