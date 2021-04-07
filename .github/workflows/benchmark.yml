@@ -25,5 +25,6 @@ jobs:
       - name: Run Delta
         uses: netlify/delta-action@main
         with:
+          filename: .delta-action.json
           title: '⏱ Benchmark results'
           token: ${{ secrets.GITHUB_TOKEN }}

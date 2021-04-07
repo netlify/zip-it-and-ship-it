@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 npm ci --prefix benchmarks/fixtures
-node benchmarks/index.js > .delta-t.json
+node benchmarks/index.js > .delta-action.json
