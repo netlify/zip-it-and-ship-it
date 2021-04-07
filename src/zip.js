@@ -69,12 +69,12 @@ const zipFunctions = async function (
 const zipFunction = async function (
   relativeSrcPath,
   destFolder,
-  { archiveFormat = ARCHIVE_FORMAT_ZIP, pluginsModulesPath: defaultModulesPath } = {},
+  { archiveFormat = ARCHIVE_FORMAT_ZIP, config: inputConfig = {}, pluginsModulesPath: defaultModulesPath } = {},
 ) {
   validateArchiveFormat(archiveFormat)
 
   const srcPath = resolve(relativeSrcPath)
-  const functions = await getFunctionsFromPaths([srcPath], { dedupe: true })
+  const functions = await getFunctionsFromPaths([srcPath], { config: inputConfig, dedupe: true })
 
   if (functions.size === 0) {
     return

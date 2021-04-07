@@ -13,7 +13,11 @@ const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
-const { JS_BUNDLER_ESBUILD: ESBUILD, JS_BUNDLER_ESBUILD_ZISI: ESBUILD_ZISI } = require('../src/utils/consts')
+const {
+  JS_BUNDLER_ESBUILD: ESBUILD,
+  JS_BUNDLER_ESBUILD_ZISI: ESBUILD_ZISI,
+  JS_BUNDLER_ZISI,
+} = require('../src/utils/consts')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -406,10 +410,26 @@ testBundlers('Can reduce parallelism', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (
 
 testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const { runtime } = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
+  const result = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
     config: { '*': { nodeBundler: bundler } },
   })
-  t.is(runtime, 'js')
+  const getOutBundler = () => {
+    switch (bundler) {
+      case ESBUILD_ZISI:
+        return ESBUILD
+
+      case DEFAULT:
+        return JS_BUNDLER_ZISI
+
+      default:
+        return bundler
+    }
+  }
+  const outBundler = getOutBundler()
+
+  t.is(result.runtime, 'js')
+  t.is(result.bundler, outBundler)
+  t.deepEqual(result.config, bundler === DEFAULT ? {} : { nodeBundler: outBundler })
 })
 
 testBundlers(
