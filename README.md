@@ -72,6 +72,15 @@ directory in your build directory.
 
 ### Options
 
+#### archiveFormat
+
+_Type_: `string`\
+_Default value_: `zip`
+
+Format of the archive created for each function. Defaults to ZIP archives.
+
+If set to `none`, the output of each function will be a directory containing all the bundled files.
+
 #### config
 
 _Type_: `object`\
@@ -84,13 +93,13 @@ The following properties are accepted:
 
 - `externalNodeModules`
 
-  _Type_: `array<string>`\
+  _Type_: `array<string>`
 
   List of Node modules to include separately inside a node_modules directory.
 
 - `ignoredNodeModules`
 
-  _Type_: `array<string>`\
+  _Type_: `array<string>`
 
   List of Node modules to keep out of the bundle.
 

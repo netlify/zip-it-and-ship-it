@@ -1,16 +1,75 @@
 const { Buffer } = require('buffer')
 const fs = require('fs')
-const { basename, extname, normalize, sep } = require('path')
+const os = require('os')
+const { basename, extname, join, normalize, sep } = require('path')
 const { promisify } = require('util')
 
+const copyFile = require('cp-file')
+const deleteFiles = require('del')
+const makeDir = require('make-dir')
+const pMap = require('p-map')
 const unixify = require('unixify')
 
 const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
+const { ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
 
 const pStat = promisify(fs.stat)
+const pWriteFile = promisify(fs.writeFile)
 
-// Zip a Node.js function file
-const zipNodeJs = async function ({ basePath, destPath, filename, mainFile, pluginsModulesPath, aliases, srcFiles }) {
+// Taken from https://www.npmjs.com/package/cpy.
+const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2
+
+const createDirectory = async function ({
+  aliases = {},
+  basePath,
+  destFolder,
+  extension,
+  filename,
+  mainFile,
+  pluginsModulesPath,
+  srcFiles,
+}) {
+  const { contents: entryContents, filename: entryFilename } = getEntryFile({
+    commonPrefix: basePath,
+    filename,
+    mainFile,
+  })
+  const functionFolder = join(destFolder, basename(filename, extension))
+
+  // Deleting the functions directory in case it exists before creating it.
+  await deleteFiles(functionFolder, { force: true })
+  await makeDir(functionFolder)
+
+  // Writing entry file.
+  await pWriteFile(join(functionFolder, entryFilename), entryContents)
+
+  // Copying source files.
+  await pMap(
+    srcFiles,
+    (srcFile) => {
+      const srcPath = aliases[srcFile] || srcFile
+      const normalizedSrcPath = normalizeFilePath(srcPath, basePath, pluginsModulesPath)
+      const destPath = join(functionFolder, normalizedSrcPath)
+
+      return copyFile(srcFile, destPath)
+    },
+    { concurrency: COPY_FILE_CONCURRENCY },
+  )
+
+  return functionFolder
+}
+
+const createZipArchive = async function ({
+  aliases,
+  basePath,
+  destFolder,
+  extension,
+  filename,
+  mainFile,
+  pluginsModulesPath,
+  srcFiles,
+}) {
+  const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
   const { archive, output } = startZip(destPath)
 
   addEntryFile(basePath, archive, filename, mainFile)
@@ -24,13 +83,21 @@ const zipNodeJs = async function ({ basePath, destPath, filename, mainFile, plug
   })
 
   await endZip(archive, output)
+
+  return destPath
+}
+
+const zipNodeJs = function ({ archiveFormat, ...options }) {
+  if (archiveFormat === ARCHIVE_FORMAT_ZIP) {
+    return createZipArchive(options)
+  }
+
+  return createDirectory(options)
 }
 
 const addEntryFile = function (commonPrefix, archive, filename, mainFile) {
-  const mainPath = normalizeFilePath(mainFile, commonPrefix)
-  const content = Buffer.from(`module.exports = require('./${mainPath}')`)
-  const extension = extname(filename)
-  const entryFilename = `${basename(filename, extension)}.js`
+  const { contents: entryContents, filename: entryFilename } = getEntryFile({ commonPrefix, filename, mainFile })
+  const content = Buffer.from(entryContents)
 
   addZipContent(archive, content, entryFilename)
 }
@@ -38,6 +105,17 @@ const addEntryFile = function (commonPrefix, archive, filename, mainFile) {
 const addStat = async function (srcFile) {
   const stat = await pStat(srcFile)
   return { srcFile, stat }
+}
+
+const getEntryFile = ({ commonPrefix, filename, mainFile }) => {
+  const mainPath = normalizeFilePath(mainFile, commonPrefix)
+  const extension = extname(filename)
+  const entryFilename = `${basename(filename, extension)}.js`
+
+  return {
+    contents: `module.exports = require('./${mainPath}')`,
+    filename: entryFilename,
+  }
 }
 
 const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat, aliases = {} }) {

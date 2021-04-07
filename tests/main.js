@@ -1,6 +1,6 @@
-const { readFile, chmod, symlink, unlink, rename } = require('fs')
+const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
-const { normalize, resolve } = require('path')
+const { join, normalize, resolve } = require('path')
 const { platform } = require('process')
 const { promisify } = require('util')
 
@@ -8,12 +8,17 @@ const test = require('ava')
 const cpy = require('cpy')
 const del = require('del')
 const execa = require('execa')
+const makeDir = require('make-dir')
 const pathExists = require('path-exists')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
-const { JS_BUNDLER_ESBUILD: ESBUILD, JS_BUNDLER_ESBUILD_ZISI: ESBUILD_ZISI } = require('../src/utils/consts')
+const {
+  JS_BUNDLER_ESBUILD: ESBUILD,
+  JS_BUNDLER_ESBUILD_ZISI: ESBUILD_ZISI,
+  JS_BUNDLER_ZISI,
+} = require('../src/utils/consts')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -24,6 +29,8 @@ const pChmod = promisify(chmod)
 const pSymlink = promisify(symlink)
 const pUnlink = promisify(unlink)
 const pRename = promisify(rename)
+const pStat = promisify(stat)
+const pWriteFile = promisify(writeFile)
 
 // Alias for the default bundler.
 const DEFAULT = undefined
@@ -406,10 +413,15 @@ testBundlers('Can reduce parallelism', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (
 
 testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const { runtime } = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
+  const result = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
     config: { '*': { nodeBundler: bundler } },
   })
-  t.is(runtime, 'js')
+  const outBundlers = { [ESBUILD_ZISI]: ESBUILD, [DEFAULT]: JS_BUNDLER_ZISI }
+  const outBundler = outBundlers[bundler] || bundler
+
+  t.is(result.runtime, 'js')
+  t.is(result.bundler, outBundler)
+  t.deepEqual(result.config, bundler === DEFAULT ? {} : { nodeBundler: outBundler })
 })
 
 testBundlers(
@@ -819,6 +831,52 @@ testBundlers(
     t.deepEqual(matches[2].config, { externalNodeModules, nodeBundler: 'esbuild' })
   },
 )
+
+testBundlers(
+  'Generates a directory if `archiveFormat` is set to `none`',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files } = await zipNode(t, 'node-module-included', {
+      opts: { archiveFormat: 'none', config: { '*': { nodeBundler: bundler } } },
+    })
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const functionEntry = require(`${files[0].path}/function.js`)
+
+    t.true(functionEntry)
+  },
+)
+
+test('When generating a directory for a function with `archiveFormat: "none"`, it empties the directory before copying any files', async (t) => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const functionDirectory = join(tmpDir, 'function')
+
+  await makeDir(functionDirectory)
+
+  const testFilePath = join(functionDirectory, 'some-file.js')
+
+  await pWriteFile(testFilePath, 'module.exports = true')
+
+  await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
+    archiveFormat: 'none',
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const functionEntry = require(`${functionDirectory}/function.js`)
+
+  t.true(functionEntry)
+
+  await t.throwsAsync(pStat(testFilePath))
+})
+
+test('Throws an error if the `archiveFormat` property contains an invalid value`', async (t) => {
+  await t.throwsAsync(
+    zipNode(t, 'node-module-included', {
+      opts: { archiveFormat: 'gzip' },
+    }),
+    `Invalid archive format: gzip`,
+  )
+})
 
 test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) => {
   try {

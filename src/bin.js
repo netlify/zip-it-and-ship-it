@@ -4,6 +4,7 @@ const { exit } = require('process')
 const yargs = require('yargs')
 
 const zipIt = require('./main')
+const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
 
 // CLI entry point
 const runCli = async function () {
@@ -23,23 +24,15 @@ const parseArgs = function () {
 }
 
 const OPTIONS = {
+  'archive-format': {
+    string: true,
+    choices: [ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP],
+    default: ARCHIVE_FORMAT_ZIP,
+    describe: 'Format of the archive created for each function',
+  },
   'parallel-limit': {
     number: true,
     describe: 'Maximum number of Functions to bundle at the same time',
-  },
-  'js-bundler': {
-    string: true,
-    describe: 'The bundler to use when processing JavaScript functions',
-  },
-  'js-external-modules': {
-    array: true,
-    default: [],
-    describe: 'List of Node modules to include separately inside a node_modules directory',
-  },
-  'js-ignored-modules': {
-    array: true,
-    default: [],
-    describe: 'List of Node modules to keep out of the bundle',
   },
 }
 
