@@ -1,0 +1,30 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.1.5
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run benchmarks
+        run: npm run benchmark
+
+      - name: Run Delta
+        uses: netlify/delta-action@main
+        with:
+          filename: .delta-action.json
+          title: '⏱ Benchmark results'
+          token: ${{ secrets.GITHUB_TOKEN }}
