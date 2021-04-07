@@ -413,19 +413,8 @@ testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (b
   const result = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
     config: { '*': { nodeBundler: bundler } },
   })
-  const getOutBundler = () => {
-    switch (bundler) {
-      case ESBUILD_ZISI:
-        return ESBUILD
-
-      case DEFAULT:
-        return JS_BUNDLER_ZISI
-
-      default:
-        return bundler
-    }
-  }
-  const outBundler = getOutBundler()
+  const outBundlers = { [ESBUILD_ZISI]: ESBUILD, [DEFAULT]: JS_BUNDLER_ZISI }
+  const outBundler = outBundlers[bundler] || bundler
 
   t.is(result.runtime, 'js')
   t.is(result.bundler, outBundler)
