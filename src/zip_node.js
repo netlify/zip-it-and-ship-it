@@ -4,7 +4,8 @@ const os = require('os')
 const { basename, extname, join, normalize, sep } = require('path')
 const { promisify } = require('util')
 
-const cpFile = require('cp-file')
+const copyFile = require('cp-file')
+const deleteFiles = require('del')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 const unixify = require('unixify')
@@ -38,6 +39,9 @@ const createDirectory = async function ({
   // Creating the function folder.
   await makeDir(functionFolder)
 
+  // Ensuring the folder is empty.
+  await deleteFiles(`${functionFolder}/**`, { force: true })
+
   // Writing entry file.
   await pWriteFile(join(functionFolder, entryFilename), entryContents)
 
@@ -49,7 +53,7 @@ const createDirectory = async function ({
       const normalizedSrcPath = normalizeFilePath(srcPath, basePath, pluginsModulesPath)
       const destPath = join(functionFolder, normalizedSrcPath)
 
-      return cpFile(srcFile, destPath)
+      return copyFile(srcFile, destPath)
     },
     { concurrency: COPY_FILE_CONCURRENCY },
   )

@@ -1,6 +1,6 @@
-const { readFile, chmod, symlink, unlink, rename } = require('fs')
+const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
-const { normalize, resolve } = require('path')
+const { join, normalize, resolve } = require('path')
 const { platform } = require('process')
 const { promisify } = require('util')
 
@@ -8,6 +8,7 @@ const test = require('ava')
 const cpy = require('cpy')
 const del = require('del')
 const execa = require('execa')
+const makeDir = require('make-dir')
 const pathExists = require('path-exists')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
@@ -28,6 +29,8 @@ const pChmod = promisify(chmod)
 const pSymlink = promisify(symlink)
 const pUnlink = promisify(unlink)
 const pRename = promisify(rename)
+const pStat = promisify(stat)
+const pWriteFile = promisify(writeFile)
 
 // Alias for the default bundler.
 const DEFAULT = undefined
@@ -843,6 +846,28 @@ testBundlers(
     t.true(functionEntry)
   },
 )
+
+test('When generating a directory for a function with `archiveFormat: "none"`, it empties the directory before copying any files', async (t) => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const functionDirectory = join(tmpDir, 'function')
+
+  await makeDir(functionDirectory)
+
+  const testFilePath = join(functionDirectory, 'some-file.js')
+
+  await pWriteFile(testFilePath, 'module.exports = true')
+
+  await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
+    archiveFormat: 'none',
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const functionEntry = require(`${functionDirectory}/function.js`)
+
+  t.true(functionEntry)
+
+  await t.throwsAsync(pStat(testFilePath))
+})
 
 test('Throws an error if the `archiveFormat` property contains an invalid value`', async (t) => {
   await t.throwsAsync(
