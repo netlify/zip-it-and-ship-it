@@ -1,7 +1,7 @@
 const { Buffer } = require('buffer')
 const fs = require('fs')
 const os = require('os')
-const { basename, extname, join, normalize, sep } = require('path')
+const { basename, extname, join, normalize, posix, sep } = require('path')
 const { promisify } = require('util')
 
 const copyFile = require('cp-file')
@@ -40,7 +40,7 @@ const createDirectory = async function ({
   await makeDir(functionFolder)
 
   // Ensuring the folder is empty.
-  await deleteFiles(`${functionFolder}/**`, { force: true })
+  await deleteFiles(posix.join(functionFolder, '**'), { force: true })
 
   // Writing entry file.
   await pWriteFile(join(functionFolder, entryFilename), entryContents)
