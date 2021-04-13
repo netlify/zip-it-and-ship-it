@@ -67,6 +67,12 @@ testBundlers(
   'Handles Node module with native bindings (buildtime marker module)',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
+    if (bundler === ESBUILD && semver.lt(versions.node, '10.0.0')) {
+      t.log('Skipping test for unsupported Node version')
+
+      return t.pass()
+    }
+
     const { files, tmpDir } = await zipNode(t, 'node-module-native-buildtime', {
       opts: { config: { '*': { nodeBundler: bundler } } },
     })
