@@ -4,6 +4,10 @@ const readPackageJson = require('read-package-json-fast')
 
 const { isNativeModule } = require('./detector')
 
+// Filters out relative or absolute file paths.
+const packageFilter = /^([^./]*)$/
+
+// Filters valid package names and extracts the base directory.
 const packageName = /^([^@][^/]*|@[^/]*\/[^/]+)(?:\/|$)/
 
 const findNativeModule = (packageJsonPath, cache) => {
@@ -24,7 +28,7 @@ const externalNativeModulesPlugin = (externalizedModules) => ({
     const cache = {}
 
     // eslint-disable-next-line complexity, max-statements
-    build.onResolve({ filter: /^([^./]*)$/ }, async (args) => {
+    build.onResolve({ filter: packageFilter }, async (args) => {
       const package = packageName.exec(args.path)
 
       if (!package) return
