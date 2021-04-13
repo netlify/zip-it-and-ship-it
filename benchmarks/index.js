@@ -5,8 +5,9 @@ const { zipFunctions } = require('..')
 const { timeFunction } = require('./helpers/main')
 
 const BENCHMARK_OUTPUT = 'benchmarks/output'
+const RUNS = 3
 
-const run = async function () {
+const runBenchmarks = async function () {
   const func = join(__dirname, 'fixtures')
 
   const largeDepsZisi = await timeFunction(
@@ -14,14 +15,14 @@ const run = async function () {
       zipFunctions(func, BENCHMARK_OUTPUT, {
         config: { '*': { nodeBundler: 'zisi' } },
       }),
-    3,
+    RUNS,
   )
   const largeDepsEsbuild = await timeFunction(
-    () =>
-      zipFunctions(func, BENCHMARK_OUTPUT, {
+    (run) =>
+      zipFunctions(func, join(BENCHMARK_OUTPUT, `run-${run}`), {
         config: { '*': { nodeBundler: 'esbuild' } },
       }),
-    3,
+    RUNS,
   )
 
   const output = { metrics: { largeDepsZisi, largeDepsEsbuild } }
@@ -29,4 +30,4 @@ const run = async function () {
   console.log(JSON.stringify(output))
 }
 
-run()
+runBenchmarks()
