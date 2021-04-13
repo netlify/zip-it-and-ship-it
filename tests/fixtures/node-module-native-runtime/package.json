@@ -1,5 +1,5 @@
 {
-  "name": "local-node-module",
+  "name": "node-module-native-runtime",
   "version": "1.0.0",
   "dependencies": {
     "test": "1.0.2"

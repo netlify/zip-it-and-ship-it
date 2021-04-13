@@ -40,17 +40,7 @@ const zipEsbuild = async ({
   stat,
 }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
-  const { paths: srcFiles } = await getSrcFilesAndExternalModules({
-    externalNodeModules: externalModules,
-    bundler: JS_BUNDLER_ESBUILD,
-    mainFile,
-    srcPath,
-    srcDir,
-    pluginsModulesPath,
-    stat,
-  })
-
-  const { bundlePath, data, cleanTempFiles } = await bundleJsFile({
+  const { bundlePath, data, cleanTempFiles, externalizedModules } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     destFilename: filename,
     destFolder,
@@ -61,6 +51,15 @@ const zipEsbuild = async ({
     srcFile: mainFile,
   })
   const bundlerWarnings = data.warnings.length === 0 ? undefined : data.warnings
+  const { paths: srcFiles } = await getSrcFilesAndExternalModules({
+    externalNodeModules: [...externalModules, ...externalizedModules],
+    bundler: JS_BUNDLER_ESBUILD,
+    mainFile,
+    srcPath,
+    srcDir,
+    pluginsModulesPath,
+    stat,
+  })
 
   // We want to remove `mainFile` from `srcFiles` because it represents the
   // path of the original, pre-bundling function file. We'll add the actual

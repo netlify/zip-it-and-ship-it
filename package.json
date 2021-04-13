@@ -74,6 +74,7 @@
     "path-exists": "^4.0.0",
     "pkg-dir": "^4.2.0",
     "precinct": "^6.3.1",
+    "read-package-json-fast": "^2.0.2",
     "require-package-name": "^2.0.1",
     "resolve": "^2.0.0-next.1",
     "semver": "^6.3.0",
