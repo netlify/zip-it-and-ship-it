@@ -10,6 +10,7 @@ const del = require('del')
 const execa = require('execa')
 const makeDir = require('make-dir')
 const pathExists = require('path-exists')
+const semver = require('semver')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
@@ -35,8 +36,6 @@ const pWriteFile = promisify(writeFile)
 // Alias for the default bundler.
 const DEFAULT = undefined
 const EXECUTABLE_PERMISSION = 0o755
-
-const majorNodeVersion = Number(versions.node.split('.')[0])
 
 const normalizeFiles = function (fixtureDir, { name, mainFile, runtime, extension, srcFile }) {
   const mainFileA = normalize(`${fixtureDir}/${mainFile}`)
@@ -202,8 +201,7 @@ testBundlers('Ignore invalid require()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async
 })
 
 testBundlers('Can use dynamic import() with esbuild', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
-  // eslint-disable-next-line no-magic-numbers
-  if (majorNodeVersion <= 10) {
+  if (semver.lt(versions.node, '10.0.0')) {
     t.log('Skipping test for unsupported Node version')
 
     return t.pass()
@@ -213,8 +211,7 @@ testBundlers('Can use dynamic import() with esbuild', [ESBUILD, ESBUILD_ZISI], a
 })
 
 testBundlers('Bundling does not crash with dynamic import() with zisi', [DEFAULT], async (bundler, t) => {
-  // eslint-disable-next-line no-magic-numbers
-  if (majorNodeVersion <= 10) {
+  if (semver.lt(versions.node, '10.0.0')) {
     t.log('Skipping test for unsupported Node version')
 
     return t.pass()
