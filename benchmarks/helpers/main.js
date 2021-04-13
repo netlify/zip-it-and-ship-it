@@ -23,7 +23,7 @@ const timeFunction = (func, runs = 1) =>
     Array.from({ length: runs }).forEach(async (_, index) => {
       performance.mark(`run-${index}-start`)
 
-      await func()
+      await func(index)
 
       performance.measure(`run-${index}`, `run-${index}-start`)
     })
