@@ -63,17 +63,51 @@ testBundlers('Zips Node.js function files', [ESBUILD, ESBUILD_ZISI, DEFAULT], as
   t.true(files.every(({ runtime }) => runtime === 'js'))
 })
 
-testBundlers('Handles Node module with native bindings', [ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
-  const { files, tmpDir } = await zipNode(t, 'node-module-native', {
-    opts: { config: { '*': { nodeBundler: bundler } } },
-  })
-  const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
-  const normalizedRequires = new Set(requires.map(unixify))
+testBundlers(
+  'Handles Node module with native bindings (buildtime marker module)',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    if (bundler === ESBUILD && semver.lt(versions.node, '10.0.0')) {
+      t.log('Skipping test for unsupported Node version')
 
-  t.true(files.every(({ runtime }) => runtime === 'js'))
-  t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
-  t.true(normalizedRequires.has('test'))
-})
+      return t.pass()
+    }
+
+    const { files, tmpDir } = await zipNode(t, 'node-module-native-buildtime', {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+    const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+    const normalizedRequires = new Set(requires.map(unixify))
+
+    t.true(files.every(({ runtime }) => runtime === 'js'))
+    t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
+    t.true(await pathExists(`${tmpDir}/src/node_modules/test/side-file.js`))
+    t.true(normalizedRequires.has('test'))
+  },
+)
+
+testBundlers(
+  'Handles Node module with native bindings (runtime marker module)',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    if (bundler === ESBUILD && semver.lt(versions.node, '10.0.0')) {
+      t.log('Skipping test for unsupported Node version')
+
+      return t.pass()
+    }
+
+    const { files, tmpDir } = await zipNode(t, 'node-module-native-runtime', {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+    const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+    const normalizedRequires = new Set(requires.map(unixify))
+
+    t.true(files.every(({ runtime }) => runtime === 'js'))
+    t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
+    t.true(await pathExists(`${tmpDir}/src/node_modules/test/side-file.js`))
+    t.true(normalizedRequires.has('test'))
+  },
+)
 
 testBundlers('Can require node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-node-module', { opts: { config: { '*': { nodeBundler: bundler } } } })
@@ -893,7 +927,7 @@ test('Throws an error if the `archiveFormat` property contains an invalid value`
 
 test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) => {
   try {
-    await zipNode(t, 'node-module-native', {
+    await zipNode(t, 'node-module-missing', {
       opts: { config: { '*': { nodeBundler: ESBUILD } } },
     })
 
