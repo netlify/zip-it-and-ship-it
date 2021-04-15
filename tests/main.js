@@ -383,9 +383,14 @@ testBundlers('Works with many dependencies', [ESBUILD, ESBUILD_ZISI, DEFAULT], a
 })
 
 testBundlers('Works with many function files', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
-  await zipNode(t, 'many-functions', {
+  const names = new Set(['one', 'two', 'three', 'four', 'five', 'six'])
+  const { files } = await zipNode(t, 'many-functions', {
     opts: { config: { '*': { nodeBundler: bundler } } },
     length: TEST_FUNCTIONS_LENGTH,
+  })
+
+  files.forEach(({ name }) => {
+    t.true(names.has(name))
   })
 })
 
@@ -466,6 +471,7 @@ testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (b
   const outBundlers = { [ESBUILD_ZISI]: ESBUILD, [DEFAULT]: JS_BUNDLER_ZISI }
   const outBundler = outBundlers[bundler] || bundler
 
+  t.is(result.name, 'function')
   t.is(result.runtime, 'js')
   t.is(result.bundler, outBundler)
   t.deepEqual(result.config, bundler === DEFAULT ? {} : { nodeBundler: outBundler })
