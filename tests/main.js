@@ -477,25 +477,21 @@ testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (b
   t.deepEqual(result.config, bundler === DEFAULT ? {} : { nodeBundler: outBundler })
 })
 
-testBundlers(
-  'Can list function main files with listFunctions()',
-  [ESBUILD, ESBUILD_ZISI, DEFAULT],
-  async (bundler, t) => {
-    const fixtureDir = `${FIXTURES_DIR}/list`
-    const functions = await listFunctions(fixtureDir)
-    t.deepEqual(
-      functions,
-      [
-        { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
-        { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
-        { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
-        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
-        { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
-        { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
-      ].map(normalizeFiles.bind(null, fixtureDir)),
-    )
-  },
-)
+test('Can list function main files with listFunctions()', async (t) => {
+  const fixtureDir = `${FIXTURES_DIR}/list`
+  const functions = await listFunctions(fixtureDir)
+  t.deepEqual(
+    functions,
+    [
+      { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
+      { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
+      { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
+      { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
+      { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
+      { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
+    ].map(normalizeFiles.bind(null, fixtureDir)),
+  )
+})
 
 testBundlers(
   'Can list all function files with listFunctionsFiles()',
