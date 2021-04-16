@@ -31,7 +31,6 @@ const OPTIONS = {
     describe: 'Format of the archive created for each function',
   },
   config: {
-    object: true,
     default: {},
     describe:
       'An object matching glob-like expressions to objects containing configuration properties. Whenever a function name matches one of the expressions, it inherits the configuration properties',
