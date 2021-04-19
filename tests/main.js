@@ -900,6 +900,28 @@ testBundlers(
   },
 )
 
+test('Generates a bundle for the Node runtime version specified in the `nodeVersion` config property', async (t) => {
+  // Using the optional catch binding feature to assert that the bundle is
+  // respecting the Node version supplied.
+  // - in Node <10 we should see `try {} catch (e) {}`
+  // - in Node >= 10 we should see `try {} catch {}`
+  const { files: node8Files } = await zipNode(t, 'node-module-optional-catch-binding', {
+    opts: { archiveFormat: 'none', config: { '*': { nodeBundler: ESBUILD, nodeVersion: '8.x' } } },
+  })
+
+  const node8Function = await pReadFile(`${node8Files[0].path}/src/function.js`, 'utf8')
+
+  t.regex(node8Function, /catch \(\w+\) {/)
+
+  const { files: node12Files } = await zipNode(t, 'node-module-optional-catch-binding', {
+    opts: { archiveFormat: 'none', config: { '*': { nodeBundler: ESBUILD, nodeVersion: '12.x' } } },
+  })
+
+  const node12Function = await pReadFile(`${node12Files[0].path}/src/function.js`, 'utf8')
+
+  t.regex(node12Function, /catch {/)
+})
+
 test('When generating a directory for a function with `archiveFormat: "none"`, it empties the directory before copying any files', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const functionDirectory = join(tmpDir, 'function')

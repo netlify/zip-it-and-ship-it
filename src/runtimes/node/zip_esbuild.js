@@ -42,6 +42,7 @@ const zipEsbuild = async ({
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const { bundlePath, data, cleanTempFiles, externalizedModules } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
+    config,
     destFilename: filename,
     destFolder,
     externalModules,
