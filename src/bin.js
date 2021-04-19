@@ -30,6 +30,11 @@ const OPTIONS = {
     default: ARCHIVE_FORMAT_ZIP,
     describe: 'Format of the archive created for each function',
   },
+  config: {
+    default: {},
+    describe:
+      'An object matching glob-like expressions to objects containing configuration properties. Whenever a function name matches one of the expressions, it inherits the configuration properties',
+  },
   'parallel-limit': {
     number: true,
     describe: 'Maximum number of Functions to bundle at the same time',
