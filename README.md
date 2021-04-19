@@ -112,6 +112,18 @@ The following properties are accepted:
 
   When the value is `esbuild_zisi`, `esbuild` will be used with a fallback to `zisi` in case of an error.
 
+- `nodeVersion`
+
+  _Type_: `string`\
+  _Default value_: `12.x`
+
+  The version of Node.js to use as the compilation target. Possible values:
+
+  - `8.x` (or `nodejs8.x`)
+  - `10.x` (or `nodejs10.x`)
+  - `12.x` (or `nodejs12.x`)
+  - `14.x` (or `nodejs14.x`)
+
 #### parallelLimit
 
 _Type_: `number`\
