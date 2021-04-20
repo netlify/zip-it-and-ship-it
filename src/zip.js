@@ -19,7 +19,7 @@ const validateArchiveFormat = (archiveFormat) => {
 
 // Takes the result of zipping a function and formats it for output.
 const formatZipResult = (result) => {
-  const { bundler, bundlerErrors, bundlerWarnings, config = {}, name, path, runtime } = result
+  const { bundler, bundlerErrors, bundlerWarnings, config = {}, name, nativeNodeModules, path, runtime } = result
 
   return removeFalsy({
     bundler,
@@ -27,6 +27,7 @@ const formatZipResult = (result) => {
     bundlerWarnings,
     config,
     name,
+    nativeNodeModules,
     path,
     runtime: runtime.name,
   })

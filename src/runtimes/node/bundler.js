@@ -40,8 +40,8 @@ const bundleJsFile = async function ({
     }
   }
 
-  const externalizedModules = new Set()
-  const plugins = [externalNativeModulesPlugin(externalizedModules)]
+  const nativeNodeModules = {}
+  const plugins = [externalNativeModulesPlugin(nativeNodeModules)]
   const nodeTarget = getBundlerTarget(config.nodeVersion)
 
   try {
@@ -58,7 +58,7 @@ const bundleJsFile = async function ({
       target: [nodeTarget],
     })
 
-    return { bundlePath, cleanTempFiles, data, externalizedModules: [...externalizedModules] }
+    return { bundlePath, cleanTempFiles, data, nativeNodeModules }
   } catch (error) {
     error.customErrorInfo = { type: 'functionsBundling', location: { functionName: name } }
 

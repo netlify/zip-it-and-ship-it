@@ -73,16 +73,24 @@ testBundlers(
       return t.pass()
     }
 
-    const { files, tmpDir } = await zipNode(t, 'node-module-native-buildtime', {
+    const fixtureDir = 'node-module-native-buildtime'
+    const { files, tmpDir } = await zipNode(t, fixtureDir, {
       opts: { config: { '*': { nodeBundler: bundler } } },
     })
     const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
     const normalizedRequires = new Set(requires.map(unixify))
+    const modulePath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/test`)
 
-    t.true(files.every(({ runtime }) => runtime === 'js'))
+    t.is(files.length, 1)
+    t.is(files[0].runtime, 'js')
     t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
     t.true(await pathExists(`${tmpDir}/src/node_modules/test/side-file.js`))
     t.true(normalizedRequires.has('test'))
+
+    // We can only detect native modules when using esbuild.
+    if (bundler !== DEFAULT) {
+      t.deepEqual(files[0].nativeNodeModules, { test: { [modulePath]: '1.0.0' } })
+    }
   },
 )
 
@@ -96,16 +104,24 @@ testBundlers(
       return t.pass()
     }
 
-    const { files, tmpDir } = await zipNode(t, 'node-module-native-runtime', {
+    const fixtureDir = 'node-module-native-runtime'
+    const { files, tmpDir } = await zipNode(t, fixtureDir, {
       opts: { config: { '*': { nodeBundler: bundler } } },
     })
     const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
     const normalizedRequires = new Set(requires.map(unixify))
+    const modulePath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/test`)
 
-    t.true(files.every(({ runtime }) => runtime === 'js'))
+    t.is(files.length, 1)
+    t.is(files[0].runtime, 'js')
     t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
     t.true(await pathExists(`${tmpDir}/src/node_modules/test/side-file.js`))
     t.true(normalizedRequires.has('test'))
+
+    // We can only detect native modules when using esbuild.
+    if (bundler !== DEFAULT) {
+      t.deepEqual(files[0].nativeNodeModules, { test: { [modulePath]: '1.0.0' } })
+    }
   },
 )
 
