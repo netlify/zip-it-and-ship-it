@@ -98,7 +98,6 @@ testBundlers(
   'Handles Node module with native bindings (runtime marker module)',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
-    console.log('-> TEST DEBUG', versions.node, semver.lt(versions.node, '10.0.0'))
     if (semver.lt(versions.node, '10.0.0')) {
       t.log('Skipping test for unsupported Node version')
 
