@@ -1,4 +1,4 @@
-# zip-it-and-ship-it
+# ![zip-it-and-ship-it](zip-it-and-ship-it.png)
 
 [![npm version](https://img.shields.io/npm/v/@netlify/zip-it-and-ship-it.svg)](https://npmjs.org/package/@netlify/zip-it-and-ship-it)
 [![Coverage Status](https://codecov.io/gh/netlify/zip-it-and-ship-it/branch/main/graph/badge.svg)](https://codecov.io/gh/netlify/zip-it-and-ship-it)
