@@ -477,25 +477,21 @@ testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (b
   t.deepEqual(result.config, bundler === DEFAULT ? {} : { nodeBundler: outBundler })
 })
 
-testBundlers(
-  'Can list function main files with listFunctions()',
-  [ESBUILD, ESBUILD_ZISI, DEFAULT],
-  async (bundler, t) => {
-    const fixtureDir = `${FIXTURES_DIR}/list`
-    const functions = await listFunctions(fixtureDir)
-    t.deepEqual(
-      functions,
-      [
-        { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
-        { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
-        { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
-        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
-        { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
-        { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
-      ].map(normalizeFiles.bind(null, fixtureDir)),
-    )
-  },
-)
+test('Can list function main files with listFunctions()', async (t) => {
+  const fixtureDir = `${FIXTURES_DIR}/list`
+  const functions = await listFunctions(fixtureDir)
+  t.deepEqual(
+    functions,
+    [
+      { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
+      { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
+      { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
+      { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
+      { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
+      { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
+    ].map(normalizeFiles.bind(null, fixtureDir)),
+  )
+})
 
 testBundlers(
   'Can list all function files with listFunctionsFiles()',
@@ -899,6 +895,28 @@ testBundlers(
     t.true(functionEntry)
   },
 )
+
+test('Generates a bundle for the Node runtime version specified in the `nodeVersion` config property', async (t) => {
+  // Using the optional catch binding feature to assert that the bundle is
+  // respecting the Node version supplied.
+  // - in Node <10 we should see `try {} catch (e) {}`
+  // - in Node >= 10 we should see `try {} catch {}`
+  const { files: node8Files } = await zipNode(t, 'node-module-optional-catch-binding', {
+    opts: { archiveFormat: 'none', config: { '*': { nodeBundler: ESBUILD, nodeVersion: '8.x' } } },
+  })
+
+  const node8Function = await pReadFile(`${node8Files[0].path}/src/function.js`, 'utf8')
+
+  t.regex(node8Function, /catch \(\w+\) {/)
+
+  const { files: node12Files } = await zipNode(t, 'node-module-optional-catch-binding', {
+    opts: { archiveFormat: 'none', config: { '*': { nodeBundler: ESBUILD, nodeVersion: '12.x' } } },
+  })
+
+  const node12Function = await pReadFile(`${node12Files[0].path}/src/function.js`, 'utf8')
+
+  t.regex(node12Function, /catch {/)
+})
 
 test('When generating a directory for a function with `archiveFormat: "none"`, it empties the directory before copying any files', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })

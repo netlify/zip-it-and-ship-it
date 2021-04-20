@@ -1,4 +1,4 @@
-# zip-it-and-ship-it
+# ![zip-it-and-ship-it](zip-it-and-ship-it.png)
 
 [![npm version](https://img.shields.io/npm/v/@netlify/zip-it-and-ship-it.svg)](https://npmjs.org/package/@netlify/zip-it-and-ship-it)
 [![Coverage Status](https://codecov.io/gh/netlify/zip-it-and-ship-it/branch/main/graph/badge.svg)](https://codecov.io/gh/netlify/zip-it-and-ship-it)
@@ -111,6 +111,18 @@ The following properties are accepted:
   The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`, `esbuild_zisi`.
 
   When the value is `esbuild_zisi`, `esbuild` will be used with a fallback to `zisi` in case of an error.
+
+- `nodeVersion`
+
+  _Type_: `string`\
+  _Default value_: `12.x`
+
+  The version of Node.js to use as the compilation target. Possible values:
+
+  - `8.x` (or `nodejs8.x`)
+  - `10.x` (or `nodejs10.x`)
+  - `12.x` (or `nodejs12.x`)
+  - `14.x` (or `nodejs14.x`)
 
 #### parallelLimit
 

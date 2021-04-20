@@ -6,12 +6,14 @@ const { promisify } = require('util')
 const esbuild = require('esbuild')
 const semver = require('semver')
 
+const { getBundlerTarget } = require('./bundler_target')
 const { externalNativeModulesPlugin } = require('./native_modules/plugin')
 
 const pUnlink = promisify(fs.unlink)
 
 const bundleJsFile = async function ({
   additionalModulePaths,
+  config,
   destFilename,
   destFolder,
   externalModules = [],
@@ -40,6 +42,7 @@ const bundleJsFile = async function ({
 
   const externalizedModules = new Set()
   const plugins = [externalNativeModulesPlugin(externalizedModules)]
+  const nodeTarget = getBundlerTarget(config.nodeVersion)
 
   try {
     const data = await buildFunction({
@@ -52,7 +55,7 @@ const bundleJsFile = async function ({
       platform: 'node',
       plugins: supportsAsyncAPI ? plugins : [],
       resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
-      target: ['es2017'],
+      target: [nodeTarget],
     })
 
     return { bundlePath, cleanTempFiles, data, externalizedModules: [...externalizedModules] }
