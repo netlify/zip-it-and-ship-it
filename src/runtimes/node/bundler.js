@@ -54,7 +54,7 @@ const bundleJsFile = async function ({
       nodePaths: additionalModulePaths,
       platform: 'node',
       plugins: supportsAsyncAPI ? plugins : [],
-      resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
+      resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json'],
       target: [nodeTarget],
     })
 

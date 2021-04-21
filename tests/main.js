@@ -788,6 +788,15 @@ testBundlers(
   },
 )
 
+testBundlers('Handles a TypeScript function with imports', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
+  const { files, tmpDir } = await zipFixture(t, 'node-typescript-with-imports', {
+    opts: { config: { '*': { nodeBundler: bundler } } },
+  })
+  await unzipFiles(files)
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+})
+
 testBundlers(
   'Loads a tsconfig.json placed in the same directory as the function',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
