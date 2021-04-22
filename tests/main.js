@@ -59,8 +59,12 @@ test.after.always(async () => {
 const testBundlers = makeTestBundlers(test)
 
 testBundlers('Zips Node.js function files', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
-  const { files } = await zipNode(t, 'simple', { opts: { config: { '*': { nodeBundler: bundler } } } })
-  t.true(files.every(({ runtime }) => runtime === 'js'))
+  const fixtureName = 'simple'
+  const { files } = await zipNode(t, fixtureName, { opts: { config: { '*': { nodeBundler: bundler } } } })
+
+  t.is(files.length, 1)
+  t.is(files[0].runtime, 'js')
+  t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'function.js'))
 })
 
 testBundlers(
@@ -350,17 +354,22 @@ testBundlers(
   'Can target a directory with a main file with the same name',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
-    await zipNode(t, 'directory-handler', { opts: { config: { '*': { nodeBundler: bundler } } } })
+    const fixtureName = 'directory-handler'
+    const { files } = await zipNode(t, fixtureName, { opts: { config: { '*': { nodeBundler: bundler } } } })
+
+    t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'function', 'function.js'))
   },
 )
 
 testBundlers('Can target a directory with an index.js file', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
-  const { files, tmpDir } = await zipFixture(t, 'index-handler', {
+  const fixtureName = 'index-handler'
+  const { files, tmpDir } = await zipFixture(t, fixtureName, {
     opts: { config: { '*': { nodeBundler: bundler } } },
   })
   await unzipFiles(files)
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(require(`${tmpDir}/function.js`))
+  t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'function', 'index.js'))
 })
 
 testBundlers(
@@ -481,7 +490,8 @@ testBundlers('Can reduce parallelism', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (
 
 testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const result = await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
+  const mainFile = join(FIXTURES_DIR, 'simple', 'function.js')
+  const result = await zipFunction(mainFile, tmpDir, {
     config: { '*': { nodeBundler: bundler } },
   })
   const outBundlers = { [ESBUILD_ZISI]: ESBUILD, [DEFAULT]: JS_BUNDLER_ZISI }
@@ -490,6 +500,7 @@ testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (b
   t.is(result.name, 'function')
   t.is(result.runtime, 'js')
   t.is(result.bundler, outBundler)
+  t.is(result.mainFile, mainFile)
   t.deepEqual(result.config, bundler === DEFAULT ? {} : { nodeBundler: outBundler })
 })
 
