@@ -490,7 +490,7 @@ testBundlers('Can reduce parallelism', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (
 
 testBundlers('Can use zipFunction()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const mainFile = `${FIXTURES_DIR}/simple/function.js`
+  const mainFile = join(FIXTURES_DIR, 'simple', 'function.js')
   const result = await zipFunction(mainFile, tmpDir, {
     config: { '*': { nodeBundler: bundler } },
   })
