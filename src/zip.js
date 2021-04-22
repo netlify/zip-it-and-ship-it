@@ -19,13 +19,24 @@ const validateArchiveFormat = (archiveFormat) => {
 
 // Takes the result of zipping a function and formats it for output.
 const formatZipResult = (result) => {
-  const { bundler, bundlerErrors, bundlerWarnings, config = {}, name, nativeNodeModules, path, runtime } = result
+  const {
+    bundler,
+    bundlerErrors,
+    bundlerWarnings,
+    config = {},
+    mainFile,
+    name,
+    nativeNodeModules,
+    path,
+    runtime,
+  } = result
 
   return removeFalsy({
     bundler,
     bundlerErrors,
     bundlerWarnings,
     config,
+    mainFile,
     name,
     nativeNodeModules,
     path,
@@ -66,7 +77,7 @@ const zipFunctions = async function (
         stat: func.stat,
       })
 
-      return { ...zipResult, name: func.name, runtime: func.runtime }
+      return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
     },
     {
       concurrency: parallelLimit,
@@ -109,7 +120,7 @@ const zipFunction = async function (
     pluginsModulesPath,
   })
 
-  return formatZipResult({ ...zipResult, name, runtime })
+  return formatZipResult({ ...zipResult, mainFile, name, runtime })
 }
 
 module.exports = { zipFunction, zipFunctions }
