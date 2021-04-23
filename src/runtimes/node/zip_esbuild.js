@@ -55,6 +55,8 @@ const zipEsbuild = async ({
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
     externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
     bundler: JS_BUNDLER_ESBUILD,
+    includedFiles: config.includedFiles,
+    includedFilesBasePath: config.includedFilesBasePath,
     mainFile,
     srcPath,
     srcDir,

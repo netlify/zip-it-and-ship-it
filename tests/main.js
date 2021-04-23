@@ -1,7 +1,7 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
 const { join, normalize, resolve } = require('path')
-const { platform, versions } = require('process')
+const { env, platform, versions } = require('process')
 const { promisify } = require('util')
 
 const test = require('ava')
@@ -52,7 +52,9 @@ const getZipChecksum = async function (t, bundler) {
 }
 
 test.after.always(async () => {
-  await del(`${tmpdir()}/zip-it-test-bundler-all*`, { force: true })
+  if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
+    await del(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
+  }
 })
 
 // Convenience method for running a test for each JS bundler.
@@ -929,6 +931,40 @@ testBundlers(
     const functionEntry = require(`${files[0].path}/function.js`)
 
     t.true(functionEntry)
+  },
+)
+
+testBundlers(
+  'Includes in the bundle any paths matched by a `included_files` glob',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const fixtureName = 'included_files'
+    const { tmpDir } = await zipNode(t, `${fixtureName}/netlify/functions`, {
+      opts: {
+        config: {
+          '*': {
+            nodeBundler: bundler,
+            includedFiles: ['content/*', '!content/post3.md'],
+            includedFilesBasePath: join(FIXTURES_DIR, fixtureName),
+          },
+        },
+      },
+    })
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const func = require(`${tmpDir}/func1.js`)
+
+    const { body: body1 } = await func.handler({ queryStringParameters: { name: 'post1' } })
+    const { body: body2 } = await func.handler({ queryStringParameters: { name: 'post2' } })
+    const { body: body3 } = await func.handler({ queryStringParameters: { name: 'post3' } })
+
+    t.true(body1.includes('Hello from the other side'))
+    t.true(body2.includes("I must've called a thousand times"))
+    t.true(body3.includes('Uh-oh'))
+
+    t.true(await pathExists(`${tmpDir}/src/content/post1.md`))
+    t.true(await pathExists(`${tmpDir}/src/content/post2.md`))
+    t.false(await pathExists(`${tmpDir}/src/content/post3.md`))
   },
 )
 
