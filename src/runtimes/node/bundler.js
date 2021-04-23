@@ -58,7 +58,7 @@ const bundleJsFile = async function ({
       resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json'],
       target: [nodeTarget],
     })
-    const inputs = Object.keys(data.metafile.inputs).map((path) => resolve(process.cwd(), path))
+    const inputs = Object.keys(data.metafile.inputs).map((path) => resolve(path))
 
     return { bundlePath, cleanTempFiles, inputs, nativeNodeModules, warnings: data.warnings }
   } catch (error) {
