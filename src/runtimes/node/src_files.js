@@ -34,7 +34,7 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
 
   // `pathGroups` is an array containing the paths for each expression in the
   // `include` array. We flatten it into a single dimension.
-  const paths = pathGroups.reduce((acc, group) => [...acc, ...group], [])
+  const paths = pathGroups.flat()
 
   return [...new Set(paths)]
 }
