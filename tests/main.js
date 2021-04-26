@@ -954,6 +954,36 @@ test('Generates a bundle for the Node runtime version specified in the `nodeVers
   t.regex(node12Function, /catch {/)
 })
 
+testBundlers(
+  'Returns an `inputs` property with all the imported paths',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const fixtureName = 'node-module-and-local-imports'
+    const { files, tmpDir } = await zipNode(t, fixtureName, {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+
+    t.true(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'function.js')))
+    t.true(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'lib', 'file1.js')))
+    t.true(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'lib2', 'file2.js')))
+    t.true(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'node_modules', 'test', 'index.js')))
+    t.true(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'node_modules', 'test-child', 'index.js')))
+
+    t.false(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'lib2', 'unused_file.js')))
+
+    // Tree-shaking of node modules only happens with esbuild.
+    if (files[0].bundler === 'esbuild') {
+      t.false(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'node_modules', 'test', 'unused_file.js')))
+      t.false(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'node_modules', 'test-child', 'unused_file.js')))
+    }
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const functionEntry = require(`${tmpDir}/function.js`)
+
+    t.true(functionEntry)
+  },
+)
+
 test('When generating a directory for a function with `archiveFormat: "none"`, it empties the directory before copying any files', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const functionDirectory = join(tmpDir, 'function')

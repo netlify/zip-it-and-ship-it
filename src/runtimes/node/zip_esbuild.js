@@ -40,7 +40,7 @@ const zipEsbuild = async ({
   stat,
 }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
-  const { bundlePath, data, cleanTempFiles, nativeNodeModules = {} } = await bundleJsFile({
+  const { bundlePath, cleanTempFiles, inputs, nativeNodeModules = {}, warnings } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     config,
     destFilename: filename,
@@ -48,10 +48,9 @@ const zipEsbuild = async ({
     externalModules,
     ignoredModules,
     name,
-    srcDir,
     srcFile: mainFile,
   })
-  const bundlerWarnings = data.warnings.length === 0 ? undefined : data.warnings
+  const bundlerWarnings = warnings.length === 0 ? undefined : warnings
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
     externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
     bundler: JS_BUNDLER_ESBUILD,
@@ -92,7 +91,7 @@ const zipEsbuild = async ({
       srcFiles: [...supportingSrcFiles, bundlePath],
     })
 
-    return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, config, nativeNodeModules, path }
+    return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, config, inputs, nativeNodeModules, path }
   } finally {
     await cleanTempFiles()
   }
