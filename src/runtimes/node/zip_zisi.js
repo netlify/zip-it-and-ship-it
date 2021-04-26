@@ -42,7 +42,7 @@ const zipZisi = async ({
     srcFiles,
   })
 
-  return { bundler: JS_BUNDLER_ZISI, config, path }
+  return { bundler: JS_BUNDLER_ZISI, config, inputs: srcFiles, path }
 }
 
 module.exports = { zipZisi }

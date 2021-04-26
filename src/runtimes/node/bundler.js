@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { basename, extname, join } = require('path')
+const { basename, extname, join, resolve } = require('path')
 const process = require('process')
 const { promisify } = require('util')
 
@@ -50,15 +50,17 @@ const bundleJsFile = async function ({
       entryPoints: [srcFile],
       external,
       logLevel: 'warning',
-      outfile: bundlePath,
+      metafile: true,
       nodePaths: additionalModulePaths,
+      outfile: bundlePath,
       platform: 'node',
       plugins: supportsAsyncAPI ? plugins : [],
       resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json'],
       target: [nodeTarget],
     })
+    const inputs = Object.keys(data.metafile.inputs).map((path) => resolve(path))
 
-    return { bundlePath, cleanTempFiles, data, nativeNodeModules }
+    return { bundlePath, cleanTempFiles, inputs, nativeNodeModules, warnings: data.warnings }
   } catch (error) {
     error.customErrorInfo = { type: 'functionsBundling', location: { functionName: name } }
 
