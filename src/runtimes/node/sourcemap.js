@@ -23,6 +23,7 @@ const processSourcemap = async ({ pathFormat: pathFormatConfig, sourcemapPath, s
   const pathFormat = getPathFormat(pathFormatConfig)
   const data = await pReadFile(sourcemapPath, 'utf8')
   const sourcemap = JSON.parse(data)
+  console.log('sources:', sourcemap.sources)
   const newSources = sourcemap.sources.map((path) => {
     const absolutePath = resolve(path)
 
@@ -34,6 +35,7 @@ const processSourcemap = async ({ pathFormat: pathFormatConfig, sourcemapPath, s
 
     return relativePath
   })
+  console.log('newSources:', newSources)
   const newSourcemap = {
     ...sourcemap,
     sources: newSources,
