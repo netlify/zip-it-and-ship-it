@@ -1149,6 +1149,7 @@ test('Generates a sourcemap with absolute paths if `nodeSourcemap` is set and `n
 
   console.log('sources raw:', sourcemapData.sources)
   console.log('sources:', sources)
+  console.log('fixture dir raw:', FIXTURES_DIR, fixtureName)
   console.log('fixture dir:', unixify(`${FIXTURES_DIR}/${fixtureName}/node_modules/test-child/index.js`))
 
   t.true(sources.has(unixify(`${FIXTURES_DIR}/${fixtureName}/node_modules/test-child/index.js`)))
