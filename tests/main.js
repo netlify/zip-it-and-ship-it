@@ -1121,40 +1121,18 @@ test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) =>
   t.false(functionSource.includes('sourceMappingURL'))
 })
 
-test('Generates a sourcemap with relative paths if `nodeSourcemap` is set', async (t) => {
+test('Generates a sourcemap if `nodeSourcemap` is set', async (t) => {
   const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
     opts: { config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true } } },
   })
   const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
-  const sourcemapData = JSON.parse(sourcemap)
-  const sources = new Set(sourcemapData.sources.map(unixify))
+  const { sourceRoot, sources } = JSON.parse(sourcemap)
 
-  t.true(sources.has('node_modules/test-child/index.js'))
-  t.true(sources.has('node_modules/test/index.js'))
-  t.true(sources.has('lib2/file2.js'))
-  t.true(sources.has('lib/file1.js'))
-  t.true(sources.has('function.js'))
-})
+  await Promise.all(
+    sources.map(async (source) => {
+      const absolutePath = resolve(sourceRoot, source)
 
-test('Generates a sourcemap with absolute paths if `nodeSourcemap` is set and `nodeSourcemapPathFormat` is set to `absolute`', async (t) => {
-  const fixtureName = 'node-module-and-local-imports'
-  const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
-    opts: {
-      config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true, nodeSourcemapPathFormat: 'absolute' } },
-    },
-  })
-  const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
-  const sourcemapData = JSON.parse(sourcemap)
-  const sources = new Set(sourcemapData.sources.map(unixify))
-
-  console.log('sources raw:', sourcemapData.sources)
-  console.log('sources:', sources)
-  console.log('fixture dir raw:', FIXTURES_DIR, fixtureName)
-  console.log('fixture dir:', unixify(`${FIXTURES_DIR}/${fixtureName}/node_modules/test-child/index.js`))
-
-  t.true(sources.has(unixify(`${FIXTURES_DIR}/${fixtureName}/node_modules/test-child/index.js`)))
-  t.true(sources.has(unixify(`${FIXTURES_DIR}/${fixtureName}/node_modules/test/index.js`)))
-  t.true(sources.has(unixify(`${FIXTURES_DIR}/${fixtureName}/lib2/file2.js`)))
-  t.true(sources.has(unixify(`${FIXTURES_DIR}/${fixtureName}/lib/file1.js`)))
-  t.true(sources.has(unixify(`${FIXTURES_DIR}/${fixtureName}/function.js`)))
+      t.true(await pathExists(absolutePath))
+    }),
+  )
 })

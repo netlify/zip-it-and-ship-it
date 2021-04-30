@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { basename, extname, join, resolve } = require('path')
+const { basename, dirname, extname, join, resolve } = require('path')
 const process = require('process')
 const { promisify } = require('util')
 
@@ -8,7 +8,6 @@ const semver = require('semver')
 
 const { getBundlerTarget } = require('./bundler_target')
 const { externalNativeModulesPlugin } = require('./native_modules/plugin')
-const { processSourcemap } = require('./sourcemap')
 
 const pUnlink = promisify(fs.unlink)
 
@@ -27,7 +26,6 @@ const bundleJsFile = async function ({
   externalModules = [],
   ignoredModules = [],
   name,
-  srcDir,
   srcFile,
 }) {
   // De-duping external and ignored modules.
@@ -51,16 +49,12 @@ const bundleJsFile = async function ({
       plugins: supportsAsyncAPI ? plugins : [],
       resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json'],
       sourcemap: Boolean(config.nodeSourcemap),
+      sourceRoot: dirname(bundlePath),
       target: [nodeTarget],
     })
     const sourcemapPath = getSourcemapPath(metafile.outputs)
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction(bundlePath, sourcemapPath)
-
-    // esbuild produces a sourcemap with paths relative to the main destination
-    // file, which in our case lives in a temporary directory, making the paths
-    // useless. We rewrite those paths.
-    await processSourcemap({ bundlePath, pathFormat: config.nodeSourcemapPathFormat, sourcemapPath, srcDir })
 
     return {
       bundlePath,
