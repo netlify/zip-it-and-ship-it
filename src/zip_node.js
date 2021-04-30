@@ -20,7 +20,7 @@ const pWriteFile = promisify(fs.writeFile)
 const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2
 
 const createDirectory = async function ({
-  aliases = {},
+  aliases = new Map(),
   basePath,
   destFolder,
   extension,
@@ -47,7 +47,7 @@ const createDirectory = async function ({
   await pMap(
     srcFiles,
     (srcFile) => {
-      const srcPath = aliases[srcFile] || srcFile
+      const srcPath = aliases.get(srcFile) || srcFile
       const normalizedSrcPath = normalizeFilePath(srcPath, basePath, pluginsModulesPath)
       const destPath = join(functionFolder, normalizedSrcPath)
 
@@ -118,9 +118,10 @@ const getEntryFile = ({ commonPrefix, filename, mainFile }) => {
   }
 }
 
-const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat, aliases = {} }) {
-  const filename = aliases[srcFile] || srcFile
+const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive, stat, aliases = new Map() }) {
+  const filename = aliases.get(srcFile) || srcFile
   const normalizedFilename = normalizeFilePath(filename, commonPrefix, pluginsModulesPath)
+
   addZipFile(archive, srcFile, normalizedFilename, stat)
 }
 

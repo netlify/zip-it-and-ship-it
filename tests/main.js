@@ -1108,3 +1108,57 @@ test('Does not zip Go function files', async (t) => {
     ),
   )
 })
+
+test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
+    opts: { config: { '*': { nodeBundler: ESBUILD } } },
+  })
+
+  t.false(await pathExists(`${tmpDir}/src/function.js.map`))
+
+  const functionSource = await pReadFile(`${tmpDir}/src/function.js`, 'utf8')
+
+  t.false(functionSource.includes('sourceMappingURL'))
+})
+
+test('Generates a sourcemap with relative paths if `nodeSourcemap` is set', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
+    opts: { config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true } } },
+  })
+  const sourcemapData = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
+  const sourcemap = JSON.parse(sourcemapData)
+  const expectedSources = [
+    'node_modules/test-child/index.js',
+    'node_modules/test/index.js',
+    'lib2/file2.js',
+    'lib/file1.js',
+    'function.js',
+  ]
+
+  expectedSources.forEach((source) => {
+    t.true(sourcemap.sources.includes(source))
+  })
+})
+
+test('Generates a sourcemap with absolute paths if `nodeSourcemap` is set and `nodeSourcemapPathFormat` is set to `absolute`', async (t) => {
+  const fixtureName = 'node-module-and-local-imports'
+  const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
+    opts: {
+      config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true, nodeSourcemapPathFormat: 'absolute' } },
+    },
+  })
+  console.log(tmpDir)
+  const sourcemapData = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
+  const sourcemap = JSON.parse(sourcemapData)
+  const expectedSources = [
+    join(FIXTURES_DIR, fixtureName, 'node_modules/test-child/index.js'),
+    join(FIXTURES_DIR, fixtureName, 'node_modules/test/index.js'),
+    join(FIXTURES_DIR, fixtureName, 'lib2/file2.js'),
+    join(FIXTURES_DIR, fixtureName, 'lib/file1.js'),
+    join(FIXTURES_DIR, fixtureName, 'function.js'),
+  ]
+
+  expectedSources.forEach((source) => {
+    t.true(sourcemap.sources.includes(source))
+  })
+})
