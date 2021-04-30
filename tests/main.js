@@ -1,7 +1,7 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
 const { join, normalize, resolve } = require('path')
-const { cwd, env, platform, versions } = require('process')
+const { env, platform, versions } = require('process')
 const { promisify } = require('util')
 
 const test = require('ava')
@@ -1128,9 +1128,6 @@ test('Generates a sourcemap with relative paths if `nodeSourcemap` is set', asyn
   const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
   const { sources } = JSON.parse(sourcemap)
 
-  console.log('relative:', sources)
-  console.log('cwd:', cwd())
-
   t.true(sources.includes('node_modules/test-child/index.js'))
   t.true(sources.includes('node_modules/test/index.js'))
   t.true(sources.includes('lib2/file2.js'))
@@ -1147,10 +1144,6 @@ test('Generates a sourcemap with absolute paths if `nodeSourcemap` is set and `n
   })
   const sourcemapData = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
   const { sources } = JSON.parse(sourcemapData)
-
-  console.log('absolute:', sources)
-  console.log('cwd:', cwd())
-  console.log('fixture:', join(FIXTURES_DIR, fixtureName))
 
   t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'node_modules/test-child/index.js')))
   t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'node_modules/test/index.js')))

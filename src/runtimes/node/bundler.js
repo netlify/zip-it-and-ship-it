@@ -60,7 +60,7 @@ const bundleJsFile = async function ({
     // esbuild produces a sourcemap with paths relative to the main destination
     // file, which in our case lives in a temporary directory, making the paths
     // useless. We rewrite those paths.
-    await processSourcemap({ pathFormat: config.nodeSourcemapPathFormat, sourcemapPath, srcDir })
+    await processSourcemap({ bundlePath, pathFormat: config.nodeSourcemapPathFormat, sourcemapPath, srcDir })
 
     return {
       bundlePath,

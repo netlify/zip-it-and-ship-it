@@ -1,5 +1,5 @@
 const { readFile, writeFile } = require('fs')
-const { relative, resolve } = require('path')
+const { dirname, relative, resolve } = require('path')
 const { promisify } = require('util')
 
 const pReadFile = promisify(readFile)
@@ -15,17 +15,17 @@ const getPathFormat = (configProperty) =>
 // the paths in `sources` transformed based on the value of `pathFormat`.
 // - If set to `absolute`, absolute paths will be used;
 // - If set to `relative`, the paths will be relative to `srcDir`.
-const processSourcemap = async ({ pathFormat: pathFormatConfig, sourcemapPath, srcDir }) => {
+const processSourcemap = async ({ bundlePath, pathFormat: pathFormatConfig, sourcemapPath, srcDir }) => {
   if (!sourcemapPath) {
     return
   }
 
+  const bundleDir = dirname(bundlePath)
   const pathFormat = getPathFormat(pathFormatConfig)
   const data = await pReadFile(sourcemapPath, 'utf8')
   const sourcemap = JSON.parse(data)
-  console.log('sources:', sourcemap.sources)
   const newSources = sourcemap.sources.map((path) => {
-    const absolutePath = resolve(path)
+    const absolutePath = resolve(bundleDir, path)
 
     if (pathFormat === PATH_FORMAT_ABSOLUTE) {
       return absolutePath
@@ -35,7 +35,6 @@ const processSourcemap = async ({ pathFormat: pathFormatConfig, sourcemapPath, s
 
     return relativePath
   })
-  console.log('newSources:', newSources)
   const newSourcemap = {
     ...sourcemap,
     sources: newSources,
