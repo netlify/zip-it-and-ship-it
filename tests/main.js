@@ -1121,18 +1121,20 @@ test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) =>
   t.false(functionSource.includes('sourceMappingURL'))
 })
 
-test('Generates a sourcemap if `nodeSourcemap` is set', async (t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
-    opts: { config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true } } },
+if (platform !== 'win32') {
+  test('Generates a sourcemap if `nodeSourcemap` is set', async (t) => {
+    const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
+      opts: { config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true } } },
+    })
+    const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
+    const { sourceRoot, sources } = JSON.parse(sourcemap)
+
+    await Promise.all(
+      sources.map(async (source) => {
+        const absolutePath = resolve(sourceRoot, source)
+
+        t.true(await pathExists(absolutePath))
+      }),
+    )
   })
-  const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
-  const { sourceRoot, sources } = JSON.parse(sourcemap)
-
-  await Promise.all(
-    sources.map(async (source) => {
-      const absolutePath = resolve(sourceRoot, source)
-
-      t.true(await pathExists(absolutePath))
-    }),
-  )
-})
+}
