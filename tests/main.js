@@ -1125,19 +1125,14 @@ test('Generates a sourcemap with relative paths if `nodeSourcemap` is set', asyn
   const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
     opts: { config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true } } },
   })
-  const sourcemapData = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
-  const sourcemap = JSON.parse(sourcemapData)
-  const expectedSources = [
-    'node_modules/test-child/index.js',
-    'node_modules/test/index.js',
-    'lib2/file2.js',
-    'lib/file1.js',
-    'function.js',
-  ]
+  const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
+  const { sources } = JSON.parse(sourcemap)
 
-  expectedSources.forEach((source) => {
-    t.true(sourcemap.sources.includes(source))
-  })
+  t.true(sources.includes('node_modules/test-child/index.js'))
+  t.true(sources.includes('node_modules/test/index.js'))
+  t.true(sources.includes('lib2/file2.js'))
+  t.true(sources.includes('lib/file1.js'))
+  t.true(sources.includes('function.js'))
 })
 
 test('Generates a sourcemap with absolute paths if `nodeSourcemap` is set and `nodeSourcemapPathFormat` is set to `absolute`', async (t) => {
@@ -1147,18 +1142,12 @@ test('Generates a sourcemap with absolute paths if `nodeSourcemap` is set and `n
       config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true, nodeSourcemapPathFormat: 'absolute' } },
     },
   })
-  console.log(tmpDir)
   const sourcemapData = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
-  const sourcemap = JSON.parse(sourcemapData)
-  const expectedSources = [
-    join(FIXTURES_DIR, fixtureName, 'node_modules/test-child/index.js'),
-    join(FIXTURES_DIR, fixtureName, 'node_modules/test/index.js'),
-    join(FIXTURES_DIR, fixtureName, 'lib2/file2.js'),
-    join(FIXTURES_DIR, fixtureName, 'lib/file1.js'),
-    join(FIXTURES_DIR, fixtureName, 'function.js'),
-  ]
+  const { sources } = JSON.parse(sourcemapData)
 
-  expectedSources.forEach((source) => {
-    t.true(sourcemap.sources.includes(source))
-  })
+  t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'node_modules/test-child/index.js')))
+  t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'node_modules/test/index.js')))
+  t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'lib2/file2.js')))
+  t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'lib/file1.js')))
+  t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'function.js')))
 })
