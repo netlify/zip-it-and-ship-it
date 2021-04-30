@@ -1128,6 +1128,8 @@ test('Generates a sourcemap with relative paths if `nodeSourcemap` is set', asyn
   const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
   const { sources } = JSON.parse(sourcemap)
 
+  console.log('relative:', sources)
+
   t.true(sources.includes('node_modules/test-child/index.js'))
   t.true(sources.includes('node_modules/test/index.js'))
   t.true(sources.includes('lib2/file2.js'))
@@ -1144,6 +1146,8 @@ test('Generates a sourcemap with absolute paths if `nodeSourcemap` is set and `n
   })
   const sourcemapData = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
   const { sources } = JSON.parse(sourcemapData)
+
+  console.log('absolute:', sources)
 
   t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'node_modules/test-child/index.js')))
   t.true(sources.includes(join(FIXTURES_DIR, fixtureName, 'node_modules/test/index.js')))
