@@ -1,8 +1,15 @@
-const { readdir } = require('fs')
+const { readdir, unlink } = require('fs')
 const { join } = require('path')
 const { promisify } = require('util')
 
 const pReaddir = promisify(readdir)
+const pUnlink = promisify(unlink)
+
+const safeUnlink = async (path) => {
+  try {
+    await pUnlink(path)
+  } catch (_) {}
+}
 
 const listFunctionsDirectory = async function (srcFolder) {
   try {
@@ -14,4 +21,4 @@ const listFunctionsDirectory = async function (srcFolder) {
   }
 }
 
-module.exports = { listFunctionsDirectory }
+module.exports = { listFunctionsDirectory, safeUnlink }

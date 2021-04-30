@@ -1,15 +1,13 @@
-const fs = require('fs')
 const { basename, dirname, extname, join, resolve } = require('path')
 const process = require('process')
-const { promisify } = require('util')
 
 const esbuild = require('esbuild')
 const semver = require('semver')
 
+const { safeUnlink } = require('../../utils/fs')
+
 const { getBundlerTarget } = require('./bundler_target')
 const { externalNativeModulesPlugin } = require('./native_modules/plugin')
-
-const pUnlink = promisify(fs.unlink)
 
 const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
 
@@ -71,16 +69,8 @@ const bundleJsFile = async function ({
   }
 }
 
-const getCleanupFunction = (bundlePath, sourcemapPath) => async () => {
-  try {
-    await pUnlink(bundlePath)
-
-    if (sourcemapPath) {
-      await pUnlink(sourcemapPath)
-    }
-  } catch (_) {
-    // no-op
-  }
+const getCleanupFunction = (...paths) => async () => {
+  await Promise.all(paths.filter(Boolean).map(safeUnlink))
 }
 
 const getSourcemapPath = (outputs) => {
