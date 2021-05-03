@@ -1108,3 +1108,33 @@ test('Does not zip Go function files', async (t) => {
     ),
   )
 })
+
+test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
+    opts: { config: { '*': { nodeBundler: ESBUILD } } },
+  })
+
+  t.false(await pathExists(`${tmpDir}/src/function.js.map`))
+
+  const functionSource = await pReadFile(`${tmpDir}/src/function.js`, 'utf8')
+
+  t.false(functionSource.includes('sourceMappingURL'))
+})
+
+if (platform !== 'win32') {
+  test('Generates a sourcemap if `nodeSourcemap` is set', async (t) => {
+    const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
+      opts: { config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true } } },
+    })
+    const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
+    const { sourceRoot, sources } = JSON.parse(sourcemap)
+
+    await Promise.all(
+      sources.map(async (source) => {
+        const absolutePath = resolve(sourceRoot, source)
+
+        t.true(await pathExists(absolutePath))
+      }),
+    )
+  })
+}

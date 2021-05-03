@@ -1,15 +1,20 @@
-const fs = require('fs')
-const { basename, extname, join, resolve } = require('path')
+const { basename, dirname, extname, join, resolve } = require('path')
 const process = require('process')
-const { promisify } = require('util')
 
 const esbuild = require('esbuild')
 const semver = require('semver')
 
+const { safeUnlink } = require('../../utils/fs')
+
 const { getBundlerTarget } = require('./bundler_target')
 const { externalNativeModulesPlugin } = require('./native_modules/plugin')
 
-const pUnlink = promisify(fs.unlink)
+const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
+
+// esbuild's async build API throws on Node 8.x, so we switch to the sync
+// version for that version range.
+// eslint-disable-next-line node/no-sync
+const buildFunction = supportsAsyncAPI ? esbuild.build : esbuild.buildSync
 
 const bundleJsFile = async function ({
   additionalModulePaths,
@@ -25,27 +30,12 @@ const bundleJsFile = async function ({
   const external = [...new Set([...externalModules, ...ignoredModules])]
   const jsFilename = `${basename(destFilename, extname(destFilename))}.js`
   const bundlePath = join(destFolder, jsFilename)
-
-  // esbuild's async build API throws on Node 8.x, so we switch to the sync
-  // version for that version range.
-  const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
-
-  // eslint-disable-next-line node/no-sync
-  const buildFunction = supportsAsyncAPI ? esbuild.build : esbuild.buildSync
-  const cleanTempFiles = async () => {
-    try {
-      await pUnlink(bundlePath)
-    } catch (_) {
-      // no-op
-    }
-  }
-
   const nativeNodeModules = {}
   const plugins = [externalNativeModulesPlugin(nativeNodeModules)]
   const nodeTarget = getBundlerTarget(config.nodeVersion)
 
   try {
-    const data = await buildFunction({
+    const { metafile, warnings } = await buildFunction({
       bundle: true,
       entryPoints: [srcFile],
       external,
@@ -56,15 +46,38 @@ const bundleJsFile = async function ({
       platform: 'node',
       plugins: supportsAsyncAPI ? plugins : [],
       resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json'],
+      sourcemap: Boolean(config.nodeSourcemap),
+      sourceRoot: dirname(bundlePath),
       target: [nodeTarget],
     })
-    const inputs = Object.keys(data.metafile.inputs).map((path) => resolve(path))
+    const sourcemapPath = getSourcemapPath(metafile.outputs)
+    const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
+    const cleanTempFiles = getCleanupFunction(bundlePath, sourcemapPath)
 
-    return { bundlePath, cleanTempFiles, inputs, nativeNodeModules, warnings: data.warnings }
+    return {
+      bundlePath,
+      cleanTempFiles,
+      inputs,
+      nativeNodeModules,
+      sourcemapPath,
+      warnings,
+    }
   } catch (error) {
     error.customErrorInfo = { type: 'functionsBundling', location: { functionName: name } }
 
     throw error
+  }
+}
+
+const getCleanupFunction = (...paths) => async () => {
+  await Promise.all(paths.filter(Boolean).map(safeUnlink))
+}
+
+const getSourcemapPath = (outputs) => {
+  const relativePath = Object.keys(outputs).find((path) => extname(path) === '.map')
+
+  if (relativePath) {
+    return resolve(relativePath)
   }
 }
 

@@ -1,4 +1,4 @@
-const { dirname, format, normalize, parse } = require('path')
+const { dirname, format, join, normalize, relative, parse } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 
@@ -8,6 +8,19 @@ const { zipNodeJs } = require('../../zip_node')
 
 const { bundleJsFile } = require('./bundler')
 const { getSrcFilesAndExternalModules } = require('./src_files')
+
+const getAliases = ({ bundlePath, mainFile, sourcemapPath, srcDir }) => {
+  const aliases = new Map([[bundlePath, mainFile]])
+
+  if (sourcemapPath !== undefined) {
+    const bundleDirectory = dirname(bundlePath)
+    const relativeSourcemapPath = relative(bundleDirectory, sourcemapPath)
+
+    aliases.set(sourcemapPath, join(srcDir, relativeSourcemapPath))
+  }
+
+  return aliases
+}
 
 // Convenience method for retrieving external and ignored modules from
 // different places and merging them together.
@@ -40,7 +53,7 @@ const zipEsbuild = async ({
   stat,
 }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
-  const { bundlePath, cleanTempFiles, inputs, nativeNodeModules = {}, warnings } = await bundleJsFile({
+  const { bundlePath, cleanTempFiles, inputs, nativeNodeModules = {}, sourcemapPath, warnings } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     config,
     destFilename: filename,
@@ -73,10 +86,7 @@ const zipEsbuild = async ({
 
   // We're adding the bundled file to the zip, but we want it to have the same
   // name and path as the original, unbundled file. For this, we use an alias.
-  const aliases = {
-    [bundlePath]: normalizedMainFile,
-  }
-
+  const aliases = getAliases({ bundlePath, mainFile: normalizedMainFile, sourcemapPath, srcDir })
   const dirnames = supportingSrcFiles.map((filePath) => normalize(dirname(filePath)))
   const basePath = commonPathPrefix([...dirnames, normalize(dirname(mainFile))])
 
@@ -90,7 +100,7 @@ const zipEsbuild = async ({
       filename,
       mainFile: normalizedMainFile,
       pluginsModulesPath,
-      srcFiles: [...supportingSrcFiles, bundlePath],
+      srcFiles: [...supportingSrcFiles, bundlePath, ...(sourcemapPath ? [sourcemapPath] : [])],
     })
 
     return { bundler: JS_BUNDLER_ESBUILD, bundlerWarnings, config, inputs, nativeNodeModules, path }
