@@ -34,6 +34,11 @@ const bundleJsFile = async function ({
   const plugins = [externalNativeModulesPlugin(nativeNodeModules)]
   const nodeTarget = getBundlerTarget(config.nodeVersion)
 
+  // esbuild will format `sources` relative to the sourcemap file, which is a
+  // sibling of `bundlePath`. We use `sourceRoot` to establish that relation.
+  // They are URLs, so even on Windows they should use forward slashes.
+  const sourceRoot = dirname(bundlePath).replace(/\\/g, '/')
+
   try {
     const { metafile, warnings } = await buildFunction({
       bundle: true,
@@ -47,7 +52,7 @@ const bundleJsFile = async function ({
       plugins: supportsAsyncAPI ? plugins : [],
       resolveExtensions: ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json'],
       sourcemap: Boolean(config.nodeSourcemap),
-      sourceRoot: dirname(bundlePath),
+      sourceRoot,
       target: [nodeTarget],
     })
     const sourcemapPath = getSourcemapPath(metafile.outputs)
