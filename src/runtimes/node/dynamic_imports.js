@@ -9,15 +9,15 @@ const getModulesWithDynamicImports = async (warnings) => {
     // only way we have to single out this case.
     .filter(({ text }) => text.includes('will not be bundled because the argument is not a string literal'))
     .map(async ({ location }) => {
-      const directory = dirname(location.file)
-
       try {
+        const directory = dirname(location.file)
         const packageJsonPath = await findUp('package.json', { cwd: directory })
         const { name } = await readPackageJson(packageJsonPath)
 
         return name
       } catch (_) {
-        // no-op
+        // We couldn't find a `package.json` or we couldn't get a package name
+        // from it. Either way, it's a no-op.
       }
     })
   const packageNames = await Promise.all(dynamicImportWarnings)
