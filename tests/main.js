@@ -1063,6 +1063,16 @@ test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) =>
   }
 })
 
+test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async (t) => {
+  const { files } = await zipNode(t, 'node-module-dynamic-import', {
+    opts: { config: { '*': { nodeBundler: ESBUILD } } },
+  })
+
+  t.is(files[0].nodeModulesWithDynamicImports.length, 2)
+  t.true(files[0].nodeModulesWithDynamicImports.includes('@org/test'))
+  t.true(files[0].nodeModulesWithDynamicImports.includes('test-two'))
+})
+
 test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
   const { files, tmpDir } = await zipNode(t, 'local-node-module')
   const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })

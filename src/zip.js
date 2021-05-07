@@ -28,6 +28,7 @@ const formatZipResult = (result) => {
     mainFile,
     name,
     nativeNodeModules,
+    nodeModulesWithDynamicImports,
     path,
     runtime,
   } = result
@@ -41,6 +42,7 @@ const formatZipResult = (result) => {
     mainFile,
     name,
     nativeNodeModules,
+    nodeModulesWithDynamicImports,
     path,
     runtime: runtime.name,
   })
