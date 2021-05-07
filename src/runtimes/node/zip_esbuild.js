@@ -69,6 +69,7 @@ const zipEsbuild = async ({
     externalModules,
     ignoredModules,
     name,
+    srcDir,
     srcFile: mainFile,
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings

@@ -26,6 +26,7 @@ const bundleJsFile = async function ({
   externalModules = [],
   ignoredModules = [],
   name,
+  srcDir,
   srcFile,
 }) {
   // De-duping external and ignored modules.
@@ -60,7 +61,7 @@ const bundleJsFile = async function ({
     const sourcemapPath = getSourcemapPath(metafile.outputs)
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction(bundlePath, sourcemapPath)
-    const nodeModulesWithDynamicImports = await getModulesWithDynamicImports(warnings)
+    const nodeModulesWithDynamicImports = await getModulesWithDynamicImports({ srcDir, warnings })
 
     return {
       bundlePath,

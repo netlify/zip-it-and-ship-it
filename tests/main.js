@@ -1073,6 +1073,14 @@ test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDy
   t.true(files[0].nodeModulesWithDynamicImports.includes('test-two'))
 })
 
+test('Returns an empty list of modules with dynamic imports if the modules are missing a `package.json`', async (t) => {
+  const { files } = await zipNode(t, 'node-module-dynamic-import-invalid', {
+    opts: { config: { '*': { nodeBundler: ESBUILD } } },
+  })
+
+  t.is(files[0].nodeModulesWithDynamicImports.length, 0)
+})
+
 test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
   const { files, tmpDir } = await zipNode(t, 'local-node-module')
   const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
