@@ -79,11 +79,9 @@ const bundleJsFile = async function ({
   }
 }
 
-const getCleanupFunction =
-  (...paths) =>
-  async () => {
-    await Promise.all(paths.filter(Boolean).map(safeUnlink))
-  }
+const getCleanupFunction = (...paths) => async () => {
+  await Promise.all(paths.filter(Boolean).map(safeUnlink))
+}
 
 const getSourcemapPath = (outputs) => {
   const relativePath = Object.keys(outputs).find((path) => extname(path) === '.map')
