@@ -1,0 +1,7 @@
+{
+  "name": "node-module-dynamic-import",
+  "version": "1.0.0",
+  "dependencies": {
+    "@org/test": "1.0.0"
+  }
+}

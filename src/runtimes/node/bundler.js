@@ -7,6 +7,7 @@ const semver = require('semver')
 const { safeUnlink } = require('../../utils/fs')
 
 const { getBundlerTarget } = require('./bundler_target')
+const { getModulesWithDynamicImports } = require('./dynamic_imports')
 const { externalNativeModulesPlugin } = require('./native_modules/plugin')
 
 const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
@@ -16,6 +17,7 @@ const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
 // eslint-disable-next-line node/no-sync
 const buildFunction = supportsAsyncAPI ? esbuild.build : esbuild.buildSync
 
+// eslint-disable-next-line max-statements
 const bundleJsFile = async function ({
   additionalModulePaths,
   config,
@@ -24,6 +26,7 @@ const bundleJsFile = async function ({
   externalModules = [],
   ignoredModules = [],
   name,
+  srcDir,
   srcFile,
 }) {
   // De-duping external and ignored modules.
@@ -58,12 +61,14 @@ const bundleJsFile = async function ({
     const sourcemapPath = getSourcemapPath(metafile.outputs)
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction(bundlePath, sourcemapPath)
+    const nodeModulesWithDynamicImports = await getModulesWithDynamicImports({ srcDir, warnings })
 
     return {
       bundlePath,
       cleanTempFiles,
       inputs,
       nativeNodeModules,
+      nodeModulesWithDynamicImports,
       sourcemapPath,
       warnings,
     }
