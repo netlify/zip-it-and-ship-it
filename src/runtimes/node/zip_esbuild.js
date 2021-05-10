@@ -25,14 +25,10 @@ const getAliases = ({ bundlePath, mainFile, sourcemapPath, srcDir }) => {
 // Convenience method for retrieving external and ignored modules from
 // different places and merging them together.
 const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
-  const {
-    externalNodeModules: externalModulesFromConfig = [],
-    ignoredNodeModules: ignoredModulesFromConfig = [],
-  } = config
-  const {
-    externalModules: externalModulesFromSpecialCases,
-    ignoredModules: ignoredModulesFromSpecialCases,
-  } = await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
+  const { externalNodeModules: externalModulesFromConfig = [], ignoredNodeModules: ignoredModulesFromConfig = [] } =
+    config
+  const { externalModules: externalModulesFromSpecialCases, ignoredModules: ignoredModulesFromSpecialCases } =
+    await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
   const externalModules = [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])]
   const ignoredModules = [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases]
 
@@ -53,7 +49,14 @@ const zipEsbuild = async ({
   stat,
 }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
-  const { bundlePath, cleanTempFiles, inputs, nativeNodeModules = {}, sourcemapPath, warnings } = await bundleJsFile({
+  const {
+    bundlePath,
+    cleanTempFiles,
+    inputs,
+    nativeNodeModules = {},
+    sourcemapPath,
+    warnings,
+  } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     config,
     destFilename: filename,
