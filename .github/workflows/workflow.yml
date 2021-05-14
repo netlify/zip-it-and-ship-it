@@ -13,12 +13,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        node-version: [8.17.0, 16.x]
+        node-version: [15.x, 16.x]
         exclude:
           - os: macOS-latest
-            node-version: 8.17.0
+            node-version: 15.x
           - os: windows-latest
-            node-version: 8.17.0
+            node-version: 15.x
       fail-fast: false
     steps:
       - name: Git checkout

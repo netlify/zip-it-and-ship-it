@@ -1,13 +1,17 @@
 const { createWriteStream } = require('fs')
 const { promisify } = require('util')
 
-const archiver = require('archiver')
 const endOfStream = require('end-of-stream')
 
 const pEndOfStream = promisify(endOfStream)
 
 // Start zipping files
 const startZip = function (destPath) {
+  // `archiver` is not compatible with Node 8, so we lazy-load it and defer its
+  // execution to when absolutely needed. This way, functions that don't create
+  // an archive can still work in Node 8.
+  // eslint-disable-next-line node/global-require
+  const archiver = require('archiver')
   const output = createWriteStream(destPath)
   const archive = archiver('zip', { level: ZIP_LEVEL })
   archive.pipe(output)
