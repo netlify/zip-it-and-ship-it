@@ -54,7 +54,7 @@
     "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
   },
   "dependencies": {
-    "archiver": "^4.0.0",
+    "archiver": "^5.3.0",
     "array-flat-polyfill": "^1.0.1",
     "common-path-prefix": "^2.0.0",
     "cp-file": "^7.0.0",
