@@ -1,2 +1,2 @@
-// eslint-disable-next-line node/no-extraneous-require, import/no-extraneous-dependencies
+// eslint-disable-next-line node/no-extraneous-require
 module.exports = require('test')

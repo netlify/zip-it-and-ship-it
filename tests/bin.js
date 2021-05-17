@@ -6,7 +6,7 @@ const { tmpName } = require('tmp-promise')
 
 const { version } = require('../package.json')
 
-const { FIXTURES_DIR } = require('./helpers/main.js')
+const { FIXTURES_DIR } = require('./helpers/main')
 
 const BINARY_PATH = `${__dirname}/../src/bin.js`
 
