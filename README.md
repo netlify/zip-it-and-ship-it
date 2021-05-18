@@ -238,9 +238,8 @@ Each object has the following properties:
 
 - `name`: `string`
 
-      Function's name. This is the one used in the Function URL. For example, if a Function is a `myFunc.js` regular file, the
-
-  `name` is `myFunc` and the URL is `https://{hostname}/.netlify/functions/myFunc`.
+  Function's name. This is the one used in the Function URL. For example, if a Function is a `myFunc.js` regular file,
+  the `name` is `myFunc` and the URL is `https://{hostname}/.netlify/functions/myFunc`.
 
 - `mainFile`: `string`
 
