@@ -19,7 +19,7 @@ const pWriteFile = promisify(fs.writeFile)
 // Taken from https://www.npmjs.com/package/cpy.
 const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2
 
-const DEFAULT_USER_NAMESPACE = 'src'
+const DEFAULT_USER_SUBDIRECTORY = 'src'
 
 const createDirectory = async function ({
   aliases = new Map(),
@@ -85,10 +85,9 @@ const createZipArchive = async function ({
   // take.
   const hasEntryFileConflict = srcFiles.some((srcFile) => srcFile === entryFilePath && srcFile !== mainFile)
 
-  // If there is a naming conflict, we move all user files (i.e. everything
-  // other than the entry file) to its own namespace, which means its own
-  // sub-directory.
-  const userNamespace = hasEntryFileConflict ? DEFAULT_USER_NAMESPACE : ''
+  // If there is a naming conflict, we move all user files (everything other
+  // than the entry file) to its own sub-directory.
+  const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
   if (needsEntryFile) {
     const entryFile = getEntryFile({ commonPrefix: basePath, filename, mainFile, userNamespace })
