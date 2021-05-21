@@ -1025,8 +1025,7 @@ testBundlers(
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
     const fixtureName = 'base_path'
-    const { tmpDir } = await zipNode(t, `${fixtureName}/netlify/functions`, {
-      length: 2,
+    const { tmpDir: tmpDir1 } = await zipNode(t, `${fixtureName}/netlify/functions1`, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: {
@@ -1034,25 +1033,48 @@ testBundlers(
             includedFiles: ['content/*'],
             nodeBundler: bundler,
           },
-          func2: {
-            includedFiles: ['func2.js'],
+        },
+      },
+    })
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const function1Entry = require(`${tmpDir1}/func1.js`)
+
+    // The function should not be on a `src/` namespace.
+    t.false(unixify(function1Entry[0]).includes('/src/'))
+    t.false(await pathExists(`${tmpDir1}/src/func1.js`))
+    t.true(await pathExists(`${tmpDir1}/content/post1.md`))
+    t.true(await pathExists(`${tmpDir1}/content/post2.md`))
+    t.true(await pathExists(`${tmpDir1}/content/post3.md`))
+    t.false(await pathExists(`${tmpDir1}/src/content/post1.md`))
+    t.false(await pathExists(`${tmpDir1}/src/content/post2.md`))
+    t.false(await pathExists(`${tmpDir1}/src/content/post3.md`))
+
+    const { tmpDir: tmpDir2 } = await zipNode(t, `${fixtureName}/netlify/functions2`, {
+      opts: {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        config: {
+          '*': {
+            includedFiles: ['content/*', 'func2.js'],
+            nodeBundler: bundler,
           },
         },
       },
     })
 
     // eslint-disable-next-line import/no-dynamic-require, node/global-require
-    const function1Entry = require(`${tmpDir}/func1.js`)
-
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require
-    const function2Entry = require(`${tmpDir}/func2.js`)
-
-    // The function should not be on a `src/` namespace.
-    t.false(unixify(function1Entry[0]).includes('/src/'))
+    const function2Entry = require(`${tmpDir2}/func2.js`)
 
     // The function should be on a `src/` namespace because there's a conflict
     // with the /func2.js path present in `includedFiles`.
     t.true(unixify(function2Entry[0]).includes('/src/'))
+    t.true(await pathExists(`${tmpDir2}/src/func2.js`))
+    t.false(await pathExists(`${tmpDir2}/content/post1.md`))
+    t.false(await pathExists(`${tmpDir2}/content/post2.md`))
+    t.false(await pathExists(`${tmpDir2}/content/post3.md`))
+    t.true(await pathExists(`${tmpDir2}/src/content/post1.md`))
+    t.true(await pathExists(`${tmpDir2}/src/content/post2.md`))
+    t.true(await pathExists(`${tmpDir2}/src/content/post3.md`))
   },
 )
 
