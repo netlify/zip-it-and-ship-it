@@ -1047,13 +1047,6 @@ testBundlers(
     // eslint-disable-next-line import/no-dynamic-require, node/global-require
     const function2Entry = require(`${tmpDir}/func2.js`)
 
-    console.log('--> debug', {
-      function1Entry,
-      function2Entry,
-      function1EntryN: unixify(function1Entry[0]),
-      function2EntryN: unixify(function2Entry[0]),
-    })
-
     // The function should not be on a `src/` namespace.
     t.false(unixify(function1Entry[0]).includes('/src/'))
 
