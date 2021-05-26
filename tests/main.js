@@ -1087,6 +1087,36 @@ testBundlers(
   },
 )
 
+testBundlers(
+  'Places all user-defined files in a `src/` sub-directory if the `experimentalHandlerV2` configuration property is not defined',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const fixtureName = 'base_path'
+    const { tmpDir } = await zipNode(t, `${fixtureName}/netlify/functions2`, {
+      opts: {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        config: {
+          '*': {
+            includedFiles: ['content/*'],
+            nodeBundler: bundler,
+          },
+        },
+      },
+    })
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const function2Entry = require(`${tmpDir}/func2.js`)
+
+    t.true(unixify(function2Entry[0]).includes('/src/'))
+    t.false(await pathExists(`${tmpDir}/content/post1.md`))
+    t.false(await pathExists(`${tmpDir}/content/post2.md`))
+    t.false(await pathExists(`${tmpDir}/content/post3.md`))
+    t.true(await pathExists(`${tmpDir}/src/content/post1.md`))
+    t.true(await pathExists(`${tmpDir}/src/content/post2.md`))
+    t.true(await pathExists(`${tmpDir}/src/content/post3.md`))
+  },
+)
+
 test('When generating a directory for a function with `archiveFormat: "none"`, it empties the directory before copying any files', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const functionDirectory = join(tmpDir, 'function')
