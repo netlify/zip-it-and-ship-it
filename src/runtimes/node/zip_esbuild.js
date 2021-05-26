@@ -30,9 +30,9 @@ const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles 
 
   // If not, the base path is the common path prefix between all the supporting
   // files and the main file.
-  const dirnames = supportingSrcFiles.map((filePath) => normalize(dirname(filePath)))
+  const dirnames = [...supportingSrcFiles, mainFile].map((filePath) => normalize(dirname(filePath)))
 
-  return commonPathPrefix([...dirnames, normalize(dirname(mainFile))])
+  return commonPathPrefix(dirnames)
 }
 
 // Convenience method for retrieving external and ignored modules from
