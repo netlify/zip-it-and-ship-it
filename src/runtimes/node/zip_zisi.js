@@ -37,6 +37,7 @@ const zipZisi = async ({
     basePath: commonPathPrefix(dirnames),
     destFolder,
     extension,
+    experimentalHandlerV2: config.experimentalHandlerV2,
     filename,
     mainFile,
     pluginsModulesPath,
