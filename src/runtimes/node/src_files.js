@@ -1,3 +1,4 @@
+const { normalize } = require('path')
 const { promisify } = require('util')
 
 const glob = require('glob')
@@ -35,8 +36,9 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   // `pathGroups` is an array containing the paths for each expression in the
   // `include` array. We flatten it into a single dimension.
   const paths = pathGroups.flat()
+  const normalizedPaths = paths.map(normalize)
 
-  return [...new Set(paths)]
+  return [...new Set(normalizedPaths)]
 }
 
 const getSrcFiles = async function ({ config, ...parameters }) {

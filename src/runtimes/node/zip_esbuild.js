@@ -22,6 +22,19 @@ const getAliases = ({ bundlePath, mainFile, sourcemapPath, srcDir }) => {
   return aliases
 }
 
+const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles }) => {
+  // If there is a base path defined in the config, we use that.
+  if (basePathFromConfig !== undefined) {
+    return basePathFromConfig
+  }
+
+  // If not, the base path is the common path prefix between all the supporting
+  // files and the main file.
+  const dirnames = [...supportingSrcFiles, mainFile].map((filePath) => normalize(dirname(filePath)))
+
+  return commonPathPrefix(dirnames)
+}
+
 // Convenience method for retrieving external and ignored modules from
 // different places and merging them together.
 const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
@@ -37,6 +50,7 @@ const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
 
 const zipEsbuild = async ({
   archiveFormat,
+  basePath,
   config = {},
   destFolder,
   extension,
@@ -73,7 +87,7 @@ const zipEsbuild = async ({
     externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
     bundler: JS_BUNDLER_ESBUILD,
     includedFiles: config.includedFiles,
-    includedFilesBasePath: config.includedFilesBasePath,
+    includedFilesBasePath: config.includedFilesBasePath || basePath,
     mainFile,
     srcPath,
     srcDir,
@@ -92,15 +106,15 @@ const zipEsbuild = async ({
   // We're adding the bundled file to the zip, but we want it to have the same
   // name and path as the original, unbundled file. For this, we use an alias.
   const aliases = getAliases({ bundlePath, mainFile: normalizedMainFile, sourcemapPath, srcDir })
-  const dirnames = supportingSrcFiles.map((filePath) => normalize(dirname(filePath)))
-  const basePath = commonPathPrefix([...dirnames, normalize(dirname(mainFile))])
+  const functionBasePath = getFunctionBasePath({ basePathFromConfig: basePath, mainFile, supportingSrcFiles })
 
   try {
     const path = await zipNodeJs({
       aliases,
       archiveFormat,
-      basePath,
+      basePath: functionBasePath,
       destFolder,
+      experimentalHandlerV2: config.experimentalHandlerV2,
       extension,
       filename,
       mainFile: normalizedMainFile,

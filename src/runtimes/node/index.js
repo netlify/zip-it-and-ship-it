@@ -15,6 +15,7 @@ const getDefaultBundler = ({ extension }) => (extension === '.ts' ? JS_BUNDLER_E
 
 const zipFunction = async function ({
   archiveFormat,
+  basePath,
   config = {},
   destFolder,
   extension,
@@ -39,6 +40,7 @@ const zipFunction = async function ({
   if (bundler === JS_BUNDLER_ZISI) {
     return zipZisi({
       archiveFormat,
+      basePath,
       config,
       destFolder,
       extension,
@@ -53,6 +55,7 @@ const zipFunction = async function ({
 
   return zipEsbuild({
     archiveFormat,
+    basePath,
     config,
     destFolder,
     extension,

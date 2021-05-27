@@ -53,7 +53,7 @@ const formatZipResult = (result) => {
 const zipFunctions = async function (
   relativeSrcFolder,
   destFolder,
-  { archiveFormat = ARCHIVE_FORMAT_ZIP, config = {}, parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
+  { archiveFormat = ARCHIVE_FORMAT_ZIP, basePath, config = {}, parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
 ) {
   validateArchiveFormat(archiveFormat)
 
@@ -68,6 +68,7 @@ const zipFunctions = async function (
     async (func) => {
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
+        basePath,
         config: func.config,
         destFolder,
         extension: func.extension,

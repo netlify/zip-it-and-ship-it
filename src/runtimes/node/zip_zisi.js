@@ -9,6 +9,7 @@ const { getSrcFilesAndExternalModules } = require('./src_files')
 
 const zipZisi = async ({
   archiveFormat,
+  basePath,
   config,
   destFolder,
   extension,
@@ -23,7 +24,7 @@ const zipZisi = async ({
     bundler: JS_BUNDLER_ZISI,
     extension,
     includedFiles: config.includedFiles,
-    includedFilesBasePath: config.includedFilesBasePath,
+    includedFilesBasePath: config.includedFilesBasePath || basePath,
     mainFile,
     pluginsModulesPath,
     srcDir,
@@ -36,6 +37,7 @@ const zipZisi = async ({
     basePath: commonPathPrefix(dirnames),
     destFolder,
     extension,
+    experimentalHandlerV2: config.experimentalHandlerV2,
     filename,
     mainFile,
     pluginsModulesPath,
