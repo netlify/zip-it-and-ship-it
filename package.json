@@ -63,7 +63,7 @@
     "end-of-stream": "^1.4.4",
     "esbuild": "0.11.10",
     "filter-obj": "^2.0.1",
-    "find-up": "^4.1.0",
+    "find-up": "^5.0.0",
     "glob": "^7.1.6",
     "junk": "^3.1.0",
     "locate-path": "^5.0.0",
