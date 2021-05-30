@@ -61,15 +61,12 @@ const resolvePathPreserveSymlinksForDir = function (path, basedir) {
 // see https://github.com/browserify/resolve/issues/188#issuecomment-679010477
 // we return the first resolved location or the first error if all failed
 const resolvePathPreserveSymlinks = async function (path, baseDirs) {
-  // eslint-disable-next-line fp/no-let
   let firstError
-  // eslint-disable-next-line fp/no-loops
   for (const basedir of baseDirs) {
     try {
       // eslint-disable-next-line no-await-in-loop
       return await resolvePathPreserveSymlinksForDir(path, basedir)
     } catch (error) {
-      // eslint-disable-next-line fp/no-mutation
       firstError = firstError || error
     }
   }

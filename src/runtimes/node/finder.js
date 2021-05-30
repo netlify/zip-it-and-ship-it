@@ -24,7 +24,6 @@ const findFunctionsInPaths = async function (paths) {
   const functions = await Promise.all(paths.map(getFunctionAtPath))
 
   // It's fine to mutate the array since its scope is local to this function.
-  // eslint-disable-next-line fp/no-mutating-methods
   const sortedFunctions = functions.filter(Boolean).sort((fA, fB) => {
     // We first sort the functions array to put directories first. This is so
     // that `{name}/{name}.js` takes precedence over `{name}.js`.
