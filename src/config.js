@@ -7,7 +7,6 @@ const getConfigForFunction = ({ config, func }) => {
   }
 
   // It's safe to mutate the array because it's local to this function.
-  // eslint-disable-next-line fp/no-mutating-methods
   const matches = Object.keys(config)
     .filter((expression) => minimatch(func.name, expression))
     .map((expression) => {
