@@ -72,7 +72,7 @@
     "minimatch": "^3.0.4",
     "p-map": "^3.0.0",
     "path-exists": "^4.0.0",
-    "pkg-dir": "^4.2.0",
+    "pkg-dir": "^5.0.0",
     "precinct": "^8.0.0",
     "read-package-json-fast": "^2.0.2",
     "require-package-name": "^2.0.1",
