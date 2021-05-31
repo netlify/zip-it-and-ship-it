@@ -245,7 +245,7 @@ testBundlers('Throws on invalid package.json', [ESBUILD, ESBUILD_ZISI, DEFAULT],
   try {
     await t.throwsAsync(
       zipNode(t, 'invalid-package-json', { opts: { config: { '*': { nodeBundler: bundler } } }, fixtureDir }),
-      /(invalid JSON|package.json:1:1: error: Expected string but found "{")/,
+      { message: /(invalid JSON|package.json:1:1: error: Expected string but found "{")/ },
     )
   } finally {
     await pRename(distPackageJson, srcPackageJson)
@@ -273,7 +273,9 @@ testBundlers('Bundling does not crash with dynamic import() with zisi', [DEFAULT
     return t.pass()
   }
 
-  await t.throwsAsync(zipNode(t, 'dynamic-import', { opts: { config: { '*': { nodeBundler: bundler } } } }), /export/)
+  await t.throwsAsync(zipNode(t, 'dynamic-import', { opts: { config: { '*': { nodeBundler: bundler } } } }), {
+    message: /export/,
+  })
 })
 
 testBundlers('Can require local files', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
@@ -429,10 +431,9 @@ testBundlers('Produces deterministic checksums', [ESBUILD, ESBUILD_ZISI, DEFAULT
 })
 
 testBundlers('Throws when the source folder does not exist', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(
-    zipNode(t, 'does-not-exist', { opts: { config: { '*': { nodeBundler: bundler } } } }),
-    /Functions folder does not exist/,
-  )
+  await t.throwsAsync(zipNode(t, 'does-not-exist', { opts: { config: { '*': { nodeBundler: bundler } } } }), {
+    message: /Functions folder does not exist/,
+  })
 })
 
 testBundlers(
@@ -1144,7 +1145,7 @@ test('Throws an error if the `archiveFormat` property contains an invalid value`
     zipNode(t, 'node-module-included', {
       opts: { archiveFormat: 'gzip' },
     }),
-    `Invalid archive format: gzip`,
+    { message: `Invalid archive format: gzip` },
   )
 })
 
