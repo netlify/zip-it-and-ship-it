@@ -77,7 +77,7 @@
     "read-package-json-fast": "^2.0.2",
     "require-package-name": "^2.0.1",
     "resolve": "^2.0.0-next.1",
-    "semver": "^6.3.0",
+    "semver": "^7.0.0",
     "unixify": "^1.0.0",
     "yargs": "^15.4.1"
   },
