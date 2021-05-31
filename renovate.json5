@@ -6,13 +6,6 @@
   automerge: false,
   packageRules: [
     {
-      // These cannot be upgraded to a major version until we drop support for Node 10
-      packageNames: ['p-map', 'yargs'],
-      major: {
-        enabled: false,
-      },
-    },
-    {
       matchPackageNames: ['p-map'],
       allowedVersions: '<5',
     },
