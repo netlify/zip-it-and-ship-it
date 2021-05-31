@@ -13,6 +13,14 @@
       },
     },
     {
+      matchPackageNames: ['p-map'],
+      allowedVersions: '<5',
+    },
+    {
+      matchPackageNames: ['yargs'],
+      allowedVersions: '<17',
+    },
+    {
       // Fake dependencies used in tests
       packageNames: ['test'],
       enabled: false,
