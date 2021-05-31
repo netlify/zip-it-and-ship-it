@@ -100,8 +100,6 @@
     "files": [
       "tests/*.js"
     ],
-    "compileEnhancements": false,
-    "babel": false,
     "verbose": true
   }
 }
