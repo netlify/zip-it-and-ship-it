@@ -1,10 +1,9 @@
 const { dirname, normalize } = require('path')
 
-const commonPathPrefix = require('common-path-prefix')
-
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
 const { zipNodeJs } = require('../../zip_node')
 
+const { getBasePath } = require('./base_path')
 const { getSrcFilesAndExternalModules } = require('./src_files')
 
 const zipZisi = async ({
@@ -34,7 +33,7 @@ const zipZisi = async ({
   const dirnames = srcFiles.map((filePath) => normalize(dirname(filePath)))
   const path = await zipNodeJs({
     archiveFormat,
-    basePath: commonPathPrefix(dirnames),
+    basePath: getBasePath(dirnames),
     destFolder,
     extension,
     experimentalHandlerV2: config.experimentalHandlerV2,
