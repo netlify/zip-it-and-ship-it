@@ -1,11 +1,10 @@
 const { dirname, format, join, normalize, relative, parse } = require('path')
 
-const commonPathPrefix = require('common-path-prefix')
-
 const { getExternalAndIgnoredModulesFromSpecialCases } = require('../../node_dependencies')
 const { JS_BUNDLER_ESBUILD } = require('../../utils/consts')
 const { zipNodeJs } = require('../../zip_node')
 
+const { getBasePath } = require('./base_path')
 const { bundleJsFile } = require('./bundler')
 const { getSrcFilesAndExternalModules } = require('./src_files')
 
@@ -32,7 +31,7 @@ const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles 
   // files and the main file.
   const dirnames = [...supportingSrcFiles, mainFile].map((filePath) => normalize(dirname(filePath)))
 
-  return commonPathPrefix(dirnames)
+  return getBasePath(dirnames)
 }
 
 // Convenience method for retrieving external and ignored modules from
