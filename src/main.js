@@ -53,7 +53,17 @@ const getListedFunctionFiles = async function (
   return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime: runtime.name, extension: extname(srcFile) }))
 }
 
-const getSrcFiles = function ({ config, runtime, stat, mainFile, extension, srcPath, srcDir, pluginsModulesPath }) {
+const getSrcFiles = function ({
+  bundler,
+  config,
+  runtime,
+  stat,
+  mainFile,
+  extension,
+  srcPath,
+  srcDir,
+  pluginsModulesPath,
+}) {
   const { getSrcFiles: getRuntimeSrcFiles } = runtime
 
   if (extension === '.zip' || typeof getRuntimeSrcFiles !== 'function') {
@@ -61,6 +71,7 @@ const getSrcFiles = function ({ config, runtime, stat, mainFile, extension, srcP
   }
 
   return getRuntimeSrcFiles({
+    bundler,
     config,
     extension,
     srcPath,
