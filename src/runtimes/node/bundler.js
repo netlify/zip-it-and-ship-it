@@ -1,14 +1,14 @@
 const { basename, dirname, extname, join, resolve } = require('path')
 const process = require('process')
 
-const esbuild = require('esbuild')
+const esbuild = require('@netlify/esbuild')
 const semver = require('semver')
 
 const { safeUnlink } = require('../../utils/fs')
 
 const { getBundlerTarget } = require('./bundler_target')
-const { getModulesWithDynamicImports } = require('./dynamic_imports')
-const { externalNativeModulesPlugin } = require('./native_modules/plugin')
+const { getDynamicImportsPlugin } = require('./dynamic_imports')
+const { getNativeModulesPlugin } = require('./native_modules/plugin')
 
 const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
 
@@ -34,7 +34,11 @@ const bundleJsFile = async function ({
   const jsFilename = `${basename(destFilename, extname(destFilename))}.js`
   const bundlePath = join(destFolder, jsFilename)
   const nativeNodeModules = {}
-  const plugins = [externalNativeModulesPlugin(nativeNodeModules)]
+  const nodeModulesWithDynamicImports = new Set()
+  const plugins = [
+    getNativeModulesPlugin(nativeNodeModules),
+    getDynamicImportsPlugin({ moduleNames: nodeModulesWithDynamicImports, srcDir }),
+  ]
   const nodeTarget = getBundlerTarget(config.nodeVersion)
 
   // esbuild will format `sources` relative to the sourcemap file, which is a
@@ -61,14 +65,13 @@ const bundleJsFile = async function ({
     const sourcemapPath = getSourcemapPath(metafile.outputs)
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction(bundlePath, sourcemapPath)
-    const nodeModulesWithDynamicImports = await getModulesWithDynamicImports({ srcDir, warnings })
 
     return {
       bundlePath,
       cleanTempFiles,
       inputs,
       nativeNodeModules,
-      nodeModulesWithDynamicImports,
+      nodeModulesWithDynamicImports: [...nodeModulesWithDynamicImports],
       sourcemapPath,
       warnings,
     }
