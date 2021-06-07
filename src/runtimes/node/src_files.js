@@ -44,7 +44,6 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
 const getSrcFiles = async function ({ config, ...parameters }) {
   const { paths } = await getSrcFilesAndExternalModules({
     ...parameters,
-    bundler: config.nodeBundler || JS_BUNDLER_ZISI,
     externalNodeModules: config.externalNodeModules,
   })
 
