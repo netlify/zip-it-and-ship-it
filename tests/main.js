@@ -1179,6 +1179,22 @@ test('Returns an empty list of modules with dynamic imports if the modules are m
   t.is(files[0].nodeModulesWithDynamicImports.length, 0)
 })
 
+test('Adds a runtime shim and includes the files needed for dynamic imports using a template literal', async (t) => {
+  const fixtureName = 'node-module-dynamic-import'
+  const { files, tmpDir } = await zipNode(t, fixtureName, {
+    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const func = require(`${tmpDir}/function.js`)
+
+  t.true(func('one'))
+  t.throws(() => func('two'))
+  t.is(files[0].nodeModulesWithDynamicImports.length, 2)
+  t.true(files[0].nodeModulesWithDynamicImports.includes('@org/test'))
+  t.true(files[0].nodeModulesWithDynamicImports.includes('test-two'))
+})
+
 test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
   const { files, tmpDir } = await zipNode(t, 'local-node-module')
   const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
