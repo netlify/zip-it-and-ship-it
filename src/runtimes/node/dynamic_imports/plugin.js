@@ -39,7 +39,7 @@ const getDynamicImportsPlugin = ({ basePath, includedPaths, moduleNames, srcDir 
       includedPaths.add(includedPathsGlob)
 
       // Create the shim that will handle the import at runtime.
-      const contents = getShimContents({ basePath, expressionType, resolveDir })
+      const contents = getShimContents({ expressionType, resolveDir, srcDir })
 
       if (!contents) {
         return
@@ -84,16 +84,17 @@ const getPackageNameCached = ({ cache, resolveDir, srcDir }) => {
   return cache.get(resolveDir)
 }
 
-const getShimContents = ({ basePath, expressionType, resolveDir }) => {
+const getShimContents = ({ expressionType, resolveDir, srcDir }) => {
   // The shim needs to modify the path of the import, since originally it was
   // relative to wherever the importer sat in the file tree (i.e. anywhere in
   // the user space or inside `node_modules`), but at runtime paths must be
   // relative to the main bundle file, since esbuild will flatten everything
   // into a single file.
-  const relativeResolveDir = relative(basePath, resolveDir)
+  const relativeResolveDir = relative(srcDir, resolveDir)
+  const requireArg = relativeResolveDir ? `\`./${relativeResolveDir}/$\{args}\`` : 'args'
 
   if (expressionType === 'require') {
-    return `module.exports = args => require(\`./${relativeResolveDir}/$\{args}\`)`
+    return `module.exports = args => require(${requireArg})`
   }
 }
 
