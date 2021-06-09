@@ -13,6 +13,14 @@ const { zipZisi } = require('./zip_zisi')
 // exception of TypeScript files, for which the only option is esbuild.
 const getDefaultBundler = ({ extension }) => (extension === '.ts' ? JS_BUNDLER_ESBUILD : JS_BUNDLER_ZISI)
 
+// A proxy for the `getSrcFiles` function which adds a default `bundler` using
+// the `getDefaultBundler` function.
+const getSrcFilesWithBundler = (parameters) => {
+  const bundler = parameters.config.nodeBundler || getDefaultBundler({ extension: parameters.extension })
+
+  return getSrcFiles({ ...parameters, bundler })
+}
+
 const zipFunction = async function ({
   archiveFormat,
   basePath,
@@ -90,4 +98,9 @@ const zipWithFunctionWithFallback = async ({ config = {}, ...parameters }) => {
   }
 }
 
-module.exports = { findFunctionsInPaths, getSrcFiles, name: RUNTIME_JS, zipFunction: zipWithFunctionWithFallback }
+module.exports = {
+  findFunctionsInPaths,
+  getSrcFiles: getSrcFilesWithBundler,
+  name: RUNTIME_JS,
+  zipFunction: zipWithFunctionWithFallback,
+}

@@ -515,6 +515,7 @@ test('Can list function main files with listFunctions()', async (t) => {
     [
       { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
       { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
+      { name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts' },
       { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
       { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
       { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
@@ -534,6 +535,7 @@ testBundlers(
       [
         { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
         { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
+        { name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts', srcFile: 'five/index.ts' },
         {
           name: 'four',
           mainFile: 'four.js/four.js.js',
