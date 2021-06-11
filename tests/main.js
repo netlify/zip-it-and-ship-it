@@ -839,6 +839,31 @@ testBundlers(
   },
 )
 
+testBundlers(
+  'Respects the target defined in the config over a `target` property defined in tsconfig',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-typescript-tsconfig-target/functions', {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+    await unzipFiles(files)
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const result = require(`${tmpDir}/function.js`)
+
+    // We want to assert that the `target` specified in the tsconfig file (es5)
+    // was overridden by our own target. It's not easy to assert that without
+    // parsing the generated file, and evem then we're subject to failures due
+    // to internal changes in esbuild. The best we can do here is assert that
+    // the bundling was successful and the return values are what we expect,
+    // because the bundling should fail if the ES5 target is being used, since
+    // esbuild can't currently transpile object destructuring down to ES5.
+    t.is(result.foo, true)
+    t.is(result.bar, false)
+    t.deepEqual(result.others, { baz: true })
+  },
+)
+
 // We're not running this test for the `DEFAULT` bundler — not because it's not
 // supported, but because the legacy bundler doesn't use any of the available
 // configuration properties and therefore there is nothing we could test.
