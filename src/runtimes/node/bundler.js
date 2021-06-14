@@ -10,6 +10,11 @@ const { getBundlerTarget } = require('./bundler_target')
 const { getDynamicImportsPlugin } = require('./dynamic_imports')
 const { getNativeModulesPlugin } = require('./native_modules/plugin')
 
+// Maximum number of log messages that an esbuild instance will produce. This
+// limit is important to avoid out-of-memory errors due to too much data being
+// sent in the Go<>Node IPC channel.
+const ESBUILD_LOG_LIMIT = 10
+
 const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
 
 // esbuild's async build API throws on Node 8.x, so we switch to the sync
@@ -52,6 +57,7 @@ const bundleJsFile = async function ({
       entryPoints: [srcFile],
       external,
       logLevel: 'warning',
+      logLimit: ESBUILD_LOG_LIMIT,
       metafile: true,
       nodePaths: additionalModulePaths,
       outfile: bundlePath,
@@ -96,4 +102,4 @@ const getSourcemapPath = (outputs) => {
   }
 }
 
-module.exports = { bundleJsFile }
+module.exports = { bundleJsFile, ESBUILD_LOG_LIMIT }
