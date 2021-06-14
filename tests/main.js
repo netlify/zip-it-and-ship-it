@@ -15,6 +15,7 @@ const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
+const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
 const {
   JS_BUNDLER_ESBUILD: ESBUILD,
   JS_BUNDLER_ESBUILD_ZISI: ESBUILD_ZISI,
@@ -863,6 +864,23 @@ testBundlers(
     t.deepEqual(result.others, { baz: true })
   },
 )
+
+test('Limits the amount of log lines produced by esbuild', async (t) => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const binaryPath = resolve(__dirname, '../src/bin.js')
+  const fixturePath = join(FIXTURES_DIR, 'esbuild-log-limit')
+
+  try {
+    await execa(binaryPath, [fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
+
+    t.fail('Bundling should have thrown')
+  } catch (error) {
+    const logCount = (error.stderr.match(/require\('module-\d+'\)/g) || []).length
+
+    t.true(logCount <= ESBUILD_LOG_LIMIT)
+    t.true(error.stderr.includes(`${ESBUILD_LOG_LIMIT} of 13 errors shown`))
+  }
+})
 
 // We're not running this test for the `DEFAULT` bundler — not because it's not
 // supported, but because the legacy bundler doesn't use any of the available
