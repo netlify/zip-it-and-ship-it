@@ -2,7 +2,7 @@ const { join, relative, resolve } = require('path')
 
 const acorn = require('acorn')
 
-const ECMA_VERSION = 2017
+const ECMA_VERSION = 2021
 const GLOB_WILDCARD = '*'
 
 // Transforms an array of glob nodes into a glob string including an absolute
