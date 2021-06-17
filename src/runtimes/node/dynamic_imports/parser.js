@@ -79,7 +79,7 @@ const parseBinaryExpression = (expression) => {
     throw new Error('Expression operator not supported')
   }
 
-  const operands = [left, right].map((operand) => {
+  const operands = [left, right].flatMap((operand) => {
     switch (operand.type) {
       case 'BinaryExpression':
         return parseBinaryExpression(operand)
@@ -96,7 +96,7 @@ const parseBinaryExpression = (expression) => {
     }
   })
 
-  return operands.flat()
+  return operands
 }
 
 // Transforms a template literal AST node into an array of glob nodes, where
