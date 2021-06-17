@@ -2,6 +2,7 @@ const { basename, join, relative } = require('path')
 
 const findUp = require('find-up')
 const readPackageJson = require('read-package-json-fast')
+const unixify = require('unixify')
 
 const { parseExpression } = require('./parser')
 
@@ -91,7 +92,7 @@ const getShimContents = ({ expressionType, resolveDir, srcDir }) => {
   // relative to the main bundle file, since esbuild will flatten everything
   // into a single file.
   const relativeResolveDir = relative(srcDir, resolveDir)
-  const requireArg = relativeResolveDir ? `\`./${relativeResolveDir}/$\{args}\`` : 'args'
+  const requireArg = relativeResolveDir ? `\`./${unixify(relativeResolveDir)}/$\{args}\`` : 'args'
 
   if (expressionType === 'require') {
     return `module.exports = args => require(${requireArg})`
