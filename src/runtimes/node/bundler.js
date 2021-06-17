@@ -10,7 +10,15 @@ const { getBundlerTarget } = require('./bundler_target')
 const { getDynamicImportsPlugin } = require('./dynamic_imports/plugin')
 const { getNativeModulesPlugin } = require('./native_modules/plugin')
 
-const resolveExtensions = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json']
+// Maximum number of log messages that an esbuild instance will produce. This
+// limit is important to avoid out-of-memory errors due to too much data being
+// sent in the Go<>Node IPC channel.
+const ESBUILD_LOG_LIMIT = 10
+
+// When resolving imports with no extension (e.g. require('./foo')), these are
+// the extensions that esbuild will look for, in this order.
+const RESOLVE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json']
+
 const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
 
 // esbuild's async build API throws on Node 8.x, so we switch to the sync
@@ -71,12 +79,13 @@ const bundleJsFile = async function ({
       entryPoints: [srcFile],
       external,
       logLevel: 'warning',
+      logLimit: ESBUILD_LOG_LIMIT,
       metafile: true,
       nodePaths: additionalModulePaths,
       outdir: destFolder,
       platform: 'node',
       plugins: supportsAsyncAPI ? plugins : [],
-      resolveExtensions,
+      resolveExtensions: RESOLVE_EXTENSIONS,
       sourcemap: Boolean(config.nodeSourcemap),
       sourceRoot,
       target: [nodeTarget],
@@ -141,4 +150,4 @@ const getCleanupFunction = (paths) => async () => {
   await Promise.all(paths.filter(Boolean).map(safeUnlink))
 }
 
-module.exports = { bundleJsFile }
+module.exports = { bundleJsFile, ESBUILD_LOG_LIMIT }
