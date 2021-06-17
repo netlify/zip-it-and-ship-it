@@ -10,7 +10,7 @@ const { parseExpression } = require('./parser')
 // couple of things with them. First of all, it figures out whether the call
 // is being made from within a Node module, and if so it adds the name of the
 // module to `moduleNames`, so that we can warn the user of potential runtime
-// issues. Secondly, it parses the dynamic expressions and tries to include im
+// issues. Secondly, it parses the dynamic expressions and tries to include in
 // the bundle all the files that are possibly needed to make the import work at
 // runtime. This is not always possible, but we do our best.
 const getDynamicImportsPlugin = ({ basePath, includedPaths, moduleNames, srcDir }) => ({
