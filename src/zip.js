@@ -6,7 +6,7 @@ const pMap = require('p-map')
 const { getPluginsModulesPath } = require('./node_dependencies')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
-const { listFunctionsDirectory } = require('./utils/fs')
+const { listFunctionsDirectories, resolveFunctionsDirectories } = require('./utils/fs')
 const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -51,17 +51,17 @@ const formatZipResult = (result) => {
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
 const zipFunctions = async function (
-  relativeSrcFolder,
+  relativeSrcFolders,
   destFolder,
   { archiveFormat = ARCHIVE_FORMAT_ZIP, basePath, config = {}, parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
 ) {
   validateArchiveFormat(archiveFormat)
 
-  const srcFolder = resolve(relativeSrcFolder)
-  const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
+  const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
+  const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), makeDir(destFolder)])
   const [functions, pluginsModulesPath] = await Promise.all([
     getFunctionsFromPaths(paths, { config, dedupe: true }),
-    getPluginsModulesPath(srcFolder),
+    getPluginsModulesPath(srcFolders[0]),
   ])
   const zipped = await pMap(
     functions.values(),

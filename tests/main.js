@@ -1163,6 +1163,40 @@ testBundlers(
   },
 )
 
+testBundlers(
+  'Bundles functions from multiple directories when the first argument of `zipFunctions()` is an array',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const fixtureName = 'multiple-src-directories'
+    const { tmpDir } = await zipNode(
+      t,
+      [`${fixtureName}/.netlify/internal-functions`, `${fixtureName}/netlify/functions`],
+      {
+        length: 3,
+        opts: {
+          basePath: join(FIXTURES_DIR, fixtureName),
+          config: {
+            '*': {
+              nodeBundler: bundler,
+            },
+          },
+        },
+      },
+    )
+
+    /* eslint-disable import/no-dynamic-require, node/global-require */
+    const functionCommon = require(`${tmpDir}/function.js`)
+    const functionInternal = require(`${tmpDir}/function_internal.js`)
+    const functionUser = require(`${tmpDir}/function_user.js`)
+    /* eslint-enable import/no-dynamic-require, node/global-require */
+
+    // Functions from rightmost directories in the array take precedence.
+    t.is(functionCommon, 'user')
+    t.is(functionInternal, 'internal')
+    t.is(functionUser, 'user')
+  },
+)
+
 test('When generating a directory for a function with `archiveFormat: "none"`, it empties the directory before copying any files', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const functionDirectory = join(tmpDir, 'function')
