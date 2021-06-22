@@ -31,7 +31,7 @@ const getAbsoluteGlob = ({ basePath, globNodes, resolveDir }) => {
 // - `type`: The expression type (e.g. "require", "import")
 const parseExpression = ({ basePath, expression, resolveDir }) => {
   const { body } = acorn.parse(expression, { ecmaVersion: ECMA_VERSION })
-  const { callee } = body[0].expression
+  const { callee = {} } = body[0].expression
 
   if (callee.name === 'require') {
     const includedPathsGlob = parseRequire({ basePath, expression: body[0].expression, resolveDir })
@@ -47,8 +47,8 @@ const parseExpression = ({ basePath, expression, resolveDir }) => {
 
 // Parses a `require()` and returns a glob string with an absolute path.
 const parseRequire = ({ basePath, expression, resolveDir }) => {
-  const { arguments: args } = expression
-  const argType = args[0].type
+  const { arguments: args = [] } = expression
+  const argType = args.length === 0 ? null : args[0].type
 
   if (argType === 'BinaryExpression') {
     try {
