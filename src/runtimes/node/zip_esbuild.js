@@ -1,25 +1,13 @@
-const { dirname, format, join, normalize, relative, parse } = require('path')
+const { dirname, normalize } = require('path')
 
 const { getExternalAndIgnoredModulesFromSpecialCases } = require('../../node_dependencies')
 const { JS_BUNDLER_ESBUILD } = require('../../utils/consts')
+const { getPathWithExtension } = require('../../utils/fs')
 const { zipNodeJs } = require('../../zip_node')
 
 const { getBasePath } = require('./base_path')
 const { bundleJsFile } = require('./bundler')
 const { getSrcFilesAndExternalModules } = require('./src_files')
-
-const getAliases = ({ bundlePath, mainFile, sourcemapPath, srcDir }) => {
-  const aliases = new Map([[bundlePath, mainFile]])
-
-  if (sourcemapPath !== undefined) {
-    const bundleDirectory = dirname(bundlePath)
-    const relativeSourcemapPath = relative(bundleDirectory, sourcemapPath)
-
-    aliases.set(sourcemapPath, join(srcDir, relativeSourcemapPath))
-  }
-
-  return aliases
-}
 
 const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles }) => {
   // If there is a base path defined in the config, we use that.
@@ -63,15 +51,16 @@ const zipEsbuild = async ({
 }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const {
-    bundlePath,
+    additionalPaths,
+    bundlePaths,
     cleanTempFiles,
     inputs,
     nativeNodeModules = {},
     nodeModulesWithDynamicImports,
-    sourcemapPath,
     warnings,
   } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
+    basePath,
     config,
     destFilename: filename,
     destFolder,
@@ -85,7 +74,7 @@ const zipEsbuild = async ({
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
     externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
     bundler: JS_BUNDLER_ESBUILD,
-    includedFiles: config.includedFiles,
+    includedFiles: [...(config.includedFiles || []), ...additionalPaths],
     includedFilesBasePath: config.includedFilesBasePath || basePath,
     mainFile,
     srcPath,
@@ -98,18 +87,12 @@ const zipEsbuild = async ({
   // path of the original, pre-bundling function file. We'll add the actual
   // bundled file further below.
   const supportingSrcFiles = srcFiles.filter((path) => path !== mainFile)
-
-  // Normalizing the main file so that it has a .js extension.
-  const normalizedMainFile = format({ ...parse(mainFile), base: undefined, ext: '.js' })
-
-  // We're adding the bundled file to the zip, but we want it to have the same
-  // name and path as the original, unbundled file. For this, we use an alias.
-  const aliases = getAliases({ bundlePath, mainFile: normalizedMainFile, sourcemapPath, srcDir })
+  const normalizedMainFile = getPathWithExtension(mainFile, '.js')
   const functionBasePath = getFunctionBasePath({ basePathFromConfig: basePath, mainFile, supportingSrcFiles })
 
   try {
     const path = await zipNodeJs({
-      aliases,
+      aliases: bundlePaths,
       archiveFormat,
       basePath: functionBasePath,
       destFolder,
@@ -118,7 +101,7 @@ const zipEsbuild = async ({
       filename,
       mainFile: normalizedMainFile,
       pluginsModulesPath,
-      srcFiles: [...supportingSrcFiles, bundlePath, ...(sourcemapPath ? [sourcemapPath] : [])],
+      srcFiles: [...supportingSrcFiles, ...bundlePaths.keys()],
     })
 
     return {

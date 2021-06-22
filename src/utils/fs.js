@@ -1,9 +1,11 @@
 const { readdir, unlink } = require('fs')
-const { join } = require('path')
+const { format, join, parse } = require('path')
 const { promisify } = require('util')
 
 const pReaddir = promisify(readdir)
 const pUnlink = promisify(unlink)
+
+const getPathWithExtension = (path, extension) => format({ ...parse(path), base: undefined, ext: extension })
 
 const safeUnlink = async (path) => {
   try {
@@ -21,4 +23,4 @@ const listFunctionsDirectory = async function (srcFolder) {
   }
 }
 
-module.exports = { listFunctionsDirectory, safeUnlink }
+module.exports = { getPathWithExtension, listFunctionsDirectory, safeUnlink }

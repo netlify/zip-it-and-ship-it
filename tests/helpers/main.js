@@ -1,4 +1,5 @@
 const { dirname, join, resolve } = require('path')
+const { env } = require('process')
 const { promisify } = require('util')
 
 const AdmZip = require('adm-zip')
@@ -31,6 +32,11 @@ const zipFixture = async function (t, fixture, { length, fixtureDir, opts = {} }
   const { path: tmpDir } = await getTmpDir({
     prefix: `zip-it-test-bundler-${bundlerString}`,
   })
+
+  if (env.ZISI_KEEP_TEMP_DIRS !== undefined) {
+    console.log(tmpDir)
+  }
+
   const { files } = await zipCheckFunctions(t, fixture, { length, fixtureDir, tmpDir, opts })
   return { files, tmpDir }
 }

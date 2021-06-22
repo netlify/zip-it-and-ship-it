@@ -55,6 +55,7 @@
   },
   "dependencies": {
     "@netlify/esbuild": "^0.13.6",
+    "acorn": "^8.4.0",
     "archiver": "^5.3.0",
     "array-flat-polyfill": "^1.0.1",
     "common-path-prefix": "^3.0.0",
