@@ -1,6 +1,6 @@
-try {
-  // eslint-disable-next-line import/no-unassigned-import, import/no-unresolved, node/global-require
-  require('aws-sdk')
-} catch (error) {}
+module.exports = () => {
+  // eslint-disable-next-line node/global-require, node/no-extraneous-require
+  const AWS = require('aws-sdk')
 
-module.exports = true
+  return AWS
+}

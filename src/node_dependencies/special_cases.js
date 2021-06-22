@@ -1,7 +1,7 @@
 const { getPackageJson } = require('./package_json')
 
 const EXTERNAL_MODULES = ['@prisma/client']
-const IGNORED_MODULES = []
+const IGNORED_MODULES = ['aws-sdk']
 
 const getPackageJsonIfAvailable = async (srcDir) => {
   try {

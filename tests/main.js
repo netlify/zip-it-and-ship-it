@@ -150,7 +150,19 @@ testBundlers('Can require dynamically generated node modules', [ESBUILD, ESBUILD
 
 testBundlers('Ignore some excluded node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   const { tmpDir } = await zipNode(t, 'node-module-excluded', { opts: { config: { '*': { nodeBundler: bundler } } } })
+
   t.false(await pathExists(`${tmpDir}/src/node_modules/aws-sdk`))
+
+  try {
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const func = require(`${tmpDir}/function.js`)
+
+    func()
+
+    t.fail('Running the function should fail due to the missing module')
+  } catch (error) {
+    t.is(error.code, 'MODULE_NOT_FOUND')
+  }
 })
 
 testBundlers('Ignore TypeScript types', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
