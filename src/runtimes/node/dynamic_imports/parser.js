@@ -26,21 +26,50 @@ const getAbsoluteGlob = ({ basePath, globNodes, resolveDir }) => {
   return absoluteGlob
 }
 
+// Returns GLOB_WILDCARD for AST nodes that are accepted as part of a dynamic
+// expression and convertable to a wildcard character. This determines whether
+// we convert an expression or leave it alone. For example:
+//
+// - `./files/${someVariable}`: Convert `someVariable` to `*`
+// - `./files/${[some, array]}`: Don't convert expression
+//
+// The following AST nodes are converted to a wildcard:
+//
+// - CallExpression: `someFunction()`
+// - ConditionalExpression: `someCond ? someValue : otherValue`
+// - Identifier: `someVariable`
+// - MemberExpression: `someArray[index]` or `someObject.property`
+const getWildcardFromASTNode = (node) => {
+  switch (node.type) {
+    case 'CallExpression':
+    case 'ConditionalExpression':
+    case 'Identifier':
+    case 'MemberExpression':
+      return GLOB_WILDCARD
+
+    default:
+      throw new Error('Expression member not supported')
+  }
+}
+
 // Tries to parse an expression, returning an object with:
 // - `includedPathsGlob`: A glob with the files to be included in the bundle
 // - `type`: The expression type (e.g. "require", "import")
-const parseExpression = ({ basePath, expression, resolveDir }) => {
-  const { body } = acorn.parse(expression, { ecmaVersion: ECMA_VERSION })
-  const { callee = {} } = body[0].expression
+const parseExpression = ({ basePath, expression: rawExpression, resolveDir }) => {
+  const { body } = acorn.parse(rawExpression, { ecmaVersion: ECMA_VERSION })
+  const [topLevelExpression] = body
+  const { expression } = topLevelExpression
 
-  if (callee.name === 'require') {
-    const includedPathsGlob = parseRequire({ basePath, expression: body[0].expression, resolveDir })
+  if (expression.type === 'CallExpression' && expression.callee.name === 'require') {
+    try {
+      const includedPathsGlob = parseRequire({ basePath, expression, resolveDir })
 
-    if (includedPathsGlob) {
       return {
         includedPathsGlob,
-        type: callee.name,
+        type: expression.callee.name,
       }
+    } catch (_) {
+      // no-op
     }
   }
 }
@@ -84,15 +113,11 @@ const parseBinaryExpression = (expression) => {
       case 'BinaryExpression':
         return parseBinaryExpression(operand)
 
-      case 'CallExpression':
-      case 'Identifier':
-        return GLOB_WILDCARD
-
       case 'Literal':
         return operand.value
 
       default:
-        throw new Error('Expression member not supported')
+        return getWildcardFromASTNode(operand)
     }
   })
 
@@ -107,21 +132,17 @@ const parseBinaryExpression = (expression) => {
 const parseTemplateLiteral = (expression) => {
   const { expressions, quasis } = expression
   const parts = [...expressions, ...quasis].sort((partA, partB) => partA.start - partB.start)
-  const globNodes = parts.map(({ type, value }) => {
-    switch (type) {
+  const globNodes = parts.map((part) => {
+    switch (part.type) {
       case 'TemplateElement':
-        return value.cooked
-
-      case 'CallExpression':
-      case 'Identifier':
-        return GLOB_WILDCARD
+        return part.value.cooked
 
       default:
-        return null
+        return getWildcardFromASTNode(part)
     }
   })
 
-  return globNodes.every(Boolean) ? globNodes : null
+  return globNodes.filter(Boolean)
 }
 
 // For our purposes, we consider a glob to be valid if all the nodes are
