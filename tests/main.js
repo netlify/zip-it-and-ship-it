@@ -1237,19 +1237,34 @@ test('Returns an empty list of modules with dynamic imports if the modules are m
 })
 
 test('Adds a runtime shim and includes the files needed for dynamic imports using a template literal', async (t) => {
-  const fixtureName = 'node-module-dynamic-import'
+  const fixtureName = 'node-module-dynamic-import-template-literal'
   const { files, tmpDir } = await zipNode(t, fixtureName, {
     opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
   })
 
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/function.js`)
+  const values = func('one')
+  const expectedLength = 5
 
-  t.true(func('one'))
+  // eslint-disable-next-line unicorn/new-for-builtins
+  t.deepEqual(values, Array(expectedLength).fill(true))
   t.throws(() => func('two'))
-  t.is(files[0].nodeModulesWithDynamicImports.length, 2)
+  t.is(files[0].nodeModulesWithDynamicImports.length, 1)
   t.true(files[0].nodeModulesWithDynamicImports.includes('@org/test'))
-  t.true(files[0].nodeModulesWithDynamicImports.includes('test-two'))
+})
+
+test('Leaves dynamic imports untouched when the files required to resolve the expression cannot be packaged at build time', async (t) => {
+  const fixtureName = 'node-module-dynamic-import-unresolvable'
+  const { tmpDir } = await zipNode(t, fixtureName, {
+    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+  })
+  const functionSource = await pReadFile(`${tmpDir}/src/function.js`, 'utf8')
+
+  t.true(functionSource.includes('const require1 = require(number)'))
+  // eslint-disable-next-line no-template-curly-in-string
+  t.true(functionSource.includes('const require2 = require(`${number}.json`);'))
+  t.true(functionSource.includes('const require3 = require(foo(number));'))
 })
 
 test('Adds a runtime shim and includes the files needed for dynamic imports using an expression built with the `+` operator', async (t) => {
