@@ -1283,6 +1283,27 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   t.throws(() => func('fr'))
 })
 
+test('Creates dynamic import shims for functions with the same name and same shim contents with no naming conflicts', async (t) => {
+  const FUNCTION_COUNT = 30
+  const fixtureName = 'node-module-dynamic-import-3'
+
+  const { tmpDir } = await zipNode(t, fixtureName, {
+    length: FUNCTION_COUNT,
+    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+  })
+
+  for (let ind = 1; ind <= FUNCTION_COUNT; ind++) {
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const func = require(`${tmpDir}/function${ind}.js`)
+
+    t.deepEqual(func('en')[0], ['yes', 'no'])
+    t.deepEqual(func('en')[1], ['yes', 'no'])
+    t.deepEqual(func('pt')[0], ['sim', 'não'])
+    t.deepEqual(func('pt')[1], ['sim', 'não'])
+    t.throws(() => func('fr'))
+  }
+})
+
 test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
   const { files, tmpDir } = await zipNode(t, 'local-node-module')
   const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })

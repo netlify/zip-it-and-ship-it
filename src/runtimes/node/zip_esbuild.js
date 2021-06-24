@@ -63,7 +63,6 @@ const zipEsbuild = async ({
     basePath,
     config,
     destFilename: filename,
-    destFolder,
     externalModules,
     ignoredModules,
     name,
