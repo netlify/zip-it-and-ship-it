@@ -1283,6 +1283,23 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   t.throws(() => func('fr'))
 })
 
+test('Negated files in `included_files` are excluded from the bundle even if they match a dynamic import expression', async (t) => {
+  const fixtureName = 'node-module-dynamic-import-2'
+  const { tmpDir } = await zipNode(t, fixtureName, {
+    opts: {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: ESBUILD } },
+    },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const func = require(`${tmpDir}/function.js`)
+
+  t.deepEqual(func('pt')[0], ['sim', 'não'])
+  t.deepEqual(func('pt')[1], ['sim', 'não'])
+  t.throws(() => func('en'))
+})
+
 test('Creates dynamic import shims for functions with the same name and same shim contents with no naming conflicts', async (t) => {
   const FUNCTION_COUNT = 30
   const fixtureName = 'node-module-dynamic-import-3'
