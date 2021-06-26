@@ -1,6 +1,8 @@
 const { basename, dirname, extname, resolve, join } = require('path')
 const process = require('process')
 
+const { optimizeDocumentNode } = require('@graphql-tools/optimize')
+const graphqlLoaderPlugin = require('@luckycatfactory/esbuild-graphql-loader')
 const esbuild = require('@netlify/esbuild')
 const semver = require('semver')
 const { tmpName } = require('tmp-promise')
@@ -66,6 +68,10 @@ const bundleJsFile = async function ({
       includedPaths: dynamicImportsIncludedPaths,
       moduleNames: nodeModulesWithDynamicImports,
       srcDir,
+    }),
+    graphqlLoaderPlugin({
+      filterRegex: /\.(gql|graphql)$/,
+      mapDocumentNode: (documentNode) => optimizeDocumentNode(documentNode),
     }),
   ]
 
