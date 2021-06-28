@@ -50,11 +50,12 @@ jobs:
         working-directory: netlify-plugin-nextjs/demo
       - name: Symlinking zip-it-and-ship-it (1/2)
         run:
-          rm -rf $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/zip-it-and-ship-it && ln -s
+          rm -rf $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/zip-it-and-ship-it && mkdir -p $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify && ln -s
           $GITHUB_WORKSPACE/zip-it-and-ship-it $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/zip-it-and-ship-it
       - name: Symlinking zip-it-and-ship-it (2/2)
         run:
           rm -rf $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/build/node_modules/@netlify/zip-it-and-ship-it &&
+          mkdir -p $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/build/node_modules/@netlify &&
           ln -s $GITHUB_WORKSPACE/zip-it-and-ship-it
           $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/build/node_modules/@netlify/zip-it-and-ship-it
       - name: Installing zip-it-and-ship-it
