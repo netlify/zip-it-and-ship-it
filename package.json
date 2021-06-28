@@ -54,6 +54,8 @@
     "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
   },
   "dependencies": {
+    "@graphql-tools/optimize": "^1.0.1",
+    "@luckycatfactory/esbuild-graphql-loader": "^3.6.0",
     "@netlify/esbuild": "^0.13.6",
     "acorn": "^8.4.0",
     "archiver": "^5.3.0",
@@ -66,6 +68,7 @@
     "filter-obj": "^2.0.1",
     "find-up": "^5.0.0",
     "glob": "^7.1.6",
+    "graphql-tag": "^2.12.5",
     "junk": "^3.1.0",
     "locate-path": "^6.0.0",
     "make-dir": "^3.1.0",
