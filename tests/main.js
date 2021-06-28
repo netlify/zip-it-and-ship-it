@@ -1236,10 +1236,29 @@ test('Returns an empty list of modules with dynamic imports if the modules are m
   t.is(files[0].nodeModulesWithDynamicImports.length, 0)
 })
 
+test('Leaves dynamic imports untouched when the `processDynamicNodeImports` configuration property is not `true`', async (t) => {
+  const fixtureName = 'node-module-dynamic-import-template-literal'
+  const { tmpDir } = await zipNode(t, fixtureName, {
+    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+  })
+  const functionSource = await pReadFile(`${tmpDir}/src/function.js`, 'utf8')
+
+  /* eslint-disable no-template-curly-in-string */
+  t.true(functionSource.includes('const require1 = require(`./files/${number}.js`);'))
+  t.true(functionSource.includes('const require2 = require(`./files/${number}`);'))
+  t.true(functionSource.includes('const require3 = require(`./files/${parent.child}`);'))
+  t.true(functionSource.includes('const require4 = require(`./files/${arr[0]}`);'))
+  t.true(functionSource.includes('const require5 = require(`./files/${number.length > 0 ? number : "uh-oh"}`);'))
+  /* eslint-enable no-template-curly-in-string */
+})
+
 test('Adds a runtime shim and includes the files needed for dynamic imports using a template literal', async (t) => {
   const fixtureName = 'node-module-dynamic-import-template-literal'
   const { files, tmpDir } = await zipNode(t, fixtureName, {
-    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+    opts: {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+    },
   })
 
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
@@ -1257,7 +1276,10 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
 test('Leaves dynamic imports untouched when the files required to resolve the expression cannot be packaged at build time', async (t) => {
   const fixtureName = 'node-module-dynamic-import-unresolvable'
   const { tmpDir } = await zipNode(t, fixtureName, {
-    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+    opts: {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+    },
   })
   const functionSource = await pReadFile(`${tmpDir}/src/function.js`, 'utf8')
 
@@ -1270,7 +1292,10 @@ test('Leaves dynamic imports untouched when the files required to resolve the ex
 test('Adds a runtime shim and includes the files needed for dynamic imports using an expression built with the `+` operator', async (t) => {
   const fixtureName = 'node-module-dynamic-import-2'
   const { tmpDir } = await zipNode(t, fixtureName, {
-    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+    opts: {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+    },
   })
 
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
@@ -1288,7 +1313,7 @@ test('Negated files in `included_files` are excluded from the bundle even if the
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: ESBUILD } },
+      config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: ESBUILD, processDynamicNodeImports: true } },
     },
   })
 
@@ -1306,7 +1331,10 @@ test('Creates dynamic import shims for functions with the same name and same shi
 
   const { tmpDir } = await zipNode(t, fixtureName, {
     length: FUNCTION_COUNT,
-    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+    opts: {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+    },
   })
 
   for (let ind = 1; ind <= FUNCTION_COUNT; ind++) {
