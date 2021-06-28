@@ -30,7 +30,7 @@ jobs:
       - name: Installing Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '*'
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli
