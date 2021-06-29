@@ -95,7 +95,6 @@ const zipEsbuild = async ({
       archiveFormat,
       basePath: functionBasePath,
       destFolder,
-      experimentalHandlerV2: config.experimentalHandlerV2,
       extension,
       filename,
       mainFile: normalizedMainFile,

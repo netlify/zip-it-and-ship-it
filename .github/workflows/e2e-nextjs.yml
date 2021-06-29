@@ -1,0 +1,85 @@
+name: Next.js Integration test
+
+on:
+  pull_request:
+    branches: [main]
+    # Run on release PRs only
+    paths: ['CHANGELOG.md']
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        bundler: ['default', 'esbuild']
+    steps:
+      - name: Checking out zip-it-and-ship-it
+        uses: actions/checkout@v2
+        with:
+          path: zip-it-and-ship-it
+      - name: Checking out netlify-plugin-nextjs
+        uses: actions/checkout@v2
+        with:
+          repository: netlify/netlify-plugin-nextjs
+          path: netlify-plugin-nextjs
+      - name: Checking out netlify-cli
+        uses: actions/checkout@v2
+        with:
+          repository: netlify/cli
+          path: netlify-cli
+      - name: Installing Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '*'
+      - name: Installing netlify-cli
+        run: npm ci
+        working-directory: netlify-cli
+      - name: Installing netlify-plugin-nextjs
+        run: npm install
+        working-directory: netlify-plugin-nextjs
+      - name: Installing netlify-plugin-nextjs demo
+        run: npm install
+        working-directory: netlify-plugin-nextjs/demo
+      - name: Patching netlify.toml to change the bundler
+        if: "${{ matrix.bundler != 'default' }}"
+        run:
+          'npm i @iarna/toml --no-save && node -e "const { readFileSync, writeFileSync } = require(''fs'');const {
+          parse, stringify } = require(''@iarna/toml'');const config = parse(readFileSync(''netlify.toml'',
+          ''utf-8''));config.functions = { ...config.functions, node_bundler: ''${{ matrix.bundler }}''
+          };writeFileSync(''netlify.toml'', stringify(config));"'
+        working-directory: netlify-plugin-nextjs/demo
+      - name: Symlinking zip-it-and-ship-it (1/2)
+        run:
+          rm -rf $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/zip-it-and-ship-it && mkdir -p
+          $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify && ln -s $GITHUB_WORKSPACE/zip-it-and-ship-it
+          $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/zip-it-and-ship-it
+      - name: Symlinking zip-it-and-ship-it (2/2)
+        run:
+          rm -rf $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/build/node_modules/@netlify/zip-it-and-ship-it &&
+          mkdir -p $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/build/node_modules/@netlify && ln -s
+          $GITHUB_WORKSPACE/zip-it-and-ship-it
+          $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/build/node_modules/@netlify/zip-it-and-ship-it
+      - name: Installing zip-it-and-ship-it
+        run: npm install
+        working-directory: zip-it-and-ship-it
+      - name: Building and deploying site
+        run:
+          NETLIFY_EXPERIMENTAL_FUNCTION_HANDLER_V2=true $GITHUB_WORKSPACE/netlify-cli/bin/run deploy --build --json
+          --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_TOKEN }} --functions .netlify/functions >
+          .netlify-deploy-log.json
+        working-directory: netlify-plugin-nextjs/demo
+      - name: Parsing deploy result
+        run: |
+          node -e "console.log('deploy_log_url=' + require('./.netlify-deploy-log.json').logs)" >> $GITHUB_ENV
+          node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
+        working-directory: netlify-plugin-nextjs/demo
+      - name: Posting comment
+        uses: KeisukeYamashita/create-comment@v1
+        with:
+          check-only-first-line: true
+          unique: true
+          comment: |
+            ## Next.js Integration Test (${{ matrix.bundler }})
+
+            - **Deploy URL**: ${{ env.deploy_url }}
+            - **Deploy logs**: ${{ env.deploy_log_url }}

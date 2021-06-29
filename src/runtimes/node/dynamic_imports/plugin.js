@@ -13,11 +13,12 @@ const { parseExpression } = require('./parser')
 // issues. Secondly, it parses the dynamic expressions and tries to include in
 // the bundle all the files that are possibly needed to make the import work at
 // runtime. This is not always possible, but we do our best.
-const getDynamicImportsPlugin = ({ basePath, includedPaths, moduleNames, srcDir }) => ({
+const getDynamicImportsPlugin = ({ basePath, includedPaths, moduleNames, processImports, srcDir }) => ({
   name: 'dynamic-imports',
   setup(build) {
     const cache = new Map()
 
+    // eslint-disable-next-line complexity
     build.onDynamicImport({}, async (args) => {
       const { expression, resolveDir } = args
 
@@ -25,7 +26,9 @@ const getDynamicImportsPlugin = ({ basePath, includedPaths, moduleNames, srcDir 
 
       // Don't attempt to parse the expression if the base path isn't defined,
       // since we won't be able to generate the globs for the included paths.
-      if (!basePath) {
+      // Also don't parse the expression if we're not interested in processing
+      // the dynamic import expressions.
+      if (!basePath || !processImports) {
         return
       }
 
