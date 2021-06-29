@@ -37,9 +37,6 @@ jobs:
       - name: Installing netlify-plugin-nextjs
         run: npm install
         working-directory: netlify-plugin-nextjs
-      - name: Installing netlify-plugin-nextjs demo
-        run: npm install
-        working-directory: netlify-plugin-nextjs/demo
       - name: Patching netlify.toml to change the bundler
         if: "${{ matrix.bundler != 'default' }}"
         run:
@@ -47,7 +44,7 @@ jobs:
           parse, stringify } = require(''@iarna/toml'');const config = parse(readFileSync(''netlify.toml'',
           ''utf-8''));config.functions = { ...config.functions, node_bundler: ''${{ matrix.bundler }}''
           };writeFileSync(''netlify.toml'', stringify(config));"'
-        working-directory: netlify-plugin-nextjs/demo
+        working-directory: netlify-plugin-nextjs
       - name: Symlinking zip-it-and-ship-it (1/2)
         run:
           rm -rf $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/zip-it-and-ship-it && mkdir -p
@@ -67,12 +64,12 @@ jobs:
           NETLIFY_EXPERIMENTAL_FUNCTION_HANDLER_V2=true $GITHUB_WORKSPACE/netlify-cli/bin/run deploy --build --json
           --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{ secrets.NETLIFY_TOKEN }} --functions .netlify/functions >
           .netlify-deploy-log.json
-        working-directory: netlify-plugin-nextjs/demo
+        working-directory: netlify-plugin-nextjs
       - name: Parsing deploy result
         run: |
           node -e "console.log('deploy_log_url=' + require('./.netlify-deploy-log.json').logs)" >> $GITHUB_ENV
           node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
-        working-directory: netlify-plugin-nextjs/demo
+        working-directory: netlify-plugin-nextjs
       - name: Posting comment
         uses: KeisukeYamashita/create-comment@v1
         with:
