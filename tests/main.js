@@ -84,14 +84,14 @@ testBundlers(
     const { files, tmpDir } = await zipNode(t, fixtureDir, {
       opts: { config: { '*': { nodeBundler: bundler } } },
     })
-    const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+    const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
     const normalizedRequires = new Set(requires.map(unixify))
     const modulePath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/test`)
 
     t.is(files.length, 1)
     t.is(files[0].runtime, 'js')
-    t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
-    t.true(await pathExists(`${tmpDir}/src/node_modules/test/side-file.js`))
+    t.true(await pathExists(`${tmpDir}/node_modules/test/native.node`))
+    t.true(await pathExists(`${tmpDir}/node_modules/test/side-file.js`))
     t.true(normalizedRequires.has('test'))
 
     // We can only detect native modules when using esbuild.
@@ -115,14 +115,14 @@ testBundlers(
     const { files, tmpDir } = await zipNode(t, fixtureDir, {
       opts: { config: { '*': { nodeBundler: bundler } } },
     })
-    const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+    const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
     const normalizedRequires = new Set(requires.map(unixify))
     const modulePath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/test`)
 
     t.is(files.length, 1)
     t.is(files[0].runtime, 'js')
-    t.true(await pathExists(`${tmpDir}/src/node_modules/test/native.node`))
-    t.true(await pathExists(`${tmpDir}/src/node_modules/test/side-file.js`))
+    t.true(await pathExists(`${tmpDir}/node_modules/test/native.node`))
+    t.true(await pathExists(`${tmpDir}/node_modules/test/side-file.js`))
     t.true(normalizedRequires.has('test'))
 
     // We can only detect native modules when using esbuild.
@@ -151,7 +151,7 @@ testBundlers('Can require dynamically generated node modules', [ESBUILD, ESBUILD
 testBundlers('Ignore some excluded node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   const { tmpDir } = await zipNode(t, 'node-module-excluded', { opts: { config: { '*': { nodeBundler: bundler } } } })
 
-  t.false(await pathExists(`${tmpDir}/src/node_modules/aws-sdk`))
+  t.false(await pathExists(`${tmpDir}/node_modules/aws-sdk`))
 
   try {
     // eslint-disable-next-line import/no-dynamic-require, node/global-require
@@ -169,7 +169,7 @@ testBundlers('Ignore TypeScript types', [ESBUILD, ESBUILD_ZISI, DEFAULT], async 
   const { tmpDir } = await zipNode(t, 'node-module-typescript-types', {
     opts: { config: { '*': { nodeBundler: bundler } } },
   })
-  t.false(await pathExists(`${tmpDir}/src/node_modules/@types/node`))
+  t.false(await pathExists(`${tmpDir}/node_modules/@types/node`))
 })
 
 testBundlers('Throws on runtime errors', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
@@ -405,7 +405,7 @@ testBundlers(
     const { tmpDir } = await zipNode(t, 'ignore-dir-node-modules', {
       opts: { config: { '*': { nodeBundler: bundler } } },
     })
-    t.false(await pathExists(`${tmpDir}/src/node_modules`))
+    t.false(await pathExists(`${tmpDir}/node_modules`))
   },
 )
 
@@ -416,7 +416,7 @@ testBundlers(
     const { tmpDir } = await zipNode(t, 'ignore-deep-dir-node-modules', {
       opts: { config: { '*': { nodeBundler: bundler } } },
     })
-    t.false(await pathExists(`${tmpDir}/src/deep/node_modules`))
+    t.false(await pathExists(`${tmpDir}/deep/node_modules`))
   },
 )
 
@@ -471,7 +471,7 @@ testBundlers('Ignore directories without a main file', [ESBUILD, ESBUILD_ZISI, D
 
 testBundlers('Remove useless files', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   const { tmpDir } = await zipNode(t, 'useless', { opts: { config: { '*': { nodeBundler: bundler } } } })
-  t.false(await pathExists(`${tmpDir}/src/Desktop.ini`))
+  t.false(await pathExists(`${tmpDir}/Desktop.ini`))
 })
 
 testBundlers('Works on empty directories', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
@@ -583,8 +583,8 @@ testBundlers('Zips node modules', [DEFAULT], async (bundler, t) => {
 testBundlers('Include most files from node modules', [DEFAULT], async (bundler, t) => {
   const { tmpDir } = await zipNode(t, 'node-module-included', { opts: { config: { '*': { nodeBundler: bundler } } } })
   const [mapExists, htmlExists] = await Promise.all([
-    pathExists(`${tmpDir}/src/node_modules/test/test.map`),
-    pathExists(`${tmpDir}/src/node_modules/test/test.html`),
+    pathExists(`${tmpDir}/node_modules/test/test.map`),
+    pathExists(`${tmpDir}/node_modules/test/test.html`),
   ])
   t.false(mapExists)
   t.true(htmlExists)
@@ -599,10 +599,10 @@ testBundlers('Includes specific Next.js dependencies when using next-on-netlify'
     opts: { config: { '*': { nodeBundler: bundler } } },
   })
   const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
-    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/index.js`),
+    pathExists(`${tmpDir}/node_modules/next/dist/next-server/lib/constants.js`),
+    pathExists(`${tmpDir}/node_modules/next/dist/compiled/semver.js`),
+    pathExists(`${tmpDir}/node_modules/next/dist/other.js`),
+    pathExists(`${tmpDir}/node_modules/next/index.js`),
   ])
   t.true(constantsExists)
   t.true(semverExists)
@@ -613,10 +613,10 @@ testBundlers('Includes specific Next.js dependencies when using next-on-netlify'
 testBundlers('Includes all Next.js dependencies when not using next-on-netlify', [DEFAULT], async (bundler, t) => {
   const { tmpDir } = await zipNode(t, 'node-module-next', { opts: { config: { '*': { nodeBundler: bundler } } } })
   const [constantsExists, semverExists, otherExists, indexExists] = await Promise.all([
-    pathExists(`${tmpDir}/src/node_modules/next/dist/next-server/lib/constants.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/dist/compiled/semver.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/dist/other.js`),
-    pathExists(`${tmpDir}/src/node_modules/next/index.js`),
+    pathExists(`${tmpDir}/node_modules/next/dist/next-server/lib/constants.js`),
+    pathExists(`${tmpDir}/node_modules/next/dist/compiled/semver.js`),
+    pathExists(`${tmpDir}/node_modules/next/dist/other.js`),
+    pathExists(`${tmpDir}/node_modules/next/index.js`),
   ])
   t.true(constantsExists)
   t.true(semverExists)
@@ -631,7 +631,7 @@ testBundlers('Inlines node modules in the bundle', [ESBUILD, ESBUILD_ZISI], asyn
   const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
   t.false(requires.includes('test'))
-  t.false(await pathExists(`${tmpDir}/src/node_modules/test`))
+  t.false(await pathExists(`${tmpDir}/node_modules/test`))
 })
 
 testBundlers(
@@ -650,7 +650,7 @@ testBundlers(
     const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
     t.true(requires.includes('test'))
-    t.true(await pathExists(`${tmpDir}/src/node_modules/test`))
+    t.true(await pathExists(`${tmpDir}/node_modules/test`))
   },
 )
 
@@ -670,7 +670,7 @@ testBundlers(
     const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
     t.true(requires.includes('test'))
-    t.false(await pathExists(`${tmpDir}/src/node_modules/test`))
+    t.false(await pathExists(`${tmpDir}/node_modules/test`))
   },
 )
 
@@ -688,8 +688,8 @@ testBundlers(
       opts: { config },
     })
     const [mapExists, htmlExists] = await Promise.all([
-      pathExists(`${tmpDir}/src/node_modules/test/test.map`),
-      pathExists(`${tmpDir}/src/node_modules/test/test.html`),
+      pathExists(`${tmpDir}/node_modules/test/test.map`),
+      pathExists(`${tmpDir}/node_modules/test/test.html`),
     ])
     t.false(mapExists)
     t.true(htmlExists)
@@ -710,7 +710,7 @@ testBundlers(
       opts: { config },
     })
 
-    t.false(await pathExists(`${tmpDir}/src/node_modules/i-do-not-exist`))
+    t.false(await pathExists(`${tmpDir}/node_modules/i-do-not-exist`))
   },
 )
 
@@ -918,9 +918,9 @@ testBundlers(
 
     const { files, tmpDir } = await zipNode(t, 'config-apply-1', { length: 3, opts: { config } })
     const requires = await Promise.all([
-      getRequires({ filePath: resolve(tmpDir, 'src/another_function.js') }),
-      getRequires({ filePath: resolve(tmpDir, 'src/function_two.js') }),
-      getRequires({ filePath: resolve(tmpDir, 'src/function_one.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'another_function.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'function_two.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'function_one.js') }),
     ])
 
     t.deepEqual(requires[0], ['test-1'])
@@ -957,9 +957,9 @@ testBundlers(
 
     const { files, tmpDir } = await zipNode(t, 'config-apply-1', { length: 3, opts: { config } })
     const requires = await Promise.all([
-      getRequires({ filePath: resolve(tmpDir, 'src/another_function.js') }),
-      getRequires({ filePath: resolve(tmpDir, 'src/function_two.js') }),
-      getRequires({ filePath: resolve(tmpDir, 'src/function_one.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'another_function.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'function_two.js') }),
+      getRequires({ filePath: resolve(tmpDir, 'function_one.js') }),
     ])
 
     t.deepEqual(requires[0], externalNodeModules)
@@ -1020,9 +1020,9 @@ testBundlers(
     t.true(body2.includes("I must've called a thousand times"))
     t.true(body3.includes('Uh-oh'))
 
-    t.true(await pathExists(`${tmpDir}/src/content/post1.md`))
-    t.true(await pathExists(`${tmpDir}/src/content/post2.md`))
-    t.false(await pathExists(`${tmpDir}/src/content/post3.md`))
+    t.true(await pathExists(`${tmpDir}/content/post1.md`))
+    t.true(await pathExists(`${tmpDir}/content/post2.md`))
+    t.false(await pathExists(`${tmpDir}/content/post3.md`))
   },
 )
 
@@ -1079,7 +1079,7 @@ testBundlers(
 )
 
 testBundlers(
-  'Places all user-defined files at the root of the target directory if the `experimentalHandlerV2` configuration property is defined',
+  'Places all user-defined files at the root of the target directory',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
     const fixtureName = 'base_path'
@@ -1088,7 +1088,6 @@ testBundlers(
         basePath: join(FIXTURES_DIR, fixtureName),
         config: {
           '*': {
-            experimentalHandlerV2: true,
             includedFiles: ['content/*'],
             nodeBundler: bundler,
           },
@@ -1112,7 +1111,7 @@ testBundlers(
 )
 
 testBundlers(
-  'Places all user-defined files in a `src/` sub-directory if there is a naming conflict with the entry file, even if the `experimentalHandlerV2` configuration property is defined',
+  'Places all user-defined files in a `src/` sub-directory if there is a naming conflict with the entry file',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
     const fixtureName = 'base_path'
@@ -1121,7 +1120,6 @@ testBundlers(
         basePath: join(FIXTURES_DIR, fixtureName),
         config: {
           '*': {
-            experimentalHandlerV2: true,
             includedFiles: ['content/*', 'func2.js'],
             nodeBundler: bundler,
           },
@@ -1136,36 +1134,6 @@ testBundlers(
     // with the /func2.js path present in `includedFiles`.
     t.true(unixify(function2Entry[0]).includes('/src/'))
     t.true(await pathExists(`${tmpDir}/src/func2.js`))
-    t.false(await pathExists(`${tmpDir}/content/post1.md`))
-    t.false(await pathExists(`${tmpDir}/content/post2.md`))
-    t.false(await pathExists(`${tmpDir}/content/post3.md`))
-    t.true(await pathExists(`${tmpDir}/src/content/post1.md`))
-    t.true(await pathExists(`${tmpDir}/src/content/post2.md`))
-    t.true(await pathExists(`${tmpDir}/src/content/post3.md`))
-  },
-)
-
-testBundlers(
-  'Places all user-defined files in a `src/` sub-directory if the `experimentalHandlerV2` configuration property is not defined',
-  [ESBUILD, ESBUILD_ZISI, DEFAULT],
-  async (bundler, t) => {
-    const fixtureName = 'base_path'
-    const { tmpDir } = await zipNode(t, `${fixtureName}/netlify/functions2`, {
-      opts: {
-        basePath: join(FIXTURES_DIR, fixtureName),
-        config: {
-          '*': {
-            includedFiles: ['content/*'],
-            nodeBundler: bundler,
-          },
-        },
-      },
-    })
-
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require
-    const function2Entry = require(`${tmpDir}/func2.js`)
-
-    t.true(unixify(function2Entry[0]).includes('/src/'))
     t.false(await pathExists(`${tmpDir}/content/post1.md`))
     t.false(await pathExists(`${tmpDir}/content/post2.md`))
     t.false(await pathExists(`${tmpDir}/content/post3.md`))
@@ -1241,7 +1209,7 @@ test('Leaves dynamic imports untouched when the `processDynamicNodeImports` conf
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
   })
-  const functionSource = await pReadFile(`${tmpDir}/src/function.js`, 'utf8')
+  const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
 
   /* eslint-disable no-template-curly-in-string */
   t.true(functionSource.includes('const require1 = require(`./files/${number}.js`);'))
@@ -1281,7 +1249,7 @@ test('Leaves dynamic imports untouched when the files required to resolve the ex
       config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
     },
   })
-  const functionSource = await pReadFile(`${tmpDir}/src/function.js`, 'utf8')
+  const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
 
   t.true(functionSource.includes('const require1 = require(number)'))
   // eslint-disable-next-line no-template-curly-in-string
@@ -1351,7 +1319,7 @@ test('Creates dynamic import shims for functions with the same name and same shi
 
 test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
   const { files, tmpDir } = await zipNode(t, 'local-node-module')
-  const requires = await getRequires({ filePath: resolve(tmpDir, 'src/function.js') })
+  const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
 
   t.deepEqual(requires, ['test'])
   t.is(files[0].bundler, 'zisi')
@@ -1400,9 +1368,9 @@ test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) =>
     opts: { config: { '*': { nodeBundler: ESBUILD } } },
   })
 
-  t.false(await pathExists(`${tmpDir}/src/function.js.map`))
+  t.false(await pathExists(`${tmpDir}/function.js.map`))
 
-  const functionSource = await pReadFile(`${tmpDir}/src/function.js`, 'utf8')
+  const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
 
   t.false(functionSource.includes('sourceMappingURL'))
 })
@@ -1412,7 +1380,7 @@ if (platform !== 'win32') {
     const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
       opts: { config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true } } },
     })
-    const sourcemap = await pReadFile(`${tmpDir}/src/function.js.map`, 'utf8')
+    const sourcemap = await pReadFile(`${tmpDir}/function.js.map`, 'utf8')
     const { sourceRoot, sources } = JSON.parse(sourcemap)
 
     await Promise.all(
