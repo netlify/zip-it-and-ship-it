@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "4.4.1",
+  "version": "4.8.0",
   "description": "Zip it and ship it",
   "main": "./src/main.js",
   "bin": {
@@ -55,6 +55,7 @@
   },
   "dependencies": {
     "@netlify/esbuild": "^0.13.6",
+    "acorn": "^8.4.0",
     "archiver": "^5.3.0",
     "array-flat-polyfill": "^1.0.1",
     "common-path-prefix": "^3.0.0",
@@ -78,11 +79,12 @@
     "require-package-name": "^2.0.1",
     "resolve": "^2.0.0-next.1",
     "semver": "^7.0.0",
+    "tmp-promise": "^3.0.2",
     "unixify": "^1.0.0",
     "yargs": "^16.0.0"
   },
   "devDependencies": {
-    "@netlify/eslint-config-node": "^3.1.4",
+    "@netlify/eslint-config-node": "^3.1.6",
     "adm-zip": "^0.5.0",
     "ava": "^3.0.0",
     "cpy": "^8.0.0",
@@ -90,8 +92,7 @@
     "get-stream": "^6.0.0",
     "husky": "^4.3.8",
     "npm-run-all": "^4.1.5",
-    "nyc": "^15.0.0",
-    "tmp-promise": "^3.0.2"
+    "nyc": "^15.0.0"
   },
   "engines": {
     "node": ">=10.18.0"

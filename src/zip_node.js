@@ -74,7 +74,6 @@ const createZipArchive = async function ({
   basePath,
   destFolder,
   extension,
-  experimentalHandlerV2,
   filename,
   mainFile,
   pluginsModulesPath,
@@ -85,16 +84,9 @@ const createZipArchive = async function ({
   const entryFilename = `${basename(filename, extension)}.js`
   const entryFilePath = resolve(basePath, entryFilename)
 
-  // Traditionally, everything other than the entry file was placed inside a
-  // `src` sub-directory. We want to change this behavior, but we're doing so
-  // gradually. For now, we keep injecting that sub-directory unless there is
-  // a `experimentalHandlerV2` configuration property set to `true`, in which
-  // case we place all files at the root.
-  const needsUserNamespace = experimentalHandlerV2 !== true
-
   // We don't need an entry file if it would end up with the same path as the
   // function's main file.
-  const needsEntryFile = needsUserNamespace || entryFilePath !== mainFile
+  const needsEntryFile = entryFilePath !== mainFile
 
   // There is a naming conflict with the entry file if one of the supporting
   // files (i.e. not the main file) has the path that the entry file needs to
@@ -103,7 +95,7 @@ const createZipArchive = async function ({
 
   // If there is a naming conflict, we move all user files (everything other
   // than the entry file) to its own sub-directory.
-  const userNamespace = needsUserNamespace || hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
+  const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
   if (needsEntryFile) {
     const entryFile = getEntryFile({ commonPrefix: basePath, filename, mainFile, userNamespace })
