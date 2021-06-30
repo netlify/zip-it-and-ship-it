@@ -1,5 +1,5 @@
 const { readdir, unlink } = require('fs')
-const { format, join, parse } = require('path')
+const { format, join, parse, resolve } = require('path')
 const { promisify } = require('util')
 
 const pReaddir = promisify(readdir)
@@ -54,4 +54,10 @@ const resolveFunctionsDirectories = (input) => {
   return absoluteDirectories
 }
 
-module.exports = { getPathWithExtension, listFunctionsDirectories, listFunctionsDirectory, resolveFunctionsDirectories, safeUnlink }
+module.exports = {
+  getPathWithExtension,
+  listFunctionsDirectories,
+  listFunctionsDirectory,
+  resolveFunctionsDirectories,
+  safeUnlink,
+}
