@@ -20,7 +20,7 @@ const sortByExtension = (fA, fB) => {
   return indexB - indexA
 }
 
-const findFunctionsInPaths = async function (paths) {
+const findFunctionsInPaths = async function ({ paths }) {
   const functions = await Promise.all(paths.map(getFunctionAtPath))
 
   // It's fine to mutate the array since its scope is local to this function.

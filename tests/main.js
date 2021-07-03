@@ -10,8 +10,16 @@ const del = require('del')
 const execa = require('execa')
 const makeDir = require('make-dir')
 const pathExists = require('path-exists')
+const sinon = require('sinon')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
+
+// We must require this file first because we need to stub it before the main
+// functions are required.
+// eslint-disable-next-line import/order
+const shellUtils = require('../src/utils/shell')
+
+const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
@@ -55,6 +63,10 @@ test.after.always(async () => {
   if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
     await del(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
   }
+})
+
+test.afterEach(() => {
+  shellUtilsStub.resetHistory()
 })
 
 // Convenience method for running a test for each JS bundler.
@@ -1519,6 +1531,26 @@ test('Does not zip Go function files', async (t) => {
       Boolean,
     ),
   )
+})
+
+test('Builds Go functions from source', async (t) => {
+  shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
+
+  const { files } = await zipFixture(t, 'go-source', {
+    opts: {},
+  })
+
+  t.is(shellUtilsStub.callCount, 1)
+
+  const { args } = shellUtilsStub.getCall(0)
+
+  t.is(args[0], 'go')
+  t.is(args[1][0], 'build')
+  t.is(args[1][1], '-o')
+  t.is(args[1][2], files[0].mainFile)
+
+  t.is(files[0].name, 'go-func')
+  t.is(files[0].runtime, 'go')
 })
 
 test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {

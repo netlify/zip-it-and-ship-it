@@ -12,12 +12,14 @@ const rustRuntime = require('./rust')
  * and an array with the paths that haven't been recognized by the runtime
  * (`remainingPaths`).
  *
+ * @param   {Boolean} dedupe
+ * @param   {Object} fsCache
  * @param   {Array<String>} paths
  * @param   {Object} runtime
  * @returns {Promise<Object>}
  */
-const findFunctionsInRuntime = async function ({ dedupe = false, paths, runtime }) {
-  const functions = await runtime.findFunctionsInPaths(paths)
+const findFunctionsInRuntime = async function ({ dedupe = false, fsCache, paths, runtime }) {
+  const functions = await runtime.findFunctionsInPaths({ fsCache, paths })
 
   // If `dedupe` is true, we use the function name (`filename`) as the map key,
   // so that `function-1.js` will overwrite `function-1.go`. Otherwise, we use
@@ -49,6 +51,11 @@ const findFunctionsInRuntime = async function ({ dedupe = false, paths, runtime 
  * @returns {Promise<Map>}
  */
 const getFunctionsFromPaths = async (paths, { config, dedupe = false } = {}) => {
+  // An object to cache filesystem operations. This allows different functions
+  // to perform IO operations on the same file (i.e. getting its stats or its
+  // contents) without duplicating work.
+  const fsCache = {}
+
   // The order of this array determines the priority of the runtimes. If a path
   // is used by the first time, it won't be made available to the subsequent
   // runtimes.
@@ -63,6 +70,7 @@ const getFunctionsFromPaths = async (paths, { config, dedupe = false } = {}) => 
       const { functions: aggregateFunctions, remainingPaths: aggregatePaths } = await aggregate
       const { functions: runtimeFunctions, remainingPaths: runtimePaths } = await findFunctionsInRuntime({
         dedupe,
+        fsCache,
         paths: aggregatePaths,
         runtime,
       })

@@ -1,9 +1,26 @@
-const { readdir, unlink } = require('fs')
+const { lstat, readdir, readFile, unlink } = require('fs')
 const { format, join, parse, resolve } = require('path')
 const { promisify } = require('util')
 
+const pLstat = promisify(lstat)
 const pReaddir = promisify(readdir)
+const pReadFile = promisify(readFile)
 const pUnlink = promisify(unlink)
+
+const cachedIOFunction = (func, cache, path, ...args) => {
+  const key = `${func.name}:${path}`
+
+  if (cache[key] === undefined) {
+    // eslint-disable-next-line no-param-reassign
+    cache[key] = func(path, ...args)
+  }
+
+  return cache[key]
+}
+
+const cachedLstat = (...args) => cachedIOFunction(pLstat, ...args)
+const cachedReaddir = (...args) => cachedIOFunction(pReaddir, ...args)
+const cachedReadFile = (...args) => cachedIOFunction(pReadFile, ...args)
 
 const getPathWithExtension = (path, extension) => format({ ...parse(path), base: undefined, ext: extension })
 
@@ -55,6 +72,10 @@ const resolveFunctionsDirectories = (input) => {
 }
 
 module.exports = {
+  cachedLstat,
+  cachedReaddir,
+  cachedReadFile,
+  lstat: pLstat,
   getPathWithExtension,
   listFunctionsDirectories,
   listFunctionsDirectory,
