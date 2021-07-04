@@ -4,18 +4,11 @@ const cpFile = require('cp-file')
 
 const { RUNTIME_GO } = require('../../utils/consts')
 const { cachedLstat, cachedReaddir } = require('../../utils/fs')
-const { zipBinary } = require('../../zip_binary')
 const { detectBinaryRuntime } = require('../detect_runtime')
 
-const { build: processSource } = require('./builder')
+const { build } = require('./builder')
 
-const copyFunction = async function ({ config, destFolder, filename, srcPath }) {
-  const destPath = join(destFolder, filename)
-
-  await cpFile(srcPath, destPath)
-
-  return { config, path: destPath }
-}
+const MAIN_FILE_NAME = 'main.go'
 
 const detectGoFunction = async ({ fsCache, path }) => {
   const stat = await cachedLstat(fsCache, path)
@@ -26,22 +19,22 @@ const detectGoFunction = async ({ fsCache, path }) => {
 
   const files = await cachedReaddir(fsCache, path)
 
-  return files.includes('main.go')
+  return files.includes(MAIN_FILE_NAME)
 }
 
 const findFunctionsInPaths = async function ({ fsCache, paths }) {
   const functions = await Promise.all(
     paths.map(async (path) => {
-      const isGoSource = await detectGoFunction({ fsCache, path })
-
-      if (isGoSource) {
-        return processSource({ directory: path })
-      }
-
       const runtime = await detectBinaryRuntime({ fsCache, path })
 
       if (runtime === RUNTIME_GO) {
         return processBinary({ fsCache, path })
+      }
+
+      const isGoSource = await detectGoFunction({ fsCache, path })
+
+      if (isGoSource) {
+        return processSource({ fsCache, path })
       }
     }),
   )
@@ -62,18 +55,26 @@ const processBinary = async ({ fsCache, path }) => {
   }
 }
 
-const zipFunction = async function ({ config, destFolder, filename, mainFile, name, runtime, srcDir, srcPath, stat }) {
-  const isBuiltFromSource = srcDir !== dirname(mainFile)
+const processSource = ({ path }) => {
+  const functionName = basename(path)
+  const mainFile = join(path, MAIN_FILE_NAME)
 
-  // If this is a pre-existing binary (i.e. not built from source by us), we
-  // simply copy it to the destination folder, for backward-compatibility.
-  if (!isBuiltFromSource) {
-    return copyFunction({ config, destFolder, filename, srcPath })
+  return {
+    mainFile,
+    name: functionName,
+    srcDir: path,
+    srcPath: path,
   }
+}
 
-  const destPath = join(destFolder, `${filename}.zip`)
+const zipFunction = async function ({ config, destFolder, filename, mainFile, srcDir, srcPath }) {
+  const destPath = join(destFolder, filename)
+  const isSource = extname(mainFile) === '.go'
 
-  await zipBinary({ destPath, filename: name, srcPath, runtime, stat })
+  // If we're building a Go function from source, we call the build method and
+  // it'll take care of placing the binary in the right location. If not, we
+  // need to copy the existing binary file to the destination directory.
+  await (isSource ? build({ destPath, mainFile, srcDir }) : cpFile(srcPath, destPath))
 
   return { config, path: destPath }
 }

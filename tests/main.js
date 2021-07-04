@@ -1,6 +1,6 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
-const { dirname, join, normalize, resolve } = require('path')
+const { dirname, join, normalize, resolve, sep } = require('path')
 const { env, platform } = require('process')
 const { promisify } = require('util')
 
@@ -1536,7 +1536,8 @@ test('Does not zip Go function files', async (t) => {
 test('Builds Go functions from source', async (t) => {
   shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
-  const { files } = await zipFixture(t, 'go-source', {
+  const fixtureName = 'go-source'
+  const { files } = await zipFixture(t, fixtureName, {
     opts: {},
   })
 
@@ -1547,8 +1548,9 @@ test('Builds Go functions from source', async (t) => {
   t.is(args[0], 'go')
   t.is(args[1][0], 'build')
   t.is(args[1][1], '-o')
-  t.is(args[1][2], files[0].mainFile)
+  t.true(args[1][2].endsWith(`${sep}go-func`))
 
+  t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'go-func', 'main.go'))
   t.is(files[0].name, 'go-func')
   t.is(files[0].runtime, 'go')
 })

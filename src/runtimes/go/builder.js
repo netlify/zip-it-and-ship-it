@@ -1,30 +1,31 @@
-const { basename, join } = require('path')
-
-const tmp = require('tmp-promise')
+const { basename } = require('path')
 
 const { lstat } = require('../../utils/fs')
 const { runCommand } = require('../../utils/shell')
 
-const build = async ({ directory }) => {
-  const functionName = basename(directory)
-  const targetDirectory = await tmp.dir({ unsafeCleanup: true })
-  const binaryPath = join(targetDirectory.path, functionName)
+const build = async ({ destPath, mainFile, srcDir }) => {
+  const functionName = basename(srcDir)
 
   try {
-    await runCommand('go', ['build', '-o', binaryPath, '-ldflags', '-s -w'], { cwd: directory })
+    await runCommand('go', ['build', '-o', destPath, '-ldflags', '-s -w'], {
+      cwd: srcDir,
+      env: {
+        GOOS: 'linux',
+      },
+    })
   } catch (error) {
     console.error(`Could not compile Go function ${functionName}:\n`)
 
     throw error
   }
 
-  const stat = await lstat(binaryPath)
+  const stat = await lstat(destPath)
 
   return {
-    mainFile: binaryPath,
+    mainFile,
     name: functionName,
-    srcDir: directory,
-    srcPath: binaryPath,
+    srcDir,
+    srcPath: destPath,
     stat,
   }
 }
