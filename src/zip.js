@@ -3,6 +3,7 @@ const { resolve } = require('path')
 const makeDir = require('make-dir')
 const pMap = require('p-map')
 
+const { getFlags } = require('./feature_flags')
 const { getPluginsModulesPath } = require('./node_dependencies')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
@@ -53,14 +54,21 @@ const formatZipResult = (result) => {
 const zipFunctions = async function (
   relativeSrcFolder,
   destFolder,
-  { archiveFormat = ARCHIVE_FORMAT_ZIP, basePath, config = {}, parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
+  {
+    archiveFormat = ARCHIVE_FORMAT_ZIP,
+    basePath,
+    config = {},
+    featureFlags: inputFeatureFlags,
+    parallelLimit = DEFAULT_PARALLEL_LIMIT,
+  } = {},
 ) {
   validateArchiveFormat(archiveFormat)
 
+  const featureFlags = getFlags(inputFeatureFlags)
   const srcFolder = resolve(relativeSrcFolder)
   const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
   const [functions, pluginsModulesPath] = await Promise.all([
-    getFunctionsFromPaths(paths, { config, dedupe: true }),
+    getFunctionsFromPaths(paths, { config, dedupe: true, featureFlags }),
     getPluginsModulesPath(srcFolder),
   ])
   const zipped = await pMap(
@@ -94,12 +102,18 @@ const zipFunctions = async function (
 const zipFunction = async function (
   relativeSrcPath,
   destFolder,
-  { archiveFormat = ARCHIVE_FORMAT_ZIP, config: inputConfig = {}, pluginsModulesPath: defaultModulesPath } = {},
+  {
+    archiveFormat = ARCHIVE_FORMAT_ZIP,
+    config: inputConfig = {},
+    featureFlags: inputFeatureFlags,
+    pluginsModulesPath: defaultModulesPath,
+  } = {},
 ) {
   validateArchiveFormat(archiveFormat)
 
+  const featureFlags = getFlags(inputFeatureFlags)
   const srcPath = resolve(relativeSrcPath)
-  const functions = await getFunctionsFromPaths([srcPath], { config: inputConfig, dedupe: true })
+  const functions = await getFunctionsFromPaths([srcPath], { config: inputConfig, dedupe: true, featureFlags })
 
   if (functions.size === 0) {
     return
