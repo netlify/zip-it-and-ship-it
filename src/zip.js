@@ -64,6 +64,7 @@ const zipFunctions = async function (
 ) {
   validateArchiveFormat(archiveFormat)
 
+  const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), makeDir(destFolder)])
   const [functions, pluginsModulesPath] = await Promise.all([
