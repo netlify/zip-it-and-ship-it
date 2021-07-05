@@ -1,6 +1,6 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
-const { join, normalize, resolve } = require('path')
+const { dirname, join, normalize, resolve } = require('path')
 const { env, platform, versions } = require('process')
 const { promisify } = require('util')
 
@@ -1148,21 +1148,19 @@ testBundlers(
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
     const fixtureName = 'multiple-src-directories'
-    const { tmpDir } = await zipNode(
-      t,
-      [`${fixtureName}/.netlify/internal-functions`, `${fixtureName}/netlify/functions`],
-      {
-        length: 3,
-        opts: {
-          basePath: join(FIXTURES_DIR, fixtureName),
-          config: {
-            '*': {
-              nodeBundler: bundler,
-            },
+    const pathInternal = `${fixtureName}/.netlify/internal-functions`
+    const pathUser = `${fixtureName}/netlify/functions`
+    const { files, tmpDir } = await zipNode(t, [pathInternal, pathUser], {
+      length: 3,
+      opts: {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        config: {
+          '*': {
+            nodeBundler: bundler,
           },
         },
       },
-    )
+    })
 
     /* eslint-disable import/no-dynamic-require, node/global-require */
     const functionCommon = require(`${tmpDir}/function.js`)
@@ -1174,6 +1172,18 @@ testBundlers(
     t.is(functionCommon, 'user')
     t.is(functionInternal, 'internal')
     t.is(functionUser, 'user')
+
+    const functionCommonEntry = files.find(({ name }) => name === 'function')
+    const functionInternalEntry = files.find(({ name }) => name === 'function_internal')
+    const functionUserEntry = files.find(({ name }) => name === 'function_user')
+
+    t.not(functionCommonEntry, undefined)
+    t.not(functionInternalEntry, undefined)
+    t.not(functionUserEntry, undefined)
+
+    t.is(dirname(functionCommonEntry.mainFile), resolve(join(__dirname, 'fixtures', pathUser)))
+    t.is(dirname(functionInternalEntry.mainFile), resolve(join(__dirname, 'fixtures', pathInternal)))
+    t.is(dirname(functionUserEntry.mainFile), resolve(join(__dirname, 'fixtures', pathUser)))
   },
 )
 
