@@ -22,13 +22,17 @@ const detectGoFunction = async ({ fsCache, path }) => {
   return files.includes(MAIN_FILE_NAME)
 }
 
-const findFunctionsInPaths = async function ({ fsCache, paths }) {
+const findFunctionsInPaths = async function ({ featureFlags, fsCache, paths }) {
   const functions = await Promise.all(
     paths.map(async (path) => {
       const runtime = await detectBinaryRuntime({ fsCache, path })
 
       if (runtime === RUNTIME_GO) {
         return processBinary({ fsCache, path })
+      }
+
+      if (featureFlags.buildGoSource !== true) {
+        return
       }
 
       const isGoSource = await detectGoFunction({ fsCache, path })

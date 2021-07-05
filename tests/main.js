@@ -1533,12 +1533,29 @@ test('Does not zip Go function files', async (t) => {
   )
 })
 
-test('Builds Go functions from source', async (t) => {
+test.serial.only(
+  'Does not build Go functions from source if the `buildGoSource` feature flag is not enabled',
+  async (t) => {
+    shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
+
+    const fixtureName = 'go-source'
+    const { files } = await zipFixture(t, fixtureName, { length: 0 })
+
+    t.is(files.length, 0)
+    t.is(shellUtilsStub.callCount, 0)
+  },
+)
+
+test.serial.only('Builds Go functions from source if the `buildGoSource` feature flag is enabled', async (t) => {
   shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
   const fixtureName = 'go-source'
   const { files } = await zipFixture(t, fixtureName, {
-    opts: {},
+    opts: {
+      featureFlags: {
+        buildGoSource: true,
+      },
+    },
   })
 
   t.is(shellUtilsStub.callCount, 1)

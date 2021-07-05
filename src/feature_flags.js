@@ -1,5 +1,9 @@
+const { env } = require('process')
+
 // List of supported flags and their default value.
-const FLAGS = {}
+const FLAGS = {
+  buildGoSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_GO_SOURCE),
+}
 
 const getFlags = (input = {}, flags = FLAGS) =>
   Object.entries(flags).reduce(
