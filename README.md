@@ -24,9 +24,9 @@ npm install @netlify/zip-it-and-ship-it
 
 # Usage (Node.js)
 
-## zipFunctions(srcFolder, destFolder, options?)
+## zipFunctions(srcFolders, destFolder, options?)
 
-- `srcFolder`: `string`
+- `srcFolders`: `string` | `Array<string>`
 - `destFolder`: `string`
 - `options`: `object?`
 - _Return value_: `Promise<object[]>`
@@ -45,12 +45,15 @@ const zipNetlifyFunctions = async function () {
 
 Creates Zip `archives` from Node.js, Go, and Rust programs. Those `archives` are ready to be uploaded to AWS Lambda.
 
-### `srcFolder`
+### `srcFolders`
 
-The directory containing the source files. It must exist. In Netlify, this is the
+A directory or a list of directories containing the source files. If a string is provided, the corresponding directory
+must exist. If an array of strings is provided, at least one directory must exist.
+
+In Netlify, this directory is the
 ["Functions folder"](https://docs.netlify.com/functions/configure-and-deploy/#configure-the-functions-folder).
 
-`srcFolder` can contain:
+A source folder can contain:
 
 - Sub-directories with a main file called `index.js`, `index.ts`, `{dir}.js` or `{dir}.ts` where `{dir}` is the
   sub-directory name.

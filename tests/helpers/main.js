@@ -42,7 +42,10 @@ const zipFixture = async function (t, fixture, { length, fixtureDir, opts = {} }
 }
 
 const zipCheckFunctions = async function (t, fixture, { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts } = {}) {
-  const files = await zipFunctions(`${fixtureDir}/${fixture}`, tmpDir, opts)
+  const srcFolders = Array.isArray(fixture)
+    ? fixture.map((srcFolder) => `${fixtureDir}/${srcFolder}`)
+    : `${fixtureDir}/${fixture}`
+  const files = await zipFunctions(srcFolders, tmpDir, opts)
 
   t.true(Array.isArray(files))
   t.is(files.length, length)
