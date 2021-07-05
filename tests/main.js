@@ -537,6 +537,29 @@ test('Can list function main files with listFunctions()', async (t) => {
   )
 })
 
+test('Can list function main files from multiple source directories with listFunctions()', async (t) => {
+  const fixtureDir = `${FIXTURES_DIR}/multiple-src-directories`
+  const functions = await listFunctions([
+    join(fixtureDir, '.netlify', 'internal-functions'),
+    join(fixtureDir, 'netlify', 'functions'),
+  ])
+
+  t.deepEqual(
+    functions,
+    [
+      { name: 'function', mainFile: '.netlify/internal-functions/function.js', runtime: 'js', extension: '.js' },
+      {
+        name: 'function_internal',
+        mainFile: '.netlify/internal-functions/function_internal.js',
+        runtime: 'js',
+        extension: '.js',
+      },
+      { name: 'function', mainFile: 'netlify/functions/function.js', runtime: 'js', extension: '.js' },
+      { name: 'function_user', mainFile: 'netlify/functions/function_user.js', runtime: 'js', extension: '.js' },
+    ].map(normalizeFiles.bind(null, fixtureDir)),
+  )
+})
+
 testBundlers(
   'Can list all function files with listFunctionsFiles()',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
@@ -569,6 +592,122 @@ testBundlers(
         },
         { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' },
         { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
+      ]
+        .filter(Boolean)
+        .map(normalizeFiles.bind(null, fixtureDir)),
+    )
+  },
+)
+
+testBundlers(
+  'Can list all function files from multiple source directorires with listFunctionsFiles()',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  // eslint-disable-next-line complexity
+  async (bundler, t) => {
+    const fixtureDir = `${FIXTURES_DIR}/multiple-src-directories`
+    const functions = await listFunctionsFiles(
+      [join(fixtureDir, '.netlify', 'internal-functions'), join(fixtureDir, 'netlify', 'functions')],
+      { config: { '*': { nodeBundler: bundler } } },
+    )
+
+    t.deepEqual(
+      functions,
+      [
+        {
+          name: 'function',
+          mainFile: '.netlify/internal-functions/function.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: '.netlify/internal-functions/function.js',
+        },
+
+        bundler === DEFAULT && {
+          name: 'function',
+          mainFile: '.netlify/internal-functions/function.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: 'node_modules/test/index.js',
+        },
+
+        bundler === DEFAULT && {
+          name: 'function',
+          mainFile: '.netlify/internal-functions/function.js',
+          runtime: 'js',
+          extension: '.json',
+          srcFile: 'node_modules/test/package.json',
+        },
+
+        {
+          name: 'function_internal',
+          mainFile: '.netlify/internal-functions/function_internal.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: '.netlify/internal-functions/function_internal.js',
+        },
+
+        bundler === DEFAULT && {
+          name: 'function_internal',
+          mainFile: '.netlify/internal-functions/function_internal.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: 'node_modules/test/index.js',
+        },
+
+        bundler === DEFAULT && {
+          name: 'function_internal',
+          mainFile: '.netlify/internal-functions/function_internal.js',
+          runtime: 'js',
+          extension: '.json',
+          srcFile: 'node_modules/test/package.json',
+        },
+
+        {
+          name: 'function',
+          mainFile: 'netlify/functions/function.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: 'netlify/functions/function.js',
+        },
+
+        bundler === DEFAULT && {
+          name: 'function',
+          mainFile: 'netlify/functions/function.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: 'node_modules/test/index.js',
+        },
+
+        bundler === DEFAULT && {
+          name: 'function',
+          mainFile: 'netlify/functions/function.js',
+          runtime: 'js',
+          extension: '.json',
+          srcFile: 'node_modules/test/package.json',
+        },
+
+        {
+          name: 'function_user',
+          mainFile: 'netlify/functions/function_user.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: 'netlify/functions/function_user.js',
+        },
+
+        bundler === DEFAULT && {
+          name: 'function_user',
+          mainFile: 'netlify/functions/function_user.js',
+          runtime: 'js',
+          extension: '.js',
+          srcFile: 'node_modules/test/index.js',
+        },
+
+        bundler === DEFAULT && {
+          name: 'function_user',
+          mainFile: 'netlify/functions/function_user.js',
+          runtime: 'js',
+          extension: '.json',
+          srcFile: 'node_modules/test/package.json',
+        },
       ]
         .filter(Boolean)
         .map(normalizeFiles.bind(null, fixtureDir)),
