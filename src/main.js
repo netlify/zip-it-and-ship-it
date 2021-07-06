@@ -1,26 +1,29 @@
 const { extname } = require('path')
 
 require('./utils/polyfills')
+const { getFlags } = require('./feature_flags')
 const { getPluginsModulesPath } = require('./node_dependencies')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { listFunctionsDirectories, resolveFunctionsDirectories } = require('./utils/fs')
 const { zipFunction, zipFunctions } = require('./zip')
 
 // List all Netlify Functions main entry files for a specific directory
-const listFunctions = async function (relativeSrcFolders) {
+const listFunctions = async function (relativeSrcFolders, { featureFlags: inputFeatureFlags } = {}) {
+  const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
-  const functions = await getFunctionsFromPaths(paths)
+  const functions = await getFunctionsFromPaths(paths, { featureFlags })
   const listedFunctions = [...functions.values()].map(getListedFunction)
   return listedFunctions
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (relativeSrcFolders, { config } = {}) {
+const listFunctionsFiles = async function (relativeSrcFolders, { config, featureFlags: inputFeatureFlags } = {}) {
+  const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
   const [functions, pluginsModulesPath] = await Promise.all([
-    getFunctionsFromPaths(paths, { config }),
+    getFunctionsFromPaths(paths, { config, featureFlags }),
     getPluginsModulesPath(srcFolders[0]),
   ])
   const listedFunctionsFiles = await Promise.all(
