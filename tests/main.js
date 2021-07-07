@@ -1,7 +1,7 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
 const { dirname, join, normalize, resolve } = require('path')
-const { env, platform, versions } = require('process')
+const { env, platform } = require('process')
 const { promisify } = require('util')
 
 const test = require('ava')
@@ -10,7 +10,6 @@ const del = require('del')
 const execa = require('execa')
 const makeDir = require('make-dir')
 const pathExists = require('path-exists')
-const semver = require('semver')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
@@ -74,12 +73,6 @@ testBundlers(
   'Handles Node module with native bindings (buildtime marker module)',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
-    if (semver.lt(versions.node, '10.0.0')) {
-      t.log('Skipping test for unsupported Node version')
-
-      return t.pass()
-    }
-
     const fixtureDir = 'node-module-native-buildtime'
     const { files, tmpDir } = await zipNode(t, fixtureDir, {
       opts: { config: { '*': { nodeBundler: bundler } } },
@@ -105,12 +98,6 @@ testBundlers(
   'Handles Node module with native bindings (runtime marker module)',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
-    if (semver.lt(versions.node, '10.0.0')) {
-      t.log('Skipping test for unsupported Node version')
-
-      return t.pass()
-    }
-
     const fixtureDir = 'node-module-native-runtime'
     const { files, tmpDir } = await zipNode(t, fixtureDir, {
       opts: { config: { '*': { nodeBundler: bundler } } },
@@ -270,22 +257,10 @@ testBundlers('Ignore invalid require()', [ESBUILD, ESBUILD_ZISI, DEFAULT], async
 })
 
 testBundlers('Can use dynamic import() with esbuild', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
-  if (semver.lt(versions.node, '10.0.0')) {
-    t.log('Skipping test for unsupported Node version')
-
-    return t.pass()
-  }
-
   await zipNode(t, 'dynamic-import', { opts: { config: { '*': { nodeBundler: bundler } } } })
 })
 
 testBundlers('Bundling does not crash with dynamic import() with zisi', [DEFAULT], async (bundler, t) => {
-  if (semver.lt(versions.node, '10.0.0')) {
-    t.log('Skipping test for unsupported Node version')
-
-    return t.pass()
-  }
-
   await t.throwsAsync(zipNode(t, 'dynamic-import', { opts: { config: { '*': { nodeBundler: bundler } } } }), {
     message: /export/,
   })

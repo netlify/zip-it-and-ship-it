@@ -1,8 +1,6 @@
 const { basename, dirname, extname, resolve, join } = require('path')
-const process = require('process')
 
 const esbuild = require('@netlify/esbuild')
-const semver = require('semver')
 const { tmpName } = require('tmp-promise')
 
 const { getPathWithExtension, safeUnlink } = require('../../utils/fs')
@@ -19,13 +17,6 @@ const ESBUILD_LOG_LIMIT = 10
 // When resolving imports with no extension (e.g. require('./foo')), these are
 // the extensions that esbuild will look for, in this order.
 const RESOLVE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json']
-
-const supportsAsyncAPI = semver.satisfies(process.version, '>=9.x')
-
-// esbuild's async build API throws on Node 8.x, so we switch to the sync
-// version for that version range.
-// eslint-disable-next-line node/no-sync
-const buildFunction = supportsAsyncAPI ? esbuild.build : esbuild.buildSync
 
 // eslint-disable-next-line max-statements
 const bundleJsFile = async function ({
@@ -80,7 +71,7 @@ const bundleJsFile = async function ({
   const sourceRoot = targetDirectory.replace(/\\/g, '/')
 
   try {
-    const { metafile, warnings } = await buildFunction({
+    const { metafile, warnings } = await esbuild.build({
       bundle: true,
       entryPoints: [srcFile],
       external,
@@ -90,7 +81,7 @@ const bundleJsFile = async function ({
       nodePaths: additionalModulePaths,
       outdir: targetDirectory,
       platform: 'node',
-      plugins: supportsAsyncAPI ? plugins : [],
+      plugins,
       resolveExtensions: RESOLVE_EXTENSIONS,
       sourcemap: Boolean(config.nodeSourcemap),
       sourceRoot,
