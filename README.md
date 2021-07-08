@@ -124,6 +124,10 @@ The following properties are accepted:
   - `12.x` (or `nodejs12.x`)
   - `14.x` (or `nodejs14.x`)
 
+#### `featureFlags`
+
+See [feature flags](#feature-flags).
+
 #### `parallelLimit`
 
 - _Type_: `number`\
@@ -218,10 +222,7 @@ This is like [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options) excep
 
 The return value is `undefined` if the function is invalid.
 
-## listFunctions(srcFolder)
-
-- `srcFolder`: `string`
-- _Return value_: `Promise<object[]>`
+## listFunctions(srcFolders, options?)
 
 Returns the list of functions to bundle.
 
@@ -234,6 +235,18 @@ const listNetlifyFunctions = async function () {
   return functions
 }
 ```
+
+### `srcFolders`
+
+A directory or a list of directories containing the source files. If a string is provided, the corresponding directory must exist. If an array of strings is provided, at least one directory must exist.
+
+### `options`
+
+An optional options object.
+
+#### `featureFlags`
+
+See [feature flags](#feature-flags).
 
 ### Return value
 
@@ -257,10 +270,7 @@ Each object has the following properties:
 
   Source file extension. For Node.js, this is either `.js`, `.ts` or `.zip`. For Go, this can be anything.
 
-## listFunctionsFiles(srcFolder)
-
-- `srcFolder`: `string`
-- _Return value_: `Promise<object[]>`
+## listFunctionsFiles(srcFolders)
 
 Like [`listFunctions()`](#listfunctionssrcfolder), except it returns not only the Functions main files, but also all
 their required files. This is much slower.
@@ -273,6 +283,18 @@ const listNetlifyFunctionsFiles = async function () {
   return functions
 }
 ```
+
+### `srcFolders`
+
+A directory or a list of directories containing the source files. If a string is provided, the corresponding directory must exist. If an array of strings is provided, at least one directory must exist.
+
+### `options`
+
+An optional options object.
+
+#### `featureFlags`
+
+See [feature flags](#feature-flags).
 
 ### Return value
 
@@ -342,6 +364,14 @@ const zipNetlifyFunctions = async function () {
   return archives
 }
 ```
+
+# Feature flags
+
+`zip-it-and-ship-it` uses feature flags to enable or disable features during their testing or deprecation periods.
+
+These are supplied to each of the entrypoint functions (`zipFunction`, `zipFunctions`, `listFunctions` and `listFunctionsFiles`) as a named parameter called `featureFlags`. It consists of an object where each key is the name of a feature flag and the values are Booleans indicating whether each feature flag is enabled or disabled.
+
+The list of all feature flags currently being used can be found at [here](src/feature_flags.js).
 
 # Troubleshooting
 
