@@ -1,4 +1,4 @@
-const { join, extname, dirname, basename } = require('path')
+const { basename, dirname, extname, join } = require('path')
 
 const cpFile = require('cp-file')
 
@@ -8,8 +8,6 @@ const { detectBinaryRuntime } = require('../detect_runtime')
 
 const { build } = require('./builder')
 
-const MAIN_FILE_NAME = 'main.go'
-
 const detectGoFunction = async ({ fsCache, path }) => {
   const stat = await cachedLstat(fsCache, path)
 
@@ -17,9 +15,15 @@ const detectGoFunction = async ({ fsCache, path }) => {
     return false
   }
 
+  const directoryName = basename(path)
   const files = await cachedReaddir(fsCache, path)
+  const mainFileName = [`${directoryName}.go`, 'main.go'].find((name) => files.includes(name))
 
-  return files.includes(MAIN_FILE_NAME)
+  if (mainFileName === undefined) {
+    return false
+  }
+
+  return mainFileName
 }
 
 const findFunctionsInPaths = async function ({ featureFlags, fsCache, paths }) {
@@ -35,10 +39,10 @@ const findFunctionsInPaths = async function ({ featureFlags, fsCache, paths }) {
         return
       }
 
-      const isGoSource = await detectGoFunction({ fsCache, path })
+      const goSourceFile = await detectGoFunction({ fsCache, path })
 
-      if (isGoSource) {
-        return processSource({ fsCache, path })
+      if (goSourceFile) {
+        return processSource({ fsCache, mainFile: goSourceFile, path })
       }
     }),
   )
@@ -59,12 +63,11 @@ const processBinary = async ({ fsCache, path }) => {
   }
 }
 
-const processSource = ({ path }) => {
+const processSource = ({ mainFile, path }) => {
   const functionName = basename(path)
-  const mainFile = join(path, MAIN_FILE_NAME)
 
   return {
-    mainFile,
+    mainFile: join(path, mainFile),
     name: functionName,
     srcDir: path,
     srcPath: path,

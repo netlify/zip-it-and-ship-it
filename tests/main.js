@@ -1548,6 +1548,7 @@ test.serial('Builds Go functions from source if the `buildGoSource` feature flag
 
   const fixtureName = 'go-source'
   const { files } = await zipFixture(t, fixtureName, {
+    length: 2,
     opts: {
       featureFlags: {
         buildGoSource: true,
@@ -1555,18 +1556,26 @@ test.serial('Builds Go functions from source if the `buildGoSource` feature flag
     },
   })
 
-  t.is(shellUtilsStub.callCount, 1)
+  t.is(shellUtilsStub.callCount, 2)
 
-  const { args } = shellUtilsStub.getCall(0)
+  const { args: call1 } = shellUtilsStub.getCall(0)
+  const { args: call2 } = shellUtilsStub.getCall(1)
 
-  t.is(args[0], 'go')
-  t.is(args[1][0], 'build')
-  t.is(args[1][1], '-o')
-  t.true(args[1][2].endsWith(`${sep}go-func`))
-
-  t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'go-func', 'main.go'))
-  t.is(files[0].name, 'go-func')
+  t.is(call1[0], 'go')
+  t.is(call1[1][0], 'build')
+  t.is(call1[1][1], '-o')
+  t.true(call1[1][2].endsWith(`${sep}go-func-1`))
+  t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'go-func-1', 'main.go'))
+  t.is(files[0].name, 'go-func-1')
   t.is(files[0].runtime, 'go')
+
+  t.is(call2[0], 'go')
+  t.is(call2[1][0], 'build')
+  t.is(call2[1][1], '-o')
+  t.true(call2[1][2].endsWith(`${sep}go-func-2`))
+  t.is(files[1].mainFile, join(FIXTURES_DIR, fixtureName, 'go-func-2', 'go-func-2.go'))
+  t.is(files[1].name, 'go-func-2')
+  t.is(files[1].runtime, 'go')
 })
 
 test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
