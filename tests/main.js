@@ -1565,6 +1565,9 @@ test.serial('Builds Go functions from source if the `buildGoSource` feature flag
   t.is(call1[1][0], 'build')
   t.is(call1[1][1], '-o')
   t.true(call1[1][2].endsWith(`${sep}go-func-1`))
+  t.is(call1[2].env.CGO_ENABLED, '0')
+  t.is(call1[2].env.GOOS, 'linux')
+
   t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'go-func-1', 'main.go'))
   t.is(files[0].name, 'go-func-1')
   t.is(files[0].runtime, 'go')
@@ -1573,6 +1576,9 @@ test.serial('Builds Go functions from source if the `buildGoSource` feature flag
   t.is(call2[1][0], 'build')
   t.is(call2[1][1], '-o')
   t.true(call2[1][2].endsWith(`${sep}go-func-2`))
+  t.is(call2[2].env.CGO_ENABLED, '0')
+  t.is(call2[2].env.GOOS, 'linux')
+
   t.is(files[1].mainFile, join(FIXTURES_DIR, fixtureName, 'go-func-2', 'go-func-2.go'))
   t.is(files[1].name, 'go-func-2')
   t.is(files[1].runtime, 'go')

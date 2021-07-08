@@ -10,6 +10,7 @@ const build = async ({ destPath, mainFile, srcDir }) => {
     await runCommand('go', ['build', '-o', destPath, '-ldflags', '-s -w'], {
       cwd: srcDir,
       env: {
+        CGO_ENABLED: '0',
         GOOS: 'linux',
       },
     })
