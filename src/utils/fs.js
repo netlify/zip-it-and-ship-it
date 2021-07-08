@@ -7,6 +7,8 @@ const pReaddir = promisify(readdir)
 const pReadFile = promisify(readFile)
 const pUnlink = promisify(unlink)
 
+// This caches multiple FS calls to the same path. It creates a cache key with
+// the name of the function and the path (e.g. "readdir:/some/directory").
 const cachedIOFunction = (func, cache, path, ...args) => {
   const key = `${func.name}:${path}`
 
