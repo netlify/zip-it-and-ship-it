@@ -7,6 +7,7 @@ module.exports = {
     {
       files: 'tests/*.js',
       rules: {
+        'import/max-dependencies': 'off',
         'max-lines-per-function': 'off',
         'max-statements': 'off',
       },

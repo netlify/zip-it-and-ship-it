@@ -9,10 +9,10 @@ const { zipBinary } = require('../zip_binary')
 
 const { detectBinaryRuntime } = require('./detect_runtime')
 
-const findFunctionsInPaths = async function (paths) {
+const findFunctionsInPaths = async function ({ fsCache, paths }) {
   const functions = await Promise.all(
     paths.map(async (path) => {
-      const runtime = await detectBinaryRuntime(path)
+      const runtime = await detectBinaryRuntime({ fsCache, path })
 
       if (runtime !== RUNTIME_RUST) return
 

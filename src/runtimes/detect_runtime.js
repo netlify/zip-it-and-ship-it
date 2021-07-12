@@ -1,16 +1,12 @@
-const { readFile } = require('fs')
-const { promisify } = require('util')
-
 const { detect, Runtime } = require('elf-cam')
 
 const { RUNTIME_GO, RUNTIME_RUST } = require('../utils/consts')
-
-const pReadFile = promisify(readFile)
+const { cachedReadFile } = require('../utils/fs')
 
 // Try to guess the runtime by inspecting the binary file.
-const detectBinaryRuntime = async function (path) {
+const detectBinaryRuntime = async function ({ fsCache, path }) {
   try {
-    const buffer = await pReadFile(path)
+    const buffer = await cachedReadFile(fsCache, path)
 
     return RUNTIMES[detect(buffer)]
   } catch (error) {}

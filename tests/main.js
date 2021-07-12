@@ -1,6 +1,6 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
-const { dirname, join, normalize, resolve } = require('path')
+const { dirname, join, normalize, resolve, sep } = require('path')
 const { env, platform } = require('process')
 const { promisify } = require('util')
 
@@ -10,8 +10,16 @@ const del = require('del')
 const execa = require('execa')
 const makeDir = require('make-dir')
 const pathExists = require('path-exists')
+const sinon = require('sinon')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
+
+// We must require this file first because we need to stub it before the main
+// functions are required.
+// eslint-disable-next-line import/order
+const shellUtils = require('../src/utils/shell')
+
+const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
@@ -55,6 +63,10 @@ test.after.always(async () => {
   if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
     await del(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
   }
+})
+
+test.afterEach(() => {
+  shellUtilsStub.resetHistory()
 })
 
 // Convenience method for running a test for each JS bundler.
@@ -1519,6 +1531,57 @@ test('Does not zip Go function files', async (t) => {
       Boolean,
     ),
   )
+})
+
+test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
+  shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
+
+  const fixtureName = 'go-source'
+  const { files } = await zipFixture(t, fixtureName, { length: 0 })
+
+  t.is(files.length, 0)
+  t.is(shellUtilsStub.callCount, 0)
+})
+
+test.serial('Builds Go functions from source if the `buildGoSource` feature flag is enabled', async (t) => {
+  shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
+
+  const fixtureName = 'go-source'
+  const { files } = await zipFixture(t, fixtureName, {
+    length: 2,
+    opts: {
+      featureFlags: {
+        buildGoSource: true,
+      },
+    },
+  })
+
+  t.is(shellUtilsStub.callCount, 2)
+
+  const { args: call1 } = shellUtilsStub.getCall(0)
+  const { args: call2 } = shellUtilsStub.getCall(1)
+
+  t.is(call1[0], 'go')
+  t.is(call1[1][0], 'build')
+  t.is(call1[1][1], '-o')
+  t.true(call1[1][2].endsWith(`${sep}go-func-1`))
+  t.is(call1[2].env.CGO_ENABLED, '0')
+  t.is(call1[2].env.GOOS, 'linux')
+
+  t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'go-func-1', 'main.go'))
+  t.is(files[0].name, 'go-func-1')
+  t.is(files[0].runtime, 'go')
+
+  t.is(call2[0], 'go')
+  t.is(call2[1][0], 'build')
+  t.is(call2[1][1], '-o')
+  t.true(call2[1][2].endsWith(`${sep}go-func-2`))
+  t.is(call2[2].env.CGO_ENABLED, '0')
+  t.is(call2[2].env.GOOS, 'linux')
+
+  t.is(files[1].mainFile, join(FIXTURES_DIR, fixtureName, 'go-func-2', 'go-func-2.go'))
+  t.is(files[1].name, 'go-func-2')
+  t.is(files[1].runtime, 'go')
 })
 
 test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
