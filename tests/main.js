@@ -1487,6 +1487,26 @@ test('Creates dynamic import shims for functions with the same name and same shi
   }
 })
 
+test('Creates dynamic import shims for functions using `zipFunction`', async (t) => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const fixtureDir = join(FIXTURES_DIR, 'node-module-dynamic-import-2')
+  const result = await zipFunction(join(fixtureDir, 'function.js'), tmpDir, {
+    basePath: fixtureDir,
+    config: { '*': { nodeBundler: 'esbuild', processDynamicNodeImports: true } },
+  })
+
+  await unzipFiles([result])
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const func = require(`${tmpDir}/function.js`)
+
+  t.deepEqual(func('en')[0], ['yes', 'no'])
+  t.deepEqual(func('en')[1], ['yes', 'no'])
+  t.deepEqual(func('pt')[0], ['sim', 'não'])
+  t.deepEqual(func('pt')[1], ['sim', 'não'])
+  t.throws(() => func('fr'))
+})
+
 test('Uses the default Node bundler if no configuration object is supplied', async (t) => {
   const { files, tmpDir } = await zipNode(t, 'local-node-module')
   const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })

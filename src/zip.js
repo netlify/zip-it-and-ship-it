@@ -108,6 +108,7 @@ const zipFunction = async function (
   destFolder,
   {
     archiveFormat = ARCHIVE_FORMAT_ZIP,
+    basePath,
     config: inputConfig = {},
     featureFlags: inputFeatureFlags,
     pluginsModulesPath: defaultModulesPath,
@@ -131,6 +132,7 @@ const zipFunction = async function (
 
   const zipResult = await runtime.zipFunction({
     archiveFormat,
+    basePath,
     config,
     srcPath,
     destFolder,
