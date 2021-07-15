@@ -3,7 +3,7 @@ const { join, relative, resolve } = require('path')
 const acorn = require('acorn')
 
 const ECMA_VERSION = 2021
-const GLOB_WILDCARD = '*'
+const GLOB_WILDCARD = '**'
 
 // Transforms an array of glob nodes into a glob string including an absolute
 // path.
@@ -30,7 +30,7 @@ const getAbsoluteGlob = ({ basePath, globNodes, resolveDir }) => {
 // expression and convertable to a wildcard character. This determines whether
 // we convert an expression or leave it alone. For example:
 //
-// - `./files/${someVariable}`: Convert `someVariable` to `*`
+// - `./files/${someVariable}`: Convert `someVariable` to GLOB_WILDCARD
 // - `./files/${[some, array]}`: Don't convert expression
 //
 // The following AST nodes are converted to a wildcard:
@@ -100,7 +100,7 @@ const parseRequire = ({ basePath, expression, resolveDir }) => {
 // static parts will be left untouched and identifiers will be replaced by
 // `GLOB_WILDCARD`.
 //
-// Example: './files/' + lang + '.json' => ["./files/", "*", ".json"]
+// Example: './files/' + lang + '.json' => ["./files/", "**", ".json"]
 const parseBinaryExpression = (expression) => {
   const { left, operator, right } = expression
 
@@ -128,7 +128,7 @@ const parseBinaryExpression = (expression) => {
 // static parts will be left untouched and identifiers will be replaced by
 // `GLOB_WILDCARD`.
 //
-// Example: `./files/${lang}.json` => ["./files/", "*", ".json"]
+// Example: `./files/${lang}.json` => ["./files/", "**", ".json"]
 const parseTemplateLiteral = (expression) => {
   const { expressions, quasis } = expression
   const parts = [...expressions, ...quasis].sort((partA, partB) => partA.start - partB.start)
