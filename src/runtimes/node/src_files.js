@@ -30,7 +30,7 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
     { include: [], exclude: [] },
   )
   const pathGroups = await Promise.all(
-    include.map((expression) => pGlob(expression, { absolute: true, cwd: basePath, ignore: exclude })),
+    include.map((expression) => pGlob(expression, { absolute: true, cwd: basePath, ignore: exclude, nodir: true })),
   )
 
   // `pathGroups` is an array containing the paths for each expression in the

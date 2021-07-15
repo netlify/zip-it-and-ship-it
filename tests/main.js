@@ -1446,6 +1446,49 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   t.throws(() => func('fr'))
 })
 
+test('The dynamic import runtime shim handles files in nested directories', async (t) => {
+  const fixtureName = 'node-module-dynamic-import-4'
+  const { tmpDir } = await zipNode(t, fixtureName, {
+    opts: {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+    },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const func = require(`${tmpDir}/function.js`)
+
+  t.deepEqual(func('en')[0], ['yes', 'no'])
+  t.deepEqual(func('en')[1], ['yes', 'no'])
+  t.deepEqual(func('pt')[0], ['sim', 'não'])
+  t.deepEqual(func('pt')[1], ['sim', 'não'])
+  t.deepEqual(func('nested/es')[0], ['sí', 'no'])
+  t.deepEqual(func('nested/es')[1], ['sí', 'no'])
+  t.throws(() => func('fr'))
+})
+
+test('The dynamic import runtime shim handles files in nested directories when using `archiveType: "none"`', async (t) => {
+  const fixtureName = 'node-module-dynamic-import-4'
+  const { tmpDir } = await zipNode(t, fixtureName, {
+    opts: {
+      archiveFormat: 'none',
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+    },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const func = require(`${tmpDir}/function/function.js`)
+
+  t.deepEqual(func('en')[0], ['yes', 'no'])
+  t.deepEqual(func('en')[1], ['yes', 'no'])
+  t.deepEqual(func('pt')[0], ['sim', 'não'])
+  t.deepEqual(func('pt')[1], ['sim', 'não'])
+  t.deepEqual(func('nested/es')[0], ['sí', 'no'])
+  t.deepEqual(func('nested/es')[1], ['sí', 'no'])
+  t.throws(() => func('fr'))
+})
+
 test('Negated files in `included_files` are excluded from the bundle even if they match a dynamic import expression', async (t) => {
   const fixtureName = 'node-module-dynamic-import-2'
   const { tmpDir } = await zipNode(t, fixtureName, {
