@@ -83,11 +83,6 @@ const processSource = ({ mainFile, path }) => {
   }
 }
 
-// Rust functions must always be zipped.
-// The name of the binary inside the zip file must
-// always be `bootstrap` because they include the
-// Lambda runtime, and that's the name that AWS
-// expects for those kind of functions.
 const zipFunction = async function ({ config, destFolder, filename, mainFile, runtime, srcDir, srcPath, stat }) {
   const destPath = join(destFolder, `${filename}.zip`)
   const isSource = extname(mainFile) === '.rs'
