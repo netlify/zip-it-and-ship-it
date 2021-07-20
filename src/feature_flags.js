@@ -3,6 +3,7 @@ const { env } = require('process')
 // List of supported flags and their default value.
 const FLAGS = {
   buildGoSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_GO_SOURCE),
+  buildRustSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_RUST_SOURCE),
 }
 
 const getFlags = (input = {}, flags = FLAGS) =>

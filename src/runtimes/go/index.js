@@ -12,7 +12,7 @@ const detectGoFunction = async ({ fsCache, path }) => {
   const stat = await cachedLstat(fsCache, path)
 
   if (!stat.isDirectory()) {
-    return false
+    return
   }
 
   const directoryName = basename(path)
@@ -20,7 +20,7 @@ const detectGoFunction = async ({ fsCache, path }) => {
   const mainFileName = [`${directoryName}.go`, 'main.go'].find((name) => files.includes(name))
 
   if (mainFileName === undefined) {
-    return false
+    return
   }
 
   return mainFileName

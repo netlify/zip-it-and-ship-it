@@ -6,20 +6,36 @@ const { zipBinary } = require('../../zip_binary')
 const { detectBinaryRuntime } = require('../detect_runtime')
 
 const { build } = require('./builder')
+const { MANIFEST_NAME } = require('./constants')
 
 const detectRustFunction = async ({ fsCache, path }) => {
   const stat = await cachedLstat(fsCache, path)
 
   if (!stat.isDirectory()) {
-    return false
+    return
   }
 
   const files = await cachedReaddir(fsCache, path)
+  const hasCargoManifest = files.includes(MANIFEST_NAME)
 
-  return files.includes('Cargo.toml')
+  if (!hasCargoManifest) {
+    return
+  }
+
+  const mainFilePath = join(path, 'src', 'main.rs')
+
+  try {
+    const mainFile = await cachedLstat(fsCache, mainFilePath)
+
+    if (mainFile.isFile()) {
+      return mainFilePath
+    }
+  } catch (_) {
+    // no-op
+  }
 }
 
-const findFunctionsInPaths = async function ({ fsCache, paths }) {
+const findFunctionsInPaths = async function ({ featureFlags, fsCache, paths }) {
   const functions = await Promise.all(
     paths.map(async (path) => {
       const runtime = await detectBinaryRuntime({ fsCache, path })
@@ -28,10 +44,14 @@ const findFunctionsInPaths = async function ({ fsCache, paths }) {
         return processBinary({ fsCache, path })
       }
 
-      const isRustSource = await detectRustFunction({ fsCache, path })
+      if (featureFlags.buildRustSource !== true) {
+        return
+      }
 
-      if (isRustSource) {
-        return processSource({ fsCache, path })
+      const rustSourceFile = await detectRustFunction({ fsCache, path })
+
+      if (rustSourceFile) {
+        return processSource({ fsCache, mainFile: rustSourceFile, path })
       }
     }),
   )
@@ -52,9 +72,8 @@ const processBinary = async ({ fsCache, path }) => {
   }
 }
 
-const processSource = ({ path }) => {
+const processSource = ({ mainFile, path }) => {
   const functionName = basename(path)
-  const mainFile = join(path, 'src', 'main.rs')
 
   return {
     mainFile,
@@ -69,16 +88,23 @@ const processSource = ({ path }) => {
 // always be `bootstrap` because they include the
 // Lambda runtime, and that's the name that AWS
 // expects for those kind of functions.
-const zipFunction = async function ({ config, mainFile, srcPath, destFolder, stat, filename, runtime }) {
+const zipFunction = async function ({ config, destFolder, filename, mainFile, runtime, srcDir, srcPath, stat }) {
   const destPath = join(destFolder, `${filename}.zip`)
   const isSource = extname(mainFile) === '.rs'
-
-  let zipOptions = {
-    srcPath,
-    stat,
+  const zipOptions = {
+    destPath,
+    filename: 'bootstrap',
+    runtime,
   }
 
-  await zipBinary({ srcPath, destPath, filename: 'bootstrap', stat, runtime })
+  if (isSource) {
+    const { path: binaryPath, stat: binaryStat } = await build({ srcDir })
+
+    await zipBinary({ ...zipOptions, srcPath: binaryPath, stat: binaryStat })
+  } else {
+    await zipBinary({ ...zipOptions, srcPath, stat })
+  }
+
   return { config, path: destPath }
 }
 
