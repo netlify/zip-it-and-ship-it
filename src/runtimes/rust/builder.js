@@ -26,6 +26,14 @@ const build = async ({ srcDir }) => {
       },
     })
   } catch (error) {
+    const hasToolchain = await checkRustToolchain()
+
+    if (!hasToolchain) {
+      throw new Error(
+        'There is no Rust toolchain installed. Visit https://ntl.fyi/missing-rust-toolchain for more information.',
+      )
+    }
+
     console.error(`Could not compile Rust function ${functionName}:\n`)
 
     throw error
@@ -43,6 +51,16 @@ const build = async ({ srcDir }) => {
   return {
     path: binaryPath,
     stat,
+  }
+}
+
+const checkRustToolchain = async () => {
+  try {
+    await runCommand('cargo', ['-V'])
+
+    return true
+  } catch (_) {
+    return false
   }
 }
 
