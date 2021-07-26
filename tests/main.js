@@ -1647,6 +1647,68 @@ test.serial('Builds Go functions from source if the `buildGoSource` feature flag
   t.is(files[1].runtime, 'go')
 })
 
+test.serial(
+  'Does not build Rust functions from source if the `buildRustSource` feature flag is not enabled',
+  async (t) => {
+    shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
+
+    const fixtureName = 'rust-source'
+    const { files } = await zipFixture(t, fixtureName, { length: 0 })
+
+    t.is(files.length, 0)
+    t.is(shellUtilsStub.callCount, 0)
+  },
+)
+
+test.serial('Builds Rust functions from source if the `buildRustSource` feature flag is enabled', async (t) => {
+  shellUtilsStub.callsFake(async (...args) => {
+    const directory = join(args[2].env.CARGO_TARGET_DIR, args[1][2], 'release')
+    const binaryPath = join(directory, 'hello')
+
+    await makeDir(directory)
+
+    return pWriteFile(binaryPath, '')
+  })
+
+  const fixtureName = 'rust-source'
+  const { files } = await zipFixture(t, fixtureName, {
+    opts: {
+      featureFlags: {
+        buildRustSource: true,
+      },
+    },
+  })
+
+  t.is(shellUtilsStub.callCount, 1)
+
+  const { args: call1 } = shellUtilsStub.getCall(0)
+
+  t.is(call1[0], 'cargo')
+  t.is(call1[1][0], 'build')
+  t.is(call1[1][1], '--target')
+  t.is(call1[1][2], 'x86_64-unknown-linux-musl')
+
+  t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'rust-func-1', 'src', 'main.rs'))
+  t.is(files[0].name, 'rust-func-1')
+  t.is(files[0].runtime, 'rs')
+})
+
+test.serial('Throws an error with an informative message when the Rust toolchain is missing', async (t) => {
+  shellUtilsStub.throws()
+
+  const fixtureName = 'rust-source'
+  await t.throwsAsync(
+    zipFixture(t, fixtureName, {
+      opts: {
+        featureFlags: {
+          buildRustSource: true,
+        },
+      },
+    }),
+    { message: /^There is no Rust toolchain installed./ },
+  )
+})
+
 test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
   const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
     opts: { config: { '*': { nodeBundler: ESBUILD } } },
