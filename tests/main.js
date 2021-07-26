@@ -1693,6 +1693,22 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
   t.is(files[0].runtime, 'rs')
 })
 
+test.serial('Throws an error with an informative message when the Rust toolchain is missing', async (t) => {
+  shellUtilsStub.throws()
+
+  const fixtureName = 'rust-source'
+  await t.throwsAsync(
+    zipFixture(t, fixtureName, {
+      opts: {
+        featureFlags: {
+          buildRustSource: true,
+        },
+      },
+    }),
+    { message: /^There is no Rust toolchain installed./ },
+  )
+})
+
 test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
   const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
     opts: { config: { '*': { nodeBundler: ESBUILD } } },
