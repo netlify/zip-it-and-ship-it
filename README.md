@@ -112,6 +112,16 @@ The following properties are accepted:
 
   When the value is `esbuild_zisi`, `esbuild` will be used with a fallback to `zisi` in case of an error.
 
+- `nodeSourcemap`
+
+  - _Type_: `boolean`
+  - _Default value_: `false`
+
+  Whether to include a [sourcemap file](https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_a_source_map)
+  in the generated archive.
+
+  Available only when `nodeBundler` is set to `esbuild` or `esbuild_zisi`.
+
 - `nodeVersion`
 
   - _Type_: `string`\
@@ -238,7 +248,8 @@ const listNetlifyFunctions = async function () {
 
 ### `srcFolders`
 
-A directory or a list of directories containing the source files. If a string is provided, the corresponding directory must exist. If an array of strings is provided, at least one directory must exist.
+A directory or a list of directories containing the source files. If a string is provided, the corresponding directory
+must exist. If an array of strings is provided, at least one directory must exist.
 
 ### `options`
 
@@ -286,7 +297,8 @@ const listNetlifyFunctionsFiles = async function () {
 
 ### `srcFolders`
 
-A directory or a list of directories containing the source files. If a string is provided, the corresponding directory must exist. If an array of strings is provided, at least one directory must exist.
+A directory or a list of directories containing the source files. If a string is provided, the corresponding directory
+must exist. If an array of strings is provided, at least one directory must exist.
 
 ### `options`
 
@@ -369,7 +381,9 @@ const zipNetlifyFunctions = async function () {
 
 `zip-it-and-ship-it` uses feature flags to enable or disable features during their testing or deprecation periods.
 
-These are supplied to each of the entrypoint functions (`zipFunction`, `zipFunctions`, `listFunctions` and `listFunctionsFiles`) as a named parameter called `featureFlags`. It consists of an object where each key is the name of a feature flag and the values are Booleans indicating whether each feature flag is enabled or disabled.
+These are supplied to each of the entrypoint functions (`zipFunction`, `zipFunctions`, `listFunctions` and
+`listFunctionsFiles`) as a named parameter called `featureFlags`. It consists of an object where each key is the name of
+a feature flag and the values are Booleans indicating whether each feature flag is enabled or disabled.
 
 The list of all feature flags currently being used can be found at [here](src/feature_flags.js).
 
