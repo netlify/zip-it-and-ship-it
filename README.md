@@ -105,8 +105,8 @@ The following properties are accepted:
 
 - `nodeBundler`
 
-  - _Type_: `boolean`
-  - _Default value_: `false`
+  - _Type_: `string`
+  - _Default value_: `zisi`
 
   The bundler to use when processing JavaScript functions. Possible values: `zisi`, `esbuild`, `esbuild_zisi`.
 
@@ -114,13 +114,13 @@ The following properties are accepted:
 
 - `nodeSourcemap`
 
-  - _Type_: `string`
-  - _Default value_: `zisi`
+  - _Type_: `boolean`
+  - _Default value_: `false`
 
   Whether to include a [sourcemap file](https://developer.mozilla.org/en-US/docs/Tools/Debugger/How_to/Use_a_source_map)
   in the generated archive.
 
-  Available only when `nodeBundler` is seet to `esbuild` or `esbuild_zisi`.
+  Available only when `nodeBundler` is set to `esbuild` or `esbuild_zisi`.
 
 - `nodeVersion`
 
