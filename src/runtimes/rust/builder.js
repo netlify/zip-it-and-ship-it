@@ -13,6 +13,8 @@ const { runCommand } = require('../../utils/shell')
 const { BUILD_TARGET, MANIFEST_NAME } = require('./constants')
 
 const build = async ({ srcDir }) => {
+  await installBuildTarget()
+
   // We compile the binary to a temporary directory so that we don't pollute
   // the user's functions directory.
   const { path: targetDirectory } = await tmp.dir()
@@ -62,6 +64,19 @@ const checkRustToolchain = async () => {
   } catch (_) {
     return false
   }
+}
+
+let buildTargetInstallation
+
+// Installs the build target defined in `BUILD_TARGET`. The Promise is saved to
+// `buildTargetInstallation` so that we run the command just once for multiple
+// Rust functions.
+const installBuildTarget = () => {
+  if (buildTargetInstallation === undefined) {
+    buildTargetInstallation = runCommand('rustup', ['target', 'add', BUILD_TARGET])
+  }
+
+  return buildTargetInstallation
 }
 
 module.exports = { build }
