@@ -1662,12 +1662,16 @@ test.serial(
 
 test.serial('Builds Rust functions from source if the `buildRustSource` feature flag is enabled', async (t) => {
   shellUtilsStub.callsFake(async (...args) => {
-    const directory = join(args[2].env.CARGO_TARGET_DIR, args[1][2], 'release')
-    const binaryPath = join(directory, 'hello')
+    const [rootCommand] = args
 
-    await makeDir(directory)
+    if (rootCommand === 'cargo') {
+      const directory = join(args[2].env.CARGO_TARGET_DIR, args[1][2], 'release')
+      const binaryPath = join(directory, 'hello')
 
-    return pWriteFile(binaryPath, '')
+      await makeDir(directory)
+
+      return pWriteFile(binaryPath, '')
+    }
   })
 
   const fixtureName = 'rust-source'
@@ -1679,14 +1683,20 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
     },
   })
 
-  t.is(shellUtilsStub.callCount, 1)
+  t.is(shellUtilsStub.callCount, 2)
 
   const { args: call1 } = shellUtilsStub.getCall(0)
+  const { args: call2 } = shellUtilsStub.getCall(1)
 
-  t.is(call1[0], 'cargo')
-  t.is(call1[1][0], 'build')
-  t.is(call1[1][1], '--target')
+  t.is(call1[0], 'rustup')
+  t.is(call1[1][0], 'target')
+  t.is(call1[1][1], 'add')
   t.is(call1[1][2], 'x86_64-unknown-linux-musl')
+
+  t.is(call2[0], 'cargo')
+  t.is(call2[1][0], 'build')
+  t.is(call2[1][1], '--target')
+  t.is(call2[1][2], 'x86_64-unknown-linux-musl')
 
   t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'rust-func-1', 'src', 'main.rs'))
   t.is(files[0].name, 'rust-func-1')
