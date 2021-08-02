@@ -4,6 +4,7 @@ const makeDir = require('make-dir')
 const pMap = require('p-map')
 
 const { getFlags } = require('./feature_flags')
+const { createManifest } = require('./manifest')
 const { getPluginsModulesPath } = require('./node_dependencies')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
@@ -59,6 +60,7 @@ const zipFunctions = async function (
     basePath,
     config = {},
     featureFlags: inputFeatureFlags,
+    manifest,
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
   } = {},
 ) {
@@ -75,7 +77,7 @@ const zipFunctions = async function (
     // source directories.
     getPluginsModulesPath(srcFolders[0]),
   ])
-  const zipped = await pMap(
+  const results = await pMap(
     functions.values(),
     async (func) => {
       const zipResult = await func.runtime.zipFunction({
@@ -100,7 +102,13 @@ const zipFunctions = async function (
       concurrency: parallelLimit,
     },
   )
-  return zipped.filter(Boolean).map(formatZipResult)
+  const formattedResults = results.filter(Boolean).map(formatZipResult)
+
+  if (manifest !== undefined) {
+    await createManifest({ functions: formattedResults, path: resolve(manifest) })
+  }
+
+  return formattedResults
 }
 
 const zipFunction = async function (
