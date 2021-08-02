@@ -103,9 +103,10 @@ const zipFunctions = async function (
     },
   )
   const formattedResults = results.filter(Boolean).map(formatZipResult)
-  const manifestPath = manifest === undefined ? undefined : resolve(manifest)
 
-  await createManifest({ functions: formattedResults, path: manifestPath })
+  if (manifest !== undefined) {
+    await createManifest({ functions: formattedResults, path: resolve(manifest) })
+  }
 
   return formattedResults
 }
