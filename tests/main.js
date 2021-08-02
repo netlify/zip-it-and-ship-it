@@ -1,6 +1,6 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
-const { dirname, join, normalize, resolve, sep } = require('path')
+const { dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
 const { arch, env, platform } = require('process')
 const { promisify } = require('util')
 
@@ -1769,4 +1769,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
 
   // Asserting that the `timestamp` property falls within an interval (1s).
   t.true(Math.abs(Date.now() - manifest.timestamp) <= ALLOWED_TIMESTAMP_DELTA)
+
+  // The `path` property of each function must be an absolute path.
+  manifest.functions.every(({ path }) => isAbsolute(path))
 })
