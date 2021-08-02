@@ -1,7 +1,7 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
-const { dirname, join, normalize, resolve, sep } = require('path')
-const { env, platform } = require('process')
+const { dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
+const { arch, env, platform } = require('process')
 const { promisify } = require('util')
 
 const test = require('ava')
@@ -1748,3 +1748,25 @@ if (platform !== 'win32') {
     )
   })
 }
+
+test('Creates a manifest file with the list of created functions if the `manifest` property is supplied', async (t) => {
+  const FUNCTIONS_COUNT = 6
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const manifestPath = join(tmpDir, 'manifest.json')
+  const { files } = await zipNode(t, 'many-functions', {
+    length: FUNCTIONS_COUNT,
+    opts: { manifest: manifestPath },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const manifest = require(manifestPath)
+
+  t.deepEqual(files, manifest.functions)
+  t.is(manifest.version, 1)
+  t.is(manifest.system.arch, arch)
+  t.is(manifest.system.platform, platform)
+  t.is(typeof manifest.timestamp, 'number')
+
+  // The `path` property of each function must be an absolute path.
+  manifest.functions.every(({ path }) => isAbsolute(path))
+})

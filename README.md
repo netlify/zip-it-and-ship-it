@@ -138,6 +138,22 @@ The following properties are accepted:
 
 See [feature flags](#feature-flags).
 
+#### `manifest`
+
+- _Type_: `string`
+- _Default value_: `undefined`
+
+Defines the path for a manifest file to be created with the results of the functions bundling. This file is a
+JSON-formatted string with the following properties:
+
+- `functions`: An array with the functions created, in the same format as returned by `zipFunctions`
+- `system.arch`: The operating system CPU architecture, as returned by
+  [`process.arch`](https://nodejs.org/api/process.html#process_process_arch)
+- `system.platform`: The operating system, as returned by
+  [`process.platform`](https://nodejs.org/api/process.html#process_process_platform)
+- `timestamp`: The timestamp (in milliseconds) at the time of the functions bundling process
+- `version`: The version of the manifest file (current version is `1`)
+
 #### `parallelLimit`
 
 - _Type_: `number`\
