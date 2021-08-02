@@ -1751,7 +1751,6 @@ if (platform !== 'win32') {
 
 test('Creates a manifest file with the list of created functions if the `manifest` property is supplied', async (t) => {
   const FUNCTIONS_COUNT = 6
-  const ALLOWED_TIMESTAMP_DELTA = 1e3
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const manifestPath = join(tmpDir, 'manifest.json')
   const { files } = await zipNode(t, 'many-functions', {
@@ -1766,9 +1765,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
   t.is(manifest.version, 1)
   t.is(manifest.system.arch, arch)
   t.is(manifest.system.platform, platform)
-
-  // Asserting that the `timestamp` property falls within an interval (1s).
-  t.true(Math.abs(Date.now() - manifest.timestamp) <= ALLOWED_TIMESTAMP_DELTA)
+  t.true(typeof manifest.timestamp, 'number')
 
   // The `path` property of each function must be an absolute path.
   manifest.functions.every(({ path }) => isAbsolute(path))
