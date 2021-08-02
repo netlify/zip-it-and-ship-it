@@ -1765,7 +1765,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
   t.is(manifest.version, 1)
   t.is(manifest.system.arch, arch)
   t.is(manifest.system.platform, platform)
-  t.true(typeof manifest.timestamp, 'number')
+  t.is(typeof manifest.timestamp, 'number')
 
   // The `path` property of each function must be an absolute path.
   manifest.functions.every(({ path }) => isAbsolute(path))
