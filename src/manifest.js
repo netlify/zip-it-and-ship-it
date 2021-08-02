@@ -1,7 +1,7 @@
 const { resolve } = require('path')
 const { arch, platform } = require('process')
 
-const { safeWriteFile } = require('./utils/fs')
+const { writeFile } = require('./utils/fs')
 
 const MANIFEST_VERSION = 1
 
@@ -14,7 +14,7 @@ const createManifest = async ({ functions, path }) => {
     version: MANIFEST_VERSION,
   }
 
-  await safeWriteFile(path, JSON.stringify(payload))
+  await writeFile(path, JSON.stringify(payload))
 }
 
 const formatFunction = (fn) => ({ ...fn, path: resolve(fn.path) })

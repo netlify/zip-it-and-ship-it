@@ -33,12 +33,6 @@ const safeUnlink = async (path) => {
   } catch (_) {}
 }
 
-const safeWriteFile = async (...args) => {
-  try {
-    await pWriteFile(...args)
-  } catch (_) {}
-}
-
 // Takes a list of absolute paths and returns an array containing all the
 // filenames within those directories, if at least one of the directories
 // exists. If not, an error is thrown.
@@ -90,5 +84,5 @@ module.exports = {
   listFunctionsDirectory,
   resolveFunctionsDirectories,
   safeUnlink,
-  safeWriteFile,
+  writeFile: pWriteFile,
 }
