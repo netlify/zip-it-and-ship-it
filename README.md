@@ -143,10 +143,10 @@ See [feature flags](#feature-flags).
 - _Type_: `string`
 - _Default value_: `undefined`
 
-Defines the path for a manifest file to be created with the results of the functions bundling, including the following
-properties:
+Defines the path for a manifest file to be created with the results of the functions bundling. This file is a
+JSON-formatted string with the following properties:
 
-- `functions`: The list of functions created, in the same format as returned by `zipFunctions`
+- `functions`: An array with the functions created, in the same format as returned by `zipFunctions`
 - `system.arch`: The operating system CPU architecture, as returned by
   [`process.arch`](https://nodejs.org/api/process.html#process_process_arch)
 - `system.platform`: The operating system, as returned by
