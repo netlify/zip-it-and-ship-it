@@ -1374,7 +1374,7 @@ test('Returns an empty list of modules with dynamic imports if the modules are m
   t.is(files[0].nodeModulesWithDynamicImports.length, 0)
 })
 
-test('Leaves dynamic imports untouched when the `processDynamicNodeImports` configuration property is not `true`', async (t) => {
+test('Leaves dynamic imports untouched when the `processDynamicNodeImports` configuration property is `false`', async (t) => {
   const fixtureName = 'node-module-dynamic-import-template-literal'
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
