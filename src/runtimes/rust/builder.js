@@ -4,6 +4,7 @@ const { promisify } = require('util')
 
 const pReadFile = promisify(readFile)
 
+const makeDir = require('make-dir')
 const tmp = require('tmp-promise')
 const toml = require('toml')
 
@@ -12,12 +13,10 @@ const { runCommand } = require('../../utils/shell')
 
 const { BUILD_TARGET, MANIFEST_NAME } = require('./constants')
 
-const build = async ({ srcDir }) => {
+const build = async ({ config, name, srcDir }) => {
   await installBuildTarget()
 
-  // We compile the binary to a temporary directory so that we don't pollute
-  // the user's functions directory.
-  const { path: targetDirectory } = await tmp.dir()
+  const targetDirectory = await getTargetDirectory({ config, name })
   const functionName = basename(srcDir)
 
   try {
@@ -64,6 +63,26 @@ const checkRustToolchain = async () => {
   } catch (_) {
     return false
   }
+}
+
+// Returns the path of the Cargo target directory.
+const getTargetDirectory = async ({ config, name }) => {
+  const { rustTargetDirectory } = config
+
+  // If the config includes a `rustTargetDirectory` path, we'll use that.
+  if (rustTargetDirectory) {
+    // We replace the [name] placeholder with the name of the function.
+    const path = rustTargetDirectory.replace(/\[name]/g, name)
+
+    await makeDir(path)
+
+    return path
+  }
+
+  // If the directory hasn't been configured, we'll use a temporary directory.
+  const { path } = await tmp.dir()
+
+  return path
 }
 
 let buildTargetInstallation

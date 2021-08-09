@@ -99,7 +99,7 @@ const zipFunction = async function ({ config, destFolder, filename, mainFile, ru
   // the resulting binary. Otherwise, we're dealing with a binary so we zip it
   // directly.
   if (isSource) {
-    const { path: binaryPath, stat: binaryStat } = await build({ srcDir })
+    const { path: binaryPath, stat: binaryStat } = await build({ config, name: filename, srcDir })
 
     await zipBinary({ ...zipOptions, srcPath: binaryPath, stat: binaryStat })
   } else {
