@@ -1661,12 +1661,23 @@ test.serial(
 )
 
 test.serial('Builds Rust functions from source if the `buildRustSource` feature flag is enabled', async (t) => {
+  const targetDirectory = await tmpName({ prefix: `zip-it-test-rust-function-[name]` })
+  const tmpDirectory = await tmpName({ prefix: `zip-it-test-` })
+
   shellUtilsStub.callsFake(async (...args) => {
-    const [rootCommand] = args
+    const [rootCommand, , { cwd, env: environment } = {}] = args
 
     if (rootCommand === 'cargo') {
-      const directory = join(args[2].env.CARGO_TARGET_DIR, args[1][2], 'release')
+      const directory = join(environment.CARGO_TARGET_DIR, args[1][2], 'release')
       const binaryPath = join(directory, 'hello')
+
+      if (cwd.endsWith('rust-func-1')) {
+        t.is(dirname(environment.CARGO_TARGET_DIR), dirname(tmpDirectory))
+      }
+
+      if (cwd.endsWith('rust-func-2')) {
+        t.is(environment.CARGO_TARGET_DIR, targetDirectory.replace('[name]', 'rust-func-2'))
+      }
 
       await makeDir(directory)
 
@@ -1676,17 +1687,25 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
 
   const fixtureName = 'rust-source'
   const { files } = await zipFixture(t, fixtureName, {
+    length: 2,
     opts: {
+      config: {
+        'rust-func-2': {
+          rustTargetDirectory: targetDirectory,
+        },
+      },
       featureFlags: {
         buildRustSource: true,
       },
     },
   })
 
-  t.is(shellUtilsStub.callCount, 2)
+  t.is(files.length, 2)
+  t.is(shellUtilsStub.callCount, 3)
 
   const { args: call1 } = shellUtilsStub.getCall(0)
   const { args: call2 } = shellUtilsStub.getCall(1)
+  const { args: call3 } = shellUtilsStub.getCall(1)
 
   t.is(call1[0], 'rustup')
   t.is(call1[1][0], 'target')
@@ -1698,9 +1717,18 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
   t.is(call2[1][1], '--target')
   t.is(call2[1][2], 'x86_64-unknown-linux-musl')
 
+  t.is(call2[0], call3[0])
+  t.is(call2[1][0], call3[1][0])
+  t.is(call2[1][1], call3[1][1])
+  t.is(call2[1][2], call3[1][2])
+
   t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'rust-func-1', 'src', 'main.rs'))
   t.is(files[0].name, 'rust-func-1')
   t.is(files[0].runtime, 'rs')
+
+  t.is(files[1].mainFile, join(FIXTURES_DIR, fixtureName, 'rust-func-2', 'src', 'main.rs'))
+  t.is(files[1].name, 'rust-func-2')
+  t.is(files[1].runtime, 'rs')
 })
 
 test.serial('Throws an error with an informative message when the Rust toolchain is missing', async (t) => {
