@@ -1789,12 +1789,18 @@ test('Creates a manifest file with the list of created functions if the `manifes
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const manifest = require(manifestPath)
 
-  t.deepEqual(files, manifest.functions)
   t.is(manifest.version, 1)
   t.is(manifest.system.arch, arch)
   t.is(manifest.system.platform, platform)
   t.is(typeof manifest.timestamp, 'number')
 
-  // The `path` property of each function must be an absolute path.
-  manifest.functions.every(({ path }) => isAbsolute(path))
+  manifest.functions.forEach((fn, index) => {
+    const file = files[index]
+
+    t.true(isAbsolute(fn.path))
+    t.is(fn.mainFile, file.mainFile)
+    t.is(fn.name, file.name)
+    t.is(fn.runtime, file.runtime)
+    t.is(fn.path, file.path)
+  })
 })
