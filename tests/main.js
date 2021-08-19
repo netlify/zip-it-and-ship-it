@@ -1352,7 +1352,10 @@ test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) =>
 
     t.fail('Function did not throw')
   } catch (error) {
-    t.deepEqual(error.customErrorInfo, { type: 'functionsBundling', location: { functionName: 'function' } })
+    t.deepEqual(error.customErrorInfo, {
+      type: 'functionsBundling',
+      location: { functionName: 'function', runtime: 'js' },
+    })
   }
 })
 
@@ -1599,7 +1602,7 @@ test('Does not zip Go function files', async (t) => {
 test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
   shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
-  const fixtureName = 'go-source'
+  const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, { length: 0 })
 
   t.is(files.length, 0)
@@ -1609,7 +1612,7 @@ test.serial('Does not build Go functions from source if the `buildGoSource` feat
 test.serial('Builds Go functions from source if the `buildGoSource` feature flag is enabled', async (t) => {
   shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
-  const fixtureName = 'go-source'
+  const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, {
     length: 2,
     opts: {
@@ -1647,12 +1650,35 @@ test.serial('Builds Go functions from source if the `buildGoSource` feature flag
   t.is(files[1].runtime, 'go')
 })
 
+test.serial('Adds `type: "functionsBundling"` to errors resulting from compiling Go binaries', async (t) => {
+  shellUtilsStub.callsFake(() => {
+    throw new Error('Fake error')
+  })
+
+  try {
+    await zipFixture(t, 'go-source', {
+      opts: {
+        featureFlags: {
+          buildGoSource: true,
+        },
+      },
+    })
+
+    t.fail('Expected catch block')
+  } catch (error) {
+    t.deepEqual(error.customErrorInfo, {
+      type: 'functionsBundling',
+      location: { functionName: 'go-func-1', runtime: 'go' },
+    })
+  }
+})
+
 test.serial(
   'Does not build Rust functions from source if the `buildRustSource` feature flag is not enabled',
   async (t) => {
     shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
-    const fixtureName = 'rust-source'
+    const fixtureName = 'rust-source-multiple'
     const { files } = await zipFixture(t, fixtureName, { length: 0 })
 
     t.is(files.length, 0)
@@ -1685,7 +1711,7 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
     }
   })
 
-  const fixtureName = 'rust-source'
+  const fixtureName = 'rust-source-multiple'
   const { files } = await zipFixture(t, fixtureName, {
     length: 2,
     opts: {
@@ -1731,20 +1757,53 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
   t.is(files[1].runtime, 'rs')
 })
 
-test.serial('Throws an error with an informative message when the Rust toolchain is missing', async (t) => {
-  shellUtilsStub.throws()
+test.serial('Adds `type: "functionsBundling"` to errors resulting from compiling Rust binaries', async (t) => {
+  shellUtilsStub.callsFake((...args) => {
+    if (args[0] === 'cargo') {
+      throw new Error('Fake error')
+    }
+  })
 
-  const fixtureName = 'rust-source'
-  await t.throwsAsync(
-    zipFixture(t, fixtureName, {
+  try {
+    await zipFixture(t, 'rust-source', {
       opts: {
         featureFlags: {
           buildRustSource: true,
         },
       },
-    }),
-    { message: /^There is no Rust toolchain installed./ },
-  )
+    })
+
+    t.fail('Expected catch block')
+  } catch (error) {
+    t.deepEqual(error.customErrorInfo, {
+      type: 'functionsBundling',
+      location: { functionName: 'rust-func-1', runtime: 'rs' },
+    })
+  }
+})
+
+test.serial('Throws an error with an informative message when the Rust toolchain is missing', async (t) => {
+  shellUtilsStub.callsFake(() => {
+    throw new Error('Fake error')
+  })
+
+  try {
+    await zipFixture(t, 'rust-source', {
+      opts: {
+        featureFlags: {
+          buildRustSource: true,
+        },
+      },
+    })
+
+    t.fail('Expected catch block')
+  } catch (error) {
+    t.true(error.message.startsWith('There is no Rust toolchain installed'))
+    t.deepEqual(error.customErrorInfo, {
+      type: 'functionsBundling',
+      location: { functionName: 'rust-func-1', runtime: 'rs' },
+    })
+  }
 })
 
 test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
