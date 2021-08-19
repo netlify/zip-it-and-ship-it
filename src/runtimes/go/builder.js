@@ -18,6 +18,8 @@ const build = async ({ destPath, mainFile, srcDir }) => {
   } catch (error) {
     error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_GO } }
 
+    console.error(`Could not compile Go function ${functionName}:\n`)
+
     throw error
   }
 
