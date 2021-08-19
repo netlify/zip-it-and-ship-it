@@ -55,14 +55,14 @@ const cargoBuild = async ({ functionName, srcDir, targetDirectory }) => {
   } catch (error) {
     const hasToolchain = await checkRustToolchain()
 
-    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_RUST } }
-
     if (hasToolchain) {
       console.error(`Could not compile Rust function ${functionName}:\n`)
     } else {
       error.message =
         'There is no Rust toolchain installed. Visit https://ntl.fyi/missing-rust-toolchain for more information.'
     }
+
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_RUST } }
 
     throw error
   }
