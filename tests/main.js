@@ -953,6 +953,30 @@ testBundlers('Handles a TypeScript function with imports', [ESBUILD, ESBUILD_ZIS
 })
 
 testBundlers(
+  'Handles a JavaScript function ({name}.mjs, {name}/{name}.mjs, {name}/index.mjs)',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-mjs', {
+      length: 3,
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+
+    await unzipFiles(files)
+
+    t.is(files.length, 3)
+    files.forEach((file) => {
+      t.is(file.bundler, 'esbuild')
+    })
+
+    /* eslint-disable import/no-dynamic-require, node/global-require */
+    t.true(require(`${tmpDir}/func1.js`).handler())
+    t.true(require(`${tmpDir}/func2.js`).handler())
+    t.true(require(`${tmpDir}/func3.js`).handler())
+    /* eslint-enable import/no-dynamic-require, node/global-require */
+  },
+)
+
+testBundlers(
   'Loads a tsconfig.json placed in the same directory as the function',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {

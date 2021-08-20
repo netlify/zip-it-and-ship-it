@@ -74,6 +74,8 @@ const getMainFile = function (srcPath, filename, stat) {
       [
         join(srcPath, `${filename}.js`),
         join(srcPath, 'index.js'),
+        join(srcPath, `${filename}.mjs`),
+        join(srcPath, 'index.mjs'),
         join(srcPath, `${filename}.ts`),
         join(srcPath, 'index.ts'),
       ],
