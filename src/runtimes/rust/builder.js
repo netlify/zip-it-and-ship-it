@@ -8,37 +8,26 @@ const makeDir = require('make-dir')
 const tmp = require('tmp-promise')
 const toml = require('toml')
 
+const { RUNTIME_RUST } = require('../../utils/consts')
 const { lstat } = require('../../utils/fs')
 const { runCommand } = require('../../utils/shell')
 
 const { BUILD_TARGET, MANIFEST_NAME } = require('./constants')
 
 const build = async ({ config, name, srcDir }) => {
-  await installBuildTarget()
-
-  const targetDirectory = await getTargetDirectory({ config, name })
   const functionName = basename(srcDir)
 
   try {
-    await runCommand('cargo', ['build', '--target', BUILD_TARGET, '--release'], {
-      cwd: srcDir,
-      env: {
-        CARGO_TARGET_DIR: targetDirectory,
-      },
-    })
+    await installBuildTarget()
   } catch (error) {
-    const hasToolchain = await checkRustToolchain()
-
-    if (!hasToolchain) {
-      throw new Error(
-        'There is no Rust toolchain installed. Visit https://ntl.fyi/missing-rust-toolchain for more information.',
-      )
-    }
-
-    console.error(`Could not compile Rust function ${functionName}:\n`)
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_RUST } }
 
     throw error
   }
+
+  const targetDirectory = await getTargetDirectory({ config, name })
+
+  await cargoBuild({ functionName, srcDir, targetDirectory })
 
   // By default, the binary will have the same name as the crate and there's no
   // way to override it (https://github.com/rust-lang/cargo/issues/1706). We
@@ -52,6 +41,30 @@ const build = async ({ config, name, srcDir }) => {
   return {
     path: binaryPath,
     stat,
+  }
+}
+
+const cargoBuild = async ({ functionName, srcDir, targetDirectory }) => {
+  try {
+    await runCommand('cargo', ['build', '--target', BUILD_TARGET, '--release'], {
+      cwd: srcDir,
+      env: {
+        CARGO_TARGET_DIR: targetDirectory,
+      },
+    })
+  } catch (error) {
+    const hasToolchain = await checkRustToolchain()
+
+    if (hasToolchain) {
+      console.error(`Could not compile Rust function ${functionName}:\n`)
+    } else {
+      error.message =
+        'There is no Rust toolchain installed. Visit https://ntl.fyi/missing-rust-toolchain for more information.'
+    }
+
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_RUST } }
+
+    throw error
   }
 }
 
