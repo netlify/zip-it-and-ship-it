@@ -4,6 +4,7 @@ const cpFile = require('cp-file')
 
 const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
 
+const { detectEsModule } = require('./detect_es_module')
 const { findFunctionsInPaths } = require('./finder')
 const { getSrcFiles } = require('./src_files')
 const { zipEsbuild } = require('./zip_esbuild')
@@ -11,7 +12,21 @@ const { zipZisi } = require('./zip_zisi')
 
 // We use ZISI as the default bundler until the next major release, with the
 // exception of TypeScript files, for which the only option is esbuild.
-const getDefaultBundler = ({ extension }) => (extension === '.ts' ? JS_BUNDLER_ESBUILD : JS_BUNDLER_ZISI)
+const getDefaultBundler = ({ extension, srcFile }) => {
+  if (extension === '.ts') {
+    return JS_BUNDLER_ESBUILD
+  }
+
+  if (srcFile) {
+    const isEsModule = detectEsModule({ srcFile })
+
+    if (isEsModule) {
+      return JS_BUNDLER_ESBUILD
+    }
+  }
+
+  return JS_BUNDLER_ZISI
+}
 
 // A proxy for the `getSrcFiles` function which adds a default `bundler` using
 // the `getDefaultBundler` function.
@@ -35,7 +50,8 @@ const zipFunction = async function ({
   srcPath,
   stat,
 }) {
-  const bundler = config.nodeBundler || getDefaultBundler({ extension })
+  // how do you construct the srcFile?
+  const bundler = config.nodeBundler || getDefaultBundler({ extension, srcFile: join(srcPath, filename) })
 
   // If the file is a zip, we assume the function is bundled and ready to go.
   // We simply copy it to the destination path with no further processing.

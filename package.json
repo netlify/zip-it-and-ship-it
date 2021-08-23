@@ -63,6 +63,7 @@
     "del": "^6.0.0",
     "elf-cam": "^0.1.1",
     "end-of-stream": "^1.4.4",
+    "es-module-lexer": "^0.7.1",
     "execa": "^5.0.0",
     "filter-obj": "^2.0.1",
     "find-up": "^5.0.0",
