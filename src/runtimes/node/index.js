@@ -9,9 +9,10 @@ const { getSrcFiles } = require('./src_files')
 const { zipEsbuild } = require('./zip_esbuild')
 const { zipZisi } = require('./zip_zisi')
 
-// We use ZISI as the default bundler until the next major release, with the
-// exception of TypeScript files, for which the only option is esbuild.
-const getDefaultBundler = ({ extension }) => (extension === '.ts' ? JS_BUNDLER_ESBUILD : JS_BUNDLER_ZISI)
+// We use ZISI as the default bundler, except for certain extensions, for which
+// esbuild is the only option.
+const getDefaultBundler = ({ extension }) =>
+  ['.mjs', '.ts'].includes(extension) ? JS_BUNDLER_ESBUILD : JS_BUNDLER_ZISI
 
 // A proxy for the `getSrcFiles` function which adds a default `bundler` using
 // the `getDefaultBundler` function.
