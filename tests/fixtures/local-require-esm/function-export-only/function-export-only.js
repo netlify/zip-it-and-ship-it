@@ -1,1 +1,0 @@
-export default () => 'Yee haw!'
