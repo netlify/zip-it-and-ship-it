@@ -17,7 +17,7 @@ const detectEsModule = async ({ mainFile }) => {
 
   const [imports, exports] = parse(mainFileContents)
 
-  return imports.length !== 0 && exports.length !== 0
+  return imports.length !== 0 || exports.length !== 0
 }
 
 module.exports = { detectEsModule }
