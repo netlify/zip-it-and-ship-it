@@ -10,14 +10,16 @@ const detectEsModule = async ({ mainFile }) => {
     return false
   }
 
-  await init
+  try {
+    const [mainFileContents] = await Promise.all([pReadFile(mainFile, { encoding: 'utf8' }), init])
 
-  // Would love to just use await fs.promises.readFile, but it's not available in our version of Node.
-  const mainFileContents = await pReadFile(mainFile, { encoding: 'utf8' })
+    const [imports, exports] = parse(mainFileContents)
 
-  const [imports, exports] = parse(mainFileContents)
-
-  return imports.length !== 0 || exports.length !== 0
+    return imports.length !== 0 || exports.length !== 0
+  } catch {
+    // if there are any problems with init or parsing, assume it's not an ES module
+    return false
+  }
 }
 
 module.exports = { detectEsModule }

@@ -48,7 +48,6 @@ const zipFunction = async function ({
   srcPath,
   stat,
 }) {
-  // how do you construct the srcFile?
   const bundler = config.nodeBundler || (await getDefaultBundler({ extension, mainFile }))
 
   // If the file is a zip, we assume the function is bundled and ready to go.
