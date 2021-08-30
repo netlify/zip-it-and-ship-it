@@ -73,7 +73,7 @@
     "merge-options": "^3.0.4",
     "minimatch": "^3.0.4",
     "p-map": "^4.0.0",
-    "path-exists": "^4.0.0",
+    "path-exists": "^5.0.0",
     "pkg-dir": "^5.0.0",
     "precinct": "^8.0.0",
     "read-package-json-fast": "^2.0.2",
