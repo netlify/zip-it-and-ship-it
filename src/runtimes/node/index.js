@@ -17,7 +17,7 @@ const getDefaultBundler = async ({ extension, mainFile, featureFlags }) => {
     return JS_BUNDLER_ESBUILD
   }
 
-  if (featureFlags?.defaultEsModulesToEsBuild) {
+  if (featureFlags && featureFlags.defaultEsModulesToEsBuild) {
     const isEsModule = await detectEsModule({ mainFile })
 
     if (isEsModule) {
