@@ -31,6 +31,7 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '*'
+          cache: 'npm'
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli
