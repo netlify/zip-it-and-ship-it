@@ -915,6 +915,8 @@ testBundlers('Handles a TypeScript function ({name}.ts)', [ESBUILD, ESBUILD_ZISI
   await unzipFiles(files)
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  t.true(typeof require(`${tmpDir}/function2.js`).type === 'string')
 })
 
 testBundlers(
