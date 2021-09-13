@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, 'chore/fix-ci-npm-cache']
     # Run on release PRs only, or changes to this same file
-    paths: ['CHANGELOG.md', '.github/workflows-e2e-nextjs.yml']
+    paths: ['CHANGELOG.md', '.github/workflows/e2e-nextjs.yml']
 
 jobs:
   integration:
