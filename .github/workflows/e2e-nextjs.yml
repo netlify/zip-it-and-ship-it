@@ -2,7 +2,7 @@ name: Next.js Integration test
 
 on:
   pull_request:
-    branches: [main, 'chore/fix-ci-npm-cache']
+    branches: [main, 'chore/ci-e2e-nextjs']
     # Run on release PRs only, or changes to this same file
     paths: ['CHANGELOG.md', '.github/workflows/e2e-nextjs.yml']
 
