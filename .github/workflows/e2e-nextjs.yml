@@ -32,6 +32,11 @@ jobs:
         with:
           node-version: '*'
           cache: 'npm'
+          # We need to add each of the lockfile paths so that the global npm cache is populated accordingly
+          cache-dependency-path: |
+            zip-it-and-ship-it/package-lock.json
+            netlify-plugin-nextjs/package-lock.json
+            netlify-cli/npm-shrinkwrap.json
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli
