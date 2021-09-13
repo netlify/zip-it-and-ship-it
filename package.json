@@ -87,7 +87,7 @@
   },
   "devDependencies": {
     "@netlify/eslint-config-node": "^3.2.6",
-    "adm-zip": "^0.5.0",
+    "adm-zip": "0.5.5",
     "ava": "^3.0.0",
     "cpy": "^8.0.0",
     "get-stream": "^6.0.0",
