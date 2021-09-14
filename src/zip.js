@@ -94,6 +94,7 @@ const zipFunctions = async function (
         srcDir: func.srcDir,
         srcPath: func.srcPath,
         stat: func.stat,
+        featureFlags,
       })
 
       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
@@ -151,6 +152,7 @@ const zipFunction = async function (
     stat,
     runtime,
     pluginsModulesPath,
+    featureFlags,
   })
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })

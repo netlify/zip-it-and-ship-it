@@ -412,7 +412,7 @@ These are supplied to each of the entrypoint functions (`zipFunction`, `zipFunct
 `listFunctionsFiles`) as a named parameter called `featureFlags`. It consists of an object where each key is the name of
 a feature flag and the values are Booleans indicating whether each feature flag is enabled or disabled.
 
-The list of all feature flags currently being used can be found at [here](src/feature_flags.js).
+The list of all feature flags currently being used can be found [here](src/feature_flags.js).
 
 # Troubleshooting
 

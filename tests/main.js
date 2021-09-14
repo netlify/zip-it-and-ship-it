@@ -272,15 +272,38 @@ testBundlers('Can use dynamic import() with esbuild', [ESBUILD, ESBUILD_ZISI], a
   await zipNode(t, 'dynamic-import', { opts: { config: { '*': { nodeBundler: bundler } } } })
 })
 
-testBundlers('Bundling does not crash with dynamic import() with zisi', [DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(zipNode(t, 'dynamic-import', { opts: { config: { '*': { nodeBundler: bundler } } } }), {
-    message: /export/,
-  })
-})
-
 testBundlers('Can require local files', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-require', { opts: { config: { '*': { nodeBundler: bundler } } } })
 })
+
+testBundlers(
+  'Can bundle functions with `.js` extension using ES Modules and feature flag ON',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    await zipNode(t, 'local-require-esm', {
+      length: 3,
+      opts: { featureFlags: { defaultEsModulesToEsbuild: true }, config: { '*': { nodeBundler: bundler } } },
+    })
+  },
+)
+
+testBundlers(
+  'Can bundle functions with `.js` extension using ES Modules and feature flag OFF',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    await (bundler === DEFAULT
+      ? t.throwsAsync(
+          zipNode(t, 'local-require-esm', {
+            length: 3,
+            opts: { featureFlags: { defaultEsModulesToEsbuild: false }, config: { '*': { nodeBundler: bundler } } },
+          }),
+        )
+      : zipNode(t, 'local-require-esm', {
+          length: 3,
+          opts: { featureFlags: { defaultEsModulesToEsbuild: false }, config: { '*': { nodeBundler: bundler } } },
+        }))
+  },
+)
 
 testBundlers('Can require local files deeply', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-deep-require', { opts: { config: { '*': { nodeBundler: bundler } } } })
