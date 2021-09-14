@@ -282,21 +282,26 @@ testBundlers(
   async (bundler, t) => {
     await zipNode(t, 'local-require-esm', {
       length: 3,
-      opts: { featureFlags: { defaultEsModulesToEsBuild: true }, config: { '*': { nodeBundler: bundler } } },
+      opts: { featureFlags: { defaultEsModulesToEsbuild: true }, config: { '*': { nodeBundler: bundler } } },
     })
   },
 )
 
 testBundlers(
   'Can bundle functions with `.js` extension using ES Modules and feature flag OFF',
-  [DEFAULT],
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
-    await t.throwsAsync(
-      zipNode(t, 'local-require-esm', {
-        length: 3,
-        opts: { featureFlags: { defaultEsModulesToEsBuild: false }, config: { '*': { nodeBundler: bundler } } },
-      }),
-    )
+    await (bundler === DEFAULT
+      ? t.throwsAsync(
+          zipNode(t, 'local-require-esm', {
+            length: 3,
+            opts: { featureFlags: { defaultEsModulesToEsbuild: false }, config: { '*': { nodeBundler: bundler } } },
+          }),
+        )
+      : zipNode(t, 'local-require-esm', {
+          length: 3,
+          opts: { featureFlags: { defaultEsModulesToEsbuild: false }, config: { '*': { nodeBundler: bundler } } },
+        }))
   },
 )
 

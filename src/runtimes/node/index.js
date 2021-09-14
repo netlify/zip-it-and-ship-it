@@ -12,12 +12,12 @@ const { zipZisi } = require('./zip_zisi')
 
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
-const getDefaultBundler = async ({ extension, mainFile, featureFlags }) => {
+const getDefaultBundler = async ({ extension, mainFile, featureFlags = {} }) => {
   if (['.mjs', '.ts'].includes(extension)) {
     return JS_BUNDLER_ESBUILD
   }
 
-  if (featureFlags && featureFlags.defaultEsModulesToEsBuild) {
+  if (featureFlags.defaultEsModulesToEsbuild) {
     const isEsModule = await detectEsModule({ mainFile })
 
     if (isEsModule) {

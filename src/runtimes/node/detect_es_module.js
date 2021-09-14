@@ -11,13 +11,12 @@ const detectEsModule = async ({ mainFile }) => {
   }
 
   try {
-    const [mainFileContents] = await Promise.all([pReadFile(mainFile, { encoding: 'utf8' }), init])
-
+    const [mainFileContents] = await Promise.all([pReadFile(mainFile, 'utf8'), init])
     const [imports, exports] = parse(mainFileContents)
 
     return imports.length !== 0 || exports.length !== 0
   } catch {
-    // if there are any problems with init or parsing, assume it's not an ES module
+    // If there are any problems with init or parsing, assume it's not an ES module
     return false
   }
 }
