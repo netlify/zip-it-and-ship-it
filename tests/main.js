@@ -1910,3 +1910,11 @@ test('Creates a manifest file with the list of created functions if the `manifes
     t.is(fn.path, file.path)
   })
 })
+
+// testBundlers('Correctly follows node_modules via symlink', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
+test.only('Correctly follows node_modules via symlink', async (t) => {
+  await zipNode(t, 'node-module-symlinks')
+
+  // const isEven = require(tmpDir + "/function")
+  // t.is(isEven(10), "10 is even")
+})
