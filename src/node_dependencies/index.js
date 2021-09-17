@@ -2,7 +2,8 @@ const { dirname, basename, normalize } = require('path')
 
 const findUp = require('find-up')
 const { not: notJunk } = require('junk')
-const precinct = require('precinct')
+
+const { listImports } = require('../runtimes/node/list_imports')
 
 const { getPackageJson } = require('./package_json')
 const { resolvePathPreserveSymlinks } = require('./resolve')
@@ -63,10 +64,7 @@ const getFileDependencies = async function ({ path, packageJson, pluginsModulesP
   state.localFiles.add(path)
 
   const basedir = dirname(path)
-  // This parses JavaScript in `path` to retrieve all the `require()` statements
-  // TODO: `precinct.paperwork()` uses `fs.readFileSync()` under the hood,
-  // but should use `fs.readFile()` instead
-  const dependencies = precinct.paperwork(path, { includeCore: false })
+  const dependencies = await listImports({ path })
   const depsPaths = await Promise.all(
     dependencies
       .filter(Boolean)
