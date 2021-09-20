@@ -8,7 +8,8 @@ const getListImportsPlugin = ({ imports, path }) => ({
   name: 'list-imports',
   setup(build) {
     build.onResolve({ filter: /.*/ }, (args) => {
-      const isImport = args.path !== path && !isBuiltinModule(args.path)
+      const isEntryPoint = args.path === path
+      const isImport = !isEntryPoint && !isBuiltinModule(args.path)
 
       if (isImport) {
         imports.add(args.path)
