@@ -1,8 +1,7 @@
 const { join, relative, resolve } = require('path')
 
-const acorn = require('acorn')
+const babel = require('@babel/parser')
 
-const ECMA_VERSION = 2021
 const GLOB_WILDCARD = '**'
 
 // Transforms an array of glob nodes into a glob string including an absolute
@@ -56,8 +55,10 @@ const getWildcardFromASTNode = (node) => {
 // - `includedPathsGlob`: A glob with the files to be included in the bundle
 // - `type`: The expression type (e.g. "require", "import")
 const parseExpression = ({ basePath, expression: rawExpression, resolveDir }) => {
-  const { body } = acorn.parse(rawExpression, { ecmaVersion: ECMA_VERSION })
-  const [topLevelExpression] = body
+  const { program } = babel.parse(rawExpression, {
+    sourceType: 'module',
+  })
+  const [topLevelExpression] = program.body
   const { expression } = topLevelExpression
 
   if (expression.type === 'CallExpression' && expression.callee.name === 'require') {
@@ -113,7 +114,7 @@ const parseBinaryExpression = (expression) => {
       case 'BinaryExpression':
         return parseBinaryExpression(operand)
 
-      case 'Literal':
+      case 'StringLiteral':
         return operand.value
 
       default:
