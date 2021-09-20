@@ -57,7 +57,7 @@ const bundleJsFile = async function ({
       basePath,
       includedPaths: dynamicImportsIncludedPaths,
       moduleNames: nodeModulesWithDynamicImports,
-      processImports: config.processDynamicNodeImports === true,
+      processImports: config.processDynamicNodeImports !== false,
       srcDir,
     }),
   ]
