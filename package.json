@@ -68,6 +68,7 @@
     "filter-obj": "^2.0.1",
     "find-up": "^5.0.0",
     "glob": "^7.1.6",
+    "is-builtin-module": "^3.1.0",
     "junk": "^3.1.0",
     "locate-path": "^6.0.0",
     "make-dir": "^3.1.0",

@@ -12,6 +12,7 @@ const zipZisi = async ({
   config,
   destFolder,
   extension,
+  featureFlags,
   filename,
   mainFile,
   pluginsModulesPath,
@@ -22,6 +23,7 @@ const zipZisi = async ({
   const { paths: srcFiles } = await getSrcFilesAndExternalModules({
     bundler: JS_BUNDLER_ZISI,
     extension,
+    featureFlags,
     includedFiles: config.includedFiles,
     includedFilesBasePath: config.includedFilesBasePath || basePath,
     mainFile,

@@ -53,6 +53,7 @@ const getSrcFiles = async function ({ config, ...parameters }) {
 const getSrcFilesAndExternalModules = async function ({
   bundler,
   externalNodeModules = [],
+  featureFlags,
   includedFiles = [],
   includedFilesBasePath,
   mainFile,
@@ -64,7 +65,14 @@ const getSrcFilesAndExternalModules = async function ({
   const includedFilePaths = await getPathsOfIncludedFiles(includedFiles, includedFilesBasePath)
 
   if (bundler === JS_BUNDLER_ZISI) {
-    const paths = await listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
+    const paths = await listFilesUsingLegacyBundler({
+      featureFlags,
+      srcPath,
+      mainFile,
+      srcDir,
+      stat,
+      pluginsModulesPath,
+    })
 
     return {
       moduleNames: [],
