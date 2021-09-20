@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "4.21.1",
+  "version": "4.22.0",
   "description": "Zip it and ship it",
   "main": "./src/main.js",
   "bin": {
