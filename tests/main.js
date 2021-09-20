@@ -135,6 +135,29 @@ testBundlers('Can require node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async
   await zipNode(t, 'local-node-module', { opts: { config: { '*': { nodeBundler: bundler } } } })
 })
 
+testBundlers('Can require deep paths in node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
+  const { tmpDir } = await zipNode(t, 'local-node-module-deep-require', {
+    opts: { config: { '*': { nodeBundler: bundler } } },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const func = require(`${tmpDir}/function.js`)
+
+  t.deepEqual(func, { mock: { stack: 'jam' }, stack: 'jam' })
+
+  if (bundler === DEFAULT) {
+    // TO DO: Remove when `parseWithEsbuild` feature flag is decommissioned.
+    const { tmpDir: tmpDir2 } = await zipNode(t, 'local-node-module-deep-require', {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const func2 = require(`${tmpDir2}/function.js`)
+
+    t.deepEqual(func2, { mock: { stack: 'jam' }, stack: 'jam' })
+  }
+})
+
 testBundlers('Can require scoped node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'node-module-scope', { opts: { config: { '*': { nodeBundler: bundler } } } })
 })
