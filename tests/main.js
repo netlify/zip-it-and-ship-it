@@ -8,6 +8,7 @@ const test = require('ava')
 const cpy = require('cpy')
 const del = require('del')
 const execa = require('execa')
+const fromEntries = require('fromentries')
 const makeDir = require('make-dir')
 const pathExists = require('path-exists')
 const sinon = require('sinon')
@@ -1908,5 +1909,35 @@ test('Creates a manifest file with the list of created functions if the `manifes
     t.is(fn.name, file.name)
     t.is(fn.runtime, file.runtime)
     t.is(fn.path, file.path)
+  })
+})
+
+test('Manifest file contains config', async (t) => {
+  const FUNCTIONS_COUNT = 6
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const manifestPath = join(tmpDir, 'manifest.json')
+  await zipNode(t, 'many-functions', {
+    length: FUNCTIONS_COUNT,
+    opts: { manifest: manifestPath, config: { 'f*': { foo: 'bar' }, one: { qux: 'woz' } } },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const manifest = require(manifestPath)
+
+  const configProperties = fromEntries(manifest.functions.map(({ name, config }) => [name, config]))
+
+  t.deepEqual(configProperties, {
+    one: {
+      qux: 'woz',
+    },
+    four: {
+      foo: 'bar',
+    },
+    five: {
+      foo: 'bar',
+    },
+    six: {},
+    three: {},
+    two: {},
   })
 })
