@@ -272,15 +272,38 @@ testBundlers('Can use dynamic import() with esbuild', [ESBUILD, ESBUILD_ZISI], a
   await zipNode(t, 'dynamic-import', { opts: { config: { '*': { nodeBundler: bundler } } } })
 })
 
-testBundlers('Bundling does not crash with dynamic import() with zisi', [DEFAULT], async (bundler, t) => {
-  await t.throwsAsync(zipNode(t, 'dynamic-import', { opts: { config: { '*': { nodeBundler: bundler } } } }), {
-    message: /export/,
-  })
-})
-
 testBundlers('Can require local files', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-require', { opts: { config: { '*': { nodeBundler: bundler } } } })
 })
+
+testBundlers(
+  'Can bundle functions with `.js` extension using ES Modules and feature flag ON',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    await zipNode(t, 'local-require-esm', {
+      length: 3,
+      opts: { featureFlags: { defaultEsModulesToEsbuild: true }, config: { '*': { nodeBundler: bundler } } },
+    })
+  },
+)
+
+testBundlers(
+  'Can bundle functions with `.js` extension using ES Modules and feature flag OFF',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    await (bundler === DEFAULT
+      ? t.throwsAsync(
+          zipNode(t, 'local-require-esm', {
+            length: 3,
+            opts: { featureFlags: { defaultEsModulesToEsbuild: false }, config: { '*': { nodeBundler: bundler } } },
+          }),
+        )
+      : zipNode(t, 'local-require-esm', {
+          length: 3,
+          opts: { featureFlags: { defaultEsModulesToEsbuild: false }, config: { '*': { nodeBundler: bundler } } },
+        }))
+  },
+)
 
 testBundlers('Can require local files deeply', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-deep-require', { opts: { config: { '*': { nodeBundler: bundler } } } })
@@ -953,6 +976,30 @@ testBundlers('Handles a TypeScript function with imports', [ESBUILD, ESBUILD_ZIS
 })
 
 testBundlers(
+  'Handles a JavaScript function ({name}.mjs, {name}/{name}.mjs, {name}/index.mjs)',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-mjs', {
+      length: 3,
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+
+    await unzipFiles(files)
+
+    t.is(files.length, 3)
+    files.forEach((file) => {
+      t.is(file.bundler, 'esbuild')
+    })
+
+    /* eslint-disable import/no-dynamic-require, node/global-require */
+    t.true(require(`${tmpDir}/func1.js`).handler())
+    t.true(require(`${tmpDir}/func2.js`).handler())
+    t.true(require(`${tmpDir}/func3.js`).handler())
+    /* eslint-enable import/no-dynamic-require, node/global-require */
+  },
+)
+
+testBundlers(
   'Loads a tsconfig.json placed in the same directory as the function',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
@@ -1352,7 +1399,10 @@ test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) =>
 
     t.fail('Function did not throw')
   } catch (error) {
-    t.deepEqual(error.customErrorInfo, { type: 'functionsBundling', location: { functionName: 'function' } })
+    t.deepEqual(error.customErrorInfo, {
+      type: 'functionsBundling',
+      location: { functionName: 'function', runtime: 'js' },
+    })
   }
 })
 
@@ -1602,7 +1652,7 @@ test('Does not zip Go function files', async (t) => {
 test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
   shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
-  const fixtureName = 'go-source'
+  const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, { length: 0 })
 
   t.is(files.length, 0)
@@ -1612,7 +1662,7 @@ test.serial('Does not build Go functions from source if the `buildGoSource` feat
 test.serial('Builds Go functions from source if the `buildGoSource` feature flag is enabled', async (t) => {
   shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
-  const fixtureName = 'go-source'
+  const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, {
     length: 2,
     opts: {
@@ -1650,12 +1700,35 @@ test.serial('Builds Go functions from source if the `buildGoSource` feature flag
   t.is(files[1].runtime, 'go')
 })
 
+test.serial('Adds `type: "functionsBundling"` to errors resulting from compiling Go binaries', async (t) => {
+  shellUtilsStub.callsFake(() => {
+    throw new Error('Fake error')
+  })
+
+  try {
+    await zipFixture(t, 'go-source', {
+      opts: {
+        featureFlags: {
+          buildGoSource: true,
+        },
+      },
+    })
+
+    t.fail('Expected catch block')
+  } catch (error) {
+    t.deepEqual(error.customErrorInfo, {
+      type: 'functionsBundling',
+      location: { functionName: 'go-func-1', runtime: 'go' },
+    })
+  }
+})
+
 test.serial(
   'Does not build Rust functions from source if the `buildRustSource` feature flag is not enabled',
   async (t) => {
     shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
-    const fixtureName = 'rust-source'
+    const fixtureName = 'rust-source-multiple'
     const { files } = await zipFixture(t, fixtureName, { length: 0 })
 
     t.is(files.length, 0)
@@ -1664,12 +1737,23 @@ test.serial(
 )
 
 test.serial('Builds Rust functions from source if the `buildRustSource` feature flag is enabled', async (t) => {
+  const targetDirectory = await tmpName({ prefix: `zip-it-test-rust-function-[name]` })
+  const tmpDirectory = await tmpName({ prefix: `zip-it-test-` })
+
   shellUtilsStub.callsFake(async (...args) => {
-    const [rootCommand] = args
+    const [rootCommand, , { cwd, env: environment } = {}] = args
 
     if (rootCommand === 'cargo') {
-      const directory = join(args[2].env.CARGO_TARGET_DIR, args[1][2], 'release')
+      const directory = join(environment.CARGO_TARGET_DIR, args[1][2], 'release')
       const binaryPath = join(directory, 'hello')
+
+      if (cwd.endsWith('rust-func-1')) {
+        t.is(dirname(environment.CARGO_TARGET_DIR), dirname(tmpDirectory))
+      }
+
+      if (cwd.endsWith('rust-func-2')) {
+        t.is(environment.CARGO_TARGET_DIR, targetDirectory.replace('[name]', 'rust-func-2'))
+      }
 
       await makeDir(directory)
 
@@ -1677,19 +1761,27 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
     }
   })
 
-  const fixtureName = 'rust-source'
+  const fixtureName = 'rust-source-multiple'
   const { files } = await zipFixture(t, fixtureName, {
+    length: 2,
     opts: {
+      config: {
+        'rust-func-2': {
+          rustTargetDirectory: targetDirectory,
+        },
+      },
       featureFlags: {
         buildRustSource: true,
       },
     },
   })
 
-  t.is(shellUtilsStub.callCount, 2)
+  t.is(files.length, 2)
+  t.is(shellUtilsStub.callCount, 3)
 
   const { args: call1 } = shellUtilsStub.getCall(0)
   const { args: call2 } = shellUtilsStub.getCall(1)
+  const { args: call3 } = shellUtilsStub.getCall(1)
 
   t.is(call1[0], 'rustup')
   t.is(call1[1][0], 'target')
@@ -1701,25 +1793,67 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
   t.is(call2[1][1], '--target')
   t.is(call2[1][2], 'x86_64-unknown-linux-musl')
 
+  t.is(call2[0], call3[0])
+  t.is(call2[1][0], call3[1][0])
+  t.is(call2[1][1], call3[1][1])
+  t.is(call2[1][2], call3[1][2])
+
   t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'rust-func-1', 'src', 'main.rs'))
   t.is(files[0].name, 'rust-func-1')
   t.is(files[0].runtime, 'rs')
+
+  t.is(files[1].mainFile, join(FIXTURES_DIR, fixtureName, 'rust-func-2', 'src', 'main.rs'))
+  t.is(files[1].name, 'rust-func-2')
+  t.is(files[1].runtime, 'rs')
 })
 
-test.serial('Throws an error with an informative message when the Rust toolchain is missing', async (t) => {
-  shellUtilsStub.throws()
+test.serial('Adds `type: "functionsBundling"` to errors resulting from compiling Rust binaries', async (t) => {
+  shellUtilsStub.callsFake((...args) => {
+    if (args[0] === 'cargo') {
+      throw new Error('Fake error')
+    }
+  })
 
-  const fixtureName = 'rust-source'
-  await t.throwsAsync(
-    zipFixture(t, fixtureName, {
+  try {
+    await zipFixture(t, 'rust-source', {
       opts: {
         featureFlags: {
           buildRustSource: true,
         },
       },
-    }),
-    { message: /^There is no Rust toolchain installed./ },
-  )
+    })
+
+    t.fail('Expected catch block')
+  } catch (error) {
+    t.deepEqual(error.customErrorInfo, {
+      type: 'functionsBundling',
+      location: { functionName: 'rust-func-1', runtime: 'rs' },
+    })
+  }
+})
+
+test.serial('Throws an error with an informative message when the Rust toolchain is missing', async (t) => {
+  shellUtilsStub.callsFake(() => {
+    throw new Error('Fake error')
+  })
+
+  try {
+    await zipFixture(t, 'rust-source', {
+      opts: {
+        featureFlags: {
+          buildRustSource: true,
+        },
+      },
+    })
+
+    t.fail('Expected catch block')
+  } catch (error) {
+    t.true(error.message.startsWith('There is no Rust toolchain installed'))
+    t.deepEqual(error.customErrorInfo, {
+      type: 'functionsBundling',
+      location: { functionName: 'rust-func-1', runtime: 'rs' },
+    })
+  }
 })
 
 test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
@@ -1764,12 +1898,18 @@ test('Creates a manifest file with the list of created functions if the `manifes
   // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const manifest = require(manifestPath)
 
-  t.deepEqual(files, manifest.functions)
   t.is(manifest.version, 1)
   t.is(manifest.system.arch, arch)
   t.is(manifest.system.platform, platform)
   t.is(typeof manifest.timestamp, 'number')
 
-  // The `path` property of each function must be an absolute path.
-  manifest.functions.every(({ path }) => isAbsolute(path))
+  manifest.functions.forEach((fn, index) => {
+    const file = files[index]
+
+    t.true(isAbsolute(fn.path))
+    t.is(fn.mainFile, file.mainFile)
+    t.is(fn.name, file.name)
+    t.is(fn.runtime, file.runtime)
+    t.is(fn.path, file.path)
+  })
 })

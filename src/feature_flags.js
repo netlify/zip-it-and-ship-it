@@ -4,6 +4,7 @@ const { env } = require('process')
 const FLAGS = {
   buildGoSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_GO_SOURCE),
   buildRustSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_RUST_SOURCE),
+  defaultEsModulesToEsbuild: Boolean(env.NETLIFY_EXPERIMENTAL_DEFAULT_ES_MODULES_TO_ESBUILD),
 }
 
 const getFlags = (input = {}, flags = FLAGS) =>

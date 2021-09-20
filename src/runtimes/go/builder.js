@@ -1,5 +1,6 @@
 const { basename } = require('path')
 
+const { RUNTIME_GO } = require('../../utils/consts')
 const { lstat } = require('../../utils/fs')
 const { runCommand } = require('../../utils/shell')
 
@@ -15,6 +16,8 @@ const build = async ({ destPath, mainFile, srcDir }) => {
       },
     })
   } catch (error) {
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_GO } }
+
     console.error(`Could not compile Go function ${functionName}:\n`)
 
     throw error

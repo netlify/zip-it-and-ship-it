@@ -2,9 +2,9 @@ name: Next.js Integration test
 
 on:
   pull_request:
-    branches: [main]
-    # Run on release PRs only
-    paths: ['CHANGELOG.md']
+    branches: [main, 'chore/ci-e2e-nextjs']
+    # Run on release PRs only, or changes to this same file
+    paths: ['CHANGELOG.md', '.github/workflows/e2e-nextjs.yml']
 
 jobs:
   integration:
@@ -31,6 +31,12 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '*'
+          cache: 'npm'
+          # We need to add each of the lockfile paths so that the global npm cache is populated accordingly
+          cache-dependency-path: |
+            zip-it-and-ship-it/package-lock.json
+            netlify-plugin-nextjs/package-lock.json
+            netlify-cli/npm-shrinkwrap.json
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli

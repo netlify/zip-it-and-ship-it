@@ -134,6 +134,17 @@ The following properties are accepted:
   - `12.x` (or `nodejs12.x`)
   - `14.x` (or `nodejs14.x`)
 
+- `rustTargetDirectory`
+
+  - _Type_: `string`
+  - _Default value_: Path to a temporary directory
+
+  The path to use as the Cargo target directory when bundling Rust functions from source. When a value is not specified,
+  a random temporary directory will be used.
+
+  The `[name]` placeholder will be replaced by the name of the function, allowing you to use it to construct the path to
+  the target directory.
+
 #### `featureFlags`
 
 See [feature flags](#feature-flags).
@@ -401,7 +412,7 @@ These are supplied to each of the entrypoint functions (`zipFunction`, `zipFunct
 `listFunctionsFiles`) as a named parameter called `featureFlags`. It consists of an object where each key is the name of
 a feature flag and the values are Booleans indicating whether each feature flag is enabled or disabled.
 
-The list of all feature flags currently being used can be found at [here](src/feature_flags.js).
+The list of all feature flags currently being used can be found [here](src/feature_flags.js).
 
 # Troubleshooting
 
