@@ -1457,10 +1457,13 @@ test('Returns an empty list of modules with dynamic imports if the modules are m
   t.is(files[0].nodeModulesWithDynamicImports.length, 0)
 })
 
-test('Leaves dynamic imports untouched when the `processDynamicNodeImports` configuration property is not `true`', async (t) => {
+test('Leaves dynamic imports untouched when the `processDynamicNodeImports` configuration property is `false`', async (t) => {
   const fixtureName = 'node-module-dynamic-import-template-literal'
   const { tmpDir } = await zipNode(t, fixtureName, {
-    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+    opts: {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: false } },
+    },
   })
   const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
 
@@ -1478,7 +1481,7 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   const { files, tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+      config: { '*': { nodeBundler: ESBUILD } },
     },
   })
 
@@ -1499,7 +1502,7 @@ test('Leaves dynamic imports untouched when the files required to resolve the ex
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+      config: { '*': { nodeBundler: ESBUILD } },
     },
   })
   const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
@@ -1515,7 +1518,7 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+      config: { '*': { nodeBundler: ESBUILD } },
     },
   })
 
@@ -1534,7 +1537,7 @@ test('The dynamic import runtime shim handles files in nested directories', asyn
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+      config: { '*': { nodeBundler: ESBUILD } },
     },
   })
 
@@ -1556,7 +1559,7 @@ test('The dynamic import runtime shim handles files in nested directories when u
     opts: {
       archiveFormat: 'none',
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+      config: { '*': { nodeBundler: ESBUILD } },
     },
   })
 
@@ -1577,7 +1580,7 @@ test('Negated files in `included_files` are excluded from the bundle even if the
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+      config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: ESBUILD } },
     },
   })
 
@@ -1597,7 +1600,7 @@ test('Creates dynamic import shims for functions with the same name and same shi
     length: FUNCTION_COUNT,
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: true } },
+      config: { '*': { nodeBundler: ESBUILD } },
     },
   })
 
@@ -1618,7 +1621,7 @@ test('Creates dynamic import shims for functions using `zipFunction`', async (t)
   const fixtureDir = join(FIXTURES_DIR, 'node-module-dynamic-import-2')
   const result = await zipFunction(join(fixtureDir, 'function.js'), tmpDir, {
     basePath: fixtureDir,
-    config: { '*': { nodeBundler: 'esbuild', processDynamicNodeImports: true } },
+    config: { '*': { nodeBundler: 'esbuild' } },
   })
 
   await unzipFiles([result])
