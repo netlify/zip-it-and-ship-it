@@ -42,7 +42,7 @@ const listImports = async ({ path }) => {
       plugins: [getListImportsPlugin({ imports, path })],
     })
   } finally {
-    safeUnlink(targetPath)
+    await safeUnlink(targetPath)
   }
 
   return [...imports]
