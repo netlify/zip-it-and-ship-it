@@ -307,6 +307,11 @@ testBundlers(
 
 testBundlers('Can require local files deeply', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'local-deep-require', { opts: { config: { '*': { nodeBundler: bundler } } } })
+
+  // TO DO: Remove when `parseWithEsbuild` feature flag is decommissioned.
+  await zipNode(t, 'local-deep-require', {
+    opts: { config: { '*': { nodeBundler: bundler } }, featureFlags: { parseWithEsbuild: true } },
+  })
 })
 
 testBundlers(
@@ -432,6 +437,11 @@ testBundlers(
 
 testBundlers('Works with many dependencies', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'many-dependencies', { opts: { config: { '*': { nodeBundler: bundler } } } })
+
+  // TO DO: Remove when `parseWithEsbuild` feature flag is decommissioned.
+  await zipNode(t, 'many-dependencies', {
+    opts: { config: { '*': { nodeBundler: bundler } }, featureFlags: { parseWithEsbuild: true } },
+  })
 })
 
 testBundlers('Works with many function files', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
