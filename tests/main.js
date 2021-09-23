@@ -1440,13 +1440,14 @@ test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) =>
 })
 
 test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async (t) => {
-  const { files } = await zipNode(t, 'node-module-dynamic-import', {
-    opts: { config: { '*': { nodeBundler: ESBUILD } } },
+  const fixtureName = 'node-module-dynamic-import'
+  const { files } = await zipNode(t, fixtureName, {
+    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
   })
 
   t.is(files[0].nodeModulesWithDynamicImports.length, 2)
-  t.true(files[0].nodeModulesWithDynamicImports.includes('@org/test'))
   t.true(files[0].nodeModulesWithDynamicImports.includes('test-two'))
+  t.true(files[0].nodeModulesWithDynamicImports.includes('test-three'))
 })
 
 test('Returns an empty list of modules with dynamic imports if the modules are missing a `package.json`', async (t) => {
