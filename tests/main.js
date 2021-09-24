@@ -1494,8 +1494,7 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   // eslint-disable-next-line unicorn/new-for-builtins
   t.deepEqual(values, Array(expectedLength).fill(true))
   t.throws(() => func('two'))
-  t.is(files[0].nodeModulesWithDynamicImports.length, 1)
-  t.true(files[0].nodeModulesWithDynamicImports.includes('@org/test'))
+  t.is(files[0].nodeModulesWithDynamicImports.length, 0)
 })
 
 test('Leaves dynamic imports untouched when the files required to resolve the expression cannot be packaged at build time', async (t) => {
