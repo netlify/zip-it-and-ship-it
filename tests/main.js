@@ -81,7 +81,7 @@ testBundlers('Zips Node.js function files', [ESBUILD, ESBUILD_ZISI, DEFAULT], as
   t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'function.js'))
 })
 
-testBundlers.only(
+testBundlers(
   'Handles Node module with native bindings (buildtime marker module)',
   [ESBUILD, ESBUILD_ZISI, DEFAULT],
   async (bundler, t) => {
