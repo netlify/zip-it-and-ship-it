@@ -1,4 +1,4 @@
-const { resolve } = require('path')
+const { extname, resolve } = require('path')
 
 const makeDir = require('make-dir')
 const pMap = require('p-map')
@@ -8,15 +8,23 @@ const { createManifest } = require('./manifest')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { getPluginsModulesPath } = require('./runtimes/node/utils/plugin_modules_path')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
-const { listFunctionsDirectories, resolveFunctionsDirectories } = require('./utils/fs')
+const { listFunctionsDirectories, lstat, resolveFunctionsDirectories } = require('./utils/fs')
 const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
-const validateArchiveFormat = (archiveFormat) => {
-  if (![ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP].includes(archiveFormat)) {
-    throw new Error(`Invalid archive format: ${archiveFormat}`)
+// Returns the input object with an additional `size` property containing the
+// size of the file at `path` when it is a ZIP archive.
+const addArchiveSize = async (result) => {
+  const { path } = result
+
+  if (extname(path) !== '.zip') {
+    return result
   }
+
+  const { size } = await lstat(path)
+
+  return { ...result, size }
 }
 
 // Takes the result of zipping a function and formats it for output.
@@ -33,6 +41,7 @@ const formatZipResult = (result) => {
     nodeModulesWithDynamicImports,
     path,
     runtime,
+    size,
   } = result
 
   return removeFalsy({
@@ -47,7 +56,14 @@ const formatZipResult = (result) => {
     nodeModulesWithDynamicImports,
     path,
     runtime: runtime.name,
+    size,
   })
+}
+
+const validateArchiveFormat = (archiveFormat) => {
+  if (![ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP].includes(archiveFormat)) {
+    throw new Error(`Invalid archive format: ${archiveFormat}`)
+  }
 }
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
@@ -105,7 +121,13 @@ const zipFunctions = async function (
       concurrency: parallelLimit,
     },
   )
-  const formattedResults = results.filter(Boolean).map(formatZipResult)
+  const formattedResults = await Promise.all(
+    results.filter(Boolean).map(async (result) => {
+      const resultWithSize = await addArchiveSize(result)
+
+      return formatZipResult(resultWithSize)
+    }),
+  )
 
   if (manifest !== undefined) {
     await createManifest({ functions: formattedResults, path: resolve(manifest) })
