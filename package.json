@@ -11,6 +11,8 @@
   ],
   "scripts": {
     "prepublishOnly": "npm ci && npm test",
+    "prepack": "npm run build",
+    "build": "tsc",
     "benchmark": "./benchmarks/run.sh",
     "test": "run-s format test:dev",
     "format": "run-s format:check-fix:*",
