@@ -2,12 +2,12 @@
   "name": "@netlify/zip-it-and-ship-it",
   "version": "4.23.0",
   "description": "Zip it and ship it",
-  "main": "./src/main.js",
+  "main": "./dist/main.js",
   "bin": {
-    "zip-it-and-ship-it": "src/bin.js"
+    "zip-it-and-ship-it": "dist/bin.js"
   },
   "files": [
-    "src/**/*.js"
+    "dist"
   ],
   "scripts": {
     "prepublishOnly": "npm ci && npm test",
