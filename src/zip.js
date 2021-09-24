@@ -8,7 +8,7 @@ const { createManifest } = require('./manifest')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { getPluginsModulesPath } = require('./runtimes/node/utils/plugin_modules_path')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
-const { listFunctionsDirectories, lstat, resolveFunctionsDirectories } = require('./utils/fs')
+const { listFunctionsDirectories, resolveFunctionsDirectories, stat } = require('./utils/fs')
 const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -22,7 +22,7 @@ const addArchiveSize = async (result) => {
     return result
   }
 
-  const { size } = await lstat(path)
+  const { size } = await stat(path)
 
   return { ...result, size }
 }
@@ -158,7 +158,7 @@ const zipFunction = async function (
     return
   }
 
-  const { config, extension, filename, mainFile, name, runtime, srcDir, stat } = functions.values().next().value
+  const { config, extension, filename, mainFile, name, runtime, srcDir, stat: stats } = functions.values().next().value
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
 
@@ -178,7 +178,7 @@ const zipFunction = async function (
     runtime,
     srcDir,
     srcPath,
-    stat,
+    stat: stats,
   })
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })
