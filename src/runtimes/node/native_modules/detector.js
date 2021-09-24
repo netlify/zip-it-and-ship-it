@@ -1,16 +1,6 @@
-// eslint-disable-next-line complexity
+const markerModules = ['bindings', 'nan', 'node-gyp', 'node-gyp-build', 'node-pre-gyp', 'prebuild']
+
 const isNativeModule = ({ binary, dependencies = {}, devDependencies = {}, gypfile }) =>
-  Boolean(
-    dependencies.bindings ||
-      dependencies.prebuild ||
-      dependencies.nan ||
-      dependencies['node-pre-gyp'] ||
-      dependencies['node-gyp-build'] ||
-      devDependencies.prebuild ||
-      devDependencies['node-pre-gyp'] ||
-      devDependencies['node-gyp-build'] ||
-      gypfile ||
-      binary,
-  )
+  Boolean(binary || gypfile) || markerModules.some((marker) => dependencies[marker] || devDependencies[marker])
 
 module.exports = { isNativeModule }
