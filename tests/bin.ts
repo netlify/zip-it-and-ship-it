@@ -1,6 +1,6 @@
 const { join } = require('path')
 
-const test = require('ava')
+import test from "ava"
 const execa = require('execa')
 const { tmpName } = require('tmp-promise')
 
