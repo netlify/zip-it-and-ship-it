@@ -91,17 +91,32 @@ testBundlers(
     })
     const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
     const normalizedRequires = new Set(requires.map(unixify))
-    const modulePath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/test`)
 
     t.is(files.length, 1)
     t.is(files[0].runtime, 'js')
-    t.true(await pathExists(`${tmpDir}/node_modules/test/native.node`))
-    t.true(await pathExists(`${tmpDir}/node_modules/test/side-file.js`))
-    t.true(normalizedRequires.has('test'))
+
+    const moduleWithNodeFile = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-node-file`)
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-node-file/native.node`))
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-node-file/side-file.js`))
+    t.true(normalizedRequires.has('module-with-node-file'))
+
+    const moduleWithNodeGypPath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-node-gyp`)
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-node-gyp/native.node`))
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-node-gyp/side-file.js`))
+    t.true(normalizedRequires.has('module-with-node-gyp'))
+
+    const moduleWithPrebuildPath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-prebuild`)
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-prebuild/native.node`))
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-prebuild/side-file.js`))
+    t.true(normalizedRequires.has('module-with-prebuild'))
 
     // We can only detect native modules when using esbuild.
     if (bundler !== DEFAULT) {
-      t.deepEqual(files[0].nativeNodeModules, { test: { [modulePath]: '1.0.0' } })
+      t.deepEqual(files[0].nativeNodeModules, {
+        'module-with-node-file': { [moduleWithNodeFile]: '3.0.0' },
+        'module-with-node-gyp': { [moduleWithNodeGypPath]: '1.0.0' },
+        'module-with-prebuild': { [moduleWithPrebuildPath]: '2.0.0' },
+      })
     }
   },
 )
