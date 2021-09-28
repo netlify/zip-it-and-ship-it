@@ -14,13 +14,15 @@ const sinon = require('sinon')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
-const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 // We must require this file first because we need to stub it before the main
 // functions are required.
 // eslint-disable-next-line import/order
 const shellUtils = require('../dist/utils/shell')
 
 const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
+
+// eslint-disable-next-line import/order
+const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
 const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
 const {
