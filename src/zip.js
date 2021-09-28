@@ -27,6 +27,7 @@ const formatZipResult = (result) => {
     bundlerWarnings,
     config = {},
     inputs,
+    inSourceConfig,
     mainFile,
     name,
     nativeNodeModules,
@@ -36,6 +37,7 @@ const formatZipResult = (result) => {
   } = result
 
   return removeFalsy({
+    ...inSourceConfig,
     bundler,
     bundlerErrors,
     bundlerWarnings,

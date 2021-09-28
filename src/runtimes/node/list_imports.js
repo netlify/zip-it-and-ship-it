@@ -4,6 +4,8 @@ const { tmpName } = require('tmp-promise')
 
 const { safeUnlink } = require('../../utils/fs')
 
+const { findISCDeclarations, getISCImportFinderPlugin } = require('./in_source_config')
+
 const getListImportsPlugin = ({ imports, path }) => ({
   name: 'list-imports',
   setup(build) {
@@ -31,21 +33,30 @@ const listImports = async ({ path }) => {
   // a temporary file to serve as the esbuild output and then get rid of it
   // when we're done.
   const targetPath = await tmpName()
+
+  // To be populated with the paths of the imports found.
   const imports = new Set()
+
+  // To be populated with the paths of the files that import the in-source
+  // configuration package.
+  const iscImporterPaths = []
 
   try {
     await esbuild.build({
-      entryPoints: [path],
       bundle: true,
+      entryPoints: [path],
       outfile: targetPath,
       platform: 'node',
-      plugins: [getListImportsPlugin({ imports, path })],
+      plugins: [getISCImportFinderPlugin({ importerPaths: iscImporterPaths }), getListImportsPlugin({ imports, path })],
     })
   } finally {
     safeUnlink(targetPath)
   }
 
-  return [...imports]
+  const [iscImporterPath] = iscImporterPaths
+  const iscDeclarations = await findISCDeclarations(iscImporterPath)
+
+  return { imports: [...imports], iscDeclarations }
 }
 
 module.exports = { listImports }

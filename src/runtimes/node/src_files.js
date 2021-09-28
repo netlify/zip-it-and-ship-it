@@ -65,7 +65,7 @@ const getSrcFilesAndExternalModules = async function ({
   const includedFilePaths = await getPathsOfIncludedFiles(includedFiles, includedFilesBasePath)
 
   if (bundler === JS_BUNDLER_ZISI) {
-    const paths = await listFilesUsingLegacyBundler({
+    const { iscDeclarations, paths } = await listFilesUsingLegacyBundler({
       featureFlags,
       srcPath,
       mainFile,
@@ -75,6 +75,7 @@ const getSrcFilesAndExternalModules = async function ({
     })
 
     return {
+      iscDeclarations,
       moduleNames: [],
       paths: [...paths, ...includedFilePaths],
     }

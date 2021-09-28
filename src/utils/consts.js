@@ -1,6 +1,7 @@
 module.exports = {
   ARCHIVE_FORMAT_NONE: 'none',
   ARCHIVE_FORMAT_ZIP: 'zip',
+  IN_SOURCE_CONFIG_MODULE: '@netlify/functions',
   JS_BUNDLER_ESBUILD: 'esbuild',
   JS_BUNDLER_ESBUILD_ZISI: 'esbuild_zisi',
   JS_BUNDLER_ZISI: 'zisi',

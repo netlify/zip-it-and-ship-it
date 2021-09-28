@@ -78,7 +78,7 @@ const replaceUnzipPath = function ({ path }) {
 // will be traversed recursively up to a depth defined by `depth`. All the
 // required paths — relative or not — will be returned in a flattened array.
 const getRequires = async function ({ depth = Number.POSITIVE_INFINITY, filePath }, currentDepth = 1) {
-  const requires = await listImports({ path: filePath })
+  const { imports: requires } = await listImports({ path: filePath })
 
   if (currentDepth >= depth) {
     return requires

@@ -20,7 +20,7 @@ const zipZisi = async ({
   srcPath,
   stat,
 }) => {
-  const { paths: srcFiles } = await getSrcFilesAndExternalModules({
+  const { iscDeclarations, paths: srcFiles } = await getSrcFilesAndExternalModules({
     bundler: JS_BUNDLER_ZISI,
     extension,
     featureFlags,
@@ -44,7 +44,7 @@ const zipZisi = async ({
     srcFiles,
   })
 
-  return { bundler: JS_BUNDLER_ZISI, config, inputs: srcFiles, path }
+  return { bundler: JS_BUNDLER_ZISI, config, inputs: srcFiles, inSourceConfig: iscDeclarations, path }
 }
 
 module.exports = { zipZisi }

@@ -8,6 +8,7 @@ const { getPathWithExtension, safeUnlink } = require('../../utils/fs')
 
 const { getBundlerTarget } = require('./bundler_target')
 const { getDynamicImportsPlugin } = require('./dynamic_imports/plugin')
+const { findISCDeclarations, getISCImportFinderPlugin } = require('./in_source_config')
 const { getNativeModulesPlugin } = require('./native_modules/plugin')
 
 // Maximum number of log messages that an esbuild instance will produce. This
@@ -50,8 +51,11 @@ const bundleJsFile = async function ({
   // work at runtime.
   const dynamicImportsIncludedPaths = new Set()
 
+  const iscImporterPaths = []
+
   // The list of esbuild plugins to enable for this build.
   const plugins = [
+    getISCImportFinderPlugin({ importerPaths: iscImporterPaths }),
     getNativeModulesPlugin(nativeNodeModules),
     getDynamicImportsPlugin({
       basePath,
@@ -95,12 +99,14 @@ const bundleJsFile = async function ({
     })
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
+    const inSourceConfig = await getISCDeclarations(iscImporterPaths)
 
     return {
       additionalPaths: [...dynamicImportsIncludedPaths],
       bundlePaths,
       cleanTempFiles,
       inputs,
+      inSourceConfig,
       nativeNodeModules,
       nodeModulesWithDynamicImports: [...nodeModulesWithDynamicImports],
       warnings,
@@ -146,6 +152,12 @@ const getBundlePaths = ({ destFolder, outputs, srcFile }) => {
 
 const getCleanupFunction = (paths) => async () => {
   await Promise.all(paths.filter(Boolean).map(safeUnlink))
+}
+
+const getISCDeclarations = async (iscImporterPaths) => {
+  const [iscImporterPath] = iscImporterPaths
+
+  return await findISCDeclarations(iscImporterPath)
 }
 
 module.exports = { bundleJsFile, ESBUILD_LOG_LIMIT }

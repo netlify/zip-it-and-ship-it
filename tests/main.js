@@ -21,7 +21,7 @@ const shellUtils = require('../src/utils/shell')
 
 const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
-const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
+const { zipFunction, zipFunctions, listFunctions, listFunctionsFiles } = require('..')
 const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
 const {
   JS_BUNDLER_ESBUILD: ESBUILD,
@@ -1943,3 +1943,22 @@ test('Creates a manifest file with the list of created functions if the `manifes
     t.is(fn.path, file.path)
   })
 })
+
+testBundlers(
+  'Finds in-source config declarations in CJS and ESM files using the `cron` helper',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    const FUNCTIONS_COUNT = 6
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const functionsDir = join(FIXTURES_DIR, 'in-source-config', 'functions')
+    const results = await zipFunctions(functionsDir, tmpDir, {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+
+    t.is(results.length, FUNCTIONS_COUNT)
+
+    results.forEach((result) => {
+      t.is(result.schedule, '@daily')
+    })
+  },
+)

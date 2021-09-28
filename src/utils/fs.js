@@ -82,6 +82,7 @@ module.exports = {
   getPathWithExtension,
   listFunctionsDirectories,
   listFunctionsDirectory,
+  readFile: pReadFile,
   resolveFunctionsDirectories,
   safeUnlink,
   writeFile: pWriteFile,

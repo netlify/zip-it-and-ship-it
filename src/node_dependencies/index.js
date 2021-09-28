@@ -2,7 +2,6 @@ const { dirname, basename, normalize } = require('path')
 
 const findUp = require('find-up')
 const { not: notJunk } = require('junk')
-const precinct = require('precinct')
 
 const { listImports } = require('../runtimes/node/list_imports')
 
@@ -33,17 +32,19 @@ const listFilesUsingLegacyBundler = async function ({
   stat,
   pluginsModulesPath,
 }) {
-  const [treeFiles, depFiles] = await Promise.all([
+  const [treeFiles, parsedEntryPoint] = await Promise.all([
     getTreeFiles(srcPath, stat),
-    getDependencies(mainFile, srcDir, pluginsModulesPath, featureFlags),
+    parseEntryPoint(mainFile, srcDir, pluginsModulesPath, featureFlags),
   ])
-  const files = [...treeFiles, ...depFiles].map(normalize)
+  const { dependencies, iscDeclarations } = parsedEntryPoint
+  const files = [...treeFiles, ...dependencies].map(normalize)
   const uniqueFiles = [...new Set(files)]
 
   // We sort so that the archive's checksum is deterministic.
   // Mutating is fine since `Array.filter()` returns a shallow copy
   const filteredFiles = uniqueFiles.filter(isNotJunk).sort()
-  return filteredFiles
+
+  return { iscDeclarations, paths: filteredFiles }
 }
 
 // Remove temporary files like *~, *.swp, etc.
@@ -52,38 +53,35 @@ const isNotJunk = function (file) {
 }
 
 // Retrieve all the files recursively required by a Node.js file
-const getDependencies = async function (mainFile, srcDir, pluginsModulesPath, featureFlags) {
+const parseEntryPoint = async function (mainFile, srcDir, pluginsModulesPath, featureFlags) {
   const packageJson = await getPackageJson(srcDir)
   const state = getNewCache()
 
   try {
-    return await getFileDependencies({ featureFlags, path: mainFile, packageJson, pluginsModulesPath, state })
+    return await parseFile({
+      featureFlags,
+      packageJson,
+      path: mainFile,
+      pluginsModulesPath,
+      state,
+    })
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
   }
 }
 
-const getFileDependencies = async function ({
-  featureFlags,
-  path,
-  packageJson,
-  pluginsModulesPath,
-  state,
-  treeShakeNext,
-}) {
+const parseFile = async function ({ featureFlags, path, packageJson, pluginsModulesPath, state, treeShakeNext }) {
   if (state.localFiles.has(path)) {
-    return []
+    return { dependencies: [] }
   }
 
   state.localFiles.add(path)
 
   const basedir = dirname(path)
-  const dependencies = featureFlags.parseWithEsbuild
-    ? await listImports({ path })
-    : precinct.paperwork(path, { includeCore: false })
-  const depsPaths = await Promise.all(
-    dependencies.filter(Boolean).map((dependency) =>
+  const { imports, iscDeclarations } = await listImports({ path })
+  const dependencyPaths = await Promise.all(
+    imports.filter(Boolean).map((dependency) =>
       getImportDependencies({
         dependency,
         basedir,
@@ -95,9 +93,8 @@ const getFileDependencies = async function ({
       }),
     ),
   )
-  // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
-  // eslint-disable-next-line unicorn/prefer-spread
-  return [].concat(...depsPaths)
+
+  return { dependencies: dependencyPaths.flat(), iscDeclarations }
 }
 
 const getImportDependencies = function ({
@@ -140,7 +137,7 @@ const getTreeShakedDependencies = async function ({
   treeShakeNext,
 }) {
   const path = await resolvePathPreserveSymlinks(dependency, [basedir, pluginsModulesPath].filter(Boolean))
-  const depsPath = await getFileDependencies({
+  const { dependencies } = await parseFile({
     featureFlags,
     path,
     packageJson,
@@ -148,7 +145,7 @@ const getTreeShakedDependencies = async function ({
     state,
     treeShakeNext,
   })
-  return [path, ...depsPath]
+  return [path, ...dependencies]
 }
 
 module.exports = {
