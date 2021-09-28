@@ -8,7 +8,7 @@ const { version } = require('../package.json')
 
 const { FIXTURES_DIR } = require('./helpers/main')
 
-const BINARY_PATH = `${__dirname}/../src/bin.js`
+const BINARY_PATH = join(__dirname, "..", "dist", "bin.js")
 
 test('CLI | --version', async (t) => {
   const { stdout } = await execa(BINARY_PATH, ['--version'])

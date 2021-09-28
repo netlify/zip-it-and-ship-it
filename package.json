@@ -12,9 +12,9 @@
   "scripts": {
     "prepublishOnly": "npm ci && npm test",
     "prepack": "npm run build",
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/bin.js",
     "benchmark": "./benchmarks/run.sh",
-    "test": "run-s format test:dev",
+    "test": "run-s build format test:dev",
     "format": "run-s format:check-fix:*",
     "format:ci": "run-s build format:check:*",
     "format:check-fix:lint": "run-e format:check:lint format:fix:lint",
