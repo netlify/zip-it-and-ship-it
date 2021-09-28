@@ -13,4 +13,5 @@ module.exports = {
       },
     },
   ],
+  ignorePatterns: ['README.md', 'tests/fixtures'],
 }
