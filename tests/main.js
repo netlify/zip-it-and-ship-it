@@ -91,17 +91,32 @@ testBundlers(
     })
     const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
     const normalizedRequires = new Set(requires.map(unixify))
-    const modulePath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/test`)
 
     t.is(files.length, 1)
     t.is(files[0].runtime, 'js')
-    t.true(await pathExists(`${tmpDir}/node_modules/test/native.node`))
-    t.true(await pathExists(`${tmpDir}/node_modules/test/side-file.js`))
-    t.true(normalizedRequires.has('test'))
+
+    const moduleWithNodeFile = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-node-file`)
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-node-file/native.node`))
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-node-file/side-file.js`))
+    t.true(normalizedRequires.has('module-with-node-file'))
+
+    const moduleWithNodeGypPath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-node-gyp`)
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-node-gyp/native.node`))
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-node-gyp/side-file.js`))
+    t.true(normalizedRequires.has('module-with-node-gyp'))
+
+    const moduleWithPrebuildPath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-prebuild`)
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-prebuild/native.node`))
+    t.true(await pathExists(`${tmpDir}/node_modules/module-with-prebuild/side-file.js`))
+    t.true(normalizedRequires.has('module-with-prebuild'))
 
     // We can only detect native modules when using esbuild.
     if (bundler !== DEFAULT) {
-      t.deepEqual(files[0].nativeNodeModules, { test: { [modulePath]: '1.0.0' } })
+      t.deepEqual(files[0].nativeNodeModules, {
+        'module-with-node-file': { [moduleWithNodeFile]: '3.0.0' },
+        'module-with-node-gyp': { [moduleWithNodeGypPath]: '1.0.0' },
+        'module-with-prebuild': { [moduleWithPrebuildPath]: '2.0.0' },
+      })
     }
   },
 )
@@ -1440,13 +1455,14 @@ test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) =>
 })
 
 test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async (t) => {
-  const { files } = await zipNode(t, 'node-module-dynamic-import', {
-    opts: { config: { '*': { nodeBundler: ESBUILD } } },
+  const fixtureName = 'node-module-dynamic-import'
+  const { files } = await zipNode(t, fixtureName, {
+    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
   })
 
   t.is(files[0].nodeModulesWithDynamicImports.length, 2)
-  t.true(files[0].nodeModulesWithDynamicImports.includes('@org/test'))
   t.true(files[0].nodeModulesWithDynamicImports.includes('test-two'))
+  t.true(files[0].nodeModulesWithDynamicImports.includes('test-three'))
 })
 
 test('Returns an empty list of modules with dynamic imports if the modules are missing a `package.json`', async (t) => {
@@ -1493,8 +1509,7 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   // eslint-disable-next-line unicorn/new-for-builtins
   t.deepEqual(values, Array(expectedLength).fill(true))
   t.throws(() => func('two'))
-  t.is(files[0].nodeModulesWithDynamicImports.length, 1)
-  t.true(files[0].nodeModulesWithDynamicImports.includes('@org/test'))
+  t.is(files[0].nodeModulesWithDynamicImports.length, 0)
 })
 
 test('Leaves dynamic imports untouched when the files required to resolve the expression cannot be packaged at build time', async (t) => {
