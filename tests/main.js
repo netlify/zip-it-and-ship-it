@@ -1100,7 +1100,7 @@ testBundlers(
 
 test('Limits the amount of log lines produced by esbuild', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const binaryPath = resolve(__dirname, '../src/bin.js')
+  const binaryPath = resolve(__dirname, '../dist/bin.js')
   const fixturePath = join(FIXTURES_DIR, 'esbuild-log-limit')
 
   try {
