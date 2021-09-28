@@ -1,7 +1,17 @@
 const pkgDir = require('pkg-dir')
 
+export interface PackageJson {
+  name?: string
+  version?: string
+  dependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
+  peerDependenciesMeta?: Record<string, { optional: boolean }>
+  devDependencies?: Record<string, string>
+  optionalDependencies?: Record<string, string>
+}
+
 // Retrieve the `package.json` of a specific project or module
-const getPackageJson = async function (srcDir) {
+export const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   const packageRoot = await pkgDir(srcDir)
 
   if (packageRoot === undefined) {
@@ -17,5 +27,3 @@ const getPackageJson = async function (srcDir) {
     throw new Error(`${packageJsonPath} is invalid JSON: ${error.message}`)
   }
 }
-
-module.exports = { getPackageJson }

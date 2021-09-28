@@ -5,7 +5,7 @@ import { Stats } from 'fs'
 const pGlob = promisify(glob)
 
 // When using a directory, we include all its descendants except `node_modules`
-const getTreeFiles = function (srcPath: string, stat: Stats) {
+export const getTreeFiles = function (srcPath: string, stat: Stats) {
   if (!stat.isDirectory()) {
     return [srcPath]
   }
@@ -16,5 +16,3 @@ const getTreeFiles = function (srcPath: string, stat: Stats) {
     absolute: true,
   })
 }
-
-module.exports = { getTreeFiles }

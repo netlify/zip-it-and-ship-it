@@ -1,11 +1,11 @@
-const { promisify } = require('util')
+import { promisify } from 'util'
 
-const glob = require('glob')
+import glob from 'glob'
 
 const pGlob = promisify(glob)
 
 // We use all the files published by the Node.js except some that are not needed
-const getPublishedFiles = async function (modulePath) {
+export const getPublishedFiles = async function (modulePath: string) {
   const ignore = getIgnoredFiles(modulePath)
   const publishedFiles = await pGlob(`${modulePath}/**`, {
     ignore,
@@ -16,7 +16,7 @@ const getPublishedFiles = async function (modulePath) {
   return publishedFiles
 }
 
-const getIgnoredFiles = function (modulePath) {
+const getIgnoredFiles = function (modulePath: string) {
   return IGNORED_FILES.map((ignoreFile) => `${modulePath}/${ignoreFile}`)
 }
 
@@ -33,5 +33,3 @@ const IGNORED_FILES = [
   '*.ts',
   '*.patch',
 ]
-
-module.exports = { getPublishedFiles }
