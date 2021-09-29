@@ -88,7 +88,7 @@
     "yargs": "^16.0.0"
   },
   "devDependencies": {
-    "@netlify/eslint-config-node": "^3.2.10",
+    "@netlify/eslint-config-node": "^3.2.11",
     "adm-zip": "0.5.5",
     "ava": "^3.0.0",
     "cpy": "^8.0.0",
