@@ -2,6 +2,8 @@
   "name": "node-module-native-buildtime",
   "version": "1.0.0",
   "dependencies": {
-    "test": "1.0.0"
+    "module-with-node-file": "3.0.0",
+    "module-with-node-gyp": "1.0.0",
+    "module-with-prebuild": "2.0.0"
   }
 }
