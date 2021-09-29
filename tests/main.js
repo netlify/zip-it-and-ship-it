@@ -173,6 +173,21 @@ testBundlers('Can require deep paths in node modules', [ESBUILD, ESBUILD_ZISI, D
   }
 })
 
+testBundlers(
+  'Can require Node modules with destructuring expressions',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    await zipNode(t, `local-node-module-destructure-require`, {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+
+    // TO DO: Remove when `parseWithEsbuild` feature flag is decommissioned.
+    await zipNode(t, `local-node-module-destructure-require`, {
+      opts: { config: { '*': { nodeBundler: bundler } }, featureFlags: { parseWithEsbuild: true } },
+    })
+  },
+)
+
 testBundlers('Can require scoped node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'node-module-scope', { opts: { config: { '*': { nodeBundler: bundler } } } })
 })
