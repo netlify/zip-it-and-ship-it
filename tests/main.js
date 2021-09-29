@@ -24,12 +24,12 @@ const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 // eslint-disable-next-line import/order
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
-const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
+const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundler')
 const {
   JS_BUNDLER_ESBUILD: ESBUILD,
   JS_BUNDLER_ESBUILD_ZISI: ESBUILD_ZISI,
   JS_BUNDLER_ZISI,
-} = require('../src/utils/consts')
+} = require('../dist/utils/consts')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -174,6 +174,21 @@ testBundlers('Can require deep paths in node modules', [ESBUILD, ESBUILD_ZISI, D
     t.deepEqual(func2, { mock: { stack: 'jam' }, stack: 'jam' })
   }
 })
+
+testBundlers(
+  'Can require Node modules with destructuring expressions',
+  [ESBUILD, ESBUILD_ZISI, DEFAULT],
+  async (bundler, t) => {
+    await zipNode(t, `local-node-module-destructure-require`, {
+      opts: { config: { '*': { nodeBundler: bundler } } },
+    })
+
+    // TO DO: Remove when `parseWithEsbuild` feature flag is decommissioned.
+    await zipNode(t, `local-node-module-destructure-require`, {
+      opts: { config: { '*': { nodeBundler: bundler } }, featureFlags: { parseWithEsbuild: true } },
+    })
+  },
+)
 
 testBundlers('Can require scoped node modules', [ESBUILD, ESBUILD_ZISI, DEFAULT], async (bundler, t) => {
   await zipNode(t, 'node-module-scope', { opts: { config: { '*': { nodeBundler: bundler } } } })
@@ -1106,7 +1121,7 @@ test('Limits the amount of log lines produced by esbuild', async (t) => {
   const fixturePath = join(FIXTURES_DIR, 'esbuild-log-limit')
 
   try {
-    await execa(binaryPath, [fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
+    await execa('node', [binaryPath, fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
 
     t.fail('Bundling should have thrown')
   } catch (error) {
@@ -1962,4 +1977,15 @@ test('Creates a manifest file with the list of created functions if the `manifes
     t.is(fn.runtime, file.runtime)
     t.is(fn.path, file.path)
   })
+})
+
+testBundlers('Correctly follows node_modules via symlink', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-symlinks', {
+    opts: { config: { '*': { nodeBundler: bundler } } },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const isEven = require(`${tmpDir}/function`)
+  // eslint-disable-next-line no-magic-numbers
+  t.is(isEven(10), '10 is even')
 })
