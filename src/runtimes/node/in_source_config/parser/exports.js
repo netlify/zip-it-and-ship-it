@@ -1,7 +1,7 @@
 const { isNamedExport, isModuleExports, isVariableDeclarator } = require('./helpers')
 
 const getExportFromCJS = (node) => {
-  if (!isModuleExports(node)) {
+  if (!isModuleExports(node, ['module', 'exports', 'handler'])) {
     return []
   }
 

@@ -23,13 +23,13 @@ const isImport = (node, importPath) => {
   return type === 'ImportDeclaration' && source.value === importPath
 }
 
-const isModuleExports = (node) => {
+const isModuleExports = (node, dotExpression = ['module', 'exports']) => {
   const { expression, type } = node || {}
 
   return (
     type === 'ExpressionStatement' &&
     expression.type === 'AssignmentExpression' &&
-    isDotExpression(expression.left, ['module', 'exports', 'handler'])
+    isDotExpression(expression.left, dotExpression)
   )
 }
 
