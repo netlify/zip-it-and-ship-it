@@ -4,6 +4,11 @@ const { tmpName } = require('tmp-promise')
 
 const { safeUnlink } = require('../../utils/fs')
 
+// Maximum number of log messages that an esbuild instance will produce. This
+// limit is important to avoid out-of-memory errors due to too much data being
+// sent in the Go<>Node IPC channel.
+const ESBUILD_LOG_LIMIT = 10
+
 const getListImportsPlugin = ({ imports, path }) => ({
   name: 'list-imports',
   setup(build) {
@@ -35,11 +40,14 @@ const listImports = async ({ path }) => {
 
   try {
     await esbuild.build({
-      entryPoints: [path],
       bundle: true,
+      entryPoints: [path],
+      logLevel: 'error',
+      logLimit: ESBUILD_LOG_LIMIT,
       outfile: targetPath,
       platform: 'node',
       plugins: [getListImportsPlugin({ imports, path })],
+      target: 'esnext',
     })
   } finally {
     await safeUnlink(targetPath)
