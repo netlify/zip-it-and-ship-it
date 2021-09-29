@@ -2,6 +2,8 @@
   "name": "node-module-dynamic-import",
   "version": "1.0.0",
   "dependencies": {
-    "@org/test": "1.0.0"
+    "@org/test": "1.0.0",
+    "@org/test_2": "1.0.0",
+    "test-three": "1.0.0"
   }
 }
