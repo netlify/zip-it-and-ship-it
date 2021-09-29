@@ -1989,11 +1989,13 @@ function wrapfunction (fn, message) {
   }
 
   var args = createArgumentsString(fn.length)
-  var deprecate = this
+  var deprecate = this // eslint-disable-line no-unused-vars
   var stack = getStack()
   var site = callSiteLocation(stack[1])
 
   site.name = fn.name
+
+   // eslint-disable-next-line no-eval
   var deprecatedfn = eval('(function (' + args + ') {\n' +
     '"use strict"\n' +
     'log.call(deprecate, message, site)\n' +

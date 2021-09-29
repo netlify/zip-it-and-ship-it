@@ -301,7 +301,7 @@ renderOpts.inAmpMode=inAmpMode;renderOpts.hybridAmp=hybridAmp;const docComponent
 unstable_runtimeJS: true?pageConfig.unstable_runtimeJS:undefined,unstable_JsPreload:pageConfig.unstable_JsPreload,dangerousAsPath:router.asPath,ampState,props,headTags:await headTags(documentCtx),isFallback,docProps,pathname,ampPath,query,inAmpMode,hybridAmp,dynamicImportsIds,dynamicImports,gsp:!!getStaticProps?true:undefined,gssp:!!getServerSideProps?true:undefined,gip:hasPageGetInitialProps?true:undefined,appGip:!defaultAppGetInitialProps?true:undefined,devOnlyCacheBusterQueryString,scriptLoader});if(false){}if(inAmpMode&&html){// inject HTML to AMP_RENDER_TARGET to allow rendering
 // directly to body in AMP mode
 const ampRenderIndex=html.indexOf(_constants2.AMP_RENDER_TARGET);html=html.substring(0,ampRenderIndex)+`<!-- __NEXT_DATA__ -->${docProps.html}`+html.substring(ampRenderIndex+_constants2.AMP_RENDER_TARGET.length);html=await(0,_optimizeAmp.default)(html,renderOpts.ampOptimizerConfig);if(!renderOpts.ampSkipValidation&&renderOpts.ampValidator){await renderOpts.ampValidator(html,pathname);}}// Avoid postProcess if both flags are false
-if(false){}if(renderOpts.optimizeCss){
+if(false){}if(renderOpts.optimizeCss){// eslint-disable-next-line import/no-extraneous-dependencies
 const Critters=__webpack_require__("WADY");const cssOptimizer=new Critters({ssrMode:true,reduceInlineStyles:false,path:renderOpts.distDir,publicPath:'/_next/',preload:'media',fonts:false,...renderOpts.optimizeCss});html=await cssOptimizer.process(html);}if(inAmpMode||hybridAmp){// fix &amp being escaped for amphtml rel link
 html=html.replace(/&amp;amp=1/g,'&amp=1');}return html;}function errorToJSON(err){const{name,message,stack}=err;return{name,message,stack};}function serializeError(dev,err){if(dev){return errorToJSON(err);}return{name:'Internal Server Error.',message:'500 - Internal Server Error.',statusCode:500};}
 //# sourceMappingURL=render.js.map
@@ -1338,6 +1338,8 @@ module.exports = (chalk, tmp) => {
 	const styles = [];
 	const chunks = [];
 	let chunk = [];
+
+	// eslint-disable-next-line max-params
 	tmp.replace(TEMPLATE_REGEX, (m, escapeChar, inverse, style, close, chr) => {
 		if (escapeChar) {
 			chunk.push(unescape(escapeChar));
@@ -1825,7 +1827,7 @@ function build(_styles, _empty, key) {
 
 	// `__proto__` is used because we must return a function, but there is
 	// no way to create a function with a different prototype
-	builder.__proto__ = proto;
+	builder.__proto__ = proto; // eslint-disable-line no-proto
 
 	return builder;
 }
@@ -1897,7 +1899,7 @@ function chalkTag(chalk, strings) {
 
 Object.defineProperties(Chalk.prototype, styles);
 
-module.exports = Chalk();
+module.exports = Chalk(); // eslint-disable-line new-cap
 module.exports.supportsColor = stdoutColor;
 module.exports.default = module.exports; // For TypeScript
 
@@ -2845,7 +2847,7 @@ function unique() {
       } else {
         keys.add(key);
       }
-    }
+    } // eslint-disable-next-line default-case
 
 
     switch (h.type) {
@@ -3561,11 +3563,13 @@ function wrapfunction (fn, message) {
   }
 
   var args = createArgumentsString(fn.length)
-  var deprecate = this
+  var deprecate = this // eslint-disable-line no-unused-vars
   var stack = getStack()
   var site = callSiteLocation(stack[1])
 
   site.name = fn.name
+
+   // eslint-disable-next-line no-eval
   var deprecatedfn = eval('(function (' + args + ') {\n' +
     '"use strict"\n' +
     'log.call(deprecate, message, site)\n' +
@@ -5134,7 +5138,7 @@ function shouldUseNative() {
 		// Detect buggy property enumeration order in older V8 versions.
 
 		// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-		var test1 = new String('abc');
+		var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
 		test1[5] = 'de';
 		if (Object.getOwnPropertyNames(test1)[0] === '5') {
 			return false;
@@ -9136,6 +9140,7 @@ function mitt() {
     },
 
     emit(type, ...evts) {
+      // eslint-disable-next-line array-callback-return
       ;
       (all[type] || []).slice().map(handler => {
         handler(...evts);
