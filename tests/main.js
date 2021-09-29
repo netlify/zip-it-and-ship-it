@@ -24,12 +24,12 @@ const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 // eslint-disable-next-line import/order
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
-const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
+const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundler')
 const {
   JS_BUNDLER_ESBUILD: ESBUILD,
   JS_BUNDLER_ESBUILD_ZISI: ESBUILD_ZISI,
   JS_BUNDLER_ZISI,
-} = require('../src/utils/consts')
+} = require('../dist/utils/consts')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -1106,7 +1106,7 @@ test('Limits the amount of log lines produced by esbuild', async (t) => {
   const fixturePath = join(FIXTURES_DIR, 'esbuild-log-limit')
 
   try {
-    await execa(binaryPath, [fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
+    await execa("node", [binaryPath, fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
 
     t.fail('Bundling should have thrown')
   } catch (error) {
