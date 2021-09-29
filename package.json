@@ -15,7 +15,7 @@
     "build": "tsc",
     "benchmark": "./benchmarks/run.sh",
     "test": "run-s build format test:dev",
-    "format": "run-s format:check-fix:*",
+    "format": "run-s build format:check-fix:*",
     "format:ci": "run-s build format:check:*",
     "format:check-fix:lint": "run-e format:check:lint format:fix:lint",
     "format:check:lint": "cross-env-shell eslint $npm_package_config_eslint",
