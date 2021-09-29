@@ -1976,3 +1976,14 @@ test('Creates a manifest file with the list of created functions if the `manifes
     t.is(fn.path, file.path)
   })
 })
+
+testBundlers('Correctly follows node_modules via symlink', [ESBUILD, ESBUILD_ZISI], async (bundler, t) => {
+  const { tmpDir } = await zipNode(t, 'node-module-symlinks', {
+    opts: { config: { '*': { nodeBundler: bundler } } },
+  })
+
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  const isEven = require(`${tmpDir}/function`)
+  // eslint-disable-next-line no-magic-numbers
+  t.is(isEven(10), '10 is even')
+})
