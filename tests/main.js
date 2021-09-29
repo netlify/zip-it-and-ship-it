@@ -1121,7 +1121,7 @@ test('Limits the amount of log lines produced by esbuild', async (t) => {
   const fixturePath = join(FIXTURES_DIR, 'esbuild-log-limit')
 
   try {
-    await execa("node", [binaryPath, fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
+    await execa('node', [binaryPath, fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
 
     t.fail('Bundling should have thrown')
   } catch (error) {
