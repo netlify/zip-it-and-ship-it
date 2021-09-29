@@ -27,7 +27,7 @@ const listFunctionsFiles = async function (relativeSrcFolders, { config, feature
     getPluginsModulesPath(srcFolders[0]),
   ])
   const listedFunctionsFiles = await Promise.all(
-    [...functions.values()].map((func) => getListedFunctionFiles(func, { pluginsModulesPath })),
+    [...functions.values()].map((func) => getListedFunctionFiles(func, { featureFlags, pluginsModulesPath })),
   )
 
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
@@ -41,9 +41,10 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }) {
 
 const getListedFunctionFiles = async function (
   { config, runtime, name, stat, mainFile, extension, srcPath, srcDir },
-  { pluginsModulesPath },
+  { featureFlags, pluginsModulesPath },
 ) {
   const srcFiles = await getSrcFiles({
+    featureFlags,
     runtime,
     stat,
     mainFile,
@@ -59,6 +60,7 @@ const getListedFunctionFiles = async function (
 const getSrcFiles = function ({
   bundler,
   config,
+  featureFlags,
   runtime,
   stat,
   mainFile,
@@ -77,6 +79,7 @@ const getSrcFiles = function ({
     bundler,
     config,
     extension,
+    featureFlags,
     srcPath,
     mainFile,
     srcDir,

@@ -3,10 +3,10 @@ const { env } = require('process')
 const { promisify } = require('util')
 
 const AdmZip = require('adm-zip')
-const precinct = require('precinct')
 const { dir: getTmpDir } = require('tmp-promise')
 
 const { zipFunctions } = require('../..')
+const { listImports } = require('../../src/runtimes/node/list_imports')
 const { ARCHIVE_FORMAT_ZIP } = require('../../src/utils/consts')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
@@ -77,8 +77,8 @@ const replaceUnzipPath = function ({ path }) {
 // Returns a list of paths included using `require` calls. Relative requires
 // will be traversed recursively up to a depth defined by `depth`. All the
 // required paths — relative or not — will be returned in a flattened array.
-const getRequires = function ({ depth = Number.POSITIVE_INFINITY, filePath }, currentDepth = 1) {
-  const requires = precinct.paperwork(filePath, { includeCore: false })
+const getRequires = async function ({ depth = Number.POSITIVE_INFINITY, filePath }, currentDepth = 1) {
+  const requires = await listImports({ path: filePath })
 
   if (currentDepth >= depth) {
     return requires

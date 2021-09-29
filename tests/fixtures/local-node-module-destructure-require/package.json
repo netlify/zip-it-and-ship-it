@@ -1,0 +1,7 @@
+{
+  "name": "local-node-module-destructure-require",
+  "version": "1.0.0",
+  "dependencies": {
+    "@netlify/mock-package": "1.0.0"
+  }
+}

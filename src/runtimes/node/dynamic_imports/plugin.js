@@ -22,36 +22,35 @@ const getDynamicImportsPlugin = ({ basePath, includedPaths, moduleNames, process
     build.onDynamicImport({}, async (args) => {
       const { expression, resolveDir } = args
 
-      await registerModuleWithDynamicImports({ cache, moduleNames, resolveDir, srcDir })
-
       // Don't attempt to parse the expression if the base path isn't defined,
       // since we won't be able to generate the globs for the included paths.
       // Also don't parse the expression if we're not interested in processing
       // the dynamic import expressions.
-      if (!basePath || !processImports) {
-        return
+      if (basePath && processImports) {
+        const { includedPathsGlob, type: expressionType } = parseExpression({ basePath, expression, resolveDir }) || {}
+
+        if (includedPathsGlob) {
+          // The parser has found a glob of paths that should be included in the
+          // bundle to make this import work, so we add it to `includedPaths`.
+          includedPaths.add(includedPathsGlob)
+
+          // Create the shim that will handle the import at runtime.
+          const contents = getShimContents({ expressionType, resolveDir, srcDir })
+
+          // This is the only branch where we actually solve a dynamic import.
+          // eslint-disable-next-line max-depth
+          if (contents) {
+            return {
+              contents,
+            }
+          }
+        }
       }
 
-      const { includedPathsGlob, type: expressionType } = parseExpression({ basePath, expression, resolveDir }) || {}
-
-      if (!includedPathsGlob) {
-        return
-      }
-
-      // The parser has found a glob of paths that should be included in the
-      // bundle to make this import work, so we add it to `includedPaths`.
-      includedPaths.add(includedPathsGlob)
-
-      // Create the shim that will handle the import at runtime.
-      const contents = getShimContents({ expressionType, resolveDir, srcDir })
-
-      if (!contents) {
-        return
-      }
-
-      return {
-        contents,
-      }
+      // If we're here, it means we weren't able to solve the dynamic import.
+      // We add it to the list of modules with dynamic imports, which allows
+      // consumers like Netlify Build or CLI to advise users on how to proceed.
+      await registerModuleWithDynamicImports({ cache, moduleNames, resolveDir, srcDir })
     })
   },
 })

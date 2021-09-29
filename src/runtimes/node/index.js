@@ -42,6 +42,7 @@ const zipFunction = async function ({
   config = {},
   destFolder,
   extension,
+  featureFlags,
   filename,
   mainFile,
   name,
@@ -49,7 +50,6 @@ const zipFunction = async function ({
   srcDir,
   srcPath,
   stat,
-  featureFlags,
 }) {
   const bundler = config.nodeBundler || (await getDefaultBundler({ extension, mainFile, featureFlags }))
   // If the file is a zip, we assume the function is bundled and ready to go.
@@ -67,6 +67,7 @@ const zipFunction = async function ({
       config,
       destFolder,
       extension,
+      featureFlags,
       filename,
       mainFile,
       pluginsModulesPath,

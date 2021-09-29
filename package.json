@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "4.21.0",
+  "version": "4.23.3",
   "description": "Zip it and ship it",
   "main": "./src/main.js",
   "bin": {
@@ -54,8 +54,8 @@
     "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
   },
   "dependencies": {
+    "@babel/parser": "^7.15.7",
     "@netlify/esbuild": "^0.13.6",
-    "acorn": "^8.4.0",
     "archiver": "^5.3.0",
     "array-flat-polyfill": "^1.0.1",
     "common-path-prefix": "^3.0.0",
@@ -63,11 +63,12 @@
     "del": "^6.0.0",
     "elf-cam": "^0.1.1",
     "end-of-stream": "^1.4.4",
-    "es-module-lexer": "^0.7.1",
+    "es-module-lexer": "^0.9.0",
     "execa": "^5.0.0",
     "filter-obj": "^2.0.1",
     "find-up": "^5.0.0",
     "glob": "^7.1.6",
+    "is-builtin-module": "^3.1.0",
     "junk": "^3.1.0",
     "locate-path": "^6.0.0",
     "make-dir": "^3.1.0",
@@ -87,7 +88,7 @@
     "yargs": "^16.0.0"
   },
   "devDependencies": {
-    "@netlify/eslint-config-node": "^3.2.7",
+    "@netlify/eslint-config-node": "^3.2.10",
     "adm-zip": "0.5.5",
     "ava": "^3.0.0",
     "cpy": "^8.0.0",
