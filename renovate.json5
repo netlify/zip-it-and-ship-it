@@ -1,6 +1,7 @@
 {
   extends: ['github>netlify/renovate-config:default'],
   ignorePresets: [':prHourlyLimit2'],
+  ignorePaths: ["benchmarks/fixtures/"],
   semanticCommits: true,
   dependencyDashboard: true,
   automerge: false,
