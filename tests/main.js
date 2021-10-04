@@ -1609,18 +1609,37 @@ test('Throws an error if the `archiveFormat` property contains an invalid value`
   )
 })
 
-test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) => {
+test.only('Adds `type: "functionsBundling"` to user errors (esbuild)', async (t) => {
   try {
-    await zipNode(t, 'node-module-missing', {
+    await zipNode(t, 'node-syntax-error', {
       opts: { config: { '*': { nodeBundler: ESBUILD } } },
     })
 
-    t.fail('Function did not throw')
+    t.fail('Bundling should have thrown')
   } catch (error) {
     t.deepEqual(error.customErrorInfo, {
       type: 'functionsBundling',
       location: { bundler: ESBUILD, functionName: 'function', runtime: 'js' },
     })
+  }
+})
+
+// TO DO: Once https://github.com/netlify/zip-it-and-ship-it/pull/699 lands,
+// merge this with the test above and make `parseWithEsbuild` part of a new
+// variation.
+test('Adds `type: "functionsBundling"` to user errors (ZISI)', async (t) => {
+  try {
+    await zipNode(t, 'node-syntax-error', {
+      opts: { config: { '*': { nodeBundler: JS_BUNDLER_ZISI } }, featureFlags: { parseWithEsbuild: true } },
+    })
+
+    t.fail('Bundling should have thrown')
+  } catch (error) {
+    const { customErrorInfo } = error
+
+    t.is(customErrorInfo.type, 'functionsBundling')
+    t.is(customErrorInfo.location.bundler, JS_BUNDLER_ZISI)
+    t.is(customErrorInfo.location.runtime, 'js')
   }
 })
 
