@@ -1619,7 +1619,7 @@ test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) =>
   } catch (error) {
     t.deepEqual(error.customErrorInfo, {
       type: 'functionsBundling',
-      location: { functionName: 'function', runtime: 'js' },
+      location: { bundler: ESBUILD, functionName: 'function', runtime: 'js' },
     })
   }
 })
