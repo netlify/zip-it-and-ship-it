@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "4.23.3",
+  "version": "4.23.4",
   "description": "Zip it and ship it",
   "main": "./dist/main.js",
   "bin": {
@@ -86,6 +86,7 @@
     "semver": "^7.0.0",
     "tmp-promise": "^3.0.2",
     "toml": "^3.0.0",
+    "typescript": "^4.4.3",
     "unixify": "^1.0.0",
     "yargs": "^16.0.0"
   },
