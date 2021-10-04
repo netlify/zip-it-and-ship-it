@@ -1609,7 +1609,7 @@ test('Throws an error if the `archiveFormat` property contains an invalid value`
   )
 })
 
-test.only('Adds `type: "functionsBundling"` to user errors (esbuild)', async (t) => {
+test('Adds `type: "functionsBundling"` to user errors (esbuild)', async (t) => {
   try {
     await zipNode(t, 'node-syntax-error', {
       opts: { config: { '*': { nodeBundler: ESBUILD } } },
