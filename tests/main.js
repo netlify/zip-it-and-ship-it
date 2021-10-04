@@ -2263,3 +2263,17 @@ testMany(
     files.every(({ size }) => Number.isInteger(size) && size > 0)
   },
 )
+
+testMany(
+  'Handles built-in modules imported with the `node:` prefix',
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi'],
+  async (options, t) => {
+    const { tmpDir } = await zipNode(t, 'node-force-builtin', {
+      opts: { config: { '*': { ...options } } },
+    })
+
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
+    const func = require(`${tmpDir}/function`)
+    t.true(func())
+  },
+)
