@@ -90,7 +90,7 @@
     "yargs": "^16.0.0"
   },
   "devDependencies": {
-    "@netlify/eslint-config-node": "^3.2.10-prerelease-230-1",
+    "@netlify/eslint-config-node": "^3.3.0",
     "adm-zip": "0.5.5",
     "ava": "^3.0.0",
     "cpy": "^8.0.0",
