@@ -1639,6 +1639,7 @@ test('Adds `type: "functionsBundling"` to user errors (ZISI)', async (t) => {
 
     t.is(customErrorInfo.type, 'functionsBundling')
     t.is(customErrorInfo.location.bundler, JS_BUNDLER_ZISI)
+    t.is(customErrorInfo.location.functionName, 'function')
     t.is(customErrorInfo.location.runtime, 'js')
   }
 })

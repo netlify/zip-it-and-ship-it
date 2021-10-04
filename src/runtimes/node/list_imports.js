@@ -29,7 +29,7 @@ const getListImportsPlugin = ({ imports, path }) => ({
   },
 })
 
-const listImports = async ({ path }) => {
+const listImports = async ({ functionName, path }) => {
   // We're not interested in the output that esbuild generates, we're just
   // using it for its parsing capabilities in order to find import/require
   // statements. However, if we don't give esbuild a path in `outfile`, it
@@ -53,7 +53,7 @@ const listImports = async ({ path }) => {
   } catch (error) {
     error.customErrorInfo = {
       type: 'functionsBundling',
-      location: { bundler: JS_BUNDLER_ZISI, path, runtime: RUNTIME_JS },
+      location: { bundler: JS_BUNDLER_ZISI, functionName, runtime: RUNTIME_JS },
     }
 
     throw error
