@@ -712,12 +712,14 @@ testMany(
     const result = await zipFunction(mainFile, tmpDir, {
       config: { '*': { ...options } },
     })
+    const outBundlers = { [JS_BUNDLER_ESBUILD_ZISI]: ESBUILD, undefined: JS_BUNDLER_ZISI }
+    const outBundler = outBundlers[bundler] || bundler
 
     t.is(result.name, 'function')
     t.is(result.runtime, 'js')
-    t.is(result.bundler, bundler === undefined ? JS_BUNDLER_ZISI : bundler)
+    t.is(result.bundler, outBundler)
     t.is(result.mainFile, mainFile)
-    t.deepEqual(result.config, bundler === undefined ? {} : { nodeBundler: bundler })
+    t.deepEqual(result.config, bundler === undefined ? {} : { nodeBundler: outBundler })
   },
 )
 
