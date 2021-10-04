@@ -25,5 +25,9 @@
       packageNames: ['test'],
       enabled: false,
     },
+    {
+      matchPackageNames: ['pkg-dir'],
+      allowedVersions: '<=5',
+    },
   ],
 }
