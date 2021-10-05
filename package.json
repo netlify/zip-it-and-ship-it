@@ -92,6 +92,7 @@
     "@netlify/eslint-config-node": "^3.2.11",
     "adm-zip": "0.5.5",
     "ava": "^3.0.0",
+    "conditional-type-checks": "^1.0.5",
     "cpy": "^8.0.0",
     "deepmerge": "^4.2.2",
     "get-stream": "^6.0.0",

@@ -1,7 +1,18 @@
+import { AssertTrue, IsExact } from 'conditional-type-checks'
+
 export type Globify<S extends string> = S extends `${infer Head}_${infer Tail}`
   ? '*' | `${Head}*` | `${Head}_${Globify<Tail>}`
   : S | '*'
 
-type Test = Globify<'foo_bar' | 'foo_bar_baz' | 'yeet'>
-
-type Test2 = Globify<'bundler_default' | 'bundler_default_parse_esbuild' | 'bundler_esbuild' | 'bundler_esbuild_zisi'>
+type TestBundlers = AssertTrue<
+  IsExact<
+    Globify<'bundler_default' | 'bundler_esbuild_zisi'>,
+    | '*'
+    | 'bundler*'
+    | 'bundler_*'
+    | 'bundler_default'
+    | 'bundler_esbuild*'
+    | 'bundler_esbuild_*'
+    | 'bundler_esbuild_zisi'
+  >
+>
