@@ -1,5 +1,15 @@
 const { platform } = require('process')
 
+const minimatch = require('minimatch')
+
+/**
+ * @param {string[]} variationNames
+ * @param {string[]} patterns
+ * @returns {string[]}
+ */
+const matchVariations = (variationNames, patterns) =>
+  variationNames.filter((variationName) => patterns.some((pattern) => minimatch(variationName, pattern)))
+
 /**
  * @template M, O
  * @param {import("ava")} test
@@ -7,7 +17,8 @@ const { platform } = require('process')
  * @returns {(name: string, matrix: import("./globify").Globify<M>[], runner: (opts: O, t: import("ava").ExecutionContext) => any) => void}
  */
 const makeTestMany = (test, matrix) => {
-  const testBundlers = (title, variationNames, assertions, testFn = test) => {
+  const testBundlers = (title, patterns, assertions, testFn = test) => {
+    const variationNames = matchVariations(Object.keys(matrix), patterns)
     variationNames.forEach((name) => {
       const variation = matrix[name]
 
