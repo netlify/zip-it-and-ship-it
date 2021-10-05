@@ -1,6 +1,6 @@
 import { AssertTrue, IsExact } from 'conditional-type-checks'
 
-// takes a string like `foo_bar`, recursively splits it up along underscores, and collects all kinds of glob expressions.
+// Takes a string like `foo_bar`, recursively splits it up along underscores, and collects all kinds of glob expressions.
 // see examples below.
 export type Globify<S extends string> = S extends `${infer Head}_${infer Tail}`
   ? '*' | `${Head}*` | `${Head}_${Globify<Tail>}`
