@@ -24,7 +24,12 @@ const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
-const { JS_BUNDLER_ESBUILD: ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI } = require('../src/utils/consts')
+const {
+  JS_BUNDLER_ESBUILD: ESBUILD,
+  JS_BUNDLER_ESBUILD_ZISI,
+  JS_BUNDLER_ZISI,
+  JS_BUNDLER_ESBUILD,
+} = require('../src/utils/consts')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -1596,40 +1601,28 @@ test('Throws an error if the `archiveFormat` property contains an invalid value`
   )
 })
 
-test('Adds `type: "functionsBundling"` to user errors (esbuild)', async (t) => {
-  try {
-    await zipNode(t, 'node-syntax-error', {
-      opts: { config: { '*': { nodeBundler: ESBUILD } } },
-    })
+testMany(
+  'Adds `type: "functionsBundling"` to user errors (esbuild)',
+  ['bundler_default_parse_esbuild', 'bundler_esbuild'],
+  async (options, t) => {
+    const bundler = options.config['*'].nodeBundler
 
-    t.fail('Bundling should have thrown')
-  } catch (error) {
-    t.deepEqual(error.customErrorInfo, {
-      type: 'functionsBundling',
-      location: { bundler: ESBUILD, functionName: 'function', runtime: 'js' },
-    })
-  }
-})
+    try {
+      await zipNode(t, 'node-syntax-error', {
+        opts: options,
+      })
 
-// TO DO: Once https://github.com/netlify/zip-it-and-ship-it/pull/699 lands,
-// merge this with the test above and make `parseWithEsbuild` part of a new
-// variation.
-test('Adds `type: "functionsBundling"` to user errors (ZISI)', async (t) => {
-  try {
-    await zipNode(t, 'node-syntax-error', {
-      opts: { config: { '*': { nodeBundler: JS_BUNDLER_ZISI } }, featureFlags: { parseWithEsbuild: true } },
-    })
+      t.fail('Bundling should have thrown')
+    } catch (error) {
+      const { customErrorInfo } = error
 
-    t.fail('Bundling should have thrown')
-  } catch (error) {
-    const { customErrorInfo } = error
-
-    t.is(customErrorInfo.type, 'functionsBundling')
-    t.is(customErrorInfo.location.bundler, JS_BUNDLER_ZISI)
-    t.is(customErrorInfo.location.functionName, 'function')
-    t.is(customErrorInfo.location.runtime, 'js')
-  }
-})
+      t.is(customErrorInfo.type, 'functionsBundling')
+      t.is(customErrorInfo.location.bundler, bundler === JS_BUNDLER_ESBUILD ? ESBUILD : JS_BUNDLER_ZISI)
+      t.is(customErrorInfo.location.functionName, 'function')
+      t.is(customErrorInfo.location.runtime, 'js')
+    }
+  },
+)
 
 test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async (t) => {
   const fixtureName = 'node-module-dynamic-import'
