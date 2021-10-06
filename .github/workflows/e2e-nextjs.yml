@@ -63,7 +63,7 @@ jobs:
           $GITHUB_WORKSPACE/zip-it-and-ship-it
           $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/build/node_modules/@netlify/zip-it-and-ship-it
       - name: Installing zip-it-and-ship-it
-        run: npm install
+        run: npm install && npm run build
         working-directory: zip-it-and-ship-it
       - name: Building and deploying site
         run:
