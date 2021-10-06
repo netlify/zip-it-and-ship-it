@@ -1,12 +1,25 @@
-const { normalize } = require('path')
+const { normalize, resolve } = require('path')
 const { promisify } = require('util')
 
 const glob = require('glob')
+const minimatch = require('minimatch')
 
 const pGlob = promisify(glob)
 
 const { getDependencyNamesAndPathsForDependencies, listFilesUsingLegacyBundler } = require('../../node_dependencies')
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
+
+// Returns the subset of `paths` that don't match any of the glob expressions
+// from `exclude`.
+const filterExcludedPaths = (paths, exclude = []) => {
+  if (exclude.length === 0) {
+    return paths
+  }
+
+  const excludedPaths = paths.filter((path) => !exclude.some((pattern) => minimatch(path, pattern)))
+
+  return excludedPaths
+}
 
 const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   // Some of the globs in `includedFiles` might be exclusion patterns, which
@@ -16,9 +29,11 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   const { include, exclude } = includedFiles.reduce(
     (acc, path) => {
       if (path.startsWith('!')) {
+        const excludePath = resolve(basePath, path.slice(1))
+
         return {
           ...acc,
-          exclude: [...acc.exclude, path.slice(1)],
+          exclude: [...acc.exclude, excludePath],
         }
       }
 
@@ -38,7 +53,7 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   const paths = pathGroups.flat()
   const normalizedPaths = paths.map(normalize)
 
-  return [...new Set(normalizedPaths)]
+  return { exclude, paths: [...new Set(normalizedPaths)] }
 }
 
 const getSrcFiles = async function ({ config, ...parameters }) {
@@ -63,10 +78,13 @@ const getSrcFilesAndExternalModules = async function ({
   srcPath,
   stat,
 }) {
-  const includedFilePaths = await getPathsOfIncludedFiles(includedFiles, includedFilesBasePath)
+  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+    includedFiles,
+    includedFilesBasePath,
+  )
 
   if (bundler === JS_BUNDLER_ZISI) {
-    const paths = await listFilesUsingLegacyBundler({
+    const dependencyPaths = await listFilesUsingLegacyBundler({
       featureFlags,
       srcPath,
       mainFile,
@@ -75,27 +93,22 @@ const getSrcFilesAndExternalModules = async function ({
       stat,
       pluginsModulesPath,
     })
+    const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
 
     return {
       moduleNames: [],
-      paths: [...paths, ...includedFilePaths],
+      paths: includedPaths,
     }
   }
 
-  if (externalNodeModules.length !== 0) {
-    const { moduleNames, paths } = await getDependencyNamesAndPathsForDependencies({
-      dependencies: externalNodeModules,
-      basedir: srcDir,
-      pluginsModulesPath,
-    })
+  const { moduleNames, paths: dependencyPaths } = await getDependencyNamesAndPathsForDependencies({
+    dependencies: externalNodeModules,
+    basedir: srcDir,
+    pluginsModulesPath,
+  })
+  const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
 
-    return { moduleNames, paths: [...paths, ...includedFilePaths, mainFile] }
-  }
-
-  return {
-    moduleNames: externalNodeModules,
-    paths: [mainFile, ...includedFilePaths],
-  }
+  return { moduleNames, paths: [...includedPaths, mainFile] }
 }
 
 module.exports = { getSrcFiles, getSrcFilesAndExternalModules }

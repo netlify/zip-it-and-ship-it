@@ -42,6 +42,13 @@ const getDependencyNamesAndPathsForDependencies = async function ({
   state = getNewCache(),
   pluginsModulesPath,
 }) {
+  if (dependencyNames.length === 0) {
+    return {
+      moduleNames: [],
+      paths: [],
+    }
+  }
+
   const packageJson = await getPackageJson(basedir)
   const dependencies = await Promise.all(
     dependencyNames.map((dependencyName) =>
