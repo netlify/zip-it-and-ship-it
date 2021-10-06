@@ -1972,6 +1972,7 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
   t.is(call1[1][0], 'target')
   t.is(call1[1][1], 'add')
   t.is(call1[1][2], 'x86_64-unknown-linux-musl')
+  t.is(call1[2].env.RUSTUP_TOOLCHAIN, 'stable')
 
   t.is(call2[0], 'cargo')
   t.is(call2[1][0], 'build')

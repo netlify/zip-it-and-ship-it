@@ -105,7 +105,11 @@ let buildTargetInstallation
 // Rust functions.
 const installBuildTarget = () => {
   if (buildTargetInstallation === undefined) {
-    buildTargetInstallation = runCommand('rustup', ['target', 'add', BUILD_TARGET])
+    buildTargetInstallation = runCommand('rustup', ['target', 'add', BUILD_TARGET], {
+      env: {
+        RUSTUP_TOOLCHAIN: 'stable',
+      },
+    })
   }
 
   return buildTargetInstallation
