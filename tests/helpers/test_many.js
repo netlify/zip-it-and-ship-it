@@ -1,5 +1,11 @@
 const { platform } = require('process')
 
+/**
+ * @template M, O
+ * @param {import("ava")} test
+ * @param {Record<M, O>} matrix
+ * @returns {(name: string, matrix: M[], runner: (opts: O, t: import("ava").ExecutionContext) => any) => void}
+ */
 const makeTestMany = (test, matrix) => {
   const testBundlers = (title, variationNames, assertions, testFn = test) => {
     variationNames.forEach((name) => {
