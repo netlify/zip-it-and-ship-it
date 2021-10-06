@@ -29,13 +29,14 @@ const listFilesUsingLegacyBundler = async function ({
   featureFlags,
   srcPath,
   mainFile,
+  name,
   srcDir,
   stat,
   pluginsModulesPath,
 }) {
   const [treeFiles, depFiles] = await Promise.all([
     getTreeFiles(srcPath, stat),
-    getDependencies(mainFile, srcDir, pluginsModulesPath, featureFlags),
+    getDependencies({ featureFlags, functionName: name, mainFile, pluginsModulesPath, srcDir }),
   ])
   const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
@@ -52,12 +53,19 @@ const isNotJunk = function (file) {
 }
 
 // Retrieve all the files recursively required by a Node.js file
-const getDependencies = async function (mainFile, srcDir, pluginsModulesPath, featureFlags) {
+const getDependencies = async function ({ featureFlags, functionName, mainFile, pluginsModulesPath, srcDir }) {
   const packageJson = await getPackageJson(srcDir)
   const state = getNewCache()
 
   try {
-    return await getFileDependencies({ featureFlags, path: mainFile, packageJson, pluginsModulesPath, state })
+    return await getFileDependencies({
+      featureFlags,
+      functionName,
+      path: mainFile,
+      packageJson,
+      pluginsModulesPath,
+      state,
+    })
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
     throw error
@@ -66,6 +74,7 @@ const getDependencies = async function (mainFile, srcDir, pluginsModulesPath, fe
 
 const getFileDependencies = async function ({
   featureFlags,
+  functionName,
   path,
   packageJson,
   pluginsModulesPath,
@@ -80,7 +89,7 @@ const getFileDependencies = async function ({
 
   const basedir = dirname(path)
   const dependencies = featureFlags.parseWithEsbuild
-    ? await listImports({ path })
+    ? await listImports({ functionName, path })
     : precinct.paperwork(path, { includeCore: false })
   const depsPaths = await Promise.all(
     dependencies.filter(Boolean).map((dependency) =>
@@ -88,6 +97,7 @@ const getFileDependencies = async function ({
         dependency,
         basedir,
         featureFlags,
+        functionName,
         packageJson,
         pluginsModulesPath,
         state,
@@ -104,6 +114,7 @@ const getImportDependencies = function ({
   dependency,
   basedir,
   featureFlags,
+  functionName,
   packageJson,
   pluginsModulesPath,
   state,
@@ -115,6 +126,7 @@ const getImportDependencies = function ({
       dependency,
       basedir,
       featureFlags,
+      functionName,
       packageJson,
       pluginsModulesPath,
       state,
@@ -134,6 +146,7 @@ const getTreeShakedDependencies = async function ({
   dependency,
   basedir,
   featureFlags,
+  functionName,
   packageJson,
   pluginsModulesPath,
   state,
@@ -142,6 +155,7 @@ const getTreeShakedDependencies = async function ({
   const path = await resolvePathPreserveSymlinks(dependency, [basedir, pluginsModulesPath].filter(Boolean))
   const depsPath = await getFileDependencies({
     featureFlags,
+    functionName,
     path,
     packageJson,
     pluginsModulesPath,

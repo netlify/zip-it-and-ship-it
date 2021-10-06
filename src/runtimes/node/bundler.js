@@ -3,7 +3,7 @@ const { basename, dirname, extname, resolve, join } = require('path')
 const esbuild = require('@netlify/esbuild')
 const { tmpName } = require('tmp-promise')
 
-const { RUNTIME_JS } = require('../../utils/consts')
+const { JS_BUNDLER_ESBUILD, RUNTIME_JS } = require('../../utils/consts')
 const { getPathWithExtension, safeUnlink } = require('../../utils/fs')
 
 const { getBundlerTarget } = require('./bundler_target')
@@ -106,7 +106,10 @@ const bundleJsFile = async function ({
       warnings,
     }
   } catch (error) {
-    error.customErrorInfo = { type: 'functionsBundling', location: { functionName: name, runtime: RUNTIME_JS } }
+    error.customErrorInfo = {
+      type: 'functionsBundling',
+      location: { bundler: JS_BUNDLER_ESBUILD, functionName: name, runtime: RUNTIME_JS },
+    }
 
     throw error
   }

@@ -70,6 +70,7 @@ const zipFunction = async function ({
       featureFlags,
       filename,
       mainFile,
+      name,
       pluginsModulesPath,
       srcDir,
       srcPath,
