@@ -7,8 +7,8 @@
     "zip-it-and-ship-it": "dist/bin.js"
   },
   "files": [
-    "dist",
-    "!dist/tsconfig.tsbuildinfo"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
   "scripts": {
     "prepublishOnly": "npm ci && npm test",

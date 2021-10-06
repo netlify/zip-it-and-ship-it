@@ -16,4 +16,3 @@ benchmarks/fixtures/*/package*.json
 benchmarks/output
 .delta-t.json
 /dist
-/tsconfig.tsbuildinfo
