@@ -18,18 +18,20 @@ const unixify = require('unixify')
 // We must require this file first because we need to stub it before the main
 // functions are required.
 // eslint-disable-next-line import/order
-const shellUtils = require('../src/utils/shell')
+const shellUtils = require('../dist/utils/shell')
 
 const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
+// eslint-disable-next-line import/order
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
-const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
+
+const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundler')
 const {
   JS_BUNDLER_ESBUILD: ESBUILD,
   JS_BUNDLER_ESBUILD_ZISI,
   JS_BUNDLER_ZISI,
   JS_BUNDLER_ESBUILD,
-} = require('../src/utils/consts')
+} = require('../dist/utils/consts')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -1245,11 +1247,11 @@ testMany(
 
 test('Limits the amount of log lines produced by esbuild', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const binaryPath = resolve(__dirname, '../src/bin.js')
+  const binaryPath = resolve(__dirname, '../dist/bin.js')
   const fixturePath = join(FIXTURES_DIR, 'esbuild-log-limit')
 
   try {
-    await execa(binaryPath, [fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
+    await execa('node', [binaryPath, fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
 
     t.fail('Bundling should have thrown')
   } catch (error) {

@@ -2,19 +2,22 @@
   "name": "@netlify/zip-it-and-ship-it",
   "version": "4.23.5",
   "description": "Zip it and ship it",
-  "main": "./src/main.js",
+  "main": "./dist/main.js",
   "bin": {
-    "zip-it-and-ship-it": "src/bin.js"
+    "zip-it-and-ship-it": "dist/bin.js"
   },
   "files": [
-    "src/**/*.js"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
   "scripts": {
     "prepublishOnly": "npm ci && npm test",
+    "prepack": "npm run build",
+    "build": "tsc",
     "benchmark": "./benchmarks/run.sh",
-    "test": "run-s format test:dev",
-    "format": "run-s format:check-fix:*",
-    "format:ci": "run-s format:check:*",
+    "test": "run-s build format test:dev",
+    "format": "run-s build format:check-fix:*",
+    "format:ci": "run-s build format:check:*",
     "format:check-fix:lint": "run-e format:check:lint format:fix:lint",
     "format:check:lint": "cross-env-shell eslint $npm_package_config_eslint",
     "format:fix:lint": "cross-env-shell eslint --fix $npm_package_config_eslint",
@@ -22,11 +25,11 @@
     "format:check:prettier": "cross-env-shell prettier --check $npm_package_config_prettier",
     "format:fix:prettier": "cross-env-shell prettier --write $npm_package_config_prettier",
     "test:dev": "ava",
-    "test:ci": "nyc -r lcovonly -r text -r json ava"
+    "test:ci": "npm run build && nyc -r lcovonly -r text -r json ava"
   },
   "config": {
-    "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{js,md,html}\" \"*.{js,md,html}\" \".*.{js,md,html}\"",
-    "prettier": "--ignore-path .gitignore --loglevel=warn \"{src,tests,.github}/**/*.{js,md,yml,json,html}\" \"*.{js,yml,json,html}\" \".*.{js,yml,json,html}\" \"!package-lock.json\""
+    "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{js,ts,md,html}\" \"*.{js,ts,md,html}\" \".*.{js,ts,md,html}\"",
+    "prettier": "--ignore-path .gitignore --loglevel=warn \"{src,tests,.github}/**/*.{js,ts,md,yml,json,html}\" \"*.{js,ts,yml,json,html}\" \".*.{js,ts,yml,json,html}\" \"!package-lock.json\""
   },
   "eslintIgnore": [
     "benchmarks/fixtures/**"
@@ -89,7 +92,7 @@
     "yargs": "^16.0.0"
   },
   "devDependencies": {
-    "@netlify/eslint-config-node": "^3.2.11",
+    "@netlify/eslint-config-node": "^3.3.0",
     "adm-zip": "0.5.5",
     "ava": "^3.0.0",
     "cpy": "^8.0.0",
@@ -98,14 +101,15 @@
     "husky": "^4.3.8",
     "npm-run-all": "^4.1.5",
     "nyc": "^15.0.0",
-    "sinon": "^11.1.1"
+    "sinon": "^11.1.1",
+    "typescript": "^4.4.3"
   },
   "engines": {
     "node": ">=10.18.0"
   },
   "ava": {
     "files": [
-      "tests/*.js"
+      "tests/*"
     ],
     "verbose": true,
     "timeout": "2m"
