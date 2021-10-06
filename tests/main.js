@@ -1748,23 +1748,21 @@ test('Negated files in `included_files` are excluded from the bundle even if the
   t.throws(() => func('en'))
 })
 
-testBundlers(
+testMany(
   'Negated files in `included_files` are excluded from the bundle even if they match Node modules required in a function',
-  [ESBUILD, DEFAULT],
-  async (bundler, t) => {
+  ['bundler_default', 'bundler_default_parse_esbuild', 'bundler_esbuild'],
+  async (options, t) => {
     const fixtureName = 'node-module-included-try-catch'
-    const { tmpDir } = await zipNode(t, fixtureName, {
-      opts: {
-        basePath: join(FIXTURES_DIR, fixtureName),
-        config: {
-          '*': {
-            externalNodeModules: ['test'],
-            includedFiles: ['!node_modules/test/**'],
-            nodeBundler: bundler,
-          },
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          externalNodeModules: ['test'],
+          includedFiles: ['!node_modules/test/**'],
         },
       },
     })
+    const { tmpDir } = await zipNode(t, fixtureName, { opts })
 
     t.true(await pathExists(`${tmpDir}/function.js`))
     t.false(await pathExists(`${tmpDir}/node_modules/test/index.js`))
