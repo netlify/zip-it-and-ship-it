@@ -2,6 +2,7 @@ const esbuild = require('@netlify/esbuild')
 const isBuiltinModule = require('is-builtin-module')
 const { tmpName } = require('tmp-promise')
 
+const { JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
 const { safeUnlink } = require('../../utils/fs')
 
 // Maximum number of log messages that an esbuild instance will produce. This
@@ -28,7 +29,7 @@ const getListImportsPlugin = ({ imports, path }) => ({
   },
 })
 
-const listImports = async ({ path }) => {
+const listImports = async ({ functionName, path }) => {
   // We're not interested in the output that esbuild generates, we're just
   // using it for its parsing capabilities in order to find import/require
   // statements. However, if we don't give esbuild a path in `outfile`, it
@@ -49,6 +50,13 @@ const listImports = async ({ path }) => {
       plugins: [getListImportsPlugin({ imports, path })],
       target: 'esnext',
     })
+  } catch (error) {
+    error.customErrorInfo = {
+      type: 'functionsBundling',
+      location: { bundler: JS_BUNDLER_ZISI, functionName, runtime: RUNTIME_JS },
+    }
+
+    throw error
   } finally {
     await safeUnlink(targetPath)
   }
