@@ -3,8 +3,8 @@ const { dirname, normalize } = require('path')
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
 const { zipNodeJs } = require('../../zip_node')
 
-const { getBasePath } = require('./base_path')
 const { getSrcFilesAndExternalModules } = require('./src_files')
+const { getBasePath } = require('./utils/base_path')
 
 const zipZisi = async ({
   archiveFormat,

@@ -4,11 +4,10 @@ const findUp = require('find-up')
 const { not: notJunk } = require('junk')
 const precinct = require('precinct')
 
-const { listImports } = require('../runtimes/node/list_imports')
+const { getPackageJson } = require('../../utils/package_json')
 
-const { getPackageJson } = require('./package_json')
+const { listImports } = require('./list_imports')
 const { resolvePathPreserveSymlinks } = require('./resolve')
-const { getExternalAndIgnoredModulesFromSpecialCases } = require('./special_cases')
 const {
   getDependencyPathsForDependency,
   getDependencyNamesAndPathsForDependencies,
@@ -169,7 +168,6 @@ module.exports = {
   getDependencyPathsForDependency,
   getDependencyNamesAndPathsForDependencies,
   getDependencyNamesAndPathsForDependency,
-  getExternalAndIgnoredModulesFromSpecialCases,
   getPluginsModulesPath,
   listFilesUsingLegacyBundler,
 }

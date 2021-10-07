@@ -6,8 +6,9 @@ const minimatch = require('minimatch')
 
 const pGlob = promisify(glob)
 
-const { getDependencyNamesAndPathsForDependencies, listFilesUsingLegacyBundler } = require('../../node_dependencies')
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
+
+const { getDependencyNamesAndPathsForDependencies, listFilesUsingLegacyBundler } = require('./bundlers/zisi')
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.

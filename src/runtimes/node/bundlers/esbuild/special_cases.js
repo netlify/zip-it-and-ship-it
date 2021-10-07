@@ -1,4 +1,4 @@
-const { getPackageJson } = require('./package_json')
+const { getPackageJson } = require('../../utils/package_json')
 
 const EXTERNAL_MODULES = ['@prisma/client']
 const IGNORED_MODULES = ['aws-sdk']

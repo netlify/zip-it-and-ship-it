@@ -25,7 +25,7 @@ const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 // eslint-disable-next-line import/order
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
-const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundler')
+const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild')
 const {
   JS_BUNDLER_ESBUILD: ESBUILD,
   JS_BUNDLER_ESBUILD_ZISI,
