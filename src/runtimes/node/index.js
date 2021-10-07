@@ -3,13 +3,13 @@ const { join } = require('path')
 const cpFile = require('cp-file')
 
 const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
-const { zipNodeJs } = require('../../zip_node')
 
 const esbuildBundler = require('./bundlers/esbuild')
 const zisiBundler = require('./bundlers/zisi')
 const { findFunctionsInPaths } = require('./finder')
 const { getSrcFiles } = require('./src_files')
 const { detectEsModule } = require('./utils/detect_es_module')
+const { zipNodeJs } = require('./utils/zip')
 
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
