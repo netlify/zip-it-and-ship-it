@@ -2,6 +2,7 @@ const { dirname } = require('path')
 
 const { getModuleName } = require('../../utils/module')
 const { getPackageJson } = require('../../utils/package_json')
+const { getNewCache } = require('../../utils/traversal_cache')
 
 const { getNestedDependencies, handleModuleNotFound } = require('./nested')
 const { getPublishedFiles } = require('./published')
@@ -9,9 +10,6 @@ const { resolvePackage } = require('./resolve')
 const { getSideFiles } = require('./side_files')
 
 const EXCLUDED_MODULES = new Set(['aws-sdk'])
-
-// Local cache used for optimizing the traversal of module dependencies.
-const getNewCache = () => ({ localFiles: new Set(), moduleNames: new Set(), modulePaths: new Set() })
 
 // When a file requires a module, we find its path inside `node_modules` and
 // use all its published files. We also recurse on the module's dependencies.
@@ -151,5 +149,4 @@ module.exports = {
   getDependencyPathsForDependency,
   getDependencyNamesAndPathsForDependencies,
   getDependencyNamesAndPathsForDependency,
-  getNewCache,
 }

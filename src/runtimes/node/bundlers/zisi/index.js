@@ -5,6 +5,7 @@ const { not: notJunk } = require('junk')
 const precinct = require('precinct')
 
 const { getPackageJson } = require('../../utils/package_json')
+const { getNewCache } = require('../../utils/traversal_cache')
 
 const { listImports } = require('./list_imports')
 const { resolvePathPreserveSymlinks } = require('./resolve')
@@ -12,7 +13,6 @@ const {
   getDependencyPathsForDependency,
   getDependencyNamesAndPathsForDependencies,
   getDependencyNamesAndPathsForDependency,
-  getNewCache,
 } = require('./traverse')
 const { getTreeFiles } = require('./tree_files')
 const { shouldTreeShake } = require('./tree_shake')
