@@ -3,7 +3,7 @@ const { dirname, normalize } = require('path')
 const { JS_BUNDLER_ESBUILD } = require('../../utils/consts')
 const { getPathWithExtension } = require('../../utils/fs')
 
-const { bundleJsFile } = require('./bundlers/esbuild')
+const { bundleJsFile } = require('./bundlers/esbuild/bundler')
 const { getExternalAndIgnoredModulesFromSpecialCases } = require('./bundlers/esbuild/special_cases')
 const { getSrcFiles } = require('./src_files')
 const { getBasePath } = require('./utils/base_path')
