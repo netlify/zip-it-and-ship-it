@@ -29,15 +29,15 @@ const getNativeModulesPlugin = (externalizedModules) => ({
 
     // eslint-disable-next-line complexity, max-statements
     build.onResolve({ filter: packageFilter }, async (args) => {
-      const package = packageName.exec(args.path)
+      const pack = packageName.exec(args.path)
 
-      if (!package) return
+      if (!pack) return
 
       let directory = args.resolveDir
 
       while (true) {
         if (path.basename(directory) !== 'node_modules') {
-          const modulePath = path.join(directory, 'node_modules', package[1])
+          const modulePath = path.join(directory, 'node_modules', pack[1])
           const packageJsonPath = path.join(modulePath, 'package.json')
           // eslint-disable-next-line no-await-in-loop
           const [isNative, packageJsonData] = await findNativeModule(packageJsonPath, cache)
