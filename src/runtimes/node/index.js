@@ -3,6 +3,7 @@ const { join } = require('path')
 const cpFile = require('cp-file')
 
 const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
+const { zipNodeJs } = require('../../zip_node')
 
 const { findFunctionsInPaths } = require('./finder')
 const { getSrcFiles } = require('./src_files')
@@ -61,14 +62,15 @@ const zipFunction = async function ({
   }
 
   if (bundler === JS_BUNDLER_ZISI) {
-    return zipZisi({
-      archiveFormat,
+    const {
+      basePath: finalBasePath,
+      mainFile: finalMainFile,
+      srcFiles,
+    } = await zipZisi({
       basePath,
       config,
-      destFolder,
       extension,
       featureFlags,
-      filename,
       mainFile,
       name,
       pluginsModulesPath,
@@ -76,6 +78,18 @@ const zipFunction = async function ({
       srcPath,
       stat,
     })
+    const zipPath = await zipNodeJs({
+      archiveFormat,
+      basePath: finalBasePath,
+      destFolder,
+      extension,
+      filename,
+      mainFile: finalMainFile,
+      pluginsModulesPath,
+      srcFiles,
+    })
+
+    return { bundler: JS_BUNDLER_ZISI, config, inputs: srcFiles, path: zipPath }
   }
 
   return zipEsbuild({
