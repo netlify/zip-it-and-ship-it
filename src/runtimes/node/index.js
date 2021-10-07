@@ -92,12 +92,19 @@ const zipFunction = async function ({
     return { bundler: JS_BUNDLER_ZISI, config, inputs: srcFiles, path: zipPath }
   }
 
-  return zipEsbuild({
-    archiveFormat,
+  const {
+    aliases,
+    cleanupFunction,
+    basePath: finalBasePath,
+    bundlerWarnings,
+    inputs,
+    mainFile: finalMainFile,
+    nativeNodeModules,
+    nodeModulesWithDynamicImports,
+    srcFiles,
+  } = await zipEsbuild({
     basePath,
     config,
-    destFolder,
-    extension,
     filename,
     mainFile,
     name,
@@ -106,6 +113,29 @@ const zipFunction = async function ({
     srcPath,
     stat,
   })
+  const zipPath = await zipNodeJs({
+    aliases,
+    archiveFormat,
+    basePath: finalBasePath,
+    destFolder,
+    extension,
+    filename,
+    mainFile: finalMainFile,
+    pluginsModulesPath,
+    srcFiles,
+  })
+
+  await cleanupFunction()
+
+  return {
+    bundler: JS_BUNDLER_ESBUILD,
+    bundlerWarnings,
+    config,
+    inputs,
+    nativeNodeModules,
+    nodeModulesWithDynamicImports,
+    path: zipPath,
+  }
 }
 
 const zipWithFunctionWithFallback = async ({ config = {}, ...parameters }) => {
