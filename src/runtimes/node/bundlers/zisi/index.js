@@ -1,6 +1,5 @@
 const { dirname, basename, normalize } = require('path')
 
-const findUp = require('find-up')
 const { not: notJunk } = require('junk')
 const precinct = require('precinct')
 
@@ -12,10 +11,6 @@ const { resolvePathPreserveSymlinks } = require('./resolve')
 const { getDependencyPathsForDependency } = require('./traverse')
 const { getTreeFiles } = require('./tree_files')
 const { shouldTreeShake } = require('./tree_shake')
-
-const AUTO_PLUGINS_DIR = '.netlify/plugins/'
-
-const getPluginsModulesPath = (srcDir) => findUp(`${AUTO_PLUGINS_DIR}node_modules`, { cwd: srcDir, type: 'directory' })
 
 // Retrieve the paths to the Node.js files to zip.
 // We only include the files actually needed by the function because AWS Lambda
@@ -161,6 +156,5 @@ const getTreeShakedDependencies = async function ({
 }
 
 module.exports = {
-  getPluginsModulesPath,
   listFilesUsingLegacyBundler,
 }
