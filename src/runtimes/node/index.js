@@ -4,9 +4,9 @@ const cpFile = require('cp-file')
 
 const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
 
-const { detectEsModule } = require('./detect_es_module')
 const { findFunctionsInPaths } = require('./finder')
 const { getSrcFiles } = require('./src_files')
+const { detectEsModule } = require('./utils/detect_es_module')
 const { zipEsbuild } = require('./zip_esbuild')
 const { zipZisi } = require('./zip_zisi')
 

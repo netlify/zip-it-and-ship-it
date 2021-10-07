@@ -1,13 +1,13 @@
 const { dirname, normalize } = require('path')
 
-const { getExternalAndIgnoredModulesFromSpecialCases } = require('../../node_dependencies')
 const { JS_BUNDLER_ESBUILD } = require('../../utils/consts')
 const { getPathWithExtension } = require('../../utils/fs')
 const { zipNodeJs } = require('../../zip_node')
 
-const { getBasePath } = require('./base_path')
-const { bundleJsFile } = require('./bundler')
+const { bundleJsFile } = require('./bundlers/esbuild')
+const { getExternalAndIgnoredModulesFromSpecialCases } = require('./bundlers/esbuild/special_cases')
 const { getSrcFilesAndExternalModules } = require('./src_files')
+const { getBasePath } = require('./utils/base_path')
 
 const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles }) => {
   // If there is a base path defined in the config, we use that.

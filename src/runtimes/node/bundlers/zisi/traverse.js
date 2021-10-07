@@ -1,8 +1,9 @@
 const { dirname } = require('path')
 
-const { getModuleName } = require('./module')
+const { getModuleName } = require('../../utils/module')
+const { getPackageJson } = require('../../utils/package_json')
+
 const { getNestedDependencies, handleModuleNotFound } = require('./nested')
-const { getPackageJson } = require('./package_json')
 const { getPublishedFiles } = require('./published')
 const { resolvePackage } = require('./resolve')
 const { getSideFiles } = require('./side_files')
