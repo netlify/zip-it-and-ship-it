@@ -89,7 +89,7 @@ const getSrcFiles = async function ({
     return includedPaths
   }
 
-  const { paths: dependencyPaths } = await getDependencyNamesAndPathsForDependencies({
+  const dependencyPaths = await getDependencyNamesAndPathsForDependencies({
     dependencies: externalNodeModules,
     basedir: srcDir,
     pluginsModulesPath,

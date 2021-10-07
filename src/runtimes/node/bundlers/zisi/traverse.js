@@ -42,10 +42,7 @@ const getDependencyNamesAndPathsForDependencies = async function ({
   pluginsModulesPath,
 }) {
   if (dependencyNames.length === 0) {
-    return {
-      moduleNames: [],
-      paths: [],
-    }
+    return []
   }
 
   const packageJson = await getPackageJson(basedir)
@@ -60,13 +57,9 @@ const getDependencyNamesAndPathsForDependencies = async function ({
       }),
     ),
   )
-  const moduleNames = new Set(dependencies.flatMap((dependency) => [...dependency.moduleNames]))
-  const paths = new Set(dependencies.flatMap((dependency) => [...dependency.paths]))
+  const paths = new Set(dependencies.flat())
 
-  return {
-    moduleNames: [...moduleNames],
-    paths: [...paths],
-  }
+  return [...paths]
 }
 
 const getDependencyNamesAndPathsForDependency = async function ({
@@ -79,16 +72,10 @@ const getDependencyNamesAndPathsForDependency = async function ({
   try {
     const paths = await getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath })
 
-    return {
-      moduleNames: [...state.moduleNames],
-      paths,
-    }
+    return paths
   } catch (error) {
     if (error.code === 'MODULE_NOT_FOUND') {
-      return {
-        moduleNames: [],
-        paths: [],
-      }
+      return []
     }
 
     throw error
