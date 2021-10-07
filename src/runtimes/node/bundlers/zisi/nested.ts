@@ -82,7 +82,7 @@ const isOptionalModule = function (
 const MIN_NEXT_VERSION = '10.0.4'
 
 const satisfiesRange = (range: string): boolean =>
-  validRange(range) && (satisfies(MIN_NEXT_VERSION, range) || lessThanRange(MIN_NEXT_VERSION, range))
+  Boolean(validRange(range)) && (satisfies(MIN_NEXT_VERSION, range) || lessThanRange(MIN_NEXT_VERSION, range))
 
 // 'critters' is used only in Next.js >= 10.0.4 when enabling an experimental option and has to be installed manually
 // we ignore it if it's missing

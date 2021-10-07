@@ -11,6 +11,6 @@ export const getSideFiles = async function (modulePath: string, moduleName: stri
   return await getPublishedFiles(`${modulePath}/${sideFiles}`)
 }
 
-const SIDE_FILES = {
+const SIDE_FILES: Record<string, string> = {
   '@prisma/client': '../../.prisma',
 }
