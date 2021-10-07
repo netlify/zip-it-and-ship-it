@@ -15,15 +15,7 @@ const { shouldTreeShake } = require('./tree_shake')
 // Retrieve the paths to the Node.js files to zip.
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
-const listFilesUsingLegacyBundler = async function ({
-  featureFlags,
-  srcPath,
-  mainFile,
-  name,
-  srcDir,
-  stat,
-  pluginsModulesPath,
-}) {
+const listFiles = async function ({ featureFlags, srcPath, mainFile, name, srcDir, stat, pluginsModulesPath }) {
   const [treeFiles, depFiles] = await Promise.all([
     getTreeFiles(srcPath, stat),
     getDependencies({ featureFlags, functionName: name, mainFile, pluginsModulesPath, srcDir }),
@@ -156,5 +148,5 @@ const getTreeShakedDependencies = async function ({
 }
 
 module.exports = {
-  listFilesUsingLegacyBundler,
+  listFiles,
 }
