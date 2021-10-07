@@ -1,4 +1,4 @@
-const pkgDir = require('pkg-dir')
+import pkgDir from 'pkg-dir'
 
 export interface PackageJson {
   name?: string

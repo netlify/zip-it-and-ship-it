@@ -27,7 +27,14 @@ const getModulesForNextJs = ({
   }
 }
 
-export const getExternalAndIgnoredModulesFromSpecialCases = async ({ srcDir }: { srcDir: string }) => {
+export const getExternalAndIgnoredModulesFromSpecialCases = async ({
+  srcDir,
+}: {
+  srcDir: string
+}): Promise<{
+  externalModules: string[]
+  ignoredModules: string[]
+}> => {
   const { dependencies = {}, devDependencies = {} } = await getPackageJsonIfAvailable(srcDir)
   const { externalModules: nextJsExternalModules, ignoredModules: nextJsIgnoredModules } = getModulesForNextJs({
     dependencies,

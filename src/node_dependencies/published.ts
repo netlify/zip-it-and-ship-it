@@ -5,7 +5,7 @@ import glob from 'glob'
 const pGlob = promisify(glob)
 
 // We use all the files published by the Node.js except some that are not needed
-export const getPublishedFiles = async function (modulePath: string) {
+export const getPublishedFiles = async function (modulePath: string): Promise<string[]> {
   const ignore = getIgnoredFiles(modulePath)
   const publishedFiles = await pGlob(`${modulePath}/**`, {
     ignore,
