@@ -161,7 +161,6 @@ const getTreeShakedDependencies = async function ({
 }
 
 module.exports = {
-  getDependencyPathsForDependency,
   getPluginsModulesPath,
   listFilesUsingLegacyBundler,
 }
