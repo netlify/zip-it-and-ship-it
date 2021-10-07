@@ -1,12 +1,12 @@
 const { dirname, normalize } = require('path')
 
-const { JS_BUNDLER_ESBUILD } = require('../../utils/consts')
-const { getPathWithExtension } = require('../../utils/fs')
+const { JS_BUNDLER_ESBUILD } = require('../../../../utils/consts')
+const { getPathWithExtension } = require('../../../../utils/fs')
+const { getSrcFiles } = require('../../src_files')
+const { getBasePath } = require('../../utils/base_path')
 
-const { bundleJsFile } = require('./bundlers/esbuild/bundler')
-const { getExternalAndIgnoredModulesFromSpecialCases } = require('./bundlers/esbuild/special_cases')
-const { getSrcFiles } = require('./src_files')
-const { getBasePath } = require('./utils/base_path')
+const { bundleJsFile } = require('./bundler')
+const { getExternalAndIgnoredModulesFromSpecialCases } = require('./special_cases')
 
 const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles }) => {
   // If there is a base path defined in the config, we use that.
@@ -34,7 +34,7 @@ const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
   return { externalModules, ignoredModules }
 }
 
-const zipEsbuild = async ({
+const bundle = async ({
   basePath,
   config = {},
   filename,
@@ -102,4 +102,4 @@ const zipEsbuild = async ({
   }
 }
 
-module.exports = { zipEsbuild }
+module.exports = { bundle }
