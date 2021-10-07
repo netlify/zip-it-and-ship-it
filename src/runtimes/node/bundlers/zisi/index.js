@@ -9,11 +9,7 @@ const { getNewCache } = require('../../utils/traversal_cache')
 
 const { listImports } = require('./list_imports')
 const { resolvePathPreserveSymlinks } = require('./resolve')
-const {
-  getDependencyPathsForDependency,
-  getDependencyNamesAndPathsForDependencies,
-  getDependencyNamesAndPathsForDependency,
-} = require('./traverse')
+const { getDependencyPathsForDependency } = require('./traverse')
 const { getTreeFiles } = require('./tree_files')
 const { shouldTreeShake } = require('./tree_shake')
 
@@ -166,8 +162,6 @@ const getTreeShakedDependencies = async function ({
 
 module.exports = {
   getDependencyPathsForDependency,
-  getDependencyNamesAndPathsForDependencies,
-  getDependencyNamesAndPathsForDependency,
   getPluginsModulesPath,
   listFilesUsingLegacyBundler,
 }

@@ -135,5 +135,4 @@ const getNestedModules = async function ({ modulePath, state, packageJson, plugi
 module.exports = {
   getDependencyPathsForDependency,
   getDependencyNamesAndPathsForDependencies,
-  getDependencyNamesAndPathsForDependency,
 }
