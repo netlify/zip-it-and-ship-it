@@ -6,7 +6,7 @@ const AdmZip = require('adm-zip')
 const { dir: getTmpDir } = require('tmp-promise')
 
 const { zipFunctions } = require('../..')
-const { listImports } = require('../../dist/runtimes/node/list_imports')
+const { listImports } = require('../../dist/runtimes/node/bundlers/zisi/list_imports')
 const { ARCHIVE_FORMAT_ZIP } = require('../../dist/utils/consts')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
