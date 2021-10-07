@@ -8,7 +8,7 @@ const pGlob = promisify(glob)
 
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
 
-const { getDependencyNamesAndPathsForDependencies } = require('./bundlers/esbuild/additional_files')
+const { getSrcFilesForDependencies } = require('./bundlers/esbuild/additional_files')
 const { listFilesUsingLegacyBundler } = require('./bundlers/zisi')
 
 // Returns the subset of `paths` that don't match any of the glob expressions
@@ -90,7 +90,7 @@ const getSrcFiles = async function ({
     return includedPaths
   }
 
-  const dependencyPaths = await getDependencyNamesAndPathsForDependencies({
+  const dependencyPaths = await getSrcFilesForDependencies({
     dependencies: externalNodeModules,
     basedir: srcDir,
     pluginsModulesPath,
