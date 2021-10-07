@@ -5,6 +5,12 @@ module.exports = {
   overrides: [
     ...overrides,
     {
+      files: '*.ts',
+      rules: {
+        'import/no-namespace': 'off',
+      },
+    },
+    {
       files: 'tests/*.js',
       rules: {
         'import/max-dependencies': 'off',

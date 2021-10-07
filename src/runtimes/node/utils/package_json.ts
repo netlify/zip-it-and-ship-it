@@ -1,7 +1,16 @@
-const pkgDir = require('pkg-dir')
+import pkgDir from 'pkg-dir'
+
+export interface PackageJson {
+  name?: string
+  dependencies?: Record<string, string>
+  peerDependencies?: Record<string, string>
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>
+  optionalDependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
+}
 
 // Retrieve the `package.json` of a specific project or module
-const getPackageJson = async function (srcDir) {
+const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   const packageRoot = await pkgDir(srcDir)
 
   if (packageRoot === undefined) {

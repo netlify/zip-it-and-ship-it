@@ -6,7 +6,7 @@ import glob from 'glob'
 const pGlob = promisify(glob)
 
 // When using a directory, we include all its descendants except `node_modules`
-const getTreeFiles = async function (srcPath: string, stat: Stats): Promise<string[]> {
+export const getTreeFiles = async function (srcPath: string, stat: Stats): Promise<string[]> {
   if (!stat.isDirectory()) {
     return [srcPath]
   }
@@ -17,5 +17,3 @@ const getTreeFiles = async function (srcPath: string, stat: Stats): Promise<stri
     absolute: true,
   })
 }
-
-export { getTreeFiles }
