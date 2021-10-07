@@ -3,7 +3,7 @@ const { dirname, normalize } = require('path')
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
 const { zipNodeJs } = require('../../zip_node')
 
-const { getSrcFilesAndExternalModules } = require('./src_files')
+const { getSrcFiles } = require('./src_files')
 const { getBasePath } = require('./utils/base_path')
 
 const zipZisi = async ({
@@ -21,12 +21,14 @@ const zipZisi = async ({
   srcPath,
   stat,
 }) => {
-  const { paths: srcFiles } = await getSrcFilesAndExternalModules({
+  const srcFiles = await getSrcFiles({
     bundler: JS_BUNDLER_ZISI,
+    config: {
+      ...config,
+      includedFilesBasePath: config.includedFilesBasePath || basePath,
+    },
     extension,
     featureFlags,
-    includedFiles: config.includedFiles,
-    includedFilesBasePath: config.includedFilesBasePath || basePath,
     mainFile,
     name,
     pluginsModulesPath,

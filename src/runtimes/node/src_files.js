@@ -57,21 +57,10 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   return { exclude, paths: [...new Set(normalizedPaths)] }
 }
 
-const getSrcFiles = async function ({ config, ...parameters }) {
-  const { paths } = await getSrcFilesAndExternalModules({
-    ...parameters,
-    externalNodeModules: config.externalNodeModules,
-  })
-
-  return paths
-}
-
-const getSrcFilesAndExternalModules = async function ({
+const getSrcFiles = async function ({
   bundler,
-  externalNodeModules = [],
+  config = {},
   featureFlags,
-  includedFiles = [],
-  includedFilesBasePath,
   mainFile,
   name,
   pluginsModulesPath,
@@ -79,6 +68,7 @@ const getSrcFilesAndExternalModules = async function ({
   srcPath,
   stat,
 }) {
+  const { externalNodeModules = [], includedFiles = [], includedFilesBasePath } = config
   const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
@@ -96,20 +86,17 @@ const getSrcFilesAndExternalModules = async function ({
     })
     const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
 
-    return {
-      moduleNames: [],
-      paths: includedPaths,
-    }
+    return includedPaths
   }
 
-  const { moduleNames, paths: dependencyPaths } = await getDependencyNamesAndPathsForDependencies({
+  const { paths: dependencyPaths } = await getDependencyNamesAndPathsForDependencies({
     dependencies: externalNodeModules,
     basedir: srcDir,
     pluginsModulesPath,
   })
   const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
 
-  return { moduleNames, paths: [...includedPaths, mainFile] }
+  return [...includedPaths, mainFile]
 }
 
-module.exports = { getSrcFiles, getSrcFilesAndExternalModules }
+module.exports = { getSrcFiles }
