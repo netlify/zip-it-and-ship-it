@@ -76,6 +76,7 @@ const zipEsbuild = async ({
     includedFiles: [...(config.includedFiles || []), ...additionalPaths],
     includedFilesBasePath: config.includedFilesBasePath || basePath,
     mainFile,
+    name,
     srcPath,
     srcDir,
     pluginsModulesPath,

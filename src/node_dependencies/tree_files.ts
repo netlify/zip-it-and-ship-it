@@ -1,16 +1,17 @@
-import { promisify } from 'util'
-import glob from 'glob'
 import { Stats } from 'fs'
+import { promisify } from 'util'
+
+import glob from 'glob'
 
 const pGlob = promisify(glob)
 
 // When using a directory, we include all its descendants except `node_modules`
-export const getTreeFiles = function (srcPath: string, stat: Stats) {
+export const getTreeFiles = async function (srcPath: string, stat: Stats) {
   if (!stat.isDirectory()) {
     return [srcPath]
   }
 
-  return pGlob(`${srcPath}/**`, {
+  return await pGlob(`${srcPath}/**`, {
     ignore: `${srcPath}/**/node_modules/**`,
     nodir: true,
     absolute: true,
