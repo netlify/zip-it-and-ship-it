@@ -5,11 +5,11 @@ const cpFile = require('cp-file')
 const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
 const { zipNodeJs } = require('../../zip_node')
 
+const zisiBundler = require('./bundlers/zisi')
 const { findFunctionsInPaths } = require('./finder')
 const { getSrcFiles } = require('./src_files')
 const { detectEsModule } = require('./utils/detect_es_module')
 const { zipEsbuild } = require('./zip_esbuild')
-const { zipZisi } = require('./zip_zisi')
 
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
@@ -66,7 +66,7 @@ const zipFunction = async function ({
       basePath: finalBasePath,
       mainFile: finalMainFile,
       srcFiles,
-    } = await zipZisi({
+    } = await zisiBundler.bundle({
       basePath,
       config,
       extension,

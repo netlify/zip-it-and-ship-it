@@ -1,11 +1,10 @@
 const { dirname, normalize } = require('path')
 
-const { JS_BUNDLER_ZISI } = require('../../utils/consts')
+const { JS_BUNDLER_ZISI } = require('../../../../utils/consts')
+const { getSrcFiles } = require('../../src_files')
+const { getBasePath } = require('../../utils/base_path')
 
-const { getSrcFiles } = require('./src_files')
-const { getBasePath } = require('./utils/base_path')
-
-const zipZisi = async ({
+const bundle = async ({
   basePath,
   config,
   extension,
@@ -41,4 +40,4 @@ const zipZisi = async ({
   }
 }
 
-module.exports = { zipZisi }
+module.exports = { bundle }
