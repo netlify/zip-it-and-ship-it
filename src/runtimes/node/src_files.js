@@ -8,8 +8,8 @@ const pGlob = promisify(glob)
 
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
 
+const { getDependencyNamesAndPathsForDependencies } = require('./bundlers/esbuild/additional_files')
 const { listFilesUsingLegacyBundler } = require('./bundlers/zisi')
-const { getDependencyNamesAndPathsForDependencies } = require('./bundlers/zisi/traverse')
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
