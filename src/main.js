@@ -3,7 +3,7 @@ const { extname } = require('path')
 require('./utils/polyfills')
 const { getFlags } = require('./feature_flags')
 const { getFunctionsFromPaths } = require('./runtimes')
-const { getPluginsModulesPath } = require('./runtimes/node/bundlers/zisi')
+const { getPluginsModulesPath } = require('./runtimes/node/utils/plugin_modules_path')
 const { listFunctionsDirectories, resolveFunctionsDirectories } = require('./utils/fs')
 const { zipFunction, zipFunctions } = require('./zip')
 

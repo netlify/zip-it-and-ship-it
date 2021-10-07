@@ -6,7 +6,7 @@ const { zipNodeJs } = require('../../zip_node')
 
 const { bundleJsFile } = require('./bundlers/esbuild')
 const { getExternalAndIgnoredModulesFromSpecialCases } = require('./bundlers/esbuild/special_cases')
-const { getSrcFilesAndExternalModules } = require('./src_files')
+const { getSrcFiles } = require('./src_files')
 const { getBasePath } = require('./utils/base_path')
 
 const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles }) => {
@@ -70,11 +70,14 @@ const zipEsbuild = async ({
     srcFile: mainFile,
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings
-  const { paths: srcFiles } = await getSrcFilesAndExternalModules({
-    externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
+  const srcFiles = await getSrcFiles({
     bundler: JS_BUNDLER_ESBUILD,
-    includedFiles: [...(config.includedFiles || []), ...additionalPaths],
-    includedFilesBasePath: config.includedFilesBasePath || basePath,
+    config: {
+      ...config,
+      externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
+      includedFiles: [...(config.includedFiles || []), ...additionalPaths],
+      includedFilesBasePath: config.includedFilesBasePath || basePath,
+    },
     mainFile,
     name,
     srcPath,

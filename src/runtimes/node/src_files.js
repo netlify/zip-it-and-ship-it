@@ -8,7 +8,8 @@ const pGlob = promisify(glob)
 
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
 
-const { getDependencyNamesAndPathsForDependencies, listFilesUsingLegacyBundler } = require('./bundlers/zisi')
+const { getSrcFilesForDependencies } = require('./bundlers/esbuild/additional_files')
+const zisiBundler = require('./bundlers/zisi')
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
@@ -57,21 +58,10 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   return { exclude, paths: [...new Set(normalizedPaths)] }
 }
 
-const getSrcFiles = async function ({ config, ...parameters }) {
-  const { paths } = await getSrcFilesAndExternalModules({
-    ...parameters,
-    externalNodeModules: config.externalNodeModules,
-  })
-
-  return paths
-}
-
-const getSrcFilesAndExternalModules = async function ({
+const getSrcFiles = async function ({
   bundler,
-  externalNodeModules = [],
+  config = {},
   featureFlags,
-  includedFiles = [],
-  includedFilesBasePath,
   mainFile,
   name,
   pluginsModulesPath,
@@ -79,13 +69,14 @@ const getSrcFilesAndExternalModules = async function ({
   srcPath,
   stat,
 }) {
+  const { externalNodeModules = [], includedFiles = [], includedFilesBasePath } = config
   const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
   )
 
   if (bundler === JS_BUNDLER_ZISI) {
-    const dependencyPaths = await listFilesUsingLegacyBundler({
+    const dependencyPaths = await zisiBundler.listFiles({
       featureFlags,
       srcPath,
       mainFile,
@@ -96,20 +87,17 @@ const getSrcFilesAndExternalModules = async function ({
     })
     const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
 
-    return {
-      moduleNames: [],
-      paths: includedPaths,
-    }
+    return includedPaths
   }
 
-  const { moduleNames, paths: dependencyPaths } = await getDependencyNamesAndPathsForDependencies({
+  const dependencyPaths = await getSrcFilesForDependencies({
     dependencies: externalNodeModules,
     basedir: srcDir,
     pluginsModulesPath,
   })
   const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
 
-  return { moduleNames, paths: [...includedPaths, mainFile] }
+  return [...includedPaths, mainFile]
 }
 
-module.exports = { getSrcFiles, getSrcFilesAndExternalModules }
+module.exports = { getSrcFiles }
