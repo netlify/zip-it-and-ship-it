@@ -3,6 +3,7 @@ const { dirname, basename, normalize } = require('path')
 const { not: notJunk } = require('junk')
 const precinct = require('precinct')
 
+const { filterExcludedPaths, getPathsOfIncludedFiles } = require('../../utils/included_files')
 const { getPackageJson } = require('../../utils/package_json')
 const { getNewCache } = require('../../utils/traversal_cache')
 
@@ -15,7 +16,21 @@ const { shouldTreeShake } = require('./tree_shake')
 // Retrieve the paths to the Node.js files to zip.
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
-const listFiles = async function ({ featureFlags, srcPath, mainFile, name, srcDir, stat, pluginsModulesPath }) {
+const getSrcFiles = async function ({
+  config,
+  featureFlags,
+  mainFile,
+  name,
+  pluginsModulesPath,
+  srcDir,
+  srcPath,
+  stat,
+}) {
+  const { includedFiles = [], includedFilesBasePath } = config
+  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+    includedFiles,
+    includedFilesBasePath,
+  )
   const [treeFiles, depFiles] = await Promise.all([
     getTreeFiles(srcPath, stat),
     getDependencies({ featureFlags, functionName: name, mainFile, pluginsModulesPath, srcDir }),
@@ -26,7 +41,9 @@ const listFiles = async function ({ featureFlags, srcPath, mainFile, name, srcDi
   // We sort so that the archive's checksum is deterministic.
   // Mutating is fine since `Array.filter()` returns a shallow copy
   const filteredFiles = uniqueFiles.filter(isNotJunk).sort()
-  return filteredFiles
+  const includedPaths = filterExcludedPaths([...filteredFiles, ...includedFilePaths], excludedPaths)
+
+  return includedPaths
 }
 
 // Remove temporary files like *~, *.swp, etc.
@@ -148,5 +165,5 @@ const getTreeShakedDependencies = async function ({
 }
 
 module.exports = {
-  listFiles,
+  getSrcFiles,
 }
