@@ -1,12 +1,11 @@
 const { dirname, normalize } = require('path')
 
-const { JS_BUNDLER_ESBUILD } = require('../../../../utils/consts')
 const { getPathWithExtension } = require('../../../../utils/fs')
-const { getSrcFiles } = require('../../src_files')
 const { getBasePath } = require('../../utils/base_path')
 
 const { bundleJsFile } = require('./bundler')
 const { getExternalAndIgnoredModulesFromSpecialCases } = require('./special_cases')
+const { getSrcFiles } = require('./src_files')
 
 const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles }) => {
   // If there is a base path defined in the config, we use that.
@@ -34,17 +33,7 @@ const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
   return { externalModules, ignoredModules }
 }
 
-const bundle = async ({
-  basePath,
-  config = {},
-  filename,
-  mainFile,
-  name,
-  pluginsModulesPath,
-  srcDir,
-  srcPath,
-  stat,
-}) => {
+const bundle = async ({ basePath, config = {}, filename, mainFile, name, pluginsModulesPath, srcDir }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const {
     additionalPaths,
@@ -67,7 +56,6 @@ const bundle = async ({
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings
   const srcFiles = await getSrcFiles({
-    bundler: JS_BUNDLER_ESBUILD,
     config: {
       ...config,
       externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
@@ -75,11 +63,8 @@ const bundle = async ({
       includedFilesBasePath: config.includedFilesBasePath || basePath,
     },
     mainFile,
-    name,
-    srcPath,
-    srcDir,
     pluginsModulesPath,
-    stat,
+    srcDir,
   })
 
   // We want to remove `mainFile` from `srcFiles` because it represents the
@@ -102,4 +87,4 @@ const bundle = async ({
   }
 }
 
-module.exports = { bundle }
+module.exports = { bundle, getSrcFiles }
