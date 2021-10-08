@@ -6,11 +6,6 @@ const minimatch = require('minimatch')
 
 const pGlob = promisify(glob)
 
-const { JS_BUNDLER_ZISI } = require('../../utils/consts')
-
-const { getSrcFilesForDependencies } = require('./bundlers/esbuild/additional_files')
-const zisiBundler = require('./bundlers/zisi/list_files')
-
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
 const filterExcludedPaths = (paths, exclude = []) => {
@@ -58,46 +53,4 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   return { exclude, paths: [...new Set(normalizedPaths)] }
 }
 
-const getSrcFiles = async function ({
-  bundler,
-  config = {},
-  featureFlags,
-  mainFile,
-  name,
-  pluginsModulesPath,
-  srcDir,
-  srcPath,
-  stat,
-}) {
-  const { externalNodeModules = [], includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
-    includedFiles,
-    includedFilesBasePath,
-  )
-
-  if (bundler === JS_BUNDLER_ZISI) {
-    const dependencyPaths = await zisiBundler.listFiles({
-      featureFlags,
-      srcPath,
-      mainFile,
-      name,
-      srcDir,
-      stat,
-      pluginsModulesPath,
-    })
-    const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
-
-    return includedPaths
-  }
-
-  const dependencyPaths = await getSrcFilesForDependencies({
-    dependencies: externalNodeModules,
-    basedir: srcDir,
-    pluginsModulesPath,
-  })
-  const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
-
-  return [...includedPaths, mainFile]
-}
-
-module.exports = { getSrcFiles }
+module.exports = { filterExcludedPaths, getPathsOfIncludedFiles }
