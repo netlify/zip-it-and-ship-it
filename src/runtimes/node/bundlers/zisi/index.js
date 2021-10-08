@@ -35,6 +35,7 @@ const bundle = async ({
 
   return {
     basePath: getBasePath(dirnames),
+    inputs: srcFiles,
     mainFile,
     srcFiles,
   }
