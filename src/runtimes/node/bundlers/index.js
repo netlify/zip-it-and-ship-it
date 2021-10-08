@@ -1,6 +1,12 @@
-const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI } = require('../../../utils/consts')
+const {
+  JS_BUNDLER_ESBUILD,
+  JS_BUNDLER_ESBUILD_ZISI,
+  JS_BUNDLER_NFT,
+  JS_BUNDLER_ZISI,
+} = require('../../../utils/consts')
 
 const esbuildBundler = require('./esbuild')
+const nftBundler = require('./nft')
 const zisiBundler = require('./zisi')
 
 const getBundler = (name) => {
@@ -8,6 +14,9 @@ const getBundler = (name) => {
     case JS_BUNDLER_ESBUILD:
     case JS_BUNDLER_ESBUILD_ZISI:
       return esbuildBundler
+
+    case JS_BUNDLER_NFT:
+      return nftBundler
 
     case JS_BUNDLER_ZISI:
       return zisiBundler
