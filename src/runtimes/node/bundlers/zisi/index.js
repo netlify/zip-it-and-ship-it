@@ -38,4 +38,4 @@ const bundle = async ({
   }
 }
 
-module.exports = { bundle }
+module.exports = { bundle, getSrcFiles }

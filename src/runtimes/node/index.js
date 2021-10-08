@@ -6,7 +6,6 @@ const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS
 
 const { getBundler } = require('./bundlers')
 const { findFunctionsInPaths } = require('./finder')
-const { getSrcFiles } = require('./src_files')
 const { detectEsModule } = require('./utils/detect_es_module')
 const { zipNodeJs } = require('./utils/zip')
 
@@ -31,9 +30,10 @@ const getDefaultBundler = async ({ extension, mainFile, featureFlags = {} }) => 
 // A proxy for the `getSrcFiles` function which adds a default `bundler` using
 // the `getDefaultBundler` function.
 const getSrcFilesWithBundler = async (parameters) => {
-  const bundler = parameters.config.nodeBundler || (await getDefaultBundler({ extension: parameters.extension }))
+  const bundlerName = parameters.config.nodeBundler || (await getDefaultBundler({ extension: parameters.extension }))
+  const bundler = getBundler(bundlerName)
 
-  return getSrcFiles({ ...parameters, bundler })
+  return bundler.getSrcFiles({ ...parameters })
 }
 
 const zipFunction = async function ({
