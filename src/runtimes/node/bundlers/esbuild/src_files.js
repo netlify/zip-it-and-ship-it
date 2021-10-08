@@ -1,4 +1,4 @@
-const { filterExcludedPaths, getPathsOfIncludedFiles } = require('../../src_files')
+const { filterExcludedPaths, getPathsOfIncludedFiles } = require('../../utils/included_files')
 const { getPackageJson } = require('../../utils/package_json')
 const { getNewCache } = require('../../utils/traversal_cache')
 const { getDependencyPathsForDependency } = require('../zisi/traverse')
