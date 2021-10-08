@@ -4,7 +4,7 @@ const findUp = require('find-up')
 const readPackageJson = require('read-package-json-fast')
 const unixify = require('unixify')
 
-const { parseExpression } = require('./parser')
+const { parseExpression } = require('../../parser')
 
 // This plugin intercepts module imports using dynamic expressions and does a
 // couple of things with them. First of all, it figures out whether the call

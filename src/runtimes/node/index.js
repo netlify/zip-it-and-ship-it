@@ -4,11 +4,10 @@ const cpFile = require('cp-file')
 
 const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
 
-const { detectEsModule } = require('./detect_es_module')
+const { getBundler } = require('./bundlers')
 const { findFunctionsInPaths } = require('./finder')
-const { getSrcFiles } = require('./src_files')
-const { zipEsbuild } = require('./zip_esbuild')
-const { zipZisi } = require('./zip_zisi')
+const { detectEsModule } = require('./utils/detect_es_module')
+const { zipNodeJs } = require('./utils/zip')
 
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
@@ -31,9 +30,10 @@ const getDefaultBundler = async ({ extension, mainFile, featureFlags = {} }) => 
 // A proxy for the `getSrcFiles` function which adds a default `bundler` using
 // the `getDefaultBundler` function.
 const getSrcFilesWithBundler = async (parameters) => {
-  const bundler = parameters.config.nodeBundler || (await getDefaultBundler({ extension: parameters.extension }))
+  const bundlerName = parameters.config.nodeBundler || (await getDefaultBundler({ extension: parameters.extension }))
+  const bundler = getBundler(bundlerName)
 
-  return getSrcFiles({ ...parameters, bundler })
+  return bundler.getSrcFiles({ ...parameters })
 }
 
 const zipFunction = async function ({
@@ -51,7 +51,9 @@ const zipFunction = async function ({
   srcPath,
   stat,
 }) {
-  const bundler = config.nodeBundler || (await getDefaultBundler({ extension, mainFile, featureFlags }))
+  const bundlerName = config.nodeBundler || (await getDefaultBundler({ extension, mainFile, featureFlags }))
+  const bundler = getBundler(bundlerName)
+
   // If the file is a zip, we assume the function is bundled and ready to go.
   // We simply copy it to the destination path with no further processing.
   if (extension === '.zip') {
@@ -60,30 +62,21 @@ const zipFunction = async function ({
     return { config, path: destPath }
   }
 
-  if (bundler === JS_BUNDLER_ZISI) {
-    return zipZisi({
-      archiveFormat,
-      basePath,
-      config,
-      destFolder,
-      extension,
-      featureFlags,
-      filename,
-      mainFile,
-      name,
-      pluginsModulesPath,
-      srcDir,
-      srcPath,
-      stat,
-    })
-  }
-
-  return zipEsbuild({
-    archiveFormat,
+  const {
+    aliases,
+    cleanupFunction = () => {},
+    basePath: finalBasePath = basePath,
+    bundlerWarnings,
+    inputs,
+    mainFile: finalMainFile = mainFile,
+    nativeNodeModules,
+    nodeModulesWithDynamicImports,
+    srcFiles,
+  } = await bundler.bundle({
     basePath,
     config,
-    destFolder,
     extension,
+    featureFlags,
     filename,
     mainFile,
     name,
@@ -92,6 +85,30 @@ const zipFunction = async function ({
     srcPath,
     stat,
   })
+
+  const zipPath = await zipNodeJs({
+    aliases,
+    archiveFormat,
+    basePath: finalBasePath,
+    destFolder,
+    extension,
+    filename,
+    mainFile: finalMainFile,
+    pluginsModulesPath,
+    srcFiles,
+  })
+
+  await cleanupFunction()
+
+  return {
+    bundler: bundlerName,
+    bundlerWarnings,
+    config,
+    inputs,
+    nativeNodeModules,
+    nodeModulesWithDynamicImports,
+    path: zipPath,
+  }
 }
 
 const zipWithFunctionWithFallback = async ({ config = {}, ...parameters }) => {

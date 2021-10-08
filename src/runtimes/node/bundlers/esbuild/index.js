@@ -1,13 +1,11 @@
 const { dirname, normalize } = require('path')
 
-const { getExternalAndIgnoredModulesFromSpecialCases } = require('../../node_dependencies')
-const { JS_BUNDLER_ESBUILD } = require('../../utils/consts')
-const { getPathWithExtension } = require('../../utils/fs')
-const { zipNodeJs } = require('../../zip_node')
+const { getPathWithExtension } = require('../../../../utils/fs')
+const { getBasePath } = require('../../utils/base_path')
 
-const { getBasePath } = require('./base_path')
 const { bundleJsFile } = require('./bundler')
-const { getSrcFilesAndExternalModules } = require('./src_files')
+const { getExternalAndIgnoredModulesFromSpecialCases } = require('./special_cases')
+const { getSrcFiles } = require('./src_files')
 
 const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles }) => {
   // If there is a base path defined in the config, we use that.
@@ -35,20 +33,7 @@ const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
   return { externalModules, ignoredModules }
 }
 
-const zipEsbuild = async ({
-  archiveFormat,
-  basePath,
-  config = {},
-  destFolder,
-  extension,
-  filename,
-  mainFile,
-  name,
-  pluginsModulesPath,
-  srcDir,
-  srcPath,
-  stat,
-}) => {
+const bundle = async ({ basePath, config = {}, filename, mainFile, name, pluginsModulesPath, srcDir }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const {
     additionalPaths,
@@ -70,17 +55,16 @@ const zipEsbuild = async ({
     srcFile: mainFile,
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings
-  const { paths: srcFiles } = await getSrcFilesAndExternalModules({
-    externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
-    bundler: JS_BUNDLER_ESBUILD,
-    includedFiles: [...(config.includedFiles || []), ...additionalPaths],
-    includedFilesBasePath: config.includedFilesBasePath || basePath,
+  const srcFiles = await getSrcFiles({
+    config: {
+      ...config,
+      externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
+      includedFiles: [...(config.includedFiles || []), ...additionalPaths],
+      includedFilesBasePath: config.includedFilesBasePath || basePath,
+    },
     mainFile,
-    name,
-    srcPath,
-    srcDir,
     pluginsModulesPath,
-    stat,
+    srcDir,
   })
 
   // We want to remove `mainFile` from `srcFiles` because it represents the
@@ -90,31 +74,17 @@ const zipEsbuild = async ({
   const normalizedMainFile = getPathWithExtension(mainFile, '.js')
   const functionBasePath = getFunctionBasePath({ basePathFromConfig: basePath, mainFile, supportingSrcFiles })
 
-  try {
-    const path = await zipNodeJs({
-      aliases: bundlePaths,
-      archiveFormat,
-      basePath: functionBasePath,
-      destFolder,
-      extension,
-      filename,
-      mainFile: normalizedMainFile,
-      pluginsModulesPath,
-      srcFiles: [...supportingSrcFiles, ...bundlePaths.keys()],
-    })
-
-    return {
-      bundler: JS_BUNDLER_ESBUILD,
-      bundlerWarnings,
-      config,
-      inputs,
-      nativeNodeModules,
-      nodeModulesWithDynamicImports,
-      path,
-    }
-  } finally {
-    await cleanTempFiles()
+  return {
+    aliases: bundlePaths,
+    cleanupFunction: cleanTempFiles,
+    basePath: functionBasePath,
+    bundlerWarnings,
+    inputs,
+    mainFile: normalizedMainFile,
+    nativeNodeModules,
+    nodeModulesWithDynamicImports,
+    srcFiles: [...supportingSrcFiles, ...bundlePaths.keys()],
   }
 }
 
-module.exports = { zipEsbuild }
+module.exports = { bundle, getSrcFiles }

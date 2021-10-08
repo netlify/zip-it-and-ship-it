@@ -1,16 +1,13 @@
 const { dirname } = require('path')
 
-const { getModuleName } = require('./module')
+const { getModuleName } = require('../../utils/module')
+
 const { getNestedDependencies, handleModuleNotFound } = require('./nested')
-const { getPackageJson } = require('./package_json')
 const { getPublishedFiles } = require('./published')
 const { resolvePackage } = require('./resolve')
 const { getSideFiles } = require('./side_files')
 
 const EXCLUDED_MODULES = new Set(['aws-sdk'])
-
-// Local cache used for optimizing the traversal of module dependencies.
-const getNewCache = () => ({ localFiles: new Set(), moduleNames: new Set(), modulePaths: new Set() })
 
 // When a file requires a module, we find its path inside `node_modules` and
 // use all its published files. We also recurse on the module's dependencies.
@@ -33,59 +30,6 @@ const getDependencyPathsForDependency = async function ({
     return await getDependenciesForModuleName({ moduleName, basedir, state, pluginsModulesPath })
   } catch (error) {
     return handleModuleNotFound({ error, moduleName, packageJson })
-  }
-}
-
-const getDependencyNamesAndPathsForDependencies = async function ({
-  dependencies: dependencyNames,
-  basedir,
-  state = getNewCache(),
-  pluginsModulesPath,
-}) {
-  const packageJson = await getPackageJson(basedir)
-  const dependencies = await Promise.all(
-    dependencyNames.map((dependencyName) =>
-      getDependencyNamesAndPathsForDependency({
-        dependency: dependencyName,
-        basedir,
-        state,
-        packageJson,
-        pluginsModulesPath,
-      }),
-    ),
-  )
-  const moduleNames = new Set(dependencies.flatMap((dependency) => [...dependency.moduleNames]))
-  const paths = new Set(dependencies.flatMap((dependency) => [...dependency.paths]))
-
-  return {
-    moduleNames: [...moduleNames],
-    paths: [...paths],
-  }
-}
-
-const getDependencyNamesAndPathsForDependency = async function ({
-  dependency,
-  basedir,
-  state = getNewCache(),
-  packageJson,
-  pluginsModulesPath,
-}) {
-  try {
-    const paths = await getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath })
-
-    return {
-      moduleNames: [...state.moduleNames],
-      paths,
-    }
-  } catch (error) {
-    if (error.code === 'MODULE_NOT_FOUND') {
-      return {
-        moduleNames: [],
-        paths: [],
-      }
-    }
-
-    throw error
   }
 }
 
@@ -141,7 +85,4 @@ const getNestedModules = async function ({ modulePath, state, packageJson, plugi
 
 module.exports = {
   getDependencyPathsForDependency,
-  getDependencyNamesAndPathsForDependencies,
-  getDependencyNamesAndPathsForDependency,
-  getNewCache,
 }

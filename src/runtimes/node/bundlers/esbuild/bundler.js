@@ -3,12 +3,12 @@ const { basename, dirname, extname, resolve, join } = require('path')
 const esbuild = require('@netlify/esbuild')
 const { tmpName } = require('tmp-promise')
 
-const { JS_BUNDLER_ESBUILD, RUNTIME_JS } = require('../../utils/consts')
-const { getPathWithExtension, safeUnlink } = require('../../utils/fs')
+const { JS_BUNDLER_ESBUILD, RUNTIME_JS } = require('../../../../utils/consts')
+const { getPathWithExtension, safeUnlink } = require('../../../../utils/fs')
 
 const { getBundlerTarget } = require('./bundler_target')
-const { getDynamicImportsPlugin } = require('./dynamic_imports/plugin')
-const { getNativeModulesPlugin } = require('./native_modules/plugin')
+const { getDynamicImportsPlugin } = require('./plugin_dynamic_imports')
+const { getNativeModulesPlugin } = require('./plugin_native_modules')
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being

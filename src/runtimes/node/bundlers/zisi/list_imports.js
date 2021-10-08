@@ -2,8 +2,8 @@ const esbuild = require('@netlify/esbuild')
 const isBuiltinModule = require('is-builtin-module')
 const { tmpName } = require('tmp-promise')
 
-const { JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
-const { safeUnlink } = require('../../utils/fs')
+const { JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../../../utils/consts')
+const { safeUnlink } = require('../../../../utils/fs')
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being
