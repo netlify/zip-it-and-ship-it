@@ -9,7 +9,7 @@ const pGlob = promisify(glob)
 const { JS_BUNDLER_ZISI } = require('../../utils/consts')
 
 const { getSrcFilesForDependencies } = require('./bundlers/esbuild/additional_files')
-const zisiBundler = require('./bundlers/zisi/list_files')
+const zisiBundler = require('./bundlers/zisi/src_files')
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
@@ -76,7 +76,7 @@ const getSrcFiles = async function ({
   )
 
   if (bundler === JS_BUNDLER_ZISI) {
-    const dependencyPaths = await zisiBundler.listFiles({
+    const dependencyPaths = await zisiBundler.getSrcFiles({
       featureFlags,
       srcPath,
       mainFile,
