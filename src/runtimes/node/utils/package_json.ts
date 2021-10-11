@@ -1,6 +1,6 @@
 import pkgDir from 'pkg-dir'
 
-export interface PackageJson {
+interface PackageJson {
   name?: string
   dependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
@@ -13,7 +13,7 @@ export interface PackageJson {
 }
 
 // Retrieve the `package.json` of a specific project or module
-export const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
+const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   const packageRoot = await pkgDir(srcDir)
 
   if (packageRoot === undefined) {
@@ -29,3 +29,5 @@ export const getPackageJson = async function (srcDir: string): Promise<PackageJs
     throw new Error(`${packageJsonPath} is invalid JSON: ${error.message}`)
   }
 }
+
+export { getPackageJson, PackageJson }

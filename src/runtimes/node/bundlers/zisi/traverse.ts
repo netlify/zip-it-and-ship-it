@@ -13,7 +13,7 @@ const EXCLUDED_MODULES = new Set(['aws-sdk'])
 
 // When a file requires a module, we find its path inside `node_modules` and
 // use all its published files. We also recurse on the module's dependencies.
-export const getDependencyPathsForDependency = async function ({
+const getDependencyPathsForDependency = async function ({
   dependency,
   basedir,
   state,
@@ -110,3 +110,5 @@ const getNestedModules = async function ({
   // eslint-disable-next-line unicorn/prefer-spread
   return ([] as string[]).concat(...depsPaths)
 }
+
+export { getDependencyPathsForDependency }
