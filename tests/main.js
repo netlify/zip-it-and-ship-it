@@ -1857,27 +1857,12 @@ test('Does not zip Go function files', async (t) => {
   )
 })
 
-test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
-  shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
-
-  const fixtureName = 'go-source-multiple'
-  const { files } = await zipFixture(t, fixtureName, { length: 0 })
-
-  t.is(files.length, 0)
-  t.is(shellUtilsStub.callCount, 0)
-})
-
-test.serial('Builds Go functions from source if the `buildGoSource` feature flag is enabled', async (t) => {
+test.serial('Builds Go functions from source', async (t) => {
   shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
 
   const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, {
     length: 2,
-    opts: {
-      featureFlags: {
-        buildGoSource: true,
-      },
-    },
   })
 
   t.is(shellUtilsStub.callCount, 2)
@@ -1914,13 +1899,7 @@ test.serial('Adds `type: "functionsBundling"` to errors resulting from compiling
   })
 
   try {
-    await zipFixture(t, 'go-source', {
-      opts: {
-        featureFlags: {
-          buildGoSource: true,
-        },
-      },
-    })
+    await zipFixture(t, 'go-source')
 
     t.fail('Expected catch block')
   } catch (error) {
