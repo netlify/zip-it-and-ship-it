@@ -868,7 +868,6 @@ testMany('{name}/index.js takes precedence over {name}.js', ['*'], async (option
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.is(require(`${tmpDir}/function.js`), 'index-js-file-in-directory')
 })
 
