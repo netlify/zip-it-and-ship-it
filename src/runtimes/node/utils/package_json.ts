@@ -7,6 +7,9 @@ export interface PackageJson {
   peerDependenciesMeta?: Record<string, { optional?: boolean }>
   optionalDependencies?: Record<string, string>
   devDependencies?: Record<string, string>
+  files?: string[]
+  gypfile?: boolean
+  binary?: boolean
 }
 
 // Retrieve the `package.json` of a specific project or module
