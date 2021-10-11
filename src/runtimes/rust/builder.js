@@ -18,7 +18,7 @@ const build = async ({ config, name, srcDir }) => {
   const functionName = basename(srcDir)
 
   try {
-    await installBuildTarget()
+    await installToolchainOnce()
   } catch (error) {
     error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_RUST } }
 
@@ -98,17 +98,22 @@ const getTargetDirectory = async ({ config, name }) => {
   return path
 }
 
-let buildTargetInstallation
+let toolchainInstallation
 
-// Installs the build target defined in `BUILD_TARGET`. The Promise is saved to
-// `buildTargetInstallation` so that we run the command just once for multiple
-// Rust functions.
-const installBuildTarget = () => {
-  if (buildTargetInstallation === undefined) {
-    buildTargetInstallation = runCommand('rustup', ['target', 'add', BUILD_TARGET])
+// Sets the default toolchain and installs the build target defined in
+// `BUILD_TARGET`. The Promise is saved to `toolchainInstallation`, so
+// that we run the command just once for multiple Rust functions.
+const installToolchain = async () => {
+  await runCommand('rustup', ['default', 'stable'])
+  await runCommand('rustup', ['target', 'add', BUILD_TARGET])
+}
+
+const installToolchainOnce = () => {
+  if (toolchainInstallation === undefined) {
+    toolchainInstallation = installToolchain()
   }
 
-  return buildTargetInstallation
+  return toolchainInstallation
 }
 
 module.exports = { build }
