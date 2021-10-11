@@ -34,8 +34,10 @@ const build = async ({ config, name, srcDir }) => {
   // must extract the crate name from the manifest and use it to form the path
   // to the binary.
   const manifest = await pReadFile(join(srcDir, MANIFEST_NAME))
-  const { package } = toml.parse(manifest)
-  const binaryPath = join(targetDirectory, BUILD_TARGET, 'release', package.name)
+  const {
+    package: { name: packageName },
+  } = toml.parse(manifest)
+  const binaryPath = join(targetDirectory, BUILD_TARGET, 'release', packageName)
   const stat = await lstat(binaryPath)
 
   return {

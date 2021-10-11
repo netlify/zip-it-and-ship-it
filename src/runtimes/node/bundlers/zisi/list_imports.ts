@@ -1,16 +1,16 @@
-const esbuild = require('@netlify/esbuild')
-const isBuiltinModule = require('is-builtin-module')
-const { tmpName } = require('tmp-promise')
+import * as esbuild from '@netlify/esbuild'
+import isBuiltinModule from 'is-builtin-module'
+import { tmpName } from 'tmp-promise'
 
-const { JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../../../utils/consts')
-const { safeUnlink } = require('../../../../utils/fs')
+import { JS_BUNDLER_ZISI, RUNTIME_JS } from '../../../../utils/consts'
+import { safeUnlink } from '../../../../utils/fs'
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being
 // sent in the Go<>Node IPC channel.
 const ESBUILD_LOG_LIMIT = 10
 
-const getListImportsPlugin = ({ imports, path }) => ({
+const getListImportsPlugin = ({ imports, path }: { imports: Set<string>; path: string }): esbuild.Plugin => ({
   name: 'list-imports',
   setup(build) {
     build.onResolve({ filter: /.*/ }, (args) => {
@@ -29,7 +29,7 @@ const getListImportsPlugin = ({ imports, path }) => ({
   },
 })
 
-const listImports = async ({ functionName, path }) => {
+const listImports = async ({ functionName, path }: { functionName: string; path: string }): Promise<string[]> => {
   // We're not interested in the output that esbuild generates, we're just
   // using it for its parsing capabilities in order to find import/require
   // statements. However, if we don't give esbuild a path in `outfile`, it
@@ -37,7 +37,7 @@ const listImports = async ({ functionName, path }) => {
   // a temporary file to serve as the esbuild output and then get rid of it
   // when we're done.
   const targetPath = await tmpName()
-  const imports = new Set()
+  const imports = new Set<string>()
 
   try {
     await esbuild.build({
@@ -64,4 +64,4 @@ const listImports = async ({ functionName, path }) => {
   return [...imports]
 }
 
-module.exports = { listImports }
+export { listImports }

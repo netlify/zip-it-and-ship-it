@@ -1,9 +1,15 @@
-const { valid: validVersion, validRange, satisfies, gte: greaterThanEqual, ltr: lessThanRange } = require('semver')
+import { valid as validVersion, validRange, satisfies, gte as greaterThanEqual, ltr as lessThanRange } from 'semver'
+
+import { PackageJson } from '../../utils/package_json'
 
 // Apply the Node.js module logic recursively on its own dependencies, using
 // the `package.json` `dependencies`, `peerDependencies` and
 // `optionalDependencies` keys
-const getNestedDependencies = function ({ dependencies = {}, peerDependencies = {}, optionalDependencies = {} }) {
+const getNestedDependencies = function ({
+  dependencies = {},
+  peerDependencies = {},
+  optionalDependencies = {},
+}: PackageJson): string[] {
   return [
     ...Object.keys(dependencies),
     ...Object.keys(peerDependencies).filter(shouldIncludePeerDependency),
@@ -14,7 +20,7 @@ const getNestedDependencies = function ({ dependencies = {}, peerDependencies = 
 // Workaround for https://github.com/netlify/zip-it-and-ship-it/issues/73
 // TODO: remove this after adding proper modules exclusion as outlined in
 // https://github.com/netlify/zip-it-and-ship-it/issues/68
-const shouldIncludePeerDependency = function (name) {
+const shouldIncludePeerDependency = function (name: string): boolean {
   return !EXCLUDED_PEER_DEPENDENCIES.has(name)
 }
 
@@ -42,7 +48,15 @@ const EXCLUDED_PEER_DEPENDENCIES = new Set(['@prisma/cli', 'prisma2', 'prisma'])
 // `optionalDependencies`:
 //  - are not reported when missing
 //  - are included in module dependencies
-const handleModuleNotFound = function ({ error, moduleName, packageJson }) {
+const handleModuleNotFound = function ({
+  error,
+  moduleName,
+  packageJson,
+}: {
+  error: Error & { code: string }
+  moduleName: string
+  packageJson: PackageJson
+}): [] | never {
   if (
     error.code === 'MODULE_NOT_FOUND' &&
     (isOptionalModule(moduleName, packageJson) || isExternalCrittersModule(moduleName, packageJson))
@@ -54,8 +68,8 @@ const handleModuleNotFound = function ({ error, moduleName, packageJson }) {
 }
 
 const isOptionalModule = function (
-  moduleName,
-  { optionalDependencies = {}, peerDependenciesMeta = {}, peerDependencies = {} },
+  moduleName: string,
+  { optionalDependencies = {}, peerDependenciesMeta = {}, peerDependencies = {} }: PackageJson,
 ) {
   return (
     optionalDependencies[moduleName] !== undefined ||
@@ -67,12 +81,15 @@ const isOptionalModule = function (
 
 const MIN_NEXT_VERSION = '10.0.4'
 
-const satisfiesRange = (range) =>
-  validRange(range) && (satisfies(MIN_NEXT_VERSION, range) || lessThanRange(MIN_NEXT_VERSION, range))
+const satisfiesRange = (range: string): boolean =>
+  Boolean(validRange(range)) && (satisfies(MIN_NEXT_VERSION, range) || lessThanRange(MIN_NEXT_VERSION, range))
 
 // 'critters' is used only in Next.js >= 10.0.4 when enabling an experimental option and has to be installed manually
 // we ignore it if it's missing
-const isExternalCrittersModule = function (moduleName, { dependencies = {}, devDependencies = {} }) {
+const isExternalCrittersModule = function (
+  moduleName: string,
+  { dependencies = {}, devDependencies = {} }: PackageJson,
+) {
   if (moduleName !== 'critters') {
     return false
   }
@@ -91,4 +108,4 @@ const isExternalCrittersModule = function (moduleName, { dependencies = {}, devD
   return satisfiesRange(nextVersion)
 }
 
-module.exports = { getNestedDependencies, handleModuleNotFound }
+export { getNestedDependencies, handleModuleNotFound }
