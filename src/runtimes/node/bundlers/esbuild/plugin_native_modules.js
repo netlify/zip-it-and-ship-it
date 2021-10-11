@@ -31,7 +31,7 @@ const getNativeModulesPlugin = (externalizedModules) => ({
     build.onResolve({ filter: packageFilter }, async (args) => {
       const pkg = packageName.exec(args.path)
 
-      if (!pack) return
+      if (!pkg) return
 
       let directory = args.resolveDir
 
