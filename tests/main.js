@@ -1985,26 +1985,32 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
   })
 
   t.is(files.length, 2)
-  t.is(shellUtilsStub.callCount, 3)
+  // eslint-disable-next-line no-magic-numbers
+  t.is(shellUtilsStub.callCount, 4)
 
   const { args: call1 } = shellUtilsStub.getCall(0)
   const { args: call2 } = shellUtilsStub.getCall(1)
-  const { args: call3 } = shellUtilsStub.getCall(1)
+  const { args: call3 } = shellUtilsStub.getCall(2)
+  const { args: call4 } = shellUtilsStub.getCall(3)
 
   t.is(call1[0], 'rustup')
-  t.is(call1[1][0], 'target')
-  t.is(call1[1][1], 'add')
-  t.is(call1[1][2], 'x86_64-unknown-linux-musl')
+  t.is(call1[1][0], 'default')
+  t.is(call1[1][1], 'stable')
 
-  t.is(call2[0], 'cargo')
-  t.is(call2[1][0], 'build')
-  t.is(call2[1][1], '--target')
+  t.is(call2[0], 'rustup')
+  t.is(call2[1][0], 'target')
+  t.is(call2[1][1], 'add')
   t.is(call2[1][2], 'x86_64-unknown-linux-musl')
 
-  t.is(call2[0], call3[0])
-  t.is(call2[1][0], call3[1][0])
-  t.is(call2[1][1], call3[1][1])
-  t.is(call2[1][2], call3[1][2])
+  t.is(call3[0], 'cargo')
+  t.is(call3[1][0], 'build')
+  t.is(call3[1][1], '--target')
+  t.is(call3[1][2], 'x86_64-unknown-linux-musl')
+
+  t.is(call4[0], call3[0])
+  t.is(call4[1][0], call3[1][0])
+  t.is(call4[1][1], call3[1][1])
+  t.is(call4[1][2], call3[1][2])
 
   t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'rust-func-1', 'src', 'main.rs'))
   t.is(files[0].name, 'rust-func-1')
