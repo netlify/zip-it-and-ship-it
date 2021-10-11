@@ -13,7 +13,7 @@ export interface PackageJson {
 }
 
 // Retrieve the `package.json` of a specific project or module
-const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
+export const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   const packageRoot = await pkgDir(srcDir)
 
   if (packageRoot === undefined) {
@@ -29,5 +29,3 @@ const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
     throw new Error(`${packageJsonPath} is invalid JSON: ${error.message}`)
   }
 }
-
-module.exports = { getPackageJson }
