@@ -10,8 +10,8 @@ const makeDir = require('make-dir')
 const pMap = require('p-map')
 const unixify = require('unixify')
 
-const { startZip, addZipFile, addZipContent, endZip } = require('./archive')
-const { ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
+const { startZip, addZipFile, addZipContent, endZip } = require('../../../archive')
+const { ARCHIVE_FORMAT_ZIP } = require('../../../utils/consts')
 
 const pStat = promisify(fs.stat)
 const pWriteFile = promisify(fs.writeFile)

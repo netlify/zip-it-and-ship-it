@@ -18,13 +18,20 @@ const unixify = require('unixify')
 // We must require this file first because we need to stub it before the main
 // functions are required.
 // eslint-disable-next-line import/order
-const shellUtils = require('../src/utils/shell')
+const shellUtils = require('../dist/utils/shell')
 
 const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
+// eslint-disable-next-line import/order
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
-const { ESBUILD_LOG_LIMIT } = require('../src/runtimes/node/bundler')
-const { JS_BUNDLER_ESBUILD: ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI } = require('../src/utils/consts')
+
+const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler')
+const {
+  JS_BUNDLER_ESBUILD: ESBUILD,
+  JS_BUNDLER_ESBUILD_ZISI,
+  JS_BUNDLER_ZISI,
+  JS_BUNDLER_ESBUILD,
+} = require('../dist/utils/consts')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -158,7 +165,6 @@ testMany('Can require deep paths in node modules', ['*'], async (options, t) => 
     opts: options,
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/function.js`)
 
   t.deepEqual(func, { mock: { stack: 'jam' }, stack: 'jam' })
@@ -188,7 +194,6 @@ testMany('Ignore some excluded node modules', ['*'], async (options, t) => {
   t.false(await pathExists(`${tmpDir}/node_modules/aws-sdk`))
 
   try {
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require
     const func = require(`${tmpDir}/function.js`)
 
     func()
@@ -384,7 +389,6 @@ testMany('Can target a directory with an index.js file', ['*'], async (options, 
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(require(`${tmpDir}/function.js`))
   t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'function', 'index.js'))
 })
@@ -848,7 +852,6 @@ testMany(
 testMany('Exposes the main export of `node-fetch` when imported using `require()`', ['*'], async (options, t) => {
   const { files, tmpDir } = await zipFixture(t, 'node-fetch', { opts: options })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(typeof require(`${tmpDir}/function.js`) === 'function')
 })
 
@@ -857,7 +860,6 @@ testMany('{name}/{name}.js takes precedence over {name}.js and {name}/index.js',
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.is(require(`${tmpDir}/function.js`), 'function-js-file-in-directory')
 })
 
@@ -875,7 +877,6 @@ testMany('{name}/index.js takes precedence over {name}/index.ts', ['*'], async (
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.is(require(`${tmpDir}/function.js`).type, 'index-js-file-in-directory')
 })
 
@@ -884,7 +885,6 @@ testMany('{name}.js takes precedence over {name}.ts', ['*'], async (options, t) 
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.is(require(`${tmpDir}/function.js`).type, 'function-js-file')
 })
 
@@ -893,7 +893,6 @@ testMany('{name}.js takes precedence over {name}.zip', ['*'], async (options, t)
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.is(require(`${tmpDir}/function.js`).type, 'function-js-file')
 })
 
@@ -902,7 +901,6 @@ testMany('Handles a TypeScript function ({name}.ts)', ['*'], async (options, t) 
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
 })
 
@@ -911,7 +909,6 @@ testMany('Handles a TypeScript function ({name}/{name}.ts)', ['*'], async (optio
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
 })
 
@@ -920,7 +917,6 @@ testMany('Handles a TypeScript function ({name}/index.ts)', ['*'], async (option
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
 })
 
@@ -929,7 +925,6 @@ testMany('Handles a TypeScript function with imports', ['*'], async (options, t)
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
 })
 
@@ -949,11 +944,9 @@ testMany(
       t.is(file.bundler, 'esbuild')
     })
 
-    /* eslint-disable import/no-dynamic-require, node/global-require */
     t.true(require(`${tmpDir}/func1.js`).handler())
     t.true(require(`${tmpDir}/func2.js`).handler())
     t.true(require(`${tmpDir}/func3.js`).handler())
-    /* eslint-enable import/no-dynamic-require, node/global-require */
   },
 )
 
@@ -962,7 +955,6 @@ testMany('Loads a tsconfig.json placed in the same directory as the function', [
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(require(`${tmpDir}/function.js`).value)
 })
 
@@ -971,7 +963,6 @@ testMany('Loads a tsconfig.json placed in a parent directory', ['*'], async (opt
     opts: options,
   })
   await unzipFiles(files)
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   t.true(require(`${tmpDir}/function.js`).value)
 })
 
@@ -984,7 +975,6 @@ testMany(
     })
     await unzipFiles(files)
 
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require
     const result = require(`${tmpDir}/function.js`)
 
     // We want to assert that the `target` specified in the tsconfig file (es5)
@@ -1002,11 +992,11 @@ testMany(
 
 test('Limits the amount of log lines produced by esbuild', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const binaryPath = resolve(__dirname, '../src/bin.js')
+  const binaryPath = resolve(__dirname, '../dist/bin.js')
   const fixturePath = join(FIXTURES_DIR, 'esbuild-log-limit')
 
   try {
-    await execa(binaryPath, [fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
+    await execa('node', [binaryPath, fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
 
     t.fail('Bundling should have thrown')
   } catch (error) {
@@ -1108,7 +1098,6 @@ testMany('Generates a directory if `archiveFormat` is set to `none`', ['*'], asy
     opts,
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const functionEntry = require(`${files[0].path}/function.js`)
 
   t.true(functionEntry)
@@ -1128,7 +1117,6 @@ testMany('Includes in the bundle any paths matched by a `included_files` glob', 
     opts,
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/func1.js`)
 
   const { body: body1 } = await func.handler({ queryStringParameters: { name: 'post1' } })
@@ -1186,7 +1174,6 @@ testMany('Returns an `inputs` property with all the imported paths', ['*'], asyn
     t.false(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'node_modules', 'test-child', 'unused_file.js')))
   }
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const functionEntry = require(`${tmpDir}/function.js`)
 
   t.true(functionEntry)
@@ -1206,7 +1193,6 @@ testMany('Places all user-defined files at the root of the target directory', ['
     opts,
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const function1Entry = require(`${tmpDir}/func1.js`)
 
   // The function should not be on a `src/` namespace.
@@ -1237,7 +1223,6 @@ testMany(
       opts,
     })
 
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require
     const function2Entry = require(`${tmpDir}/func2.js`)
 
     // The function should be on a `src/` namespace because there's a conflict
@@ -1268,11 +1253,9 @@ testMany(
       opts,
     })
 
-    /* eslint-disable import/no-dynamic-require, node/global-require */
     const functionCommon = require(`${tmpDir}/function.js`)
     const functionInternal = require(`${tmpDir}/function_internal.js`)
     const functionUser = require(`${tmpDir}/function_user.js`)
-    /* eslint-enable import/no-dynamic-require, node/global-require */
 
     // Functions from rightmost directories in the array take precedence.
     t.is(functionCommon, 'user')
@@ -1307,7 +1290,6 @@ test('When generating a directory for a function with `archiveFormat: "none"`, i
     archiveFormat: 'none',
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const functionEntry = require(`${functionDirectory}/function.js`)
 
   t.true(functionEntry)
@@ -1324,20 +1306,28 @@ test('Throws an error if the `archiveFormat` property contains an invalid value`
   )
 })
 
-test('Adds `type: "functionsBundling"` to esbuild bundling errors', async (t) => {
-  try {
-    await zipNode(t, 'node-module-missing', {
-      opts: { config: { '*': { nodeBundler: ESBUILD } } },
-    })
+testMany(
+  'Adds `type: "functionsBundling"` to user errors (esbuild)',
+  ['bundler_default_parse_esbuild', 'bundler_esbuild'],
+  async (options, t) => {
+    const bundler = options.config['*'].nodeBundler
 
-    t.fail('Function did not throw')
-  } catch (error) {
-    t.deepEqual(error.customErrorInfo, {
-      type: 'functionsBundling',
-      location: { functionName: 'function', runtime: 'js' },
-    })
-  }
-})
+    try {
+      await zipNode(t, 'node-syntax-error', {
+        opts: options,
+      })
+
+      t.fail('Bundling should have thrown')
+    } catch (error) {
+      const { customErrorInfo } = error
+
+      t.is(customErrorInfo.type, 'functionsBundling')
+      t.is(customErrorInfo.location.bundler, bundler === JS_BUNDLER_ESBUILD ? ESBUILD : JS_BUNDLER_ZISI)
+      t.is(customErrorInfo.location.functionName, 'function')
+      t.is(customErrorInfo.location.runtime, 'js')
+    }
+  },
+)
 
 test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async (t) => {
   const fixtureName = 'node-module-dynamic-import'
@@ -1386,7 +1376,6 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
     },
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/function.js`)
   const values = func('one')
   const expectedLength = 5
@@ -1422,7 +1411,6 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
     },
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/function.js`)
 
   t.deepEqual(func('en')[0], ['yes', 'no'])
@@ -1441,7 +1429,6 @@ test('The dynamic import runtime shim handles files in nested directories', asyn
     },
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/function.js`)
 
   t.deepEqual(func('en')[0], ['yes', 'no'])
@@ -1463,7 +1450,6 @@ test('The dynamic import runtime shim handles files in nested directories when u
     },
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/function/function.js`)
 
   t.deepEqual(func('en')[0], ['yes', 'no'])
@@ -1484,13 +1470,33 @@ test('Negated files in `included_files` are excluded from the bundle even if the
     },
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/function.js`)
 
   t.deepEqual(func('pt')[0], ['sim', 'não'])
   t.deepEqual(func('pt')[1], ['sim', 'não'])
   t.throws(() => func('en'))
 })
+
+testMany(
+  'Negated files in `included_files` are excluded from the bundle even if they match Node modules required in a function',
+  ['bundler_default', 'bundler_default_parse_esbuild', 'bundler_esbuild'],
+  async (options, t) => {
+    const fixtureName = 'node-module-included-try-catch'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          externalNodeModules: ['test'],
+          includedFiles: ['!node_modules/test/**'],
+        },
+      },
+    })
+    const { tmpDir } = await zipNode(t, fixtureName, { opts })
+
+    t.true(await pathExists(`${tmpDir}/function.js`))
+    t.false(await pathExists(`${tmpDir}/node_modules/test/index.js`))
+  },
+)
 
 test('Creates dynamic import shims for functions with the same name and same shim contents with no naming conflicts', async (t) => {
   const FUNCTION_COUNT = 30
@@ -1505,7 +1511,6 @@ test('Creates dynamic import shims for functions with the same name and same shi
   })
 
   for (let ind = 1; ind <= FUNCTION_COUNT; ind++) {
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require
     const func = require(`${tmpDir}/function${ind}.js`)
 
     t.deepEqual(func('en')[0], ['yes', 'no'])
@@ -1526,7 +1531,6 @@ test('Creates dynamic import shims for functions using `zipFunction`', async (t)
 
   await unzipFiles([result])
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const func = require(`${tmpDir}/function.js`)
 
   t.deepEqual(func('en')[0], ['yes', 'no'])
@@ -1828,7 +1832,6 @@ test('Creates a manifest file with the list of created functions if the `manifes
     opts: { manifest: manifestPath },
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const manifest = require(manifestPath)
 
   t.is(manifest.version, 1)
@@ -1852,8 +1855,6 @@ testMany('Correctly follows node_modules via symlink', ['bundler_esbuild'], asyn
     opts: options,
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const isEven = require(`${tmpDir}/function`)
-  // eslint-disable-next-line no-magic-numbers
-  t.is(isEven(10), '10 is even')
+  t.is(isEven(2), '2 is even')
 })

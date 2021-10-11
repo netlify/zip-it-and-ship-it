@@ -2,7 +2,7 @@ const path = require('path')
 
 const readPackageJson = require('read-package-json-fast')
 
-const { isNativeModule } = require('./detector')
+const { isNativeModule } = require('../../utils/detect_native_module')
 
 // Filters out relative or absolute file paths.
 const packageFilter = /^([^./]*)$/

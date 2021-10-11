@@ -1,4 +1,4 @@
-const { getModuleName } = require('./module')
+const { getModuleName } = require('../../utils/module')
 
 const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
 
