@@ -29,7 +29,7 @@ const getNativeModulesPlugin = (externalizedModules) => ({
 
     // eslint-disable-next-line complexity, max-statements
     build.onResolve({ filter: packageFilter }, async (args) => {
-      const pack = packageName.exec(args.path)
+      const pkg = packageName.exec(args.path)
 
       if (!pack) return
 
