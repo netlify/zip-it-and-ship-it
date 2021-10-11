@@ -1,6 +1,6 @@
 {
   "peerDependencies": {
-    "consistent-ids": "0.5.0"
+    "consistent-ids": "0.6.1"
   },
   "peerDependenciesMeta": {
     "consistent-ids": {
