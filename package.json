@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "4.23.6",
+  "version": "4.24.0",
   "description": "Zip it and ship it",
   "main": "./dist/main.js",
   "bin": {
@@ -93,6 +93,7 @@
   },
   "devDependencies": {
     "@netlify/eslint-config-node": "^3.3.0",
+    "@types/semver": "^7.3.8",
     "adm-zip": "0.5.5",
     "ava": "^3.0.0",
     "conditional-type-checks": "^1.0.5",

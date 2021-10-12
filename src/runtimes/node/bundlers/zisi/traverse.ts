@@ -1,11 +1,13 @@
-const { dirname } = require('path')
+import { dirname } from 'path'
 
-const { getModuleName } = require('../../utils/module')
+import { getModuleName } from '../../utils/module'
+import { PackageJson } from '../../utils/package_json'
+import { TraversalCache } from '../../utils/traversal_cache'
 
-const { getNestedDependencies, handleModuleNotFound } = require('./nested')
-const { getPublishedFiles } = require('./published')
-const { resolvePackage } = require('./resolve')
-const { getSideFiles } = require('./side_files')
+import { getNestedDependencies, handleModuleNotFound } from './nested'
+import { getPublishedFiles } from './published'
+import { resolvePackage } from './resolve'
+import { getSideFiles } from './side_files'
 
 const EXCLUDED_MODULES = new Set(['aws-sdk'])
 
@@ -17,7 +19,13 @@ const getDependencyPathsForDependency = async function ({
   state,
   packageJson,
   pluginsModulesPath,
-}) {
+}: {
+  dependency: string
+  basedir: string
+  state: TraversalCache
+  packageJson: PackageJson
+  pluginsModulesPath: string
+}): Promise<string[]> {
   const moduleName = getModuleName(dependency)
 
   // Happens when doing require("@scope") (not "@scope/name") or other oddities
@@ -33,7 +41,17 @@ const getDependencyPathsForDependency = async function ({
   }
 }
 
-const getDependenciesForModuleName = async function ({ moduleName, basedir, state, pluginsModulesPath }) {
+const getDependenciesForModuleName = async function ({
+  moduleName,
+  basedir,
+  state,
+  pluginsModulesPath,
+}: {
+  moduleName: string
+  basedir: string
+  state: TraversalCache
+  pluginsModulesPath: string
+}): Promise<string[]> {
   if (isExcludedModule(moduleName)) {
     return []
   }
@@ -55,7 +73,7 @@ const getDependenciesForModuleName = async function ({ moduleName, basedir, stat
   state.modulePaths.add(modulePath)
 
   // The path depends on the user's build, i.e. must be dynamic
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require, @typescript-eslint/no-var-requires
   const packageJson = require(packagePath)
 
   const [publishedFiles, sideFiles, depsPaths] = await Promise.all([
@@ -66,11 +84,21 @@ const getDependenciesForModuleName = async function ({ moduleName, basedir, stat
   return [...publishedFiles, ...sideFiles, ...depsPaths]
 }
 
-const isExcludedModule = function (moduleName) {
+const isExcludedModule = function (moduleName: string): boolean {
   return EXCLUDED_MODULES.has(moduleName) || moduleName.startsWith('@types/')
 }
 
-const getNestedModules = async function ({ modulePath, state, packageJson, pluginsModulesPath }) {
+const getNestedModules = async function ({
+  modulePath,
+  state,
+  packageJson,
+  pluginsModulesPath,
+}: {
+  modulePath: string
+  state: TraversalCache
+  packageJson: PackageJson
+  pluginsModulesPath: string
+}) {
   const dependencies = getNestedDependencies(packageJson)
 
   const depsPaths = await Promise.all(
@@ -80,9 +108,7 @@ const getNestedModules = async function ({ modulePath, state, packageJson, plugi
   )
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
   // eslint-disable-next-line unicorn/prefer-spread
-  return [].concat(...depsPaths)
+  return ([] as string[]).concat(...depsPaths)
 }
 
-module.exports = {
-  getDependencyPathsForDependency,
-}
+export { getDependencyPathsForDependency }
