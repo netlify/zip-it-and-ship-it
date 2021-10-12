@@ -62,6 +62,7 @@ const zipFunctions = async function (
     featureFlags: inputFeatureFlags,
     manifest,
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
+    repositoryRoot = basePath,
   } = {},
 ) {
   validateArchiveFormat(archiveFormat)
@@ -90,6 +91,7 @@ const zipFunctions = async function (
         mainFile: func.mainFile,
         name: func.name,
         pluginsModulesPath,
+        repositoryRoot,
         runtime: func.runtime,
         srcDir: func.srcDir,
         srcPath: func.srcPath,
@@ -121,6 +123,7 @@ const zipFunction = async function (
     config: inputConfig = {},
     featureFlags: inputFeatureFlags,
     pluginsModulesPath: defaultModulesPath,
+    repositoryRoot = basePath,
   } = {},
 ) {
   validateArchiveFormat(archiveFormat)
@@ -143,16 +146,17 @@ const zipFunction = async function (
     archiveFormat,
     basePath,
     config,
-    srcPath,
     destFolder,
-    mainFile,
-    filename,
     extension,
-    srcDir,
-    stat,
-    runtime,
-    pluginsModulesPath,
     featureFlags,
+    filename,
+    mainFile,
+    pluginsModulesPath,
+    repositoryRoot,
+    runtime,
+    srcDir,
+    srcPath,
+    stat,
   })
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })

@@ -81,6 +81,14 @@ Format of the archive created for each function. Defaults to ZIP archives.
 
 If set to `none`, the output of each function will be a directory containing all the bundled files.
 
+#### `basePath`
+
+- _Type_: `string`
+- _Default value_: `undefined`
+
+The directory which all relative paths will be resolved from. These include paths in the `includedFiles` config
+property, as well as imports using dynamic expressions such as `require(\`./files/${name}\`)`.
+
 #### `config`
 
 - _Type_: `object`
@@ -171,6 +179,14 @@ JSON-formatted string with the following properties:
 - _Default value_: `5`
 
 Maximum number of functions to bundle at the same time.
+
+#### `repositoryRoot`
+
+- _Type_: `string`
+- _Default value_: The value of `basePath`
+
+The path of the project's repository root. This defines the boundary where Node modules can be found. It usually is the
+same value as the `basePath` property, but may be a parent directory in the case of a monorepo setup.
 
 ### Return value
 
