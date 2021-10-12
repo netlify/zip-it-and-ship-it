@@ -92,7 +92,7 @@
     "yargs": "^16.0.0"
   },
   "devDependencies": {
-    "@netlify/eslint-config-node": "^3.3.0",
+    "@netlify/eslint-config-node": "^3.3.3",
     "@types/semver": "^7.3.8",
     "adm-zip": "0.5.5",
     "ava": "^3.0.0",
