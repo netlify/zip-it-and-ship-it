@@ -2165,3 +2165,24 @@ testMany('Correctly follows node_modules via symlink', ['bundler_esbuild', 'todo
   const isEven = require(`${tmpDir}/function`)
   t.is(isEven(2), '2 is even')
 })
+
+testMany(
+  'Can find Node modules in the `repositoryRoot` path, even if it is a parent directory of `basePath`',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const fixtureDir = join(FIXTURES_DIR, 'node-monorepo')
+    const basePath = join(fixtureDir, 'packages', 'site-1', 'netlify', 'functions')
+    const opts = merge(options, {
+      basePath,
+      repositoryRoot: fixtureDir,
+    })
+    const result = await zipFunction(`${basePath}/function-1.js`, tmpDir, opts)
+
+    await unzipFiles([result])
+
+    const { mock } = require(`${tmpDir}/function-1.js`)
+
+    t.true(mock)
+  },
+)
