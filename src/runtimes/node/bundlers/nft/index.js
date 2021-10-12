@@ -17,6 +17,7 @@ const bundle = async ({
   stat,
 }) => {
   const srcFiles = await getSrcFiles({
+    basePath,
     config: {
       ...config,
       includedFilesBasePath: config.includedFilesBasePath || basePath,
@@ -39,8 +40,8 @@ const bundle = async ({
   }
 }
 
-const getSrcFiles = async function ({ config, mainFile }) {
-  const { basePath, includedFiles = [], includedFilesBasePath } = config
+const getSrcFiles = async function ({ basePath, config, mainFile }) {
+  const { includedFiles = [], includedFilesBasePath } = config
   const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,

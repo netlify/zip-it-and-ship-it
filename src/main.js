@@ -18,7 +18,10 @@ const listFunctions = async function (relativeSrcFolders, { featureFlags: inputF
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (relativeSrcFolders, { config, featureFlags: inputFeatureFlags } = {}) {
+const listFunctionsFiles = async function (
+  relativeSrcFolders,
+  { basePath, config, featureFlags: inputFeatureFlags } = {},
+) {
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
@@ -27,7 +30,7 @@ const listFunctionsFiles = async function (relativeSrcFolders, { config, feature
     getPluginsModulesPath(srcFolders[0]),
   ])
   const listedFunctionsFiles = await Promise.all(
-    [...functions.values()].map((func) => getListedFunctionFiles(func, { featureFlags, pluginsModulesPath })),
+    [...functions.values()].map((func) => getListedFunctionFiles(func, { basePath, featureFlags, pluginsModulesPath })),
   )
 
   // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
@@ -41,9 +44,10 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }) {
 
 const getListedFunctionFiles = async function (
   { config, runtime, name, stat, mainFile, extension, srcPath, srcDir },
-  { featureFlags, pluginsModulesPath },
+  { basePath, featureFlags, pluginsModulesPath },
 ) {
   const srcFiles = await getSrcFiles({
+    basePath,
     featureFlags,
     runtime,
     stat,
@@ -58,6 +62,7 @@ const getListedFunctionFiles = async function (
 }
 
 const getSrcFiles = function ({
+  basePath,
   bundler,
   config,
   featureFlags,
@@ -76,6 +81,7 @@ const getSrcFiles = function ({
   }
 
   return getRuntimeSrcFiles({
+    basePath,
     bundler,
     config,
     extension,
