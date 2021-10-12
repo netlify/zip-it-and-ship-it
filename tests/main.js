@@ -761,11 +761,7 @@ testMany(
   async (options, t) => {
     const fixtureDir = `${FIXTURES_DIR}/list`
     const opts = merge(options, {
-      config: {
-        '*': {
-          basePath: fixtureDir,
-        },
-      },
+      basePath: fixtureDir,
     })
     const bundler = options.config['*'].nodeBundler
     const functions = await listFunctionsFiles(fixtureDir, opts)
@@ -818,11 +814,7 @@ testMany(
   async (options, t) => {
     const fixtureDir = `${FIXTURES_DIR}/multiple-src-directories`
     const opts = merge(options, {
-      config: {
-        '*': {
-          basePath: fixtureDir,
-        },
-      },
+      basePath: fixtureDir,
     })
     const bundler = options.config['*'].nodeBundler
     const functions = await listFunctionsFiles(
@@ -947,11 +939,7 @@ testMany('Zips node modules', ['bundler_default', 'bundler_nft'], async (options
 testMany('Include most files from node modules', ['bundler_default'], async (options, t) => {
   const fixtureName = 'node-module-included'
   const opts = merge(options, {
-    config: {
-      '*': {
-        basePath: join(FIXTURES_DIR, fixtureName),
-      },
-    },
+    basePath: join(FIXTURES_DIR, fixtureName),
   })
   const { tmpDir } = await zipNode(t, 'node-module-included', { opts })
   const [mapExists, htmlExists] = await Promise.all([
