@@ -18,7 +18,7 @@ const bundle = async ({
   stat,
 }) => {
   const srcFiles = await getSrcFiles({
-    basePath,
+    basePath: repositoryRoot,
     config: {
       ...config,
       includedFilesBasePath: config.includedFilesBasePath || basePath,
@@ -42,16 +42,14 @@ const bundle = async ({
   }
 }
 
-const getSrcFiles = async function ({ config, mainFile, repositoryRoot }) {
+const getSrcFiles = async function ({ basePath, config, mainFile }) {
   const { includedFiles = [], includedFilesBasePath } = config
   const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
   )
-  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: repositoryRoot })
-  const normalizedDependencyPaths = dependencyPaths.map((path) =>
-    repositoryRoot ? resolve(repositoryRoot, path) : resolve(path),
-  )
+  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: basePath })
+  const normalizedDependencyPaths = dependencyPaths.map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
   const includedPaths = filterExcludedPaths([...normalizedDependencyPaths, ...includedFilePaths], excludedPaths)
 
   return includedPaths
