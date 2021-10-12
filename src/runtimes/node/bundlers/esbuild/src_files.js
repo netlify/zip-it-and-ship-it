@@ -3,12 +3,9 @@ const { getPackageJson } = require('../../utils/package_json')
 const { getNewCache } = require('../../utils/traversal_cache')
 const { getDependencyPathsForDependency } = require('../zisi/traverse')
 
-const getSrcFiles = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {
-  const { externalNodeModules = [], includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
-    includedFiles,
-    includedFilesBasePath,
-  )
+const getSrcFiles = async ({ basePath, config, mainFile, pluginsModulesPath, srcDir }) => {
+  const { externalNodeModules = [], includedFiles = [] } = config
+  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(includedFiles, basePath)
   const dependencyPaths = await getSrcFilesForDependencies({
     dependencies: externalNodeModules,
     basedir: srcDir,

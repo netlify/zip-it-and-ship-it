@@ -16,10 +16,8 @@ const bundle = async ({
   stat,
 }) => {
   const srcFiles = await getSrcFiles({
-    config: {
-      ...config,
-      includedFilesBasePath: config.includedFilesBasePath || basePath,
-    },
+    basePath,
+    config,
     featureFlags,
     mainFile,
     name,

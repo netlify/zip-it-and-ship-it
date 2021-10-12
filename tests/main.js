@@ -1368,10 +1368,10 @@ testMany(
   async (options, t) => {
     const fixtureName = 'included_files'
     const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
       config: {
         '*': {
           includedFiles: ['content/*', '!content/post3.md'],
-          includedFilesBasePath: join(FIXTURES_DIR, fixtureName),
         },
       },
     })

@@ -17,6 +17,7 @@ const { shouldTreeShake } = require('./tree_shake')
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
 const getSrcFiles = async function ({
+  basePath,
   config,
   featureFlags,
   mainFile,
@@ -26,11 +27,8 @@ const getSrcFiles = async function ({
   srcPath,
   stat,
 }) {
-  const { includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
-    includedFiles,
-    includedFilesBasePath,
-  )
+  const { includedFiles = [] } = config
+  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(includedFiles, basePath)
   const [treeFiles, depFiles] = await Promise.all([
     getTreeFiles(srcPath, stat),
     getDependencies({ featureFlags, functionName: name, mainFile, pluginsModulesPath, srcDir }),

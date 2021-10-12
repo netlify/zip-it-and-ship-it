@@ -56,11 +56,11 @@ const bundle = async ({ basePath, config = {}, filename, mainFile, name, plugins
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings
   const srcFiles = await getSrcFiles({
+    basePath,
     config: {
       ...config,
       externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
       includedFiles: [...(config.includedFiles || []), ...additionalPaths],
-      includedFilesBasePath: config.includedFilesBasePath || basePath,
     },
     mainFile,
     pluginsModulesPath,
