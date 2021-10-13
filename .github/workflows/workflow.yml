@@ -21,6 +21,11 @@ jobs:
             node-version: 10.18.0
       fail-fast: false
     steps:
+      # Increasing the maximum number of open files. See:
+      # https://github.com/actions/virtual-environments/issues/268
+      - name: Increase open file limit
+        run: sudo ulimit -Sn 65536
+        if: "${{ matrix.os == 'macOS-latest' }}"
       - name: Git checkout
         uses: actions/checkout@v2
       - name: Node.js ${{ matrix.node }}
