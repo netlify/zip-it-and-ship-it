@@ -2208,6 +2208,6 @@ testMany('repro: stream (#743)', ['bundler_default', 'bundler_esbuild', 'bundler
   const func = require(`${tmpDir}/function`)
   t.deepEqual(func.handler(), {
     statusCode: 200,
-    body: 'streams type is function',
+    body: 'streams type is object',
   })
 })
