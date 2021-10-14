@@ -8,8 +8,8 @@ const { createManifest } = require('./manifest')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { getPluginsModulesPath } = require('./runtimes/node/utils/plugin_modules_path')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
+const { formatZipResult } = require('./utils/format_result')
 const { listFunctionsDirectories, resolveFunctionsDirectories, stat } = require('./utils/fs')
-const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
@@ -25,39 +25,6 @@ const addArchiveSize = async (result) => {
   const { size } = await stat(path)
 
   return { ...result, size }
-}
-
-// Takes the result of zipping a function and formats it for output.
-const formatZipResult = (result) => {
-  const {
-    bundler,
-    bundlerErrors,
-    bundlerWarnings,
-    config = {},
-    inputs,
-    mainFile,
-    name,
-    nativeNodeModules,
-    nodeModulesWithDynamicImports,
-    path,
-    runtime,
-    size,
-  } = result
-
-  return removeFalsy({
-    bundler,
-    bundlerErrors,
-    bundlerWarnings,
-    config,
-    inputs,
-    mainFile,
-    name,
-    nativeNodeModules,
-    nodeModulesWithDynamicImports,
-    path,
-    runtime: runtime.name,
-    size,
-  })
 }
 
 const validateArchiveFormat = (archiveFormat) => {
