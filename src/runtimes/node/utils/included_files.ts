@@ -1,14 +1,14 @@
-const { normalize, resolve } = require('path')
-const { promisify } = require('util')
+import { normalize, resolve } from 'path'
+import { promisify } from 'util'
 
-const glob = require('glob')
-const minimatch = require('minimatch')
+import glob from 'glob'
+import minimatch from 'minimatch'
 
 const pGlob = promisify(glob)
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
-const filterExcludedPaths = (paths, exclude = []) => {
+const filterExcludedPaths = (paths: string[], exclude: string[] = []) => {
   if (exclude.length === 0) {
     return paths
   }
@@ -18,7 +18,15 @@ const filterExcludedPaths = (paths, exclude = []) => {
   return excludedPaths
 }
 
-const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
+const getPathsOfIncludedFiles = async (
+  includedFiles: string[],
+  basePath: string,
+): Promise<{ exclude: string[]; paths: string[] }> => {
+  interface IncludedAndExcludedPaths {
+    include: string[]
+    exclude: string[]
+  }
+
   // Some of the globs in `includedFiles` might be exclusion patterns, which
   // means paths that should NOT be included in the bundle. We need to treat
   // these differently, so we iterate on the array and put those paths in a
@@ -29,17 +37,17 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
         const excludePath = resolve(basePath, path.slice(1))
 
         return {
-          ...acc,
+          include: acc.include,
           exclude: [...acc.exclude, excludePath],
         }
       }
 
       return {
-        ...acc,
         include: [...acc.include, path],
+        exclude: acc.exclude,
       }
     },
-    { include: [], exclude: [] },
+    { include: [], exclude: [] } as IncludedAndExcludedPaths,
   )
   const pathGroups = await Promise.all(
     include.map((expression) => pGlob(expression, { absolute: true, cwd: basePath, ignore: exclude, nodir: true })),
@@ -53,4 +61,4 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   return { exclude, paths: [...new Set(normalizedPaths)] }
 }
 
-module.exports = { filterExcludedPaths, getPathsOfIncludedFiles }
+export { filterExcludedPaths, getPathsOfIncludedFiles }
