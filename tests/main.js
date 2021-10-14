@@ -2200,3 +2200,14 @@ testMany(
     files.every(({ size }) => Number.isInteger(size) && size > 0)
   },
 )
+testMany('repro: stream (#743)', ['bundler_default', 'bundler_esbuild', 'bundler_nft'], async (options, t) => {
+  const { tmpDir } = await zipNode(t, 'require-stream', {
+    opts: options,
+  })
+
+  const func = require(`${tmpDir}/function`)
+  t.deepEqual(func.handler(), {
+    statusCode: 200,
+    body: 'streams type is function',
+  })
+})
