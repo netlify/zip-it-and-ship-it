@@ -7,9 +7,10 @@ const { getFlags } = require('./feature_flags')
 const { createManifest } = require('./manifest')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { getPluginsModulesPath } = require('./runtimes/node/utils/plugin_modules_path')
+const { addArchiveSize } = require('./utils/archive_size')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
+const { formatZipResult } = require('./utils/format_result')
 const { listFunctionsDirectories, resolveFunctionsDirectories } = require('./utils/fs')
-const { removeFalsy } = require('./utils/remove_falsy')
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
@@ -17,37 +18,6 @@ const validateArchiveFormat = (archiveFormat) => {
   if (![ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP].includes(archiveFormat)) {
     throw new Error(`Invalid archive format: ${archiveFormat}`)
   }
-}
-
-// Takes the result of zipping a function and formats it for output.
-const formatZipResult = (result) => {
-  const {
-    bundler,
-    bundlerErrors,
-    bundlerWarnings,
-    config = {},
-    inputs,
-    mainFile,
-    name,
-    nativeNodeModules,
-    nodeModulesWithDynamicImports,
-    path,
-    runtime,
-  } = result
-
-  return removeFalsy({
-    bundler,
-    bundlerErrors,
-    bundlerWarnings,
-    config,
-    inputs,
-    mainFile,
-    name,
-    nativeNodeModules,
-    nodeModulesWithDynamicImports,
-    path,
-    runtime: runtime.name,
-  })
 }
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
@@ -105,7 +75,13 @@ const zipFunctions = async function (
       concurrency: parallelLimit,
     },
   )
-  const formattedResults = results.filter(Boolean).map(formatZipResult)
+  const formattedResults = await Promise.all(
+    results.filter(Boolean).map(async (result) => {
+      const resultWithSize = await addArchiveSize(result)
+
+      return formatZipResult(resultWithSize)
+    }),
+  )
 
   if (manifest !== undefined) {
     await createManifest({ functions: formattedResults, path: resolve(manifest) })
@@ -136,7 +112,7 @@ const zipFunction = async function (
     return
   }
 
-  const { config, extension, filename, mainFile, name, runtime, srcDir, stat } = functions.values().next().value
+  const { config, extension, filename, mainFile, name, runtime, srcDir, stat: stats } = functions.values().next().value
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
 
@@ -156,7 +132,7 @@ const zipFunction = async function (
     runtime,
     srcDir,
     srcPath,
-    stat,
+    stat: stats,
   })
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })

@@ -2186,3 +2186,17 @@ testMany(
     t.true(mock)
   },
 )
+
+testMany(
+  'Returns a `size` property with the size of each generated archive',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const FUNCTIONS_COUNT = 6
+    const { files } = await zipNode(t, 'many-functions', {
+      length: FUNCTIONS_COUNT,
+      opts: options,
+    })
+
+    files.every(({ size }) => Number.isInteger(size) && size > 0)
+  },
+)

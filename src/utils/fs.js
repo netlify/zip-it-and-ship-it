@@ -1,10 +1,11 @@
-const { lstat, readdir, readFile, unlink, writeFile } = require('fs')
+const { lstat, readdir, readFile, stat, unlink, writeFile } = require('fs')
 const { format, join, parse, resolve } = require('path')
 const { promisify } = require('util')
 
 const pLstat = promisify(lstat)
 const pReaddir = promisify(readdir)
 const pReadFile = promisify(readFile)
+const pStat = promisify(stat)
 const pUnlink = promisify(unlink)
 const pWriteFile = promisify(writeFile)
 
@@ -84,5 +85,6 @@ module.exports = {
   listFunctionsDirectory,
   resolveFunctionsDirectories,
   safeUnlink,
+  stat: pStat,
   writeFile: pWriteFile,
 }
