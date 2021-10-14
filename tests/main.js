@@ -2201,13 +2201,7 @@ testMany(
   },
 )
 testMany('repro: stream (#743)', ['bundler_default', 'bundler_esbuild', 'bundler_nft'], async (options, t) => {
-  const { tmpDir } = await zipNode(t, 'require-stream', {
+  await zipFixture(t, 'require-stream', {
     opts: options,
-  })
-
-  const func = require(`${tmpDir}/function`)
-  t.deepEqual(func.handler(), {
-    statusCode: 200,
-    body: 'streams type is object',
   })
 })
