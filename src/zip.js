@@ -1,4 +1,4 @@
-const { extname, resolve } = require('path')
+const { resolve } = require('path')
 
 const makeDir = require('make-dir')
 const pMap = require('p-map')
@@ -7,25 +7,12 @@ const { getFlags } = require('./feature_flags')
 const { createManifest } = require('./manifest')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { getPluginsModulesPath } = require('./runtimes/node/utils/plugin_modules_path')
+const { addArchiveSize } = require('./utils/archive_size')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
 const { formatZipResult } = require('./utils/format_result')
-const { listFunctionsDirectories, resolveFunctionsDirectories, stat } = require('./utils/fs')
+const { listFunctionsDirectories, resolveFunctionsDirectories } = require('./utils/fs')
 
 const DEFAULT_PARALLEL_LIMIT = 5
-
-// Returns the input object with an additional `size` property containing the
-// size of the file at `path` when it is a ZIP archive.
-const addArchiveSize = async (result) => {
-  const { path } = result
-
-  if (extname(path) !== '.zip') {
-    return result
-  }
-
-  const { size } = await stat(path)
-
-  return { ...result, size }
-}
 
 const validateArchiveFormat = (archiveFormat) => {
   if (![ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP].includes(archiveFormat)) {
