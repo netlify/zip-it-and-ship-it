@@ -94,7 +94,10 @@
   },
   "devDependencies": {
     "@netlify/eslint-config-node": "^3.3.3",
+    "@types/archiver": "^5.1.1",
+    "@types/end-of-stream": "^1.4.1",
     "@types/semver": "^7.3.8",
+    "@types/unixify": "^1.0.0",
     "adm-zip": "0.5.5",
     "ava": "^3.0.0",
     "cpy": "^8.0.0",
