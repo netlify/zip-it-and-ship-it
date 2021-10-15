@@ -1,7 +1,24 @@
-const mergeOptions = require('merge-options')
-const minimatch = require('minimatch')
+import mergeOptions from 'merge-options'
+import minimatch from 'minimatch'
 
-const getConfigForFunction = ({ config, func }) => {
+import { FunctionSource } from './function'
+
+interface FunctionConfig {
+  externalNodeModules?: string[]
+  ignoredNodeModules?: string[]
+  nodeBundler?: 'esbuild' | 'esbuild_zisi' | 'nft'
+  nodeSourcemap?: boolean
+  nodeVersion?: '8.x' | 'nodejs8.x' | '10.x' | 'nodejs10.x' | '12.x' | 'nodejs12.x' | '14.x' | 'nodejs14.x'
+  rustTargetDirectory?: string
+}
+
+const getConfigForFunction = ({
+  config,
+  func,
+}: {
+  config: Record<string, FunctionConfig>
+  func: FunctionSource
+}): FunctionConfig => {
   if (!config) {
     return {}
   }
@@ -29,4 +46,5 @@ const getConfigForFunction = ({ config, func }) => {
   return mergeOptions.apply({ concatArrays: true, ignoreUndefined: true }, matches)
 }
 
-module.exports = { getConfigForFunction }
+export { getConfigForFunction }
+export type { FunctionConfig }
