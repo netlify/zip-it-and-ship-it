@@ -22,16 +22,11 @@ const getPathsOfIncludedFiles = async (
   includedFiles: string[],
   basePath: string,
 ): Promise<{ exclude: string[]; paths: string[] }> => {
-  interface IncludedAndExcludedPaths {
-    include: string[]
-    exclude: string[]
-  }
-
   // Some of the globs in `includedFiles` might be exclusion patterns, which
   // means paths that should NOT be included in the bundle. We need to treat
   // these differently, so we iterate on the array and put those paths in a
   // `exclude` array and the rest of the paths in an `include` array.
-  const { include, exclude } = includedFiles.reduce(
+  const { include, exclude } = includedFiles.reduce<{ include: string[]; exclude: string[] }>(
     (acc, path) => {
       if (path.startsWith('!')) {
         const excludePath = resolve(basePath, path.slice(1))
@@ -47,7 +42,7 @@ const getPathsOfIncludedFiles = async (
         exclude: acc.exclude,
       }
     },
-    { include: [], exclude: [] } as IncludedAndExcludedPaths,
+    { include: [], exclude: [] },
   )
   const pathGroups = await Promise.all(
     include.map((expression) => pGlob(expression, { absolute: true, cwd: basePath, ignore: exclude, nodir: true })),
