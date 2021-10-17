@@ -1,9 +1,9 @@
-const { getPackageJson } = require('../../utils/package_json')
+import { getPackageJson, PackageJson } from '../../utils/package_json'
 
 const EXTERNAL_MODULES = ['@prisma/client']
 const IGNORED_MODULES = ['aws-sdk']
 
-const getPackageJsonIfAvailable = async (srcDir) => {
+const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> => {
   try {
     const packageJson = await getPackageJson(srcDir)
 
@@ -13,10 +13,10 @@ const getPackageJsonIfAvailable = async (srcDir) => {
   }
 }
 
-const getModulesForNextJs = ({ dependencies, devDependencies }) => {
+const getModulesForNextJs = ({ dependencies, devDependencies }: PackageJson) => {
   const allDependencies = { ...dependencies, ...devDependencies }
   const externalModules = allDependencies.next ? ['critters', 'nanoid'] : []
-  const ignoredModules = []
+  const ignoredModules: string[] = []
 
   return {
     externalModules,
@@ -24,7 +24,7 @@ const getModulesForNextJs = ({ dependencies, devDependencies }) => {
   }
 }
 
-const getExternalAndIgnoredModulesFromSpecialCases = async ({ srcDir }) => {
+const getExternalAndIgnoredModulesFromSpecialCases = async ({ srcDir }: { srcDir: string }) => {
   const { dependencies = {}, devDependencies = {} } = await getPackageJsonIfAvailable(srcDir)
   const { externalModules: nextJsExternalModules, ignoredModules: nextJsIgnoredModules } = getModulesForNextJs({
     dependencies,
@@ -39,4 +39,4 @@ const getExternalAndIgnoredModulesFromSpecialCases = async ({ srcDir }) => {
   }
 }
 
-module.exports = { getExternalAndIgnoredModulesFromSpecialCases }
+export { getExternalAndIgnoredModulesFromSpecialCases }
