@@ -1,29 +1,37 @@
-const { dirname, normalize } = require('path')
+import { dirname, normalize } from 'path'
 
-const { getBasePath } = require('../../utils/base_path')
+import type { BundleFunction } from '..'
+import { getBasePath } from '../../utils/base_path'
 
-const { getSrcFiles } = require('./src_files')
+import { getSrcFiles } from './src_files'
 
-const bundle = async ({
+const bundle: BundleFunction = async ({
   basePath,
   config,
+  extension,
   featureFlags,
+  filename,
   mainFile,
   name,
   pluginsModulesPath,
+  runtime,
   srcDir,
   srcPath,
   stat,
 }) => {
   const srcFiles = await getSrcFiles({
+    basePath,
     config: {
       ...config,
       includedFilesBasePath: config.includedFilesBasePath || basePath,
     },
+    extension,
     featureFlags,
+    filename,
     mainFile,
     name,
     pluginsModulesPath,
+    runtime,
     srcDir,
     srcPath,
     stat,
@@ -38,4 +46,6 @@ const bundle = async ({
   }
 }
 
-module.exports = { bundle, getSrcFiles }
+const bundler = { bundle, getSrcFiles }
+
+export default bundler
