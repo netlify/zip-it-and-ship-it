@@ -105,7 +105,6 @@ const parseExpression = ({
 }
 
 // Parses a `require()` and returns a glob string with an absolute path.
-// eslint-disable-next-line complexity
 const parseRequire = ({
   basePath,
   expression,

@@ -7,7 +7,9 @@ import type { NodeBundler } from './node'
 import { ArchiveFormat } from './node/utils/zip'
 
 interface FindFunctionsInPathsFunction {
-  (args: { featureFlags: FeatureFlags; fsCache: Record<string, Promise<any>>; paths: string[] }): Promise<SourceFile[]>
+  (args: { featureFlags: FeatureFlags; fsCache: Record<string, Promise<unknown>>; paths: string[] }): Promise<
+    SourceFile[]
+  >
 }
 
 interface GetSrcFilesFunction {
