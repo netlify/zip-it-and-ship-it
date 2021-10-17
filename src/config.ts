@@ -2,13 +2,17 @@ import mergeOptions from 'merge-options'
 import minimatch from 'minimatch'
 
 import { FunctionSource } from './function'
+import type { NodeBundler } from './runtimes/node'
 
 interface FunctionConfig {
   externalNodeModules?: string[]
+  includedFiles?: string[]
+  includedFilesBasePath?: string
   ignoredNodeModules?: string[]
-  nodeBundler?: 'esbuild' | 'esbuild_zisi' | 'nft'
+  nodeBundler?: NodeBundler
   nodeSourcemap?: boolean
   nodeVersion?: '8.x' | 'nodejs8.x' | '10.x' | 'nodejs10.x' | '12.x' | 'nodejs12.x' | '14.x' | 'nodejs14.x'
+  processDynamicNodeImports?: boolean
   rustTargetDirectory?: string
 }
 
