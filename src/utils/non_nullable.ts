@@ -1,3 +1,3 @@
-const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined
+const nonNullable = <T>(value: T): value is NonNullable<T> => Boolean(value)
 
 export { nonNullable }

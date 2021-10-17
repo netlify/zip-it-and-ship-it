@@ -1,6 +1,7 @@
 import { env } from 'process'
 
 type FeatureFlag = 'buildGoSource' | 'buildRustSource' | 'defaultEsModulesToEsbuild' | 'parseWithEsbuild'
+type FeatureFlags = Record<FeatureFlag, boolean>
 
 // List of supported flags and their default value.
 const FLAGS: Record<FeatureFlag, boolean> = {
@@ -20,4 +21,4 @@ const getFlags = (input: Record<string, boolean> = {}, flags = FLAGS) =>
   )
 
 export { getFlags }
-export type { FeatureFlag }
+export type { FeatureFlag, FeatureFlags }

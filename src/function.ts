@@ -1,7 +1,8 @@
 import { Stats } from 'fs'
 
-interface FunctionSource {
+interface SourceFile {
   extension: string
+  filename: string
   mainFile: string
   name: string
   srcDir: string
@@ -9,4 +10,8 @@ interface FunctionSource {
   stat: Stats
 }
 
-export { FunctionSource }
+type FunctionSource = SourceFile & {
+  runtime: string
+}
+
+export { FunctionSource, SourceFile }
