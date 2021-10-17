@@ -1,18 +1,22 @@
-const { dirname, normalize, resolve } = require('path')
+import { dirname, normalize, resolve } from 'path'
 
-const { nodeFileTrace } = require('@vercel/nft')
+import { nodeFileTrace } from '@vercel/nft'
 
-const { getBasePath } = require('../../utils/base_path')
-const { filterExcludedPaths, getPathsOfIncludedFiles } = require('../../utils/included_files')
+import type { BundleFunction, GetSrcFilesFunction } from '..'
+import { getBasePath } from '../../utils/base_path'
+import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 
-const bundle = async ({
+const bundle: BundleFunction = async ({
   basePath,
   config,
+  extension,
   featureFlags,
+  filename,
   mainFile,
   name,
   pluginsModulesPath,
   repositoryRoot = basePath,
+  runtime,
   srcDir,
   srcPath,
   stat,
@@ -23,11 +27,14 @@ const bundle = async ({
       ...config,
       includedFilesBasePath: config.includedFilesBasePath || basePath,
     },
+    extension,
     featureFlags,
+    filename,
     mainFile,
     name,
     pluginsModulesPath,
     repositoryRoot,
+    runtime,
     srcDir,
     srcPath,
     stat,
@@ -42,7 +49,7 @@ const bundle = async ({
   }
 }
 
-const getSrcFiles = async function ({ basePath, config, mainFile }) {
+const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mainFile }) {
   const { includedFiles = [], includedFilesBasePath } = config
   const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
@@ -55,4 +62,6 @@ const getSrcFiles = async function ({ basePath, config, mainFile }) {
   return includedPaths
 }
 
-module.exports = { bundle, getSrcFiles }
+const bundler = { bundle, getSrcFiles }
+
+export default bundler
