@@ -4,7 +4,7 @@ import { promisify } from 'util'
 
 import locatePath from 'locate-path'
 
-import { FunctionSource } from '../../function'
+import { SourceFile } from '../../function'
 import { nonNullable } from '../../utils/non_nullable'
 
 const pLstat = promisify(lstat)
@@ -16,7 +16,7 @@ const allowedExtensions = ['.js', '.zip', '.cjs', '.mjs', '.ts']
 // entries by extension according to their position in `allowedExtensions`.
 // It places extensions with a higher precedence last in the array, so that
 // they "win" when the array is flattened into a Map.
-const sortByExtension = (fA: FunctionSource, fB: FunctionSource) => {
+const sortByExtension = (fA: SourceFile, fB: SourceFile) => {
   const indexA = allowedExtensions.indexOf(fA.extension)
   const indexB = allowedExtensions.indexOf(fB.extension)
 
@@ -48,7 +48,7 @@ const findFunctionsInPaths = async function ({ paths }: { paths: string[] }) {
   return sortedFunctions
 }
 
-const getFunctionAtPath = async function (srcPath: string): Promise<FunctionSource | undefined> {
+const getFunctionAtPath = async function (srcPath: string): Promise<SourceFile | undefined> {
   const filename = basename(srcPath)
 
   if (filename === 'node_modules') {
@@ -66,7 +66,7 @@ const getFunctionAtPath = async function (srcPath: string): Promise<FunctionSour
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
   const name = basename(srcPath, extname(srcPath))
 
-  return { extension, mainFile, name, srcDir, srcPath, stat }
+  return { extension, filename, mainFile, name, srcDir, srcPath, stat }
 }
 
 // Each `srcPath` can also be a directory with an `index` file or a file using
