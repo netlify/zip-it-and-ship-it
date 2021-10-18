@@ -1,11 +1,11 @@
-const { readFile } = require('fs')
-const { promisify } = require('util')
+import { readFile } from 'fs'
+import { promisify } from 'util'
+
+import { init, parse } from 'es-module-lexer'
 
 const pReadFile = promisify(readFile)
 
-const { init, parse } = require('es-module-lexer')
-
-const detectEsModule = async ({ mainFile }) => {
+const detectEsModule = async ({ mainFile }: { mainFile: string }): Promise<boolean> => {
   if (!mainFile) {
     return false
   }
@@ -21,4 +21,4 @@ const detectEsModule = async ({ mainFile }) => {
   }
 }
 
-module.exports = { detectEsModule }
+export { detectEsModule }

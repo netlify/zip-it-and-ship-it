@@ -1,14 +1,14 @@
-const { normalize, resolve } = require('path')
-const { promisify } = require('util')
+import { normalize, resolve } from 'path'
+import { promisify } from 'util'
 
-const glob = require('glob')
-const minimatch = require('minimatch')
+import glob from 'glob'
+import minimatch from 'minimatch'
 
 const pGlob = promisify(glob)
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
-const filterExcludedPaths = (paths, exclude = []) => {
+const filterExcludedPaths = (paths: string[], exclude: string[] = []) => {
   if (exclude.length === 0) {
     return paths
   }
@@ -18,25 +18,28 @@ const filterExcludedPaths = (paths, exclude = []) => {
   return excludedPaths
 }
 
-const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
+const getPathsOfIncludedFiles = async (
+  includedFiles: string[],
+  basePath: string,
+): Promise<{ exclude: string[]; paths: string[] }> => {
   // Some of the globs in `includedFiles` might be exclusion patterns, which
   // means paths that should NOT be included in the bundle. We need to treat
   // these differently, so we iterate on the array and put those paths in a
   // `exclude` array and the rest of the paths in an `include` array.
-  const { include, exclude } = includedFiles.reduce(
+  const { include, exclude } = includedFiles.reduce<{ include: string[]; exclude: string[] }>(
     (acc, path) => {
       if (path.startsWith('!')) {
         const excludePath = resolve(basePath, path.slice(1))
 
         return {
-          ...acc,
+          include: acc.include,
           exclude: [...acc.exclude, excludePath],
         }
       }
 
       return {
-        ...acc,
         include: [...acc.include, path],
+        exclude: acc.exclude,
       }
     },
     { include: [], exclude: [] },
@@ -53,4 +56,4 @@ const getPathsOfIncludedFiles = async (includedFiles, basePath) => {
   return { exclude, paths: [...new Set(normalizedPaths)] }
 }
 
-module.exports = { filterExcludedPaths, getPathsOfIncludedFiles }
+export { filterExcludedPaths, getPathsOfIncludedFiles }
