@@ -1,6 +1,8 @@
-const { lstat, readdir, readFile, stat, unlink, writeFile } = require('fs')
-const { format, join, parse, resolve } = require('path')
-const { promisify } = require('util')
+import { lstat, readdir, readFile, stat, unlink, writeFile } from 'fs'
+import { format, join, parse, resolve } from 'path'
+import { promisify } from 'util'
+
+import { nonNullable } from './non_nullable'
 
 const pLstat = promisify(lstat)
 const pReaddir = promisify(readdir)
@@ -9,26 +11,35 @@ const pStat = promisify(stat)
 const pUnlink = promisify(unlink)
 const pWriteFile = promisify(writeFile)
 
+type FsCache = Record<string, unknown>
+
 // This caches multiple FS calls to the same path. It creates a cache key with
 // the name of the function and the path (e.g. "readdir:/some/directory").
-const cachedIOFunction = (func, cache, path, ...args) => {
-  const key = `${func.name}:${path}`
+//
+// TODO: This abstraction is stripping out some type data. For example, when
+// calling `readFile` without an encoding, the return type should be narrowed
+// down from `string | Buffer` to `Buffer`, but that's not happening.
+const makeCachedFunction =
+  <Args extends unknown[], ReturnType>(func: (path: string, ...args: Args) => ReturnType) =>
+  (cache: FsCache, path: string, ...args: Args): ReturnType => {
+    const key = `${func.name}:${path}`
 
-  if (cache[key] === undefined) {
-    // eslint-disable-next-line no-param-reassign
-    cache[key] = func(path, ...args)
+    if (cache[key] === undefined) {
+      // eslint-disable-next-line no-param-reassign
+      cache[key] = func(path, ...args)
+    }
+
+    return cache[key] as ReturnType
   }
 
-  return cache[key]
-}
+const cachedLstat = makeCachedFunction(pLstat)
+const cachedReaddir = makeCachedFunction(pReaddir)
+const cachedReadFile = makeCachedFunction(pReadFile)
 
-const cachedLstat = (...args) => cachedIOFunction(pLstat, ...args)
-const cachedReaddir = (...args) => cachedIOFunction(pReaddir, ...args)
-const cachedReadFile = (...args) => cachedIOFunction(pReadFile, ...args)
+const getPathWithExtension = (path: string, extension: string) =>
+  format({ ...parse(path), base: undefined, ext: extension })
 
-const getPathWithExtension = (path, extension) => format({ ...parse(path), base: undefined, ext: extension })
-
-const safeUnlink = async (path) => {
+const safeUnlink = async (path: string) => {
   try {
     await pUnlink(path)
   } catch (_) {}
@@ -37,7 +48,7 @@ const safeUnlink = async (path) => {
 // Takes a list of absolute paths and returns an array containing all the
 // filenames within those directories, if at least one of the directories
 // exists. If not, an error is thrown.
-const listFunctionsDirectories = async function (srcFolders) {
+const listFunctionsDirectories = async function (srcFolders: string[]) {
   const filenamesByDirectory = await Promise.all(
     srcFolders.map(async (srcFolder) => {
       try {
@@ -49,7 +60,7 @@ const listFunctionsDirectories = async function (srcFolders) {
       }
     }),
   )
-  const validDirectories = filenamesByDirectory.filter(Boolean)
+  const validDirectories = filenamesByDirectory.filter(nonNullable)
 
   if (validDirectories.length === 0) {
     throw new Error(`Functions folder does not exist: ${srcFolders.join(', ')}`)
@@ -58,7 +69,7 @@ const listFunctionsDirectories = async function (srcFolders) {
   return validDirectories.flat()
 }
 
-const listFunctionsDirectory = async function (srcFolder) {
+const listFunctionsDirectory = async function (srcFolder: string) {
   try {
     const filenames = await pReaddir(srcFolder)
 
@@ -68,23 +79,25 @@ const listFunctionsDirectory = async function (srcFolder) {
   }
 }
 
-const resolveFunctionsDirectories = (input) => {
+const resolveFunctionsDirectories = (input: string | string[]) => {
   const directories = Array.isArray(input) ? input : [input]
   const absoluteDirectories = directories.map((srcFolder) => resolve(srcFolder))
 
   return absoluteDirectories
 }
 
-module.exports = {
+export {
   cachedLstat,
   cachedReaddir,
   cachedReadFile,
-  lstat: pLstat,
+  pLstat as lstat,
   getPathWithExtension,
   listFunctionsDirectories,
   listFunctionsDirectory,
   resolveFunctionsDirectories,
   safeUnlink,
-  stat: pStat,
-  writeFile: pWriteFile,
+  pStat as stat,
+  pWriteFile as writeFile,
+  pReadFile as readFile,
 }
+export type { FsCache }

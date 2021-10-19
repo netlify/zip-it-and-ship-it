@@ -22,12 +22,14 @@ interface FunctionConfig {
 
 type GlobPattern = string
 
+type Config = Record<GlobPattern, FunctionConfig>
+
 const getConfigForFunction = ({
   config,
   func,
 }: {
-  config: Record<GlobPattern, FunctionConfig>
-  func: FunctionSource
+  config?: Config
+  func: Omit<FunctionSource, 'config'>
 }): FunctionConfig => {
   if (!config) {
     return {}
@@ -57,4 +59,4 @@ const getConfigForFunction = ({
 }
 
 export { getConfigForFunction }
-export type { FunctionConfig }
+export type { Config, FunctionConfig }

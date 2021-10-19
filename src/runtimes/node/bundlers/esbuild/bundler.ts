@@ -32,7 +32,7 @@ const bundleJsFile = async function ({
   srcFile,
 }: {
   additionalModulePaths?: string[]
-  basePath: string
+  basePath?: string
   config: FunctionConfig
   externalModules: string[]
   ignoredModules: string[]

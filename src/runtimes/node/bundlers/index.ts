@@ -18,17 +18,17 @@ type NativeNodeModules = Record<string, Record<string, string | undefined>>
 
 type BundleFunction = (
   args: {
-    basePath: string
+    basePath?: string
     config: FunctionConfig
     featureFlags: Record<FeatureFlag, boolean>
-    pluginsModulesPath: string
+    pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<{
   aliases?: Map<string, string>
+  basePath: string
   bundlerWarnings?: BundlerWarning[]
   cleanupFunction?: CleanupFunction
-  basePath: string
   inputs: string[]
   mainFile: string
   nativeNodeModules?: NativeNodeModules
@@ -38,10 +38,10 @@ type BundleFunction = (
 
 type GetSrcFilesFunction = (
   args: {
-    basePath: string
+    basePath?: string
     config: FunctionConfig
     featureFlags: Record<FeatureFlag, boolean>
-    pluginsModulesPath: string
+    pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<string[]>

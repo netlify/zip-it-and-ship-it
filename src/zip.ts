@@ -1,21 +1,38 @@
-const { resolve } = require('path')
+import { resolve } from 'path'
 
-const makeDir = require('make-dir')
-const pMap = require('p-map')
+import makeDir from 'make-dir'
+import pMap from 'p-map'
 
-const { getFlags } = require('./feature_flags')
-const { createManifest } = require('./manifest')
-const { getFunctionsFromPaths } = require('./runtimes')
-const { getPluginsModulesPath } = require('./runtimes/node/utils/plugin_modules_path')
-const { addArchiveSize } = require('./utils/archive_size')
-const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
-const { formatZipResult } = require('./utils/format_result')
-const { listFunctionsDirectories, resolveFunctionsDirectories } = require('./utils/fs')
+import { ArchiveFormat } from './archive'
+import { Config } from './config'
+import { FeatureFlags, getFlags } from './feature_flags'
+import { FunctionSource } from './function'
+import { createManifest } from './manifest'
+import { getFunctionsFromPaths } from './runtimes'
+import { getPluginsModulesPath } from './runtimes/node/utils/plugin_modules_path'
+import { addArchiveSize } from './utils/archive_size'
+import { formatZipResult } from './utils/format_result'
+import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
+
+interface ZipFunctionOptions {
+  archiveFormat?: ArchiveFormat
+  basePath?: string
+  config?: Config
+  featureFlags?: FeatureFlags
+  pluginsModulesPath?: string
+  repositoryRoot?: string
+}
+
+type ZipFunctionsOptions = ZipFunctionOptions & {
+  manifest?: string
+  parallelLimit?: number
+}
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
-const validateArchiveFormat = (archiveFormat) => {
-  if (![ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP].includes(archiveFormat)) {
+// TODO: now that we have types, do we still need runtime validation?
+const validateArchiveFormat = (archiveFormat: ArchiveFormat) => {
+  if (!['none', 'zip'].includes(archiveFormat)) {
     throw new Error(`Invalid archive format: ${archiveFormat}`)
   }
 }
@@ -23,17 +40,17 @@ const validateArchiveFormat = (archiveFormat) => {
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
 const zipFunctions = async function (
-  relativeSrcFolders,
-  destFolder,
+  relativeSrcFolders: string | string[],
+  destFolder: string,
   {
-    archiveFormat = ARCHIVE_FORMAT_ZIP,
+    archiveFormat = 'zip',
     basePath,
     config = {},
     featureFlags: inputFeatureFlags,
     manifest,
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
     repositoryRoot = basePath,
-  } = {},
+  }: ZipFunctionsOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
 
@@ -91,16 +108,16 @@ const zipFunctions = async function (
 }
 
 const zipFunction = async function (
-  relativeSrcPath,
-  destFolder,
+  relativeSrcPath: string,
+  destFolder: string,
   {
-    archiveFormat = ARCHIVE_FORMAT_ZIP,
+    archiveFormat = 'zip',
     basePath,
     config: inputConfig = {},
     featureFlags: inputFeatureFlags,
     pluginsModulesPath: defaultModulesPath,
     repositoryRoot = basePath,
-  } = {},
+  }: ZipFunctionOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
 
@@ -112,7 +129,16 @@ const zipFunction = async function (
     return
   }
 
-  const { config, extension, filename, mainFile, name, runtime, srcDir, stat: stats } = functions.values().next().value
+  const {
+    config,
+    extension,
+    filename,
+    mainFile,
+    name,
+    runtime,
+    srcDir,
+    stat: stats,
+  }: FunctionSource = functions.values().next().value
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
 
@@ -127,6 +153,7 @@ const zipFunction = async function (
     featureFlags,
     filename,
     mainFile,
+    name,
     pluginsModulesPath,
     repositoryRoot,
     runtime,
@@ -138,4 +165,4 @@ const zipFunction = async function (
   return formatZipResult({ ...zipResult, mainFile, name, runtime })
 }
 
-module.exports = { zipFunction, zipFunctions }
+export { zipFunction, zipFunctions }

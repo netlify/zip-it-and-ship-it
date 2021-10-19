@@ -1,5 +1,8 @@
 import { Stats } from 'fs'
 
+import type { FunctionConfig } from './config'
+import type { Runtime } from './runtimes/runtime'
+
 interface SourceFile {
   extension: string
   filename: string
@@ -11,7 +14,8 @@ interface SourceFile {
 }
 
 type FunctionSource = SourceFile & {
-  runtime: string
+  config: FunctionConfig
+  runtime: Runtime
 }
 
 export { FunctionSource, SourceFile }

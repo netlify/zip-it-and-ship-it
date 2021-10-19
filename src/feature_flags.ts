@@ -21,5 +21,5 @@ const getFlags = (input: Record<string, boolean> = {}, flags = FLAGS) =>
     {},
   )
 
-export { getFlags }
+export { FLAGS as defaultFlags, getFlags }
 export type { FeatureFlag, FeatureFlags }
