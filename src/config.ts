@@ -24,7 +24,13 @@ type GlobPattern = string
 
 type Config = Record<GlobPattern, FunctionConfig>
 
-const getConfigForFunction = ({ config, func }: { config?: Config; func: FunctionSource }): FunctionConfig => {
+const getConfigForFunction = ({
+  config,
+  func,
+}: {
+  config?: Config
+  func: Omit<FunctionSource, 'config'>
+}): FunctionConfig => {
   if (!config) {
     return {}
   }

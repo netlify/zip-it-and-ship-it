@@ -17,6 +17,9 @@ type FunctionMap = Map<string, FunctionSource>
 // This is compatible with the constructor of `FunctionMap`.
 type FunctionTuple = [string, FunctionSource]
 
+// The same as `FunctionTuple` but functions don't have a `config` object yet.
+type FunctionTupleWithoutConfig = [string, Omit<FunctionSource, 'config'>]
+
 /**
  * Finds functions for a list of paths using a specific runtime. The return
  * value is an object containing an array of the functions found (`functions`)
@@ -44,7 +47,7 @@ const findFunctionsInRuntime = async function ({
   const key = dedupe ? 'name' : 'srcPath'
 
   // Augmenting the function objects with additional information.
-  const augmentedFunctions: FunctionTuple[] = functions.map((func) => [
+  const augmentedFunctions: FunctionTupleWithoutConfig[] = functions.map((func) => [
     func[key],
     {
       ...func,
@@ -98,7 +101,7 @@ const getFunctionsFromPaths = async (
       functions: [...aggregateFunctions, ...runtimeFunctions],
       remainingPaths: runtimePaths,
     }
-  }, Promise.resolve({ functions: [], remainingPaths: paths } as { functions: FunctionTuple[]; remainingPaths: string[] }))
+  }, Promise.resolve({ functions: [], remainingPaths: paths } as { functions: FunctionTupleWithoutConfig[]; remainingPaths: string[] }))
   const functionsWithConfig: FunctionTuple[] = functions.map(([name, func]) => [
     name,
     { ...func, config: getConfigForFunction({ config, func }) },
