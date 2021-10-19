@@ -1,10 +1,8 @@
 import { ArchiveFormat } from '../archive'
 import { FunctionConfig } from '../config'
 import { FeatureFlags } from '../feature_flags'
-import { FunctionSource, SourceFile } from '../function'
+import { FunctionArchive, FunctionSource, SourceFile } from '../function'
 import { FsCache } from '../utils/fs'
-
-import type { NodeBundler } from './node'
 
 type RuntimeName = 'go' | 'js' | 'rs'
 
@@ -34,15 +32,7 @@ type ZipFunction = (
     pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
-) => Promise<{
-  bundler?: NodeBundler
-  bundlerWarnings?: object[]
-  config: FunctionConfig
-  inputs?: string[]
-  nativeNodeModules?: object
-  nodeModulesWithDynamicImports?: string[]
-  path: string
-}>
+) => Promise<FunctionArchive>
 
 interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction

@@ -13,6 +13,7 @@ import { getPluginsModulesPath } from './runtimes/node/utils/plugin_modules_path
 import { addArchiveSize } from './utils/archive_size'
 import { formatZipResult } from './utils/format_result'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
+import { nonNullable } from './utils/non_nullable'
 
 interface ZipFunctionOptions {
   archiveFormat?: ArchiveFormat
@@ -93,7 +94,7 @@ const zipFunctions = async function (
     },
   )
   const formattedResults = await Promise.all(
-    results.filter(Boolean).map(async (result) => {
+    results.filter(nonNullable).map(async (result) => {
       const resultWithSize = await addArchiveSize(result)
 
       return formatZipResult(resultWithSize)
