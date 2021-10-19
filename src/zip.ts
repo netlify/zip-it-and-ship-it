@@ -30,6 +30,7 @@ type ZipFunctionsOptions = ZipFunctionOptions & {
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
+// TODO: now that we have types, do we still need runtime validation?
 const validateArchiveFormat = (archiveFormat: ArchiveFormat) => {
   if (!['none', 'zip'].includes(archiveFormat)) {
     throw new Error(`Invalid archive format: ${archiveFormat}`)
