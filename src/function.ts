@@ -13,6 +13,7 @@ interface FunctionArchive {
   nativeNodeModules?: object
   nodeModulesWithDynamicImports?: string[]
   path: string
+  size?: number
 }
 
 // A function file found on the filesystem.
@@ -32,4 +33,4 @@ type FunctionSource = SourceFile & {
   runtime: Runtime
 }
 
-export { FunctionSource, FunctionArchive, SourceFile }
+export { FunctionArchive, FunctionSource, SourceFile }
