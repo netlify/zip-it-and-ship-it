@@ -23,7 +23,7 @@ const getDynamicImportsPlugin = ({
   processImports,
   srcDir,
 }: {
-  basePath: string
+  basePath?: string
   includedPaths: Set<string>
   moduleNames: Set<string>
   processImports: boolean

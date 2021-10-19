@@ -85,7 +85,7 @@ const zipFunction: ZipFunction = async function ({
   const {
     aliases,
     cleanupFunction,
-    basePath: finalBasePath = basePath,
+    basePath: finalBasePath,
     bundlerWarnings,
     inputs,
     mainFile: finalMainFile = mainFile,

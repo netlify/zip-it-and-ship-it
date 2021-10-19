@@ -24,7 +24,7 @@ type GetSrcFilesFunction = (
 type ZipFunction = (
   args: {
     archiveFormat: ArchiveFormat
-    basePath: string
+    basePath?: string
     config: FunctionConfig
     destFolder: string
     featureFlags: FeatureFlags
