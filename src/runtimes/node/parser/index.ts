@@ -177,7 +177,7 @@ const parseTemplateLiteral = (expression: TemplateLiteral): string[] => {
   const globNodes = parts.map((part) => {
     switch (part.type) {
       case 'TemplateElement':
-        return part.value.cooked
+        return part.value.cooked === '' ? null : part.value.cooked
 
       default:
         return getWildcardFromASTNode(part)
