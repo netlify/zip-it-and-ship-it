@@ -23,7 +23,7 @@ const addZipFile = function (archive: Archiver, file: string, name: string, stat
 }
 
 // Add new file content to zip
-const addZipContent = function (archive: Archiver, content: Buffer, name: string): void {
+const addZipContent = function (archive: Archiver, content: Buffer | string, name: string): void {
   archive.append(content, { name, date: new Date(0) })
 }
 

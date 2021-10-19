@@ -9,7 +9,7 @@ interface SourceFile {
   name: string
   srcDir: string
   srcPath: string
-  stat?: Stats
+  stat: Stats
 }
 
 type FunctionSource = SourceFile & {

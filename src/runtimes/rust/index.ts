@@ -66,7 +66,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({
       const rustSourceFile = await detectRustFunction({ fsCache, path })
 
       if (rustSourceFile) {
-        return processSource({ mainFile: rustSourceFile, path })
+        return processSource({ fsCache, mainFile: rustSourceFile, path })
       }
     }),
   )
@@ -91,7 +91,20 @@ const processBinary = async ({ fsCache, path }: { fsCache: FsCache; path: string
   }
 }
 
-const processSource = ({ mainFile, path }: { mainFile: string; path: string }): SourceFile => {
+const processSource = async ({
+  fsCache,
+  mainFile,
+  path,
+}: {
+  fsCache: FsCache
+  mainFile: string
+  path: string
+}): Promise<SourceFile> => {
+  // TODO: This `stat` value is not going to be used, but we need it to satisfy
+  // the `FunctionSource` interface. We should revisit whether `stat` should be
+  // part of that interface in the first place, or whether we could compute it
+  // downstream when needed (maybe using the FS cache as an optimisation).
+  const stat = (await cachedLstat(fsCache, path)) as Stats
   const filename = basename(path)
   const extension = extname(path)
   const name = basename(path, extension)
@@ -103,6 +116,7 @@ const processSource = ({ mainFile, path }: { mainFile: string; path: string }): 
     name,
     srcDir: path,
     srcPath: path,
+    stat,
   }
 }
 
