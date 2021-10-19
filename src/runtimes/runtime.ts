@@ -1,6 +1,7 @@
 import { FunctionConfig } from '../config'
 import { FeatureFlags } from '../feature_flags'
 import { FunctionSource, SourceFile } from '../function'
+import { FsCache } from '../utils/fs'
 
 import type { NodeBundler } from './node'
 // TODO: Move to a file outside of the Node runtime directory.
@@ -8,7 +9,7 @@ import { ArchiveFormat } from './node/utils/zip'
 
 type FindFunctionsInPathsFunction = (args: {
   featureFlags: FeatureFlags
-  fsCache: Record<string, Promise<unknown>>
+  fsCache: FsCache
   paths: string[]
 }) => Promise<SourceFile[]>
 
