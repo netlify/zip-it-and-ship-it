@@ -4,6 +4,10 @@ import minimatch from 'minimatch'
 import { FunctionSource } from './function'
 import type { NodeBundler } from './runtimes/node'
 
+// eslint-disable-next-line no-magic-numbers
+type SupportedVersionNumbers = 8 | 10 | 12 | 14
+type NodeVersion = `${SupportedVersionNumbers}.x` | `nodejs${SupportedVersionNumbers}.x`
+
 interface FunctionConfig {
   externalNodeModules?: string[]
   includedFiles?: string[]
@@ -11,7 +15,7 @@ interface FunctionConfig {
   ignoredNodeModules?: string[]
   nodeBundler?: NodeBundler
   nodeSourcemap?: boolean
-  nodeVersion?: '8.x' | 'nodejs8.x' | '10.x' | 'nodejs10.x' | '12.x' | 'nodejs12.x' | '14.x' | 'nodejs14.x'
+  nodeVersion?: NodeVersion
   processDynamicNodeImports?: boolean
   rustTargetDirectory?: string
 }
