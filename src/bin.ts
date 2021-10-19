@@ -8,11 +8,12 @@ import { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } from './utils/consts'
 
 // CLI entry point
 const runCli = async function () {
-  // @ts-expect-error soon
+  // @ts-expect-error TODO: `destFolder` and  `srcFolder` are not being passed
+  // back from `parseArgs()`.
   const { destFolder, srcFolder, ...options } = parseArgs()
 
   try {
-    // @ts-expect-error soon
+    // @ts-expect-error TODO: `options` is not getting the right types.
     const zipped = await zipFunctions(srcFolder, destFolder, options)
     console.log(JSON.stringify(zipped, null, 2))
   } catch (error) {
