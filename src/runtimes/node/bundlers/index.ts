@@ -12,9 +12,7 @@ import zisiBundler from './zisi'
 // TODO: Create a generic warning type
 type BundlerWarning = Message
 
-interface CleanupFunction {
-  (): Promise<void>
-}
+type CleanupFunction = () => Promise<void>
 
 type NativeNodeModules = Record<string, Record<string, string | undefined>>
 
