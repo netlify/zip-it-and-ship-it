@@ -21,27 +21,25 @@ type GetSrcFilesFunction = (
   } & FunctionSource,
 ) => Promise<string[]>
 
-interface ZipFunction {
-  (
-    args: {
-      archiveFormat: ArchiveFormat
-      basePath: string
-      config: FunctionConfig
-      destFolder: string
-      featureFlags: FeatureFlags
-      pluginsModulesPath: string
-      repositoryRoot: string
-    } & FunctionSource,
-  ): Promise<{
-    bundler?: NodeBundler
-    bundlerWarnings?: object[]
+type ZipFunction = (
+  args: {
+    archiveFormat: ArchiveFormat
+    basePath: string
     config: FunctionConfig
-    inputs?: string[]
-    nativeNodeModules?: object
-    nodeModulesWithDynamicImports?: string[]
-    path: string
-  }>
-}
+    destFolder: string
+    featureFlags: FeatureFlags
+    pluginsModulesPath: string
+    repositoryRoot: string
+  } & FunctionSource,
+) => Promise<{
+  bundler?: NodeBundler
+  bundlerWarnings?: object[]
+  config: FunctionConfig
+  inputs?: string[]
+  nativeNodeModules?: object
+  nodeModulesWithDynamicImports?: string[]
+  path: string
+}>
 
 interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction
