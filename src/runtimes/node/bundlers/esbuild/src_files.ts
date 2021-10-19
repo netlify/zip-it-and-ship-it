@@ -1,4 +1,4 @@
-import type { GetSrcFilesFunction } from '..'
+import type { GetSrcFilesFunction } from '../../../runtime'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 import { getPackageJson, PackageJson } from '../../utils/package_json'
 import { getNewCache, TraversalCache } from '../../utils/traversal_cache'

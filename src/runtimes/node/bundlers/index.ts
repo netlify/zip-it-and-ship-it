@@ -4,6 +4,7 @@ import { FunctionConfig } from '../../../config'
 import { FeatureFlag } from '../../../feature_flags'
 import { FunctionSource } from '../../../function'
 import { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_NFT, JS_BUNDLER_ZISI } from '../../../utils/consts'
+import { GetSrcFilesFunction } from '../../runtime'
 
 import esbuildBundler from './esbuild'
 import nftBundler from './nft'
@@ -35,16 +36,6 @@ type BundleFunction = (
   nodeModulesWithDynamicImports?: string[]
   srcFiles: string[]
 }>
-
-type GetSrcFilesFunction = (
-  args: {
-    basePath?: string
-    config: FunctionConfig
-    featureFlags: Record<FeatureFlag, boolean>
-    pluginsModulesPath?: string
-    repositoryRoot?: string
-  } & FunctionSource,
-) => Promise<string[]>
 
 interface NodeBundler {
   bundle: BundleFunction
