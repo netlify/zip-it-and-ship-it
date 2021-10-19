@@ -6,6 +6,8 @@ import { promisify } from 'util'
 import archiver, { Archiver } from 'archiver'
 import endOfStream from 'end-of-stream'
 
+type ArchiveFormat = 'none' | 'zip'
+
 const pEndOfStream = promisify(endOfStream)
 
 // Start zipping files
@@ -34,4 +36,4 @@ const endZip = async function (archive: Archiver, output: Writable): Promise<voi
 }
 
 export { startZip, addZipFile, addZipContent, endZip }
-export type { Archiver as ZipArchive }
+export type { ArchiveFormat, Archiver as ZipArchive }
