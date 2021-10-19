@@ -119,9 +119,7 @@ const zipFunction: ZipFunction = async function ({
     srcFiles,
   })
 
-  if (cleanupFunction !== undefined) {
-    await cleanupFunction()
-  }
+  await cleanupFunction?.()
 
   return {
     bundler: bundlerName,
