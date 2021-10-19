@@ -3,13 +3,12 @@ import { basename, dirname, extname, join } from 'path'
 
 import cpFile from 'cp-file'
 
-import { FeatureFlags } from '../../feature_flags'
 import { SourceFile } from '../../function'
 import { RUNTIME_GO } from '../../utils/consts'
 import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
 import { detectBinaryRuntime } from '../detect_runtime'
-import { ZipFunction } from '../runtime'
+import { FindFunctionsInPathsFunction, ZipFunction } from '../runtime'
 
 import { build } from './builder'
 
@@ -34,15 +33,7 @@ const detectGoFunction = async ({ fsCache, path }: { fsCache: FsCache; path: str
   return mainFileName
 }
 
-const findFunctionsInPaths = async function ({
-  featureFlags,
-  fsCache,
-  paths,
-}: {
-  featureFlags: FeatureFlags
-  fsCache: FsCache
-  paths: string[]
-}): Promise<SourceFile[]> {
+const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ featureFlags, fsCache, paths }) {
   const functions = await Promise.all(
     paths.map(async (path) => {
       const runtime = await detectBinaryRuntime({ fsCache, path })
