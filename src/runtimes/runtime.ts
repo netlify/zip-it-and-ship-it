@@ -1,8 +1,10 @@
 import { ArchiveFormat } from '../archive'
 import { FunctionConfig } from '../config'
 import { FeatureFlags } from '../feature_flags'
-import { FunctionArchive, FunctionSource, SourceFile } from '../function'
+import { FunctionSource, SourceFile } from '../function'
 import { FsCache } from '../utils/fs'
+
+import type { NodeBundler } from './node'
 
 type RuntimeName = 'go' | 'js' | 'rs'
 
@@ -22,6 +24,17 @@ type GetSrcFilesFunction = (
   } & FunctionSource,
 ) => Promise<string[]>
 
+interface ZipFunctionResult {
+  bundler?: NodeBundler
+  bundlerErrors?: object[]
+  bundlerWarnings?: object[]
+  config: FunctionConfig
+  inputs?: string[]
+  nativeNodeModules?: object
+  nodeModulesWithDynamicImports?: string[]
+  path: string
+}
+
 type ZipFunction = (
   args: {
     archiveFormat: ArchiveFormat
@@ -32,7 +45,7 @@ type ZipFunction = (
     pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
-) => Promise<FunctionArchive>
+) => Promise<ZipFunctionResult>
 
 interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction
@@ -41,4 +54,4 @@ interface Runtime {
   zipFunction: ZipFunction
 }
 
-export { FindFunctionsInPathsFunction, GetSrcFilesFunction, Runtime, RuntimeName, ZipFunction }
+export { FindFunctionsInPathsFunction, GetSrcFilesFunction, Runtime, RuntimeName, ZipFunction, ZipFunctionResult }

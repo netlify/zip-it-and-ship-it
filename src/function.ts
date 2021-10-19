@@ -1,18 +1,13 @@
 import { Stats } from 'fs'
 
 import type { FunctionConfig } from './config'
-import type { NodeBundler } from './runtimes/node'
-import type { Runtime } from './runtimes/runtime'
+import type { Runtime, ZipFunctionResult } from './runtimes/runtime'
 
 // A function that has been processed and turned into an archive.
-interface FunctionArchive {
-  bundler?: NodeBundler
-  bundlerWarnings?: object[]
-  config: FunctionConfig
-  inputs?: string[]
-  nativeNodeModules?: object
-  nodeModulesWithDynamicImports?: string[]
-  path: string
+type FunctionArchive = ZipFunctionResult & {
+  mainFile: string
+  name: string
+  runtime: Runtime
   size?: number
 }
 
