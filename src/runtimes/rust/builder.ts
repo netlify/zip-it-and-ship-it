@@ -1,20 +1,22 @@
-const { readFile } = require('fs')
-const { basename, join } = require('path')
-const { promisify } = require('util')
+import { readFile } from 'fs'
+import { basename, join } from 'path'
+import { promisify } from 'util'
+
+import makeDir from 'make-dir'
+import tmp from 'tmp-promise'
+import toml from 'toml'
+
+import { FunctionConfig } from '../../config'
+import { RUNTIME_RUST } from '../../utils/consts'
+import { lstat } from '../../utils/fs'
+import { runCommand } from '../../utils/shell'
+
+import { CargoManifest } from './cargo_manifest'
+import { BUILD_TARGET, MANIFEST_NAME } from './constants'
 
 const pReadFile = promisify(readFile)
 
-const makeDir = require('make-dir')
-const tmp = require('tmp-promise')
-const toml = require('toml')
-
-const { RUNTIME_RUST } = require('../../utils/consts')
-const { lstat } = require('../../utils/fs')
-const { runCommand } = require('../../utils/shell')
-
-const { BUILD_TARGET, MANIFEST_NAME } = require('./constants')
-
-const build = async ({ config, name, srcDir }) => {
+const build = async ({ config, name, srcDir }: { config: FunctionConfig; name: string; srcDir: string }) => {
   const functionName = basename(srcDir)
 
   try {
@@ -33,10 +35,10 @@ const build = async ({ config, name, srcDir }) => {
   // way to override it (https://github.com/rust-lang/cargo/issues/1706). We
   // must extract the crate name from the manifest and use it to form the path
   // to the binary.
-  const manifest = await pReadFile(join(srcDir, MANIFEST_NAME))
+  const manifest = await pReadFile(join(srcDir, MANIFEST_NAME), 'utf8')
   const {
     package: { name: packageName },
-  } = toml.parse(manifest)
+  }: CargoManifest = toml.parse(manifest)
   const binaryPath = join(targetDirectory, BUILD_TARGET, 'release', packageName)
   const stat = await lstat(binaryPath)
 
@@ -46,7 +48,15 @@ const build = async ({ config, name, srcDir }) => {
   }
 }
 
-const cargoBuild = async ({ functionName, srcDir, targetDirectory }) => {
+const cargoBuild = async ({
+  functionName,
+  srcDir,
+  targetDirectory,
+}: {
+  functionName: string
+  srcDir: string
+  targetDirectory: string
+}) => {
   try {
     await runCommand('cargo', ['build', '--target', BUILD_TARGET, '--release'], {
       cwd: srcDir,
@@ -81,7 +91,7 @@ const checkRustToolchain = async () => {
 }
 
 // Returns the path of the Cargo target directory.
-const getTargetDirectory = async ({ config, name }) => {
+const getTargetDirectory = async ({ config, name }: { config: FunctionConfig; name: string }) => {
   const { rustTargetDirectory } = config
 
   // If the config includes a `rustTargetDirectory` path, we'll use that.
@@ -100,7 +110,7 @@ const getTargetDirectory = async ({ config, name }) => {
   return path
 }
 
-let toolchainInstallation
+let toolchainInstallation: Promise<void>
 
 // Sets the default toolchain and installs the build target defined in
 // `BUILD_TARGET`. The Promise is saved to `toolchainInstallation`, so
@@ -118,4 +128,4 @@ const installToolchainOnce = () => {
   return toolchainInstallation
 }
 
-module.exports = { build }
+export { build }
