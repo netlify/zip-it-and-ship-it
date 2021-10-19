@@ -6,11 +6,11 @@ import type { NodeBundler } from './node'
 // TODO: Move to a file outside of the Node runtime directory.
 import { ArchiveFormat } from './node/utils/zip'
 
-interface FindFunctionsInPathsFunction {
-  (args: { featureFlags: FeatureFlags; fsCache: Record<string, Promise<unknown>>; paths: string[] }): Promise<
-    SourceFile[]
-  >
-}
+type FindFunctionsInPathsFunction = (args: {
+  featureFlags: FeatureFlags
+  fsCache: Record<string, Promise<unknown>>
+  paths: string[]
+}) => Promise<SourceFile[]>
 
 interface GetSrcFilesFunction {
   (
