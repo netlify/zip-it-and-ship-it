@@ -3,8 +3,7 @@ import { join } from 'path'
 import cpFile from 'cp-file'
 
 import { FeatureFlags } from '../../feature_flags'
-import { RUNTIME_JS } from '../../utils/consts'
-import { GetSrcFilesFunction, ZipFunction } from '../runtime'
+import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime'
 
 import { getBundler } from './bundlers'
 import { findFunctionsInPaths } from './finder'
@@ -154,10 +153,10 @@ const zipWithFunctionWithFallback: ZipFunction = async ({ config = {}, ...parame
   }
 }
 
-const runtime = {
+const runtime: Runtime = {
   findFunctionsInPaths,
   getSrcFiles: getSrcFilesWithBundler,
-  name: RUNTIME_JS,
+  name: 'js',
   zipFunction: zipWithFunctionWithFallback,
 }
 
