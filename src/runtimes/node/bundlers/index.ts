@@ -36,17 +36,15 @@ type BundleFunction = (
   srcFiles: string[]
 }>
 
-interface GetSrcFilesFunction {
-  (
-    args: {
-      basePath: string
-      config: FunctionConfig
-      featureFlags: Record<FeatureFlag, boolean>
-      pluginsModulesPath: string
-      repositoryRoot?: string
-    } & FunctionSource,
-  ): Promise<string[]>
-}
+type GetSrcFilesFunction = (
+  args: {
+    basePath: string
+    config: FunctionConfig
+    featureFlags: Record<FeatureFlag, boolean>
+    pluginsModulesPath: string
+    repositoryRoot?: string
+  } & FunctionSource,
+) => Promise<string[]>
 
 interface NodeBundler {
   bundle: BundleFunction
