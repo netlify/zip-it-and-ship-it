@@ -1,24 +1,38 @@
-const { extname, basename } = require('path')
+import { extname, basename } from 'path'
 
-const { getConfigForFunction } = require('../config')
+import { Config, getConfigForFunction } from '../config'
+import { defaultFlags, FeatureFlags } from '../feature_flags'
+import { FunctionSource } from '../function'
+import { FsCache } from '../utils/fs'
 
-const goRuntime = require('./go')
-const { default: jsRuntime } = require('./node')
-const rustRuntime = require('./rust')
+import goRuntime from './go'
+import jsRuntime from './node'
+import type { Runtime } from './runtime'
+import rustRuntime from './rust'
+
+// A tuple containing the name of a function and the object describing it.
+// This is compatible with the constructor of `Map`.
+type FunctionTuple = [string, FunctionSource]
 
 /**
  * Finds functions for a list of paths using a specific runtime. The return
  * value is an object containing an array of the functions found (`functions`)
  * and an array with the paths that haven't been recognized by the runtime
  * (`remainingPaths`).
- *
- * @param   {Boolean} dedupe
- * @param   {Object} fsCache
- * @param   {Array<String>} paths
- * @param   {Object} runtime
- * @returns {Promise<Object>}
  */
-const findFunctionsInRuntime = async function ({ dedupe = false, featureFlags, fsCache, paths, runtime }) {
+const findFunctionsInRuntime = async function ({
+  dedupe = false,
+  featureFlags,
+  fsCache,
+  paths,
+  runtime,
+}: {
+  dedupe: boolean
+  featureFlags: FeatureFlags
+  fsCache: FsCache
+  paths: string[]
+  runtime: Runtime
+}) {
   const functions = await runtime.findFunctionsInPaths({ featureFlags, fsCache, paths })
 
   // If `dedupe` is true, we use the function name (`filename`) as the map key,
@@ -27,7 +41,7 @@ const findFunctionsInRuntime = async function ({ dedupe = false, featureFlags, f
   const key = dedupe ? 'name' : 'srcPath'
 
   // Augmenting the function objects with additional information.
-  const augmentedFunctions = functions.map((func) => [
+  const augmentedFunctions: FunctionTuple[] = functions.map((func) => [
     func[key],
     {
       ...func,
@@ -44,13 +58,15 @@ const findFunctionsInRuntime = async function ({ dedupe = false, featureFlags, f
 
 /**
  * Gets a list of functions found in a list of paths.
- *
- * @param   {Object} config
- * @param   {Boolean} dedupe
- * @param   {String} path
- * @returns {Promise<Map>}
  */
-const getFunctionsFromPaths = async (paths, { config, dedupe = false, featureFlags } = {}) => {
+const getFunctionsFromPaths = async (
+  paths: string[],
+  {
+    config,
+    dedupe = false,
+    featureFlags = defaultFlags,
+  }: { config?: Config; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
+) => {
   // An object to cache filesystem operations. This allows different functions
   // to perform IO operations on the same file (i.e. getting its stats or its
   // contents) without duplicating work.
@@ -65,25 +81,23 @@ const getFunctionsFromPaths = async (paths, { config, dedupe = false, featureFla
   // through `findFunctionsInRuntime`. For each iteration, we collect all the
   // functions found plus the list of paths that still need to be evaluated,
   // using them as the input for the next iteration until the last runtime.
-  const { functions } = await runtimes.reduce(
-    async (aggregate, runtime) => {
-      const { functions: aggregateFunctions, remainingPaths: aggregatePaths } = await aggregate
-      const { functions: runtimeFunctions, remainingPaths: runtimePaths } = await findFunctionsInRuntime({
-        dedupe,
-        featureFlags,
-        fsCache,
-        paths: aggregatePaths,
-        runtime,
-      })
+  const { functions } = await runtimes.reduce(async (aggregate, runtime) => {
+    const { functions: aggregateFunctions, remainingPaths: aggregatePaths } = await aggregate
+    const { functions: runtimeFunctions, remainingPaths: runtimePaths } = await findFunctionsInRuntime({
+      dedupe,
+      featureFlags,
+      fsCache,
+      paths: aggregatePaths,
+      // @ts-expect-error This will error until all runtimes are typed.
+      runtime,
+    })
 
-      return {
-        functions: [...aggregateFunctions, ...runtimeFunctions],
-        remainingPaths: runtimePaths,
-      }
-    },
-    { functions: [], remainingPaths: paths },
-  )
-  const functionsWithConfig = functions.map(([name, func]) => [
+    return {
+      functions: [...aggregateFunctions, ...runtimeFunctions],
+      remainingPaths: runtimePaths,
+    }
+  }, Promise.resolve({ functions: [], remainingPaths: paths } as { functions: FunctionTuple[]; remainingPaths: string[] }))
+  const functionsWithConfig: FunctionTuple[] = functions.map(([name, func]) => [
     name,
     { ...func, config: getConfigForFunction({ config, func }) },
   ])
@@ -91,6 +105,4 @@ const getFunctionsFromPaths = async (paths, { config, dedupe = false, featureFla
   return new Map(functionsWithConfig)
 }
 
-module.exports = {
-  getFunctionsFromPaths,
-}
+export { getFunctionsFromPaths }
