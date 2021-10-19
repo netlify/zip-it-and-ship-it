@@ -16,27 +16,25 @@ type CleanupFunction = () => Promise<void>
 
 type NativeNodeModules = Record<string, Record<string, string | undefined>>
 
-interface BundleFunction {
-  (
-    args: {
-      basePath: string
-      config: FunctionConfig
-      featureFlags: Record<FeatureFlag, boolean>
-      pluginsModulesPath: string
-      repositoryRoot?: string
-    } & FunctionSource,
-  ): Promise<{
-    aliases?: Map<string, string>
-    bundlerWarnings?: BundlerWarning[]
-    cleanupFunction?: CleanupFunction
+type BundleFunction = (
+  args: {
     basePath: string
-    inputs: string[]
-    mainFile: string
-    nativeNodeModules?: NativeNodeModules
-    nodeModulesWithDynamicImports?: string[]
-    srcFiles: string[]
-  }>
-}
+    config: FunctionConfig
+    featureFlags: Record<FeatureFlag, boolean>
+    pluginsModulesPath: string
+    repositoryRoot?: string
+  } & FunctionSource,
+) => Promise<{
+  aliases?: Map<string, string>
+  bundlerWarnings?: BundlerWarning[]
+  cleanupFunction?: CleanupFunction
+  basePath: string
+  inputs: string[]
+  mainFile: string
+  nativeNodeModules?: NativeNodeModules
+  nodeModulesWithDynamicImports?: string[]
+  srcFiles: string[]
+}>
 
 interface GetSrcFilesFunction {
   (
