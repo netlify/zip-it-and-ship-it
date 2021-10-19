@@ -30,7 +30,7 @@ const findFunctionsInPaths = async function ({ paths }: { paths: string[] }) {
   const sortedFunctions = functions.filter(nonNullable).sort((fA, fB) => {
     // We first sort the functions array to put directories first. This is so
     // that `{name}/{name}.js` takes precedence over `{name}.js`.
-    const directorySort = Number(fA?.stat?.isDirectory()) - Number(fB?.stat?.isDirectory())
+    const directorySort = Number(fA.stat.isDirectory()) - Number(fB.stat.isDirectory())
 
     if (directorySort !== 0) {
       return directorySort
