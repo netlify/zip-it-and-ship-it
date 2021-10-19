@@ -1,17 +1,19 @@
 #!/usr/bin/env node
-const { exit } = require('process')
+import { exit } from 'process'
 
-const yargs = require('yargs')
+import yargs from 'yargs'
 
-const zipIt = require('./main')
-const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
+import { zipFunctions } from './main'
+import { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } from './utils/consts'
 
 // CLI entry point
 const runCli = async function () {
+  // @ts-expect-error soon
   const { destFolder, srcFolder, ...options } = parseArgs()
 
   try {
-    const zipped = await zipIt.zipFunctions(srcFolder, destFolder, options)
+    // @ts-expect-error soon
+    const zipped = await zipFunctions(srcFolder, destFolder, options)
     console.log(JSON.stringify(zipped, null, 2))
   } catch (error) {
     console.error(error.toString())
@@ -20,7 +22,12 @@ const runCli = async function () {
 }
 
 const parseArgs = function () {
-  return yargs.command('* <srcFolder> <destFolder>').options(OPTIONS).usage(USAGE).strict().parse()
+  return yargs
+    .command('* <srcFolder> <destFolder>', 'Create ZIP archives from a directory')
+    .options(OPTIONS)
+    .usage(USAGE)
+    .strict()
+    .parse()
 }
 
 const OPTIONS = {
