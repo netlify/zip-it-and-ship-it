@@ -10,8 +10,11 @@ import jsRuntime from './node'
 import type { Runtime } from './runtime'
 import rustRuntime from './rust'
 
+// A `Map` of functions, indexed by their name.
+type FunctionMap = Map<string, FunctionSource>
+
 // A tuple containing the name of a function and the object describing it.
-// This is compatible with the constructor of `Map`.
+// This is compatible with the constructor of `FunctionMap`.
 type FunctionTuple = [string, FunctionSource]
 
 /**
@@ -66,7 +69,7 @@ const getFunctionsFromPaths = async (
     dedupe = false,
     featureFlags = defaultFlags,
   }: { config?: Config; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
-) => {
+): Promise<FunctionMap> => {
   // An object to cache filesystem operations. This allows different functions
   // to perform IO operations on the same file (i.e. getting its stats or its
   // contents) without duplicating work.
@@ -88,7 +91,6 @@ const getFunctionsFromPaths = async (
       featureFlags,
       fsCache,
       paths: aggregatePaths,
-      // @ts-expect-error This will error until all runtimes are typed.
       runtime,
     })
 

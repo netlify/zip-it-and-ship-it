@@ -44,7 +44,7 @@ type ZipFunction = (
 
 interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction
-  getSrcFiles: GetSrcFilesFunction
+  getSrcFiles?: GetSrcFilesFunction
   name: string
   zipFunction: ZipFunction
 }
