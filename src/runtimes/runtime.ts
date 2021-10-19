@@ -12,16 +12,14 @@ type FindFunctionsInPathsFunction = (args: {
   paths: string[]
 }) => Promise<SourceFile[]>
 
-interface GetSrcFilesFunction {
-  (
-    args: {
-      basePath: string
-      config: FunctionConfig
-      featureFlags: FeatureFlags
-      pluginsModulesPath: string
-    } & FunctionSource,
-  ): Promise<string[]>
-}
+type GetSrcFilesFunction = (
+  args: {
+    basePath: string
+    config: FunctionConfig
+    featureFlags: FeatureFlags
+    pluginsModulesPath: string
+  } & FunctionSource,
+) => Promise<string[]>
 
 interface ZipFunction {
   (
