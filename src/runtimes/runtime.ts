@@ -29,7 +29,7 @@ type ZipFunction = (
     destFolder: string
     featureFlags: FeatureFlags
     pluginsModulesPath?: string
-    repositoryRoot: string
+    repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<{
   bundler?: NodeBundler
