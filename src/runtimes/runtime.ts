@@ -28,7 +28,7 @@ type ZipFunction = (
     config: FunctionConfig
     destFolder: string
     featureFlags: FeatureFlags
-    pluginsModulesPath: string
+    pluginsModulesPath?: string
     repositoryRoot: string
   } & FunctionSource,
 ) => Promise<{

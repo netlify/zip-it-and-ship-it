@@ -66,7 +66,7 @@ const getDependencies = async function ({
   featureFlags: FeatureFlags
   functionName: string
   mainFile: string
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
   srcDir: string
 }) {
   const packageJson = await getPackageJson(srcDir)
@@ -100,7 +100,7 @@ const getFileDependencies = async function ({
   functionName: string
   path: string
   packageJson: PackageJson
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
   state: TraversalCache
   treeShakeNext?: boolean
 }): Promise<string[]> {
@@ -147,7 +147,7 @@ const getImportDependencies = function ({
   featureFlags: FeatureFlags
   functionName: string
   packageJson: PackageJson
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
   state: TraversalCache
   treeShakeNext: boolean
 }): Promise<string[]> {
@@ -188,11 +188,11 @@ const getTreeShakedDependencies = async function ({
   featureFlags: FeatureFlags
   functionName: string
   packageJson: PackageJson
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
   state: TraversalCache
   treeShakeNext: boolean
 }) {
-  const path = await resolvePathPreserveSymlinks(dependency, [basedir, pluginsModulesPath].filter(Boolean))
+  const path = await resolvePathPreserveSymlinks(dependency, [basedir, pluginsModulesPath].filter(nonNullable))
   const depsPath = await getFileDependencies({
     featureFlags,
     functionName,

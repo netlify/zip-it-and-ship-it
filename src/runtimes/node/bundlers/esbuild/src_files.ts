@@ -29,7 +29,7 @@ const getSrcFilesForDependencies = async function ({
   dependencies: string[]
   basedir: string
   state?: TraversalCache
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
 }) {
   if (dependencyNames.length === 0) {
     return []
@@ -63,7 +63,7 @@ const getSrcFilesForDependency = async function ({
   basedir: string
   state: TraversalCache
   packageJson: PackageJson
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
 }) {
   try {
     const paths = await getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath })

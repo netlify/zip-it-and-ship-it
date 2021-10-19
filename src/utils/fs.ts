@@ -2,6 +2,8 @@ import { lstat, readdir, readFile, stat, unlink, writeFile } from 'fs'
 import { format, join, parse, resolve } from 'path'
 import { promisify } from 'util'
 
+import { nonNullable } from './non_nullable'
+
 const pLstat = promisify(lstat)
 const pReaddir = promisify(readdir)
 const pReadFile = promisify(readFile)
@@ -58,7 +60,7 @@ const listFunctionsDirectories = async function (srcFolders: string[]) {
       }
     }),
   )
-  const validDirectories = filenamesByDirectory.filter(Boolean)
+  const validDirectories = filenamesByDirectory.filter(nonNullable)
 
   if (validDirectories.length === 0) {
     throw new Error(`Functions folder does not exist: ${srcFolders.join(', ')}`)

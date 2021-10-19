@@ -21,7 +21,7 @@ type BundleFunction = (
     basePath: string
     config: FunctionConfig
     featureFlags: Record<FeatureFlag, boolean>
-    pluginsModulesPath: string
+    pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<{
@@ -41,7 +41,7 @@ type GetSrcFilesFunction = (
     basePath: string
     config: FunctionConfig
     featureFlags: Record<FeatureFlag, boolean>
-    pluginsModulesPath: string
+    pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<string[]>
