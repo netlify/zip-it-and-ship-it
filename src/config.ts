@@ -1,7 +1,34 @@
-const mergeOptions = require('merge-options')
-const minimatch = require('minimatch')
+import mergeOptions from 'merge-options'
+import minimatch from 'minimatch'
 
-const getConfigForFunction = ({ config, func }) => {
+import { FunctionSource } from './function'
+import type { NodeBundler } from './runtimes/node'
+
+// eslint-disable-next-line no-magic-numbers
+type SupportedVersionNumbers = 8 | 10 | 12 | 14
+type NodeVersion = `${SupportedVersionNumbers}.x` | `nodejs${SupportedVersionNumbers}.x`
+
+interface FunctionConfig {
+  externalNodeModules?: string[]
+  includedFiles?: string[]
+  includedFilesBasePath?: string
+  ignoredNodeModules?: string[]
+  nodeBundler?: NodeBundler
+  nodeSourcemap?: boolean
+  nodeVersion?: NodeVersion
+  processDynamicNodeImports?: boolean
+  rustTargetDirectory?: string
+}
+
+type GlobPattern = string
+
+const getConfigForFunction = ({
+  config,
+  func,
+}: {
+  config: Record<GlobPattern, FunctionConfig>
+  func: FunctionSource
+}): FunctionConfig => {
   if (!config) {
     return {}
   }
@@ -29,4 +56,5 @@ const getConfigForFunction = ({ config, func }) => {
   return mergeOptions.apply({ concatArrays: true, ignoreUndefined: true }, matches)
 }
 
-module.exports = { getConfigForFunction }
+export { getConfigForFunction }
+export type { FunctionConfig }

@@ -1,42 +1,60 @@
-const { join } = require('path')
+import { join } from 'path'
 
-const cpFile = require('cp-file')
+import cpFile from 'cp-file'
 
-const { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_ZISI, RUNTIME_JS } = require('../../utils/consts')
+import { FeatureFlags } from '../../feature_flags'
+import { RUNTIME_JS } from '../../utils/consts'
+import { GetSrcFilesFunction, ZipFunction } from '../runtime'
 
-const { getBundler } = require('./bundlers')
-const { findFunctionsInPaths } = require('./finder')
-const { detectEsModule } = require('./utils/detect_es_module')
-const { zipNodeJs } = require('./utils/zip')
+import { getBundler } from './bundlers'
+import { findFunctionsInPaths } from './finder'
+import { detectEsModule } from './utils/detect_es_module'
+import { zipNodeJs } from './utils/zip'
+
+export type NodeBundler = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
 
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
-const getDefaultBundler = async ({ extension, mainFile, featureFlags = {} }) => {
+const getDefaultBundler = async ({
+  extension,
+  mainFile,
+  featureFlags,
+}: {
+  extension: string
+  mainFile: string
+  featureFlags: FeatureFlags
+}): Promise<NodeBundler> => {
   if (['.mjs', '.ts'].includes(extension)) {
-    return JS_BUNDLER_ESBUILD
+    return 'esbuild'
   }
 
   if (featureFlags.defaultEsModulesToEsbuild) {
     const isEsModule = await detectEsModule({ mainFile })
 
     if (isEsModule) {
-      return JS_BUNDLER_ESBUILD
+      return 'esbuild'
     }
   }
 
-  return JS_BUNDLER_ZISI
+  return 'zisi'
 }
 
 // A proxy for the `getSrcFiles` function which adds a default `bundler` using
 // the `getDefaultBundler` function.
-const getSrcFilesWithBundler = async (parameters) => {
-  const bundlerName = parameters.config.nodeBundler || (await getDefaultBundler({ extension: parameters.extension }))
+const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
+  const bundlerName =
+    parameters.config.nodeBundler ||
+    (await getDefaultBundler({
+      extension: parameters.extension,
+      featureFlags: parameters.featureFlags,
+      mainFile: parameters.mainFile,
+    }))
   const bundler = getBundler(bundlerName)
 
   return bundler.getSrcFiles({ ...parameters })
 }
 
-const zipFunction = async function ({
+const zipFunction: ZipFunction = async function ({
   archiveFormat,
   basePath,
   config = {},
@@ -65,7 +83,7 @@ const zipFunction = async function ({
 
   const {
     aliases,
-    cleanupFunction = () => {},
+    cleanupFunction,
     basePath: finalBasePath = basePath,
     bundlerWarnings,
     inputs,
@@ -83,6 +101,7 @@ const zipFunction = async function ({
     name,
     pluginsModulesPath,
     repositoryRoot,
+    runtime: RUNTIME_JS,
     srcDir,
     srcPath,
     stat,
@@ -100,7 +119,7 @@ const zipFunction = async function ({
     srcFiles,
   })
 
-  await cleanupFunction()
+  await cleanupFunction?.()
 
   return {
     bundler: bundlerName,
@@ -113,19 +132,19 @@ const zipFunction = async function ({
   }
 }
 
-const zipWithFunctionWithFallback = async ({ config = {}, ...parameters }) => {
+const zipWithFunctionWithFallback: ZipFunction = async ({ config = {}, ...parameters }) => {
   // If a specific JS bundler version is specified, we'll use it.
-  if (config.nodeBundler !== JS_BUNDLER_ESBUILD_ZISI) {
+  if (config.nodeBundler !== 'esbuild_zisi') {
     return zipFunction({ ...parameters, config })
   }
 
   // Otherwise, we'll try to bundle with esbuild and, if that fails, fallback
   // to zisi.
   try {
-    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: JS_BUNDLER_ESBUILD } })
+    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: 'esbuild' } })
   } catch (esbuildError) {
     try {
-      const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: JS_BUNDLER_ZISI } })
+      const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: 'zisi' } })
 
       return { ...data, bundlerErrors: esbuildError.errors }
     } catch (zisiError) {
@@ -134,9 +153,11 @@ const zipWithFunctionWithFallback = async ({ config = {}, ...parameters }) => {
   }
 }
 
-module.exports = {
+const runtime = {
   findFunctionsInPaths,
   getSrcFiles: getSrcFilesWithBundler,
   name: RUNTIME_JS,
   zipFunction: zipWithFunctionWithFallback,
 }
+
+export default runtime

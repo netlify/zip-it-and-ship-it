@@ -1,13 +1,23 @@
-const { dirname, normalize } = require('path')
+import { dirname, normalize } from 'path'
 
-const { getPathWithExtension } = require('../../../../utils/fs')
-const { getBasePath } = require('../../utils/base_path')
+import type { BundleFunction } from '..'
+import type { FunctionConfig } from '../../../../config'
+import { getPathWithExtension } from '../../../../utils/fs'
+import { getBasePath } from '../../utils/base_path'
 
-const { bundleJsFile } = require('./bundler')
-const { getExternalAndIgnoredModulesFromSpecialCases } = require('./special_cases')
-const { getSrcFiles } = require('./src_files')
+import { bundleJsFile } from './bundler'
+import { getExternalAndIgnoredModulesFromSpecialCases } from './special_cases'
+import { getSrcFiles } from './src_files'
 
-const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles }) => {
+const getFunctionBasePath = ({
+  basePathFromConfig,
+  mainFile,
+  supportingSrcFiles,
+}: {
+  basePathFromConfig?: string
+  mainFile: string
+  supportingSrcFiles: string[]
+}) => {
   // If there is a base path defined in the config, we use that.
   if (basePathFromConfig !== undefined) {
     return basePathFromConfig
@@ -22,7 +32,7 @@ const getFunctionBasePath = ({ basePathFromConfig, mainFile, supportingSrcFiles 
 
 // Convenience method for retrieving external and ignored modules from
 // different places and merging them together.
-const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
+const getExternalAndIgnoredModules = async ({ config, srcDir }: { config: FunctionConfig; srcDir: string }) => {
   const { externalNodeModules: externalModulesFromConfig = [], ignoredNodeModules: ignoredModulesFromConfig = [] } =
     config
   const { externalModules: externalModulesFromSpecialCases, ignoredModules: ignoredModulesFromSpecialCases } =
@@ -33,7 +43,20 @@ const getExternalAndIgnoredModules = async ({ config, srcDir }) => {
   return { externalModules, ignoredModules }
 }
 
-const bundle = async ({ basePath, config = {}, filename, mainFile, name, pluginsModulesPath, srcDir }) => {
+const bundle: BundleFunction = async ({
+  basePath,
+  config = {},
+  extension,
+  featureFlags,
+  filename,
+  mainFile,
+  name,
+  pluginsModulesPath,
+  runtime,
+  srcDir,
+  srcPath,
+  stat,
+}) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const {
     additionalPaths,
@@ -47,7 +70,6 @@ const bundle = async ({ basePath, config = {}, filename, mainFile, name, plugins
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
     basePath,
     config,
-    destFilename: filename,
     externalModules,
     ignoredModules,
     name,
@@ -56,15 +78,23 @@ const bundle = async ({ basePath, config = {}, filename, mainFile, name, plugins
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings
   const srcFiles = await getSrcFiles({
+    basePath,
     config: {
       ...config,
       externalNodeModules: [...externalModules, ...Object.keys(nativeNodeModules)],
       includedFiles: [...(config.includedFiles || []), ...additionalPaths],
       includedFilesBasePath: config.includedFilesBasePath || basePath,
     },
+    extension,
+    featureFlags,
+    filename,
     mainFile,
+    name,
     pluginsModulesPath,
+    runtime,
     srcDir,
+    srcPath,
+    stat,
   })
 
   // We want to remove `mainFile` from `srcFiles` because it represents the
@@ -87,4 +117,6 @@ const bundle = async ({ basePath, config = {}, filename, mainFile, name, plugins
   }
 }
 
-module.exports = { bundle, getSrcFiles }
+const bundler = { bundle, getSrcFiles }
+
+export default bundler

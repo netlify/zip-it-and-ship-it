@@ -1,9 +1,10 @@
-const { filterExcludedPaths, getPathsOfIncludedFiles } = require('../../utils/included_files')
-const { getPackageJson } = require('../../utils/package_json')
-const { getNewCache } = require('../../utils/traversal_cache')
-const { getDependencyPathsForDependency } = require('../zisi/traverse')
+import type { GetSrcFilesFunction } from '..'
+import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
+import { getPackageJson, PackageJson } from '../../utils/package_json'
+import { getNewCache, TraversalCache } from '../../utils/traversal_cache'
+import { getDependencyPathsForDependency } from '../zisi/traverse'
 
-const getSrcFiles = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {
+const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {
   const { externalNodeModules = [], includedFiles = [], includedFilesBasePath } = config
   const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
@@ -24,6 +25,11 @@ const getSrcFilesForDependencies = async function ({
   basedir,
   state = getNewCache(),
   pluginsModulesPath,
+}: {
+  dependencies: string[]
+  basedir: string
+  state?: TraversalCache
+  pluginsModulesPath: string
 }) {
   if (dependencyNames.length === 0) {
     return []
@@ -52,6 +58,12 @@ const getSrcFilesForDependency = async function ({
   state = getNewCache(),
   packageJson,
   pluginsModulesPath,
+}: {
+  dependency: string
+  basedir: string
+  state: TraversalCache
+  packageJson: PackageJson
+  pluginsModulesPath: string
 }) {
   try {
     const paths = await getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath })
@@ -66,4 +78,4 @@ const getSrcFilesForDependency = async function ({
   }
 }
 
-module.exports = { getSrcFiles }
+export { getSrcFiles }

@@ -1,8 +1,14 @@
-const path = require('path')
+import path from 'path'
 
-const readPackageJson = require('read-package-json-fast')
+import type { Plugin } from '@netlify/esbuild'
+import readPackageJson from 'read-package-json-fast'
 
-const { isNativeModule } = require('../../utils/detect_native_module')
+import type { NativeNodeModules } from '..'
+import { isNativeModule } from '../../utils/detect_native_module'
+import { PackageJson } from '../../utils/package_json'
+
+type NativeModuleCacheEntry = [boolean | undefined, PackageJson]
+type NativeModuleCache = Record<string, Promise<NativeModuleCacheEntry>>
 
 // Filters out relative or absolute file paths.
 const packageFilter = /^([^./]*)$/
@@ -10,22 +16,22 @@ const packageFilter = /^([^./]*)$/
 // Filters valid package names and extracts the base directory.
 const packageName = /^([^@][^/]*|@[^/]*\/[^/]+)(?:\/|$)/
 
-const findNativeModule = (packageJsonPath, cache) => {
+const findNativeModule = (packageJsonPath: string, cache: NativeModuleCache) => {
   if (cache[packageJsonPath] === undefined) {
     // eslint-disable-next-line no-param-reassign, promise/prefer-await-to-then
     cache[packageJsonPath] = readPackageJson(packageJsonPath).then(
-      (data) => [Boolean(isNativeModule(data), data), data],
-      () => [],
+      (data) => [Boolean(isNativeModule(data)), data],
+      () => [undefined, {}],
     )
   }
 
   return cache[packageJsonPath]
 }
 
-const getNativeModulesPlugin = (externalizedModules) => ({
+const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): Plugin => ({
   name: 'external-native-modules',
   setup(build) {
-    const cache = {}
+    const cache: NativeModuleCache = {}
 
     // eslint-disable-next-line complexity, max-statements
     build.onResolve({ filter: packageFilter }, async (args) => {
@@ -74,4 +80,4 @@ const getNativeModulesPlugin = (externalizedModules) => ({
   },
 })
 
-module.exports = { getNativeModulesPlugin }
+export { getNativeModulesPlugin }

@@ -20,8 +20,12 @@ const filterExcludedPaths = (paths: string[], exclude: string[] = []) => {
 
 const getPathsOfIncludedFiles = async (
   includedFiles: string[],
-  basePath: string,
+  basePath?: string,
 ): Promise<{ exclude: string[]; paths: string[] }> => {
+  if (basePath === undefined) {
+    return { exclude: [], paths: [] }
+  }
+
   // Some of the globs in `includedFiles` might be exclusion patterns, which
   // means paths that should NOT be included in the bundle. We need to treat
   // these differently, so we iterate on the array and put those paths in a

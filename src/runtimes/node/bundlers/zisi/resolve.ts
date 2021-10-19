@@ -1,9 +1,9 @@
-const { version: nodeVersion } = require('process')
+import { version as nodeVersion } from 'process'
 
-const findUp = require('find-up')
-const pathExists = require('path-exists')
-const resolveLib = require('resolve')
-const { lt: ltVersion } = require('semver')
+import findUp from 'find-up'
+import pathExists from 'path-exists'
+import resolveLib from 'resolve'
+import { lt as ltVersion } from 'semver'
 
 const BACKSLASH_REGEXP = /\\/g
 
@@ -21,7 +21,7 @@ const BACKSLASH_REGEXP = /\\/g
 // However it does not give helpful error messages.
 //   https://github.com/browserify/resolve/issues/223
 // So, on errors, we fallback to `require.resolve()`
-const resolvePackage = async function (moduleName, baseDirs) {
+const resolvePackage = async function (moduleName: string, baseDirs: string[]): Promise<string> {
   try {
     return await resolvePathPreserveSymlinks(`${moduleName}/package.json`, baseDirs)
   } catch (error) {
@@ -44,11 +44,11 @@ const REQUEST_RESOLVE_MIN_VERSION = '8.9.0'
 // We need to use `new Promise()` due to a bug with `utils.promisify()` on
 // `resolve`:
 //   https://github.com/browserify/resolve/issues/151#issuecomment-368210310
-const resolvePathPreserveSymlinksForDir = function (path, basedir) {
+const resolvePathPreserveSymlinksForDir = function (path: string, basedir: string): Promise<string> {
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line promise/prefer-await-to-callbacks
     resolveLib(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
-      if (error) {
+      if (error || resolvedLocation === undefined) {
         return reject(error)
       }
 
@@ -60,7 +60,7 @@ const resolvePathPreserveSymlinksForDir = function (path, basedir) {
 // the resolve library has a `paths` option but it's not the same as multiple basedirs
 // see https://github.com/browserify/resolve/issues/188#issuecomment-679010477
 // we return the first resolved location or the first error if all failed
-const resolvePathPreserveSymlinks = async function (path, baseDirs) {
+const resolvePathPreserveSymlinks = async function (path: string, baseDirs: string[]): Promise<string> {
   let firstError
   for (const basedir of baseDirs) {
     try {
@@ -74,7 +74,7 @@ const resolvePathPreserveSymlinks = async function (path, baseDirs) {
   throw firstError
 }
 
-const resolvePathFollowSymlinks = function (path, baseDirs) {
+const resolvePathFollowSymlinks = function (path: string, baseDirs: string[]) {
   return require.resolve(path, { paths: baseDirs })
 }
 
@@ -86,7 +86,7 @@ const resolvePathFollowSymlinks = function (path, baseDirs) {
 //   - has a `package.json`
 // Theoretically, this might not the root `package.json`, but this is very
 // unlikely, and we don't have any better alternative.
-const resolvePackageFallback = async function (moduleName, baseDirs, error) {
+const resolvePackageFallback = async function (moduleName: string, baseDirs: string[], error: Error) {
   const mainFilePath = resolvePathFollowSymlinks(moduleName, baseDirs)
   const packagePath = await findUp(isPackageDir.bind(null, moduleName), { cwd: mainFilePath, type: 'directory' })
   if (packagePath === undefined) {
@@ -95,7 +95,7 @@ const resolvePackageFallback = async function (moduleName, baseDirs, error) {
   return packagePath
 }
 
-const isPackageDir = async function (moduleName, dir) {
+const isPackageDir = async function (moduleName: string, dir: string) {
   // Need to use `endsWith()` to take into account `@scope/package`.
   // Backslashes need to be converted for Windows.
   if (!dir.replace(BACKSLASH_REGEXP, '/').endsWith(moduleName) || !(await pathExists(`${dir}/package.json`))) {
@@ -105,4 +105,4 @@ const isPackageDir = async function (moduleName, dir) {
   return dir
 }
 
-module.exports = { resolvePackage, resolvePathPreserveSymlinks }
+export { resolvePackage, resolvePathPreserveSymlinks }

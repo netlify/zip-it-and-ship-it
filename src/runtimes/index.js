@@ -3,7 +3,7 @@ const { extname, basename } = require('path')
 const { getConfigForFunction } = require('../config')
 
 const goRuntime = require('./go')
-const jsRuntime = require('./node')
+const { default: jsRuntime } = require('./node')
 const rustRuntime = require('./rust')
 
 /**

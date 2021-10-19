@@ -93,9 +93,11 @@
     "yargs": "^16.0.0"
   },
   "devDependencies": {
+    "@babel/types": "^7.15.6",
     "@netlify/eslint-config-node": "^3.3.3",
     "@types/archiver": "^5.1.1",
     "@types/end-of-stream": "^1.4.1",
+    "@types/resolve": "^1.20.1",
     "@types/semver": "^7.3.8",
     "@types/unixify": "^1.0.0",
     "adm-zip": "0.5.5",

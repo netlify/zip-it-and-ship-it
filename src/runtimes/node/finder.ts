@@ -1,8 +1,11 @@
-const { lstat } = require('fs')
-const { join, dirname, basename, extname } = require('path')
-const { promisify } = require('util')
+import { lstat, Stats } from 'fs'
+import { join, dirname, basename, extname } from 'path'
+import { promisify } from 'util'
 
-const locatePath = require('locate-path')
+import locatePath from 'locate-path'
+
+import { SourceFile } from '../../function'
+import { nonNullable } from '../../utils/non_nullable'
 
 const pLstat = promisify(lstat)
 
@@ -13,18 +16,18 @@ const allowedExtensions = ['.js', '.zip', '.cjs', '.mjs', '.ts']
 // entries by extension according to their position in `allowedExtensions`.
 // It places extensions with a higher precedence last in the array, so that
 // they "win" when the array is flattened into a Map.
-const sortByExtension = (fA, fB) => {
+const sortByExtension = (fA: SourceFile, fB: SourceFile) => {
   const indexA = allowedExtensions.indexOf(fA.extension)
   const indexB = allowedExtensions.indexOf(fB.extension)
 
   return indexB - indexA
 }
 
-const findFunctionsInPaths = async function ({ paths }) {
+const findFunctionsInPaths = async function ({ paths }: { paths: string[] }) {
   const functions = await Promise.all(paths.map(getFunctionAtPath))
 
   // It's fine to mutate the array since its scope is local to this function.
-  const sortedFunctions = functions.filter(Boolean).sort((fA, fB) => {
+  const sortedFunctions = functions.filter(nonNullable).sort((fA, fB) => {
     // We first sort the functions array to put directories first. This is so
     // that `{name}/{name}.js` takes precedence over `{name}.js`.
     const directorySort = Number(fA.stat.isDirectory()) - Number(fB.stat.isDirectory())
@@ -45,7 +48,7 @@ const findFunctionsInPaths = async function ({ paths }) {
   return sortedFunctions
 }
 
-const getFunctionAtPath = async function (srcPath) {
+const getFunctionAtPath = async function (srcPath: string): Promise<SourceFile | undefined> {
   const filename = basename(srcPath)
 
   if (filename === 'node_modules') {
@@ -63,14 +66,14 @@ const getFunctionAtPath = async function (srcPath) {
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
   const name = basename(srcPath, extname(srcPath))
 
-  return { extension, mainFile, name, srcDir, srcPath, stat }
+  return { extension, filename, mainFile, name, srcDir, srcPath, stat }
 }
 
 // Each `srcPath` can also be a directory with an `index` file or a file using
 // the same filename as its directory.
-const getMainFile = function (srcPath, filename, stat) {
+const getMainFile = async function (srcPath: string, filename: string, stat: Stats): Promise<string | undefined> {
   if (stat.isDirectory()) {
-    return locatePath(
+    return await locatePath(
       [
         join(srcPath, `${filename}.js`),
         join(srcPath, 'index.js'),
@@ -90,4 +93,4 @@ const getMainFile = function (srcPath, filename, stat) {
   }
 }
 
-module.exports = { findFunctionsInPaths, getFunctionAtPath }
+export { findFunctionsInPaths, getFunctionAtPath }

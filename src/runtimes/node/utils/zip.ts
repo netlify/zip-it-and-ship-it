@@ -226,5 +226,5 @@ const normalizeFilePath = function ({
   return pathD
 }
 
-export { zipNodeJs }
+export { ArchiveFormat, zipNodeJs }
 /* eslint-enable max-lines */

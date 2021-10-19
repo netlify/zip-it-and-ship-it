@@ -1,10 +1,13 @@
-const { basename, join, relative } = require('path')
+import { basename, join, relative } from 'path'
 
-const findUp = require('find-up')
-const readPackageJson = require('read-package-json-fast')
-const unixify = require('unixify')
+import type { Plugin } from '@netlify/esbuild'
+import findUp from 'find-up'
+import readPackageJson from 'read-package-json-fast'
+import unixify from 'unixify'
 
-const { parseExpression } = require('../../parser')
+import { parseExpression } from '../../parser'
+
+type PackageCache = Map<string, Promise<string | undefined>>
 
 // This plugin intercepts module imports using dynamic expressions and does a
 // couple of things with them. First of all, it figures out whether the call
@@ -13,13 +16,25 @@ const { parseExpression } = require('../../parser')
 // issues. Secondly, it parses the dynamic expressions and tries to include in
 // the bundle all the files that are possibly needed to make the import work at
 // runtime. This is not always possible, but we do our best.
-const getDynamicImportsPlugin = ({ basePath, includedPaths, moduleNames, processImports, srcDir }) => ({
+const getDynamicImportsPlugin = ({
+  basePath,
+  includedPaths,
+  moduleNames,
+  processImports,
+  srcDir,
+}: {
+  basePath: string
+  includedPaths: Set<string>
+  moduleNames: Set<string>
+  processImports: boolean
+  srcDir: string
+}): Plugin => ({
   name: 'dynamic-imports',
   setup(build) {
-    const cache = new Map()
+    const cache: PackageCache = new Map()
 
     // eslint-disable-next-line complexity
-    build.onDynamicImport({}, async (args) => {
+    build.onDynamicImport({ filter: /.*/ }, async (args) => {
       const { expression, resolveDir } = args
 
       // Don't attempt to parse the expression if the base path isn't defined,
@@ -55,7 +70,7 @@ const getDynamicImportsPlugin = ({ basePath, includedPaths, moduleNames, process
   },
 })
 
-const getPackageName = async ({ resolveDir, srcDir }) => {
+const getPackageName = async ({ resolveDir, srcDir }: { resolveDir: string; srcDir: string }) => {
   const packageJsonPath = await findUp(
     async (directory) => {
       // We stop traversing if we're about to leave the boundaries of the
@@ -67,7 +82,7 @@ const getPackageName = async ({ resolveDir, srcDir }) => {
       const path = join(directory, 'package.json')
       const hasPackageJson = await findUp.exists(path)
 
-      return hasPackageJson ? path : false
+      return hasPackageJson ? path : undefined
     },
     { cwd: resolveDir },
   )
@@ -79,7 +94,15 @@ const getPackageName = async ({ resolveDir, srcDir }) => {
   }
 }
 
-const getPackageNameCached = ({ cache, resolveDir, srcDir }) => {
+const getPackageNameCached = ({
+  cache,
+  resolveDir,
+  srcDir,
+}: {
+  cache: PackageCache
+  resolveDir: string
+  srcDir: string
+}) => {
   if (!cache.has(resolveDir)) {
     cache.set(resolveDir, getPackageName({ resolveDir, srcDir }))
   }
@@ -87,7 +110,15 @@ const getPackageNameCached = ({ cache, resolveDir, srcDir }) => {
   return cache.get(resolveDir)
 }
 
-const getShimContents = ({ expressionType, resolveDir, srcDir }) => {
+const getShimContents = ({
+  expressionType,
+  resolveDir,
+  srcDir,
+}: {
+  expressionType?: string
+  resolveDir: string
+  srcDir: string
+}) => {
   // The shim needs to modify the path of the import, since originally it was
   // relative to wherever the importer sat in the file tree (i.e. anywhere in
   // the user space or inside `node_modules`), but at runtime paths must be
@@ -101,7 +132,17 @@ const getShimContents = ({ expressionType, resolveDir, srcDir }) => {
   }
 }
 
-const registerModuleWithDynamicImports = async ({ cache, moduleNames, resolveDir, srcDir }) => {
+const registerModuleWithDynamicImports = async ({
+  cache,
+  moduleNames,
+  resolveDir,
+  srcDir,
+}: {
+  cache: PackageCache
+  moduleNames: Set<string>
+  resolveDir: string
+  srcDir: string
+}) => {
   try {
     const packageName = await getPackageNameCached({ cache, resolveDir, srcDir })
 
@@ -113,4 +154,4 @@ const registerModuleWithDynamicImports = async ({ cache, moduleNames, resolveDir
   }
 }
 
-module.exports = { getDynamicImportsPlugin }
+export { getDynamicImportsPlugin }

@@ -1,6 +1,9 @@
-const { join, relative, resolve } = require('path')
+import { join, relative, resolve } from 'path'
 
-const babel = require('@babel/parser')
+import { parse } from '@babel/parser'
+import type { BinaryExpression, CallExpression, Expression, PrivateName, TemplateLiteral, TSType } from '@babel/types'
+
+import { nonNullable } from '../../../utils/non_nullable'
 
 const GLOB_WILDCARD = '**'
 
@@ -8,7 +11,15 @@ const GLOB_WILDCARD = '**'
 // path.
 //
 // Example: ["./files/", "*", ".json"] => "/home/ntl/files/*.json"
-const getAbsoluteGlob = ({ basePath, globNodes, resolveDir }) => {
+const getAbsoluteGlob = ({
+  basePath,
+  globNodes,
+  resolveDir,
+}: {
+  basePath: string
+  globNodes: string[]
+  resolveDir: string
+}) => {
   if (!validateGlobNodes(globNodes)) {
     return null
   }
@@ -38,7 +49,7 @@ const getAbsoluteGlob = ({ basePath, globNodes, resolveDir }) => {
 // - ConditionalExpression: `someCond ? someValue : otherValue`
 // - Identifier: `someVariable`
 // - MemberExpression: `someArray[index]` or `someObject.property`
-const getWildcardFromASTNode = (node) => {
+const getWildcardFromASTNode = (node: Expression | PrivateName | TSType) => {
   switch (node.type) {
     case 'CallExpression':
     case 'ConditionalExpression':
@@ -54,14 +65,32 @@ const getWildcardFromASTNode = (node) => {
 // Tries to parse an expression, returning an object with:
 // - `includedPathsGlob`: A glob with the files to be included in the bundle
 // - `type`: The expression type (e.g. "require", "import")
-const parseExpression = ({ basePath, expression: rawExpression, resolveDir }) => {
-  const { program } = babel.parse(rawExpression, {
+// eslint-disable-next-line complexity
+const parseExpression = ({
+  basePath,
+  expression: rawExpression,
+  resolveDir,
+}: {
+  basePath: string
+  expression: string
+  resolveDir: string
+}) => {
+  const { program } = parse(rawExpression, {
     sourceType: 'module',
   })
-  const [topLevelExpression] = program.body
-  const { expression } = topLevelExpression
+  const [statement] = program.body
 
-  if (expression.type === 'CallExpression' && expression.callee.name === 'require') {
+  if (statement.type !== 'ExpressionStatement') {
+    return
+  }
+
+  const { expression } = statement
+
+  if (
+    expression.type === 'CallExpression' &&
+    expression.callee.type === 'Identifier' &&
+    expression.callee.name === 'require'
+  ) {
     try {
       const includedPathsGlob = parseRequire({ basePath, expression, resolveDir })
 
@@ -76,13 +105,25 @@ const parseExpression = ({ basePath, expression: rawExpression, resolveDir }) =>
 }
 
 // Parses a `require()` and returns a glob string with an absolute path.
-const parseRequire = ({ basePath, expression, resolveDir }) => {
+const parseRequire = ({
+  basePath,
+  expression,
+  resolveDir,
+}: {
+  basePath: string
+  expression: CallExpression
+  resolveDir: string
+}) => {
   const { arguments: args = [] } = expression
-  const argType = args.length === 0 ? null : args[0].type
+  const [firstArg] = args
 
-  if (argType === 'BinaryExpression') {
+  if (firstArg === undefined) {
+    return
+  }
+
+  if (firstArg.type === 'BinaryExpression') {
     try {
-      const globNodes = parseBinaryExpression(args[0])
+      const globNodes = parseBinaryExpression(firstArg)
 
       return getAbsoluteGlob({ basePath, globNodes, resolveDir })
     } catch (_) {
@@ -90,8 +131,8 @@ const parseRequire = ({ basePath, expression, resolveDir }) => {
     }
   }
 
-  if (argType === 'TemplateLiteral') {
-    const globNodes = parseTemplateLiteral(args[0])
+  if (firstArg.type === 'TemplateLiteral') {
+    const globNodes = parseTemplateLiteral(firstArg)
 
     return getAbsoluteGlob({ basePath, globNodes, resolveDir })
   }
@@ -102,7 +143,7 @@ const parseRequire = ({ basePath, expression, resolveDir }) => {
 // `GLOB_WILDCARD`.
 //
 // Example: './files/' + lang + '.json' => ["./files/", "**", ".json"]
-const parseBinaryExpression = (expression) => {
+const parseBinaryExpression = (expression: BinaryExpression): string[] => {
   const { left, operator, right } = expression
 
   if (operator !== '+') {
@@ -130,25 +171,25 @@ const parseBinaryExpression = (expression) => {
 // `GLOB_WILDCARD`.
 //
 // Example: `./files/${lang}.json` => ["./files/", "**", ".json"]
-const parseTemplateLiteral = (expression) => {
+const parseTemplateLiteral = (expression: TemplateLiteral): string[] => {
   const { expressions, quasis } = expression
-  const parts = [...expressions, ...quasis].sort((partA, partB) => partA.start - partB.start)
+  const parts = [...expressions, ...quasis].sort((partA, partB) => (partA.start ?? 0) - (partB.start ?? 0))
   const globNodes = parts.map((part) => {
     switch (part.type) {
       case 'TemplateElement':
-        return part.value.cooked
+        return part.value.cooked === '' ? null : part.value.cooked
 
       default:
         return getWildcardFromASTNode(part)
     }
   })
 
-  return globNodes.filter(Boolean)
+  return globNodes.filter(nonNullable)
 }
 
 // For our purposes, we consider a glob to be valid if all the nodes are
 // strings and the first node is static (i.e. not a wildcard character).
-const validateGlobNodes = (globNodes) => {
+const validateGlobNodes = (globNodes: string[]) => {
   if (!globNodes) {
     return false
   }
@@ -159,4 +200,4 @@ const validateGlobNodes = (globNodes) => {
   return hasStrings && hasStaticHead
 }
 
-module.exports = { parseExpression }
+export { parseExpression }
