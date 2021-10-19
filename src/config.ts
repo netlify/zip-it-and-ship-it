@@ -16,11 +16,13 @@ interface FunctionConfig {
   rustTargetDirectory?: string
 }
 
+type GlobPattern = string
+
 const getConfigForFunction = ({
   config,
   func,
 }: {
-  config: Record<string, FunctionConfig>
+  config: Record<GlobPattern, FunctionConfig>
   func: FunctionSource
 }): FunctionConfig => {
   if (!config) {
