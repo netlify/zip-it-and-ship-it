@@ -173,7 +173,7 @@ const parseBinaryExpression = (expression: BinaryExpression): string[] => {
 // Example: `./files/${lang}.json` => ["./files/", "**", ".json"]
 const parseTemplateLiteral = (expression: TemplateLiteral): string[] => {
   const { expressions, quasis } = expression
-  const parts = [...expressions, ...quasis].sort((partA, partB) => (partA.start || 0) - (partB.start || 0))
+  const parts = [...expressions, ...quasis].sort((partA, partB) => (partA.start ?? 0) - (partB.start ?? 0))
   const globNodes = parts.map((part) => {
     switch (part.type) {
       case 'TemplateElement':
