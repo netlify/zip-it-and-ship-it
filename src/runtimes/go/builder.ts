@@ -1,10 +1,10 @@
-const { basename } = require('path')
+import { basename } from 'path'
 
-const { RUNTIME_GO } = require('../../utils/consts')
-const { lstat } = require('../../utils/fs')
-const { runCommand } = require('../../utils/shell')
+import { RUNTIME_GO } from '../../utils/consts'
+import { lstat } from '../../utils/fs'
+import { runCommand } from '../../utils/shell'
 
-const build = async ({ destPath, mainFile, srcDir }) => {
+const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
   const functionName = basename(srcDir)
 
   try {
@@ -34,4 +34,4 @@ const build = async ({ destPath, mainFile, srcDir }) => {
   }
 }
 
-module.exports = { build }
+export { build }
