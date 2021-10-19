@@ -9,11 +9,17 @@ const pStat = promisify(stat)
 const pUnlink = promisify(unlink)
 const pWriteFile = promisify(writeFile)
 
+type FsCache = Record<string, unknown>
+
 // This caches multiple FS calls to the same path. It creates a cache key with
 // the name of the function and the path (e.g. "readdir:/some/directory").
+//
+// TODO: This abstraction is stripping out some type data. For example, when
+// calling `readFile` without an encoding, the return type should be narrowed
+// down from `string | Buffer` to `Buffer`, but that's not happening.
 const makeCachedFunction =
   <Args extends unknown[], ReturnType>(func: (path: string, ...args: Args) => ReturnType) =>
-  (cache: Record<string, ReturnType>, path: string, ...args: Args): ReturnType => {
+  (cache: FsCache, path: string, ...args: Args): ReturnType => {
     const key = `${func.name}:${path}`
 
     if (cache[key] === undefined) {
@@ -21,7 +27,7 @@ const makeCachedFunction =
       cache[key] = func(path, ...args)
     }
 
-    return cache[key]
+    return cache[key] as ReturnType
   }
 
 const cachedLstat = makeCachedFunction(pLstat)
@@ -90,4 +96,6 @@ export {
   safeUnlink,
   pStat as stat,
   pWriteFile as writeFile,
+  pReadFile as readFile,
 }
+export type { FsCache }
