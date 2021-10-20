@@ -3,6 +3,7 @@ import { dirname, normalize } from 'path'
 import type { BundleFunction } from '..'
 import type { FunctionConfig } from '../../../../config'
 import { getPathWithExtension } from '../../../../utils/fs'
+import { nonNullable } from '../../../../utils/non_nullable'
 import { getBasePath } from '../../utils/base_path'
 
 import { bundleJsFile } from './bundler'
@@ -12,15 +13,19 @@ import { getSrcFiles } from './src_files'
 const getFunctionBasePath = ({
   basePathFromConfig,
   mainFile,
+  repositoryRoot,
   supportingSrcFiles,
 }: {
   basePathFromConfig?: string
   mainFile: string
+  repositoryRoot?: string
   supportingSrcFiles: string[]
 }) => {
-  // If there is a base path defined in the config, we use that.
+  // If there is a base path defined in the config, we use that. To account for
+  // paths outside of `basePathFromConfig` but inside `repositoryRoot`, we use
+  // the common path prefix between the two.
   if (basePathFromConfig !== undefined) {
-    return basePathFromConfig
+    return getBasePath([basePathFromConfig, repositoryRoot].filter(nonNullable))
   }
 
   // If not, the base path is the common path prefix between all the supporting
@@ -52,6 +57,7 @@ const bundle: BundleFunction = async ({
   mainFile,
   name,
   pluginsModulesPath,
+  repositoryRoot,
   runtime,
   srcDir,
   srcPath,
@@ -102,7 +108,12 @@ const bundle: BundleFunction = async ({
   // bundled file further below.
   const supportingSrcFiles = srcFiles.filter((path) => path !== mainFile)
   const normalizedMainFile = getPathWithExtension(mainFile, '.js')
-  const functionBasePath = getFunctionBasePath({ basePathFromConfig: basePath, mainFile, supportingSrcFiles })
+  const functionBasePath = getFunctionBasePath({
+    basePathFromConfig: basePath,
+    mainFile,
+    repositoryRoot,
+    supportingSrcFiles,
+  })
 
   return {
     aliases: bundlePaths,
