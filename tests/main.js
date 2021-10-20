@@ -2175,15 +2175,21 @@ testMany(
     const basePath = join(fixtureDir, 'packages', 'site-1', 'netlify', 'functions')
     const opts = merge(options, {
       basePath,
+      config: {
+        '*': {
+          externalNodeModules: ['@netlify/mock-package-2'],
+        },
+      },
       repositoryRoot: fixtureDir,
     })
     const result = await zipFunction(`${basePath}/function-1.js`, tmpDir, opts)
 
     await unzipFiles([result])
 
-    const { mock } = require(`${tmpDir}/function-1.js`)
+    const { mock1, mock2 } = require(`${tmpDir}/function-1.js`)
 
-    t.true(mock)
+    t.true(mock1)
+    t.true(mock2)
   },
 )
 
