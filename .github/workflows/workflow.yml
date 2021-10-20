@@ -41,6 +41,8 @@ jobs:
         if: "${{ matrix.node-version == '*' }}"
       - name: Tests
         run: npm run test:ci
+        env:
+          ZISI_TEST_RATE_LIMIT: 3
       - name: Get test coverage flags
         id: test-coverage-flags
         run: |-
