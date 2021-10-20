@@ -6,7 +6,7 @@ import pMap from 'p-map'
 import { ArchiveFormat } from './archive'
 import { Config } from './config'
 import { FeatureFlags, getFlags } from './feature_flags'
-import { FunctionArchive, FunctionSource } from './function'
+import { FunctionSource } from './function'
 import { createManifest } from './manifest'
 import { getFunctionsFromPaths } from './runtimes'
 import { getPluginsModulesPath } from './runtimes/node/utils/plugin_modules_path'
@@ -66,7 +66,7 @@ const zipFunctions = async function (
     // source directories.
     getPluginsModulesPath(srcFolders[0]),
   ])
-  const results: FunctionArchive[] = await pMap(
+  const results = await pMap(
     functions.values(),
     async (func) => {
       const zipResult = await func.runtime.zipFunction({
