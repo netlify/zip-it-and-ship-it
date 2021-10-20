@@ -8,7 +8,7 @@ import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
 import { zipBinary } from '../../zip_binary'
 import { detectBinaryRuntime } from '../detect_runtime'
-import { FindFunctionsInPathsFunction, ZipFunction } from '../runtime'
+import { FindFunctionsInPathsFunction, Runtime, ZipFunction } from '../runtime'
 
 import { build } from './builder'
 import { MANIFEST_NAME } from './constants'
@@ -155,6 +155,6 @@ const zipFunction: ZipFunction = async function ({
   return { config, path: destPath }
 }
 
-const runtime = { findFunctionsInPaths, name: RUNTIME_RUST, zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, name: 'rs', zipFunction }
 
 export default runtime

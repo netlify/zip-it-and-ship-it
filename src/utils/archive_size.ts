@@ -1,10 +1,12 @@
-const { extname } = require('path')
+import { extname } from 'path'
 
-const { stat } = require('./fs')
+import type { FunctionArchive } from '../function'
+
+import { stat } from './fs'
 
 // Returns the input object with an additional `size` property containing the
 // size of the file at `path` when it is a ZIP archive.
-const addArchiveSize = async (result) => {
+const addArchiveSize = async (result: FunctionArchive) => {
   const { path } = result
 
   if (extname(path) !== '.zip') {
@@ -16,4 +18,4 @@ const addArchiveSize = async (result) => {
   return { ...result, size }
 }
 
-module.exports = { addArchiveSize }
+export { addArchiveSize }

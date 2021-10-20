@@ -2,7 +2,8 @@ import { dirname, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 
-import type { BundleFunction, GetSrcFilesFunction } from '..'
+import type { BundleFunction } from '..'
+import type { GetSrcFilesFunction } from '../../../runtime'
 import { getBasePath } from '../../utils/base_path'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 

@@ -8,7 +8,7 @@ import { RUNTIME_GO } from '../../utils/consts'
 import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
 import { detectBinaryRuntime } from '../detect_runtime'
-import { FindFunctionsInPathsFunction, ZipFunction } from '../runtime'
+import { FindFunctionsInPathsFunction, Runtime, ZipFunction } from '../runtime'
 
 import { build } from './builder'
 
@@ -115,6 +115,6 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
   return { config, path: destPath }
 }
 
-const runtime = { findFunctionsInPaths, name: RUNTIME_GO, zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, name: 'go', zipFunction }
 
 export default runtime
