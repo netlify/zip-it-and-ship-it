@@ -1,5 +1,3 @@
-export const ARCHIVE_FORMAT_NONE = 'none'
-export const ARCHIVE_FORMAT_ZIP = 'zip'
 export const JS_BUNDLER_ESBUILD = 'esbuild'
 export const JS_BUNDLER_ESBUILD_ZISI = 'esbuild_zisi'
 export const JS_BUNDLER_NFT = 'nft'

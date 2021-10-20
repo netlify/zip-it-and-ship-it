@@ -3,8 +3,8 @@ import { exit } from 'process'
 
 import yargs from 'yargs'
 
+import type { ArchiveFormat } from './archive'
 import { zipFunctions } from './main'
-import { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } from './utils/consts'
 
 // CLI entry point
 const runCli = async function () {
@@ -31,11 +31,14 @@ const parseArgs = function () {
     .parse()
 }
 
+const archiveFormats: ArchiveFormat[] = ['none', 'zip']
+const defaultArchiveFormat: ArchiveFormat = 'zip'
+
 const OPTIONS = {
   'archive-format': {
     string: true,
-    choices: [ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP],
-    default: ARCHIVE_FORMAT_ZIP,
+    choices: archiveFormats,
+    default: defaultArchiveFormat,
     describe: 'Format of the archive created for each function',
   },
   config: {
