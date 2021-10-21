@@ -1,3 +1,3 @@
-const scopeModule = require('@netlify/eslint-config-node')
+const { stack } = require('@netlify/mock-package')
 
-module.exports = typeof scopeModule === 'object'
+module.exports = stack === 'jam'
