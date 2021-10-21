@@ -1206,7 +1206,7 @@ testMany(
 
 testMany(
   'Handles a JavaScript function ({name}.mjs, {name}/{name}.mjs, {name}/index.mjs)',
-  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
+  ['bundler_esbuild', 'bundler_default'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-mjs', {
       length: 3,
