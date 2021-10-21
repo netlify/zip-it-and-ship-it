@@ -1,15 +1,18 @@
 import { FunctionArchive } from '../function'
 import { RuntimeName } from '../runtimes/runtime'
 
-import { removeFalsy } from './remove_falsy'
+import { removeUndefined } from './remove_undefined'
 
-type FunctionResult = FunctionArchive & { runtime: RuntimeName }
+type FunctionResult = Omit<FunctionArchive, 'runtime'> & { runtime: RuntimeName }
 
 // Takes the result of zipping a function and formats it for output.
 const formatZipResult = (archive: FunctionArchive) => {
-  const result = removeFalsy({ ...archive, runtime: archive.runtime.name }) as FunctionResult
+  const functionResult: FunctionResult = {
+    ...archive,
+    runtime: archive.runtime.name,
+  }
 
-  return result
+  return removeUndefined(functionResult)
 }
 
 export { formatZipResult }
