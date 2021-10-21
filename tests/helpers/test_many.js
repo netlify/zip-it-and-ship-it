@@ -13,10 +13,10 @@ const getRateLimitedTestFunction = (originalTestFunction) => {
 }
 
 /**
- * @template M, O
+ * @template M
  * @param {import("ava")} test
- * @param {Record<M, O>} matrix
- * @returns {(name: string, matrix: M[], runner: (opts: O, t: import("ava").ExecutionContext) => any) => void}
+ * @param {Record<M, { config: import("../../src/config").Config }>} matrix
+ * @returns {(name: string, matrix: M[], runner: (opts: { config: import("../../src/config").Config }, t: import("ava").ExecutionContext) => any) => void}
  */
 const makeTestMany = (test, matrix) => {
   const filteredVariations = env.ZISI_FILTER_VARIATIONS ? env.ZISI_FILTER_VARIATIONS.split(',') : []
