@@ -1,7 +1,0 @@
-export const JS_BUNDLER_ESBUILD = 'esbuild'
-export const JS_BUNDLER_ESBUILD_ZISI = 'esbuild_zisi'
-export const JS_BUNDLER_NFT = 'nft'
-export const JS_BUNDLER_ZISI = 'zisi'
-export const RUNTIME_GO = 'go'
-export const RUNTIME_JS = 'js'
-export const RUNTIME_RUST = 'rs'
