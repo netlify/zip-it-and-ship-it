@@ -18,7 +18,7 @@ const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
   })
   const { archiveFormat } = opts || {}
 
-  if (archiveFormat === undefined || archiveFormat === "zip") {
+  if (archiveFormat === undefined || archiveFormat === 'zip') {
     await requireExtractedFiles(t, files)
   }
 
