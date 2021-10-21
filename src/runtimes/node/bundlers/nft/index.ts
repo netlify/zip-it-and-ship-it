@@ -10,7 +10,11 @@ import { getBasePath } from '../../utils/base_path'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 
 import { transpileMany } from './transpile'
-import type { Cache } from './types'
+
+interface NftCache {
+  analysisCache?: Map<string, { isESM: boolean; [key: string]: unknown }>
+  [key: string]: unknown
+}
 
 const bundle: BundleFunction = async ({ basePath, config, mainFile, repositoryRoot = basePath }) => {
   const { includedFiles = [], includedFilesBasePath } = config
@@ -50,7 +54,7 @@ const traceFilesAndTranspile = async function ({
   mainFile: string
 }) {
   const fsCache: FsCache = {}
-  const cache: Cache = {}
+  const cache: NftCache = {}
   const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
     base: basePath,
     cache,
