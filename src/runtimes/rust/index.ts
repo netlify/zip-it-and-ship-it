@@ -3,7 +3,6 @@ import { join, extname, dirname, basename } from 'path'
 
 import { FeatureFlags } from '../../feature_flags'
 import { SourceFile } from '../../function'
-import { RUNTIME_RUST } from '../../utils/consts'
 import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
 import { zipBinary } from '../../zip_binary'
@@ -55,7 +54,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({
     paths.map(async (path) => {
       const runtime = await detectBinaryRuntime({ fsCache, path })
 
-      if (runtime === RUNTIME_RUST) {
+      if (runtime === 'rs') {
         return processBinary({ fsCache, path })
       }
 

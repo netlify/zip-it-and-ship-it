@@ -1,8 +1,8 @@
 import { basename } from 'path'
 
-import { RUNTIME_GO } from '../../utils/consts'
 import { lstat } from '../../utils/fs'
 import { runCommand } from '../../utils/shell'
+import type { RuntimeName } from '../runtime'
 
 const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
   const functionName = basename(srcDir)
@@ -16,7 +16,8 @@ const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFil
       },
     })
   } catch (error) {
-    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_GO } }
+    const runtime: RuntimeName = 'go'
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime } }
 
     console.error(`Could not compile Go function ${functionName}:\n`)
 

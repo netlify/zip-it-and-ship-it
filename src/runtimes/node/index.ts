@@ -10,7 +10,7 @@ import { findFunctionsInPaths } from './finder'
 import { detectEsModule } from './utils/detect_es_module'
 import { zipNodeJs } from './utils/zip'
 
-export type NodeBundler = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
+export type NodeBundlerName = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
 
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
@@ -22,7 +22,7 @@ const getDefaultBundler = async ({
   extension: string
   mainFile: string
   featureFlags: FeatureFlags
-}): Promise<NodeBundler> => {
+}): Promise<NodeBundlerName> => {
   if (['.mjs', '.ts'].includes(extension)) {
     return 'esbuild'
   }
