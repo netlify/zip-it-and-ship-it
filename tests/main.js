@@ -335,7 +335,7 @@ testMany(
 
 testMany(
   'Resolves dependencies from .netlify/plugins/node_modules',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild', 'todo:bundler_nft'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-next-image', { opts: options })
   },
