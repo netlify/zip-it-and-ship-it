@@ -4,7 +4,7 @@ import { FeatureFlags } from '../feature_flags'
 import { FunctionSource, SourceFile } from '../function'
 import { FsCache } from '../utils/fs'
 
-import type { NodeBundler } from './node'
+import type { NodeBundlerName } from './node'
 
 type RuntimeName = 'go' | 'js' | 'rs'
 
@@ -25,7 +25,7 @@ type GetSrcFilesFunction = (
 ) => Promise<string[]>
 
 interface ZipFunctionResult {
-  bundler?: NodeBundler
+  bundler?: NodeBundlerName
   bundlerErrors?: object[]
   bundlerWarnings?: object[]
   config: FunctionConfig

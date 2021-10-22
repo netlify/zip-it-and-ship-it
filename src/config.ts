@@ -2,7 +2,7 @@ import mergeOptions from 'merge-options'
 import minimatch from 'minimatch'
 
 import { FunctionSource } from './function'
-import type { NodeBundler } from './runtimes/node'
+import type { NodeBundlerName } from './runtimes/node'
 
 // eslint-disable-next-line no-magic-numbers
 type SupportedVersionNumbers = 8 | 10 | 12 | 14
@@ -13,7 +13,7 @@ interface FunctionConfig {
   includedFiles?: string[]
   includedFilesBasePath?: string
   ignoredNodeModules?: string[]
-  nodeBundler?: NodeBundler
+  nodeBundler?: NodeBundlerName
   nodeSourcemap?: boolean
   nodeVersion?: NodeVersion
   processDynamicNodeImports?: boolean

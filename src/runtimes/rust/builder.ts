@@ -7,14 +7,16 @@ import tmp from 'tmp-promise'
 import toml from 'toml'
 
 import { FunctionConfig } from '../../config'
-import { RUNTIME_RUST } from '../../utils/consts'
 import { lstat } from '../../utils/fs'
 import { runCommand } from '../../utils/shell'
+import type { RuntimeName } from '../runtime'
 
 import { CargoManifest } from './cargo_manifest'
 import { BUILD_TARGET, MANIFEST_NAME } from './constants'
 
 const pReadFile = promisify(readFile)
+
+const runtimeName: RuntimeName = 'rs'
 
 const build = async ({ config, name, srcDir }: { config: FunctionConfig; name: string; srcDir: string }) => {
   const functionName = basename(srcDir)
@@ -22,7 +24,7 @@ const build = async ({ config, name, srcDir }: { config: FunctionConfig; name: s
   try {
     await installToolchainOnce()
   } catch (error) {
-    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_RUST } }
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: runtimeName } }
 
     throw error
   }
@@ -74,7 +76,7 @@ const cargoBuild = async ({
         'There is no Rust toolchain installed. Visit https://ntl.fyi/missing-rust-toolchain for more information.'
     }
 
-    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: RUNTIME_RUST } }
+    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime: runtimeName } }
 
     throw error
   }

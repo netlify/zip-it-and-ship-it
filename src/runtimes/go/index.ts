@@ -4,7 +4,6 @@ import { basename, dirname, extname, join } from 'path'
 import cpFile from 'cp-file'
 
 import { SourceFile } from '../../function'
-import { RUNTIME_GO } from '../../utils/consts'
 import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
 import { detectBinaryRuntime } from '../detect_runtime'
@@ -38,7 +37,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ fea
     paths.map(async (path) => {
       const runtime = await detectBinaryRuntime({ fsCache, path })
 
-      if (runtime === RUNTIME_GO) {
+      if (runtime === 'go') {
         return processBinary({ fsCache, path })
       }
 

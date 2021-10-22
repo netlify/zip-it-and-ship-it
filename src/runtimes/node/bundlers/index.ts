@@ -1,9 +1,9 @@
 import type { Message } from '@netlify/esbuild'
 
+import type { NodeBundlerName } from '..'
 import { FunctionConfig } from '../../../config'
 import { FeatureFlag } from '../../../feature_flags'
 import { FunctionSource } from '../../../function'
-import { JS_BUNDLER_ESBUILD, JS_BUNDLER_ESBUILD_ZISI, JS_BUNDLER_NFT, JS_BUNDLER_ZISI } from '../../../utils/consts'
 import { GetSrcFilesFunction } from '../../runtime'
 
 import esbuildBundler from './esbuild'
@@ -42,16 +42,16 @@ interface NodeBundler {
   getSrcFiles: GetSrcFilesFunction
 }
 
-const getBundler = (name: string): NodeBundler => {
+const getBundler = (name: NodeBundlerName): NodeBundler => {
   switch (name) {
-    case JS_BUNDLER_ESBUILD:
-    case JS_BUNDLER_ESBUILD_ZISI:
+    case 'esbuild':
+    case 'esbuild_zisi':
       return esbuildBundler
 
-    case JS_BUNDLER_NFT:
+    case 'nft':
       return nftBundler
 
-    case JS_BUNDLER_ZISI:
+    case 'zisi':
       return zisiBundler
 
     default:

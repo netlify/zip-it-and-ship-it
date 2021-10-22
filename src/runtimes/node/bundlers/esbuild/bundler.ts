@@ -3,9 +3,10 @@ import { basename, dirname, extname, resolve, join } from 'path'
 import { build, Metafile } from '@netlify/esbuild'
 import { tmpName } from 'tmp-promise'
 
+import type { NodeBundlerName } from '../..'
 import type { FunctionConfig } from '../../../../config'
-import { JS_BUNDLER_ESBUILD, RUNTIME_JS } from '../../../../utils/consts'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs'
+import type { RuntimeName } from '../../../runtime'
 
 import { getBundlerTarget } from './bundler_target'
 import { getDynamicImportsPlugin } from './plugin_dynamic_imports'
@@ -116,9 +117,11 @@ const bundleJsFile = async function ({
       warnings,
     }
   } catch (error) {
+    const bundler: NodeBundlerName = 'esbuild'
+    const runtime: RuntimeName = 'js'
     error.customErrorInfo = {
       type: 'functionsBundling',
-      location: { bundler: JS_BUNDLER_ESBUILD, functionName: name, runtime: RUNTIME_JS },
+      location: { bundler, functionName: name, runtime },
     }
 
     throw error

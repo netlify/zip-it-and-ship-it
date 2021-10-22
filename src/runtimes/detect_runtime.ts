@@ -2,11 +2,18 @@ import type { Buffer } from 'buffer'
 
 import { detect, Runtime } from 'elf-cam'
 
-import { RUNTIME_GO, RUNTIME_RUST } from '../utils/consts'
 import { cachedReadFile, FsCache } from '../utils/fs'
 
+import type { RuntimeName } from './runtime'
+
 // Try to guess the runtime by inspecting the binary file.
-const detectBinaryRuntime = async function ({ fsCache, path }: { fsCache: FsCache; path: string }) {
+const detectBinaryRuntime = async function ({
+  fsCache,
+  path,
+}: {
+  fsCache: FsCache
+  path: string
+}): Promise<RuntimeName | undefined> {
   try {
     const buffer = await cachedReadFile(fsCache, path)
 
@@ -15,17 +22,15 @@ const detectBinaryRuntime = async function ({ fsCache, path }: { fsCache: FsCach
     // Buffer in this case because we're not specifying an encoding.
     const binaryType = detect(buffer as Buffer)
 
-    if (binaryType === undefined) {
-      return
+    switch (binaryType) {
+      case Runtime.Go:
+        return 'go'
+      case Runtime.Rust:
+        return 'rs'
+      default:
+        return undefined
     }
-
-    return RUNTIMES[binaryType]
   } catch (error) {}
-}
-
-const RUNTIMES = {
-  [Runtime.Go]: RUNTIME_GO,
-  [Runtime.Rust]: RUNTIME_RUST,
 }
 
 export { detectBinaryRuntime }
