@@ -398,7 +398,7 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules and feature flag ON',
-  ['bundler_esbuild', 'bundler_default', 'todo:bundler_nft'],
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   async (options, t) => {
     const opts = merge(options, { featureFlags: { defaultEsModulesToEsbuild: true } })
 
@@ -411,7 +411,7 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules and feature flag OFF',
-  ['bundler_esbuild', 'bundler_default', 'todo:bundler_nft'],
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   async (options, t) => {
     const bundler = options.config['*'].nodeBundler
 
@@ -1206,7 +1206,7 @@ testMany(
 
 testMany(
   'Handles a JavaScript function ({name}.mjs, {name}/{name}.mjs, {name}/index.mjs)',
-  ['bundler_esbuild', 'bundler_default', 'todo:bundler_nft'],
+  ['bundler_esbuild', 'bundler_default'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-mjs', {
       length: 3,
