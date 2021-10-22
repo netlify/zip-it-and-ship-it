@@ -1,6 +1,7 @@
-import { dirname, normalize, resolve } from 'path'
+import { basename, dirname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
+import resolveDependency from '@vercel/nft/out/resolve-dependency'
 
 import type { BundleFunction } from '..'
 import type { FunctionConfig } from '../../../../config'
@@ -16,7 +17,15 @@ interface NftCache {
   [key: string]: unknown
 }
 
-const bundle: BundleFunction = async ({ basePath, config, mainFile, repositoryRoot = basePath }) => {
+const appearsToBeModuleName = (name: string) => !name.startsWith('.')
+
+const bundle: BundleFunction = async ({
+  basePath,
+  config,
+  mainFile,
+  pluginsModulesPath,
+  repositoryRoot = basePath,
+}) => {
   const { includedFiles = [], includedFilesBasePath } = config
   const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
@@ -30,6 +39,7 @@ const bundle: BundleFunction = async ({ basePath, config, mainFile, repositoryRo
     basePath: repositoryRoot,
     config,
     mainFile,
+    pluginsModulesPath,
   })
   const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
@@ -48,10 +58,12 @@ const traceFilesAndTranspile = async function ({
   basePath,
   config,
   mainFile,
+  pluginsModulesPath,
 }: {
   basePath?: string
   config: FunctionConfig
   mainFile: string
+  pluginsModulesPath?: string
 }) {
   const fsCache: FsCache = {}
   const cache: NftCache = {}
@@ -66,6 +78,22 @@ const traceFilesAndTranspile = async function ({
       } catch (error) {
         if (error.code === 'ENOENT' || error.code === 'EISDIR') {
           return null
+        }
+
+        throw error
+      }
+    },
+    resolve: async (specifier, parent, ...args) => {
+      try {
+        return await resolveDependency(specifier, parent, ...args)
+      } catch (error) {
+        // If we get a `MODULE_NOT_FOUND` error for what appears to be a module
+        // name, we try to resolve it a second time using `pluginsModulesPath`
+        // as the base directory.
+        if (error.code === 'MODULE_NOT_FOUND' && pluginsModulesPath && appearsToBeModuleName(specifier)) {
+          const newParent = join(pluginsModulesPath, basename(parent))
+
+          return await resolveDependency(specifier, newParent, ...args)
         }
 
         throw error
