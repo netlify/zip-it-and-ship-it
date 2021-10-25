@@ -18,7 +18,7 @@ const createManifest = async ({ functions, path }: { functions: FunctionResult[]
   await writeFile(path, JSON.stringify(payload))
 }
 
-const formatFunctionForManifest = ({ mainFile, name, path, runtime, config }: FunctionResult) => ({
+const formatFunctionForManifest = ({ config, mainFile, name, path, runtime }: FunctionResult) => ({
   mainFile,
   name,
   path: resolve(path),
