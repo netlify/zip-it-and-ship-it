@@ -12,6 +12,9 @@ import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/includ
 
 import { transpileMany } from './transpile'
 
+// Paths that will be excluded from the tracing process.
+const ignore = ['node_modules/**/aws-sdk/**']
+
 interface NftCache {
   analysisCache?: Map<string, { isESM: boolean; [key: string]: unknown }>
   [key: string]: unknown
@@ -70,6 +73,7 @@ const traceFilesAndTranspile = async function ({
   const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
     base: basePath,
     cache,
+    ignore,
     readFile: async (path: string) => {
       try {
         const source = (await cachedReadFile(fsCache, path, 'utf8')) as string
@@ -136,7 +140,7 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
     includedFiles,
     includedFilesBasePath,
   )
-  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: basePath })
+  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: basePath, ignore })
   const normalizedDependencyPaths = dependencyPaths.map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
   const includedPaths = filterExcludedPaths([...normalizedDependencyPaths, ...includedFilePaths], excludedPaths)
 
