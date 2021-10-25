@@ -15,7 +15,7 @@ import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/includ
 import { transpileMany } from './transpile'
 
 // Paths that will be excluded from the tracing process.
-const ignore = ['node_modules/**/aws-sdk/**']
+const ignore = ['node_modules/aws-sdk/**']
 
 interface NftCache {
   analysisCache?: Map<string, { isESM: boolean; [key: string]: unknown }>
