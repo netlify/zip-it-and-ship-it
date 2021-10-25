@@ -2,6 +2,8 @@ import { basename, dirname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import resolveDependency from '@vercel/nft/out/resolve-dependency'
+import minimatch from 'minimatch'
+import unixify from 'unixify'
 
 import type { BundleFunction } from '..'
 import type { FunctionConfig } from '../../../../config'
@@ -13,7 +15,7 @@ import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/includ
 import { transpileMany } from './transpile'
 
 // Paths that will be excluded from the tracing process.
-const ignore = [join('node_modules', '**', 'aws-sdk', '**')]
+const ignore = ['node_modules/**/aws-sdk/**']
 
 interface NftCache {
   analysisCache?: Map<string, { isESM: boolean; [key: string]: unknown }>
@@ -57,6 +59,13 @@ const bundle: BundleFunction = async ({
   }
 }
 
+const ignoreFunction = (path: string) => {
+  const normalizedPath = unixify(path)
+  const shouldIgnore = ignore.some((expression) => minimatch(normalizedPath, expression))
+
+  return shouldIgnore
+}
+
 const traceFilesAndTranspile = async function ({
   basePath,
   config,
@@ -73,7 +82,7 @@ const traceFilesAndTranspile = async function ({
   const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
     base: basePath,
     cache,
-    ignore,
+    ignore: ignoreFunction,
     readFile: async (path: string) => {
       try {
         const source = (await cachedReadFile(fsCache, path, 'utf8')) as string
@@ -140,7 +149,7 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
     includedFiles,
     includedFilesBasePath,
   )
-  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: basePath, ignore })
+  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: basePath, ignore: ignoreFunction })
   const normalizedDependencyPaths = dependencyPaths.map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
   const includedPaths = filterExcludedPaths([...normalizedDependencyPaths, ...includedFilePaths], excludedPaths)
 
