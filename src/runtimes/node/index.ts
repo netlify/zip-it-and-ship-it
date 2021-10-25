@@ -23,11 +23,17 @@ const getDefaultBundler = async ({
   mainFile: string
   featureFlags: FeatureFlags
 }): Promise<NodeBundlerName> => {
+  const { defaultEsModulesToEsbuild, traceWithNft } = featureFlags
+
   if (['.mjs', '.ts'].includes(extension)) {
     return 'esbuild'
   }
 
-  if (featureFlags.defaultEsModulesToEsbuild) {
+  if (traceWithNft) {
+    return 'nft'
+  }
+
+  if (defaultEsModulesToEsbuild) {
     const isEsModule = await detectEsModule({ mainFile })
 
     if (isEsModule) {

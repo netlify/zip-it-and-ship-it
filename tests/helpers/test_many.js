@@ -46,7 +46,7 @@ const makeTestMany = (test, matrix) => {
 
       const rateLimitedTestFn = getRateLimitedTestFunction(testFn)
 
-      rateLimitedTestFn(testTitle, assertions.bind(null, variation))
+      rateLimitedTestFn(testTitle, assertions.bind(null, variation), name)
     })
   }
 
