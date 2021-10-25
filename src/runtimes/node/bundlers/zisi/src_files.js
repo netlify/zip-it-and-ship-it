@@ -1,6 +1,7 @@
 const { dirname, basename, normalize } = require('path')
 
 const { not: notJunk } = require('junk')
+const precinct = require('precinct')
 
 const { filterExcludedPaths, getPathsOfIncludedFiles } = require('../../utils/included_files')
 const { getPackageJson } = require('../../utils/package_json')
@@ -86,7 +87,9 @@ const getFileDependencies = async function ({
   state.localFiles.add(path)
 
   const basedir = dirname(path)
-  const dependencies = await listImports({ functionName, path })
+  const dependencies = featureFlags.parseWithEsbuild
+    ? await listImports({ functionName, path })
+    : precinct.paperwork(path, { includeCore: false })
   const depsPaths = await Promise.all(
     dependencies.filter(Boolean).map((dependency) =>
       getImportDependencies({
