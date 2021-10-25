@@ -1,4 +1,4 @@
-const streams = require('stream/web')
+const streams = require('node:stream/web')
 
 exports.handler = () => ({
   statusCode: 200,

@@ -2227,3 +2227,13 @@ testMany(
     files.every(({ size }) => Number.isInteger(size) && size > 0)
   },
 )
+
+testMany(
+  'Ignores node:-prefixed imports (repro #743)',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    await zipFixture(t, 'require-stream', {
+      opts: options,
+    })
+  },
+)
