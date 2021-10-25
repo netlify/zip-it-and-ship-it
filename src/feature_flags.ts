@@ -5,6 +5,7 @@ const FLAGS: Record<string, boolean> = {
   buildRustSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_RUST_SOURCE),
   defaultEsModulesToEsbuild: Boolean(env.NETLIFY_EXPERIMENTAL_DEFAULT_ES_MODULES_TO_ESBUILD),
   parseWithEsbuild: false,
+  traceWithNft: false,
 }
 
 type FeatureFlag = keyof typeof FLAGS
