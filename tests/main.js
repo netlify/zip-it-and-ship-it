@@ -2176,7 +2176,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
 
 testMany(
   'Includes `schedule` config in manifest',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild', 'bundler_nft'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_nft'],
   async (options, t) => {
     const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
     const manifestPath = join(tmpDir, 'manifest.json')
