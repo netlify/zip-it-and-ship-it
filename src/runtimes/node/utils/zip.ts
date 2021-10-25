@@ -37,7 +37,7 @@ interface ZipNodeParameters {
   extension: string
   filename: string
   mainFile: string
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
   srcFiles: string[]
 }
 
@@ -190,7 +190,7 @@ const zipJsFile = function ({
   aliases?: Map<string, string>
   archive: ZipArchive
   commonPrefix: string
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
   stat: Stats
   srcFile: string
   userNamespace: string
@@ -226,5 +226,5 @@ const normalizeFilePath = function ({
   return pathD
 }
 
-export { zipNodeJs }
+export { ArchiveFormat, zipNodeJs }
 /* eslint-enable max-lines */

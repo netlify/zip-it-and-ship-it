@@ -1,5 +1,6 @@
 import { dirname } from 'path'
 
+import { nonNullable } from '../../../../utils/non_nullable'
 import { getModuleName } from '../../utils/module'
 import { PackageJson } from '../../utils/package_json'
 import { TraversalCache } from '../../utils/traversal_cache'
@@ -24,7 +25,7 @@ const getDependencyPathsForDependency = async function ({
   basedir: string
   state: TraversalCache
   packageJson: PackageJson
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
 }): Promise<string[]> {
   const moduleName = getModuleName(dependency)
 
@@ -50,14 +51,14 @@ const getDependenciesForModuleName = async function ({
   moduleName: string
   basedir: string
   state: TraversalCache
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
 }): Promise<string[]> {
   if (isExcludedModule(moduleName)) {
     return []
   }
 
   // Find the Node.js module directory path
-  const packagePath = await resolvePackage(moduleName, [basedir, pluginsModulesPath].filter(Boolean))
+  const packagePath = await resolvePackage(moduleName, [basedir, pluginsModulesPath].filter(nonNullable))
 
   if (packagePath === undefined) {
     return []
@@ -97,7 +98,7 @@ const getNestedModules = async function ({
   modulePath: string
   state: TraversalCache
   packageJson: PackageJson
-  pluginsModulesPath: string
+  pluginsModulesPath?: string
 }) {
   const dependencies = getNestedDependencies(packageJson)
 

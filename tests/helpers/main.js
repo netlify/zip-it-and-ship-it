@@ -7,7 +7,6 @@ const { dir: getTmpDir } = require('tmp-promise')
 
 const { zipFunctions } = require('../..')
 const { listImports } = require('../../dist/runtimes/node/bundlers/zisi/list_imports')
-const { ARCHIVE_FORMAT_ZIP } = require('../../dist/utils/consts')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 
@@ -19,7 +18,7 @@ const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
   })
   const { archiveFormat } = opts || {}
 
-  if (archiveFormat === undefined || archiveFormat === ARCHIVE_FORMAT_ZIP) {
+  if (archiveFormat === undefined || archiveFormat === 'zip') {
     await requireExtractedFiles(t, files)
   }
 

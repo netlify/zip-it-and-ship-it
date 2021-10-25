@@ -1,10 +1,22 @@
-const { env, platform } = require('process')
+const { env } = require('process')
+
+const throat = require('throat')
+
+const getRateLimitedTestFunction = (originalTestFunction) => {
+  const rateLimit = Number.parseInt(env.ZISI_TEST_RATE_LIMIT)
+
+  if (Number.isNaN(rateLimit)) {
+    return originalTestFunction
+  }
+
+  return throat(rateLimit, originalTestFunction)
+}
 
 /**
- * @template M, O
+ * @template M
  * @param {import("ava")} test
- * @param {Record<M, O>} matrix
- * @returns {(name: string, matrix: M[], runner: (opts: O, t: import("ava").ExecutionContext) => any) => void}
+ * @param {Record<M, { config: import("../../src/config").Config }>} matrix
+ * @returns {(name: string, matrix: M[], runner: (opts: { config: import("../../src/config").Config }, t: import("ava").ExecutionContext) => any) => void}
  */
 const makeTestMany = (test, matrix) => {
   const filteredVariations = env.ZISI_FILTER_VARIATIONS ? env.ZISI_FILTER_VARIATIONS.split(',') : []
@@ -18,12 +30,10 @@ const makeTestMany = (test, matrix) => {
 
       // Weird workaround to avoid running too many tests in parallel on
       // Windows, which causes problems in the CI.
-      const isSerial = variationNames.length >= 3 && platform === 'win32'
-      const testFunction = isSerial ? testFn.serial : testFn
       const testTitle = `${title} [${name}]`
 
       if (name.startsWith('todo:')) {
-        testFunction.todo(testTitle)
+        testFn.todo(testTitle)
 
         return
       }
@@ -34,7 +44,9 @@ const makeTestMany = (test, matrix) => {
         throw new Error(`Unknown variation in test: ${name}`)
       }
 
-      testFunction(testTitle, assertions.bind(null, variation))
+      const rateLimitedTestFn = getRateLimitedTestFunction(testFn)
+
+      rateLimitedTestFn(testTitle, assertions.bind(null, variation), name)
     })
   }
 

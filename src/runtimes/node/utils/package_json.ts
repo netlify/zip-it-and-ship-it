@@ -2,6 +2,7 @@ import pkgDir from 'pkg-dir'
 
 interface PackageJson {
   name?: string
+  version?: string
   dependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
   peerDependenciesMeta?: Record<string, { optional?: boolean }>
