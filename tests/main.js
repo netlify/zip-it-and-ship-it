@@ -2150,6 +2150,28 @@ test('Creates a manifest file with the list of created functions if the `manifes
   })
 })
 
+testMany(
+  'Includes `schedule` config in manifest',
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+    await zipNode(t, 'simple', {
+      opts: merge(options, {
+        manifest: manifestPath,
+        config: {
+          function: {
+            schedule: '@daily',
+          },
+        },
+      }),
+    })
+
+    const manifest = require(manifestPath)
+    t.is(manifest.functions[0].schedule, '@daily')
+  },
+)
+
 testMany('Correctly follows node_modules via symlink', ['bundler_esbuild', 'todo:bundler_nft'], async (options, t) => {
   const { tmpDir } = await zipNode(t, 'node-module-symlinks', {
     opts: options,
