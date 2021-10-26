@@ -81,6 +81,14 @@ Format of the archive created for each function. Defaults to ZIP archives.
 
 If set to `none`, the output of each function will be a directory containing all the bundled files.
 
+#### `basePath`
+
+- _Type_: `string`
+- _Default value_: `undefined`
+
+The directory which all relative paths will be resolved from. These include paths in the `includedFiles` config
+property, as well as imports using dynamic expressions such as `require(\`./files/${name}\`)`.
+
 #### `config`
 
 - _Type_: `object`
@@ -192,6 +200,10 @@ properties.
 - `runtime` `string`
 
   Either `"js"`, `"go"`, or `"rs"`.
+
+- `size`: `number`
+
+  The size of the generated archive, in bytes.
 
 Additionally, the following properties also exist for Node.js functions:
 

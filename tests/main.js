@@ -12,6 +12,7 @@ const execa = require('execa')
 const makeDir = require('make-dir')
 const pathExists = require('path-exists')
 const sinon = require('sinon')
+const sortOn = require('sort-on')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
@@ -26,12 +27,6 @@ const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
 
 const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler')
-const {
-  JS_BUNDLER_ESBUILD: ESBUILD,
-  JS_BUNDLER_ESBUILD_ZISI,
-  JS_BUNDLER_ZISI,
-  JS_BUNDLER_ESBUILD,
-} = require('../dist/utils/consts')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -76,21 +71,39 @@ const testMany = makeTestMany(test, {
   bundler_default: {
     config: { '*': { nodeBundler: undefined } },
   },
-  bundler_default_parse_esbuild: {
+  bundler_default_nft: {
     config: { '*': { nodeBundler: undefined } },
-    featureFlags: { parseWithEsbuild: true },
+    featureFlags: { traceWithNft: true },
   },
   bundler_esbuild: {
-    config: { '*': { nodeBundler: ESBUILD } },
+    config: { '*': { nodeBundler: 'esbuild' } },
   },
   bundler_esbuild_zisi: {
-    config: { '*': { nodeBundler: JS_BUNDLER_ESBUILD_ZISI } },
+    config: { '*': { nodeBundler: 'esbuild_zisi' } },
+  },
+  bundler_nft: {
+    config: { '*': { nodeBundler: 'nft' } },
   },
 })
 
+const getNodeBundlerString = (variation) => {
+  switch (variation) {
+    case 'bundler_esbuild':
+    case 'bundler_esbuild_zisi':
+      return 'esbuild'
+
+    case 'bundler_nft':
+    case 'bundler_default_nft':
+      return 'nft'
+
+    default:
+      return 'zisi'
+  }
+}
+
 testMany(
   'Zips Node.js function files',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'simple'
     const { files } = await zipNode(t, fixtureName, { opts: options })
@@ -103,7 +116,7 @@ testMany(
 
 testMany(
   'Handles Node module with native bindings (buildtime marker module)',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const bundler = options.config['*'].nodeBundler
     const fixtureDir = 'node-module-native-buildtime'
@@ -132,7 +145,7 @@ testMany(
     t.true(normalizedRequires.has('module-with-prebuild'))
 
     // We can only detect native modules when using esbuild.
-    if (bundler !== undefined) {
+    if (bundler === 'esbuild' || bundler === 'esbuild_zisi') {
       t.deepEqual(files[0].nativeNodeModules, {
         'module-with-node-file': { [moduleWithNodeFile]: '3.0.0' },
         'module-with-node-gyp': { [moduleWithNodeGypPath]: '1.0.0' },
@@ -144,7 +157,7 @@ testMany(
 
 testMany(
   'Handles Node module with native bindings (runtime marker module)',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const bundler = options.config['*'].nodeBundler
     const fixtureDir = 'node-module-native-runtime'
@@ -162,7 +175,7 @@ testMany(
     t.true(normalizedRequires.has('test'))
 
     // We can only detect native modules when using esbuild.
-    if (bundler !== undefined) {
+    if (bundler === 'esbuild' || bundler === 'esbuild_zisi') {
       t.deepEqual(files[0].nativeNodeModules, { test: { [modulePath]: '1.0.0' } })
     }
   },
@@ -170,7 +183,7 @@ testMany(
 
 testMany(
   'Can require node modules',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'local-node-module', { opts: options })
   },
@@ -178,7 +191,7 @@ testMany(
 
 testMany(
   'Can require deep paths in node modules',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { tmpDir } = await zipNode(t, 'local-node-module-deep-require', {
       opts: options,
@@ -192,7 +205,7 @@ testMany(
 
 testMany(
   'Can require Node modules with destructuring expressions',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, `local-node-module-destructure-require`, {
       opts: options,
@@ -202,7 +215,7 @@ testMany(
 
 testMany(
   'Can require scoped node modules',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-scope', { opts: options })
   },
@@ -210,7 +223,7 @@ testMany(
 
 testMany(
   'Can require node modules nested files',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-path', { opts: options })
   },
@@ -218,7 +231,7 @@ testMany(
 
 testMany(
   'Can require dynamically generated node modules',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'side-module', { opts: options })
   },
@@ -226,9 +239,13 @@ testMany(
 
 testMany(
   'Ignore some excluded node modules',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
-    const { tmpDir } = await zipNode(t, 'node-module-excluded', { opts: options })
+    const fixtureName = 'node-module-excluded'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    const { tmpDir } = await zipNode(t, fixtureName, { opts })
 
     t.false(await pathExists(`${tmpDir}/node_modules/aws-sdk`))
 
@@ -246,7 +263,7 @@ testMany(
 
 testMany(
   'Ignore TypeScript types',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { tmpDir } = await zipNode(t, 'node-module-typescript-types', {
       opts: options,
@@ -257,7 +274,7 @@ testMany(
 
 testMany(
   'Throws on runtime errors',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'node-module-error', { opts: options }))
   },
@@ -265,7 +282,7 @@ testMany(
 
 testMany(
   'Throws on missing dependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'node-module-missing', { opts: options }))
   },
@@ -273,7 +290,7 @@ testMany(
 
 testMany(
   'Throws on missing dependencies with no optionalDependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'node-module-missing-package', { opts: options }))
   },
@@ -281,7 +298,7 @@ testMany(
 
 testMany(
   'Throws on missing conditional dependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'node-module-missing-conditional', { opts: options }))
   },
@@ -289,7 +306,7 @@ testMany(
 
 testMany(
   "Throws on missing dependencies' dependencies",
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'node-module-missing-deep', { opts: options }))
   },
@@ -297,7 +314,7 @@ testMany(
 
 testMany(
   'Ignore missing optional dependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-missing-optional', { opts: options })
   },
@@ -305,7 +322,7 @@ testMany(
 
 testMany(
   'Ignore modules conditional dependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-deep-conditional', { opts: options })
   },
@@ -313,7 +330,7 @@ testMany(
 
 testMany(
   'Ignore missing optional peer dependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-peer-optional', { opts: options })
   },
@@ -321,7 +338,7 @@ testMany(
 
 testMany(
   'Throws on missing optional peer dependencies with no peer dependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'node-module-peer-optional-none', { opts: options }))
   },
@@ -329,7 +346,7 @@ testMany(
 
 testMany(
   'Throws on missing non-optional peer dependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'node-module-peer-not-optional', { opts: options }))
   },
@@ -337,7 +354,7 @@ testMany(
 
 testMany(
   'Resolves dependencies from .netlify/plugins/node_modules',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-next-image', { opts: options })
   },
@@ -348,7 +365,7 @@ testMany(
 // temporarily rename it to an actual `package.json`.
 testMany(
   'Throws on invalid package.json',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi'],
   async (options, t) => {
     const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
     await cpy('**', `${fixtureDir}/invalid-package-json`, {
@@ -373,7 +390,7 @@ testMany(
 
 testMany(
   'Ignore invalid require()',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'invalid-require', { opts: options })
   },
@@ -385,7 +402,7 @@ testMany('Can use dynamic import() with esbuild', ['bundler_esbuild'], async (op
 
 testMany(
   'Can require local files',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'local-require', { opts: options })
   },
@@ -393,7 +410,7 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules and feature flag ON',
-  ['bundler_esbuild', 'bundler_default'],
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   async (options, t) => {
     const opts = merge(options, { featureFlags: { defaultEsModulesToEsbuild: true } })
 
@@ -406,7 +423,7 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules and feature flag OFF',
-  ['bundler_esbuild', 'bundler_default'],
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   async (options, t) => {
     const bundler = options.config['*'].nodeBundler
 
@@ -426,7 +443,7 @@ testMany(
 
 testMany(
   'Can require local files deeply',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'local-deep-require', { opts: options })
   },
@@ -434,7 +451,7 @@ testMany(
 
 testMany(
   'Can require local files in the parent directories',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'local-parent-require', { opts: options })
   },
@@ -442,7 +459,7 @@ testMany(
 
 testMany(
   'Ignore missing critters dependency for Next.js 10',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-next10-critters', { opts: options })
   },
@@ -450,7 +467,7 @@ testMany(
 
 testMany(
   'Ignore missing critters dependency for Next.js exact version 10.0.5',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-next10-critters-exact', { opts: options })
   },
@@ -458,7 +475,7 @@ testMany(
 
 testMany(
   'Ignore missing critters dependency for Next.js with range ^10.0.5',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-next10-critters-10.0.5-range', {
       opts: options,
@@ -468,7 +485,7 @@ testMany(
 
 testMany(
   "Ignore missing critters dependency for Next.js with version='latest'",
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-next10-critters-latest', { opts: options })
   },
@@ -479,9 +496,12 @@ testMany(
 if (platform !== 'win32') {
   testMany(
     'Can require symlinks',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options, t) => {
       const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
+      const opts = merge(options, {
+        basePath: `${fixtureDir}/symlinks`,
+      })
       await cpy('**', `${fixtureDir}/symlinks`, {
         cwd: `${FIXTURES_DIR}/symlinks`,
         parents: true,
@@ -496,7 +516,7 @@ if (platform !== 'win32') {
       }
 
       try {
-        await zipNode(t, 'symlinks', { opts: options, fixtureDir })
+        await zipNode(t, 'symlinks', { opts, fixtureDir })
       } finally {
         await pUnlink(symlinkFile)
       }
@@ -506,7 +526,7 @@ if (platform !== 'win32') {
 
 testMany(
   'Can target a directory with a main file with the same name',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'directory-handler'
     const { files } = await zipNode(t, fixtureName, { opts: options })
@@ -517,7 +537,7 @@ testMany(
 
 testMany(
   'Can target a directory with an index.js file',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'index-handler'
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
@@ -531,7 +551,7 @@ testMany(
 
 testMany(
   'Keeps non-required files inside the target directory',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { tmpDir } = await zipNode(t, 'keep-dir-files', { opts: options })
     t.true(await pathExists(`${tmpDir}/function.js`))
@@ -540,7 +560,7 @@ testMany(
 
 testMany(
   'Ignores non-required node_modules inside the target directory',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { tmpDir } = await zipNode(t, 'ignore-dir-node-modules', {
       opts: options,
@@ -551,7 +571,7 @@ testMany(
 
 testMany(
   'Ignores deep non-required node_modules inside the target directory',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { tmpDir } = await zipNode(t, 'ignore-deep-dir-node-modules', {
       opts: options,
@@ -562,7 +582,7 @@ testMany(
 
 testMany(
   'Works with many dependencies',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'many-dependencies', { opts: options })
   },
@@ -570,7 +590,7 @@ testMany(
 
 testMany(
   'Works with many function files',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const names = new Set(['one', 'two', 'three', 'four', 'five', 'six'])
     const { files } = await zipNode(t, 'many-functions', {
@@ -588,7 +608,7 @@ const TEST_FUNCTIONS_LENGTH = 6
 
 testMany(
   'Produces deterministic checksums',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const bundler = options.config['*'].nodeBundler
     const [checksumOne, checksumTwo] = await Promise.all([getZipChecksum(t, bundler), getZipChecksum(t, bundler)])
@@ -598,7 +618,7 @@ testMany(
 
 testMany(
   'Throws when the source folder does not exist',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'does-not-exist', { opts: options }), {
       message: /Functions folder does not exist/,
@@ -608,7 +628,7 @@ testMany(
 
 testMany(
   'Works even if destination folder does not exist',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'simple', { opts: options })
   },
@@ -616,7 +636,7 @@ testMany(
 
 testMany(
   'Do not consider node_modules as a function file',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'ignore-node-modules', { opts: options })
   },
@@ -624,7 +644,7 @@ testMany(
 
 testMany(
   'Ignore directories without a main file',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'ignore-directories', { opts: options })
   },
@@ -632,7 +652,7 @@ testMany(
 
 testMany(
   'Remove useless files',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { tmpDir } = await zipNode(t, 'useless', { opts: options })
     t.false(await pathExists(`${tmpDir}/Desktop.ini`))
@@ -641,7 +661,7 @@ testMany(
 
 testMany(
   'Works on empty directories',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'empty', { opts: options, length: 0 })
   },
@@ -649,17 +669,20 @@ testMany(
 
 testMany(
   'Works when no package.json is present',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
+    const opts = merge(options, {
+      basePath: fixtureDir,
+    })
     await cpy('**', `${fixtureDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
-    await zipNode(t, 'no-package-json', { opts: options, length: 1, fixtureDir })
+    await zipNode(t, 'no-package-json', { opts, length: 1, fixtureDir })
   },
 )
 
 testMany(
   'Copies already zipped files',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const tmpDir = await tmpName({ prefix: 'zip-it-test' })
     const { files } = await zipCheckFunctions(t, 'keep-zip', { tmpDir })
@@ -675,7 +698,7 @@ testMany(
 
 testMany(
   'Ignore unsupported programming languages',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipFixture(t, 'unsupported', { length: 0, opts: options })
   },
@@ -683,7 +706,7 @@ testMany(
 
 testMany(
   'Can reduce parallelism',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const opts = merge(options, { parallelLimit: 1 })
 
@@ -693,20 +716,19 @@ testMany(
 
 testMany(
   'Can use zipFunction()',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
-  async (options, t) => {
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+  async (options, t, variation) => {
     const bundler = options.config['*'].nodeBundler
     const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
     const mainFile = join(FIXTURES_DIR, 'simple', 'function.js')
     const result = await zipFunction(mainFile, tmpDir, options)
-    const outBundlers = { [JS_BUNDLER_ESBUILD_ZISI]: ESBUILD, undefined: JS_BUNDLER_ZISI }
-    const outBundler = outBundlers[bundler] || bundler
+    const bundlerUsed = getNodeBundlerString(variation)
 
     t.is(result.name, 'function')
     t.is(result.runtime, 'js')
-    t.is(result.bundler, outBundler)
+    t.is(result.bundler, bundlerUsed)
     t.is(result.mainFile, mainFile)
-    t.deepEqual(result.config, bundler === undefined ? {} : { nodeBundler: outBundler })
+    t.deepEqual(result.config, bundler === undefined ? {} : { nodeBundler: bundlerUsed })
   },
 )
 
@@ -752,17 +774,28 @@ test('Can list function main files from multiple source directories with listFun
 
 testMany(
   'Can list all function files with listFunctionsFiles()',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
-    const bundler = options.config['*'].nodeBundler
     const fixtureDir = `${FIXTURES_DIR}/list`
-    const functions = await listFunctionsFiles(fixtureDir, options)
+    const opts = merge(options, {
+      basePath: fixtureDir,
+    })
+    const bundler = options.config['*'].nodeBundler
+    const functions = await listFunctionsFiles(fixtureDir, opts)
+    const sortedFunctions = sortOn(functions, 'mainFile')
     t.deepEqual(
-      functions,
+      sortedFunctions,
       [
-        { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
-        { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
         { name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts', srcFile: 'five/index.ts' },
+
+        bundler === 'nft' && {
+          name: 'five',
+          mainFile: 'five/index.ts',
+          runtime: 'js',
+          extension: '.ts',
+          srcFile: 'five/util.ts',
+        },
+
         {
           name: 'four',
           mainFile: 'four.js/four.js.js',
@@ -771,18 +804,19 @@ testMany(
           srcFile: 'four.js/four.js.js',
         },
         { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
+        { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
+        { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
+        { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
 
-        // The JSON file should only be present when using the legacy bundler,
-        // since esbuild will inline it within the main file.
-        bundler === undefined && {
+        (bundler === undefined || bundler === 'nft') && {
           name: 'two',
           mainFile: 'two/two.js',
           runtime: 'js',
           extension: '.json',
           srcFile: 'two/three.json',
         },
+
         { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' },
-        { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
       ]
         .filter(Boolean)
         .map(normalizeFiles.bind(null, fixtureDir)),
@@ -792,127 +826,139 @@ testMany(
 
 testMany(
   'Can list all function files from multiple source directorires with listFunctionsFiles()',
-  ['bundler_esbuild', 'bundler_default'],
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   // eslint-disable-next-line complexity
   async (options, t) => {
-    const bundler = options.config['*'].nodeBundler
     const fixtureDir = `${FIXTURES_DIR}/multiple-src-directories`
+    const opts = merge(options, {
+      basePath: fixtureDir,
+    })
+    const bundler = options.config['*'].nodeBundler
     const functions = await listFunctionsFiles(
       [join(fixtureDir, '.netlify', 'internal-functions'), join(fixtureDir, 'netlify', 'functions')],
-      options,
+      opts,
     )
+    const sortedFunctions = sortOn(functions, 'mainFile')
+    const shouldInlineFiles = bundler === 'esbuild_zisi' || bundler === 'esbuild'
 
     t.deepEqual(
-      functions,
-      [
-        {
-          name: 'function',
-          mainFile: '.netlify/internal-functions/function.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: '.netlify/internal-functions/function.js',
-        },
+      sortedFunctions,
+      sortOn(
+        [
+          {
+            name: 'function',
+            mainFile: '.netlify/internal-functions/function.js',
+            runtime: 'js',
+            extension: '.js',
+            srcFile: '.netlify/internal-functions/function.js',
+          },
 
-        bundler === undefined && {
-          name: 'function',
-          mainFile: '.netlify/internal-functions/function.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'node_modules/test/index.js',
-        },
+          !shouldInlineFiles && {
+            name: 'function',
+            mainFile: '.netlify/internal-functions/function.js',
+            runtime: 'js',
+            extension: '.js',
+            srcFile: 'node_modules/test/index.js',
+          },
 
-        bundler === undefined && {
-          name: 'function',
-          mainFile: '.netlify/internal-functions/function.js',
-          runtime: 'js',
-          extension: '.json',
-          srcFile: 'node_modules/test/package.json',
-        },
+          !shouldInlineFiles && {
+            name: 'function',
+            mainFile: '.netlify/internal-functions/function.js',
+            runtime: 'js',
+            extension: '.json',
+            srcFile: 'node_modules/test/package.json',
+          },
 
-        {
-          name: 'function_internal',
-          mainFile: '.netlify/internal-functions/function_internal.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: '.netlify/internal-functions/function_internal.js',
-        },
+          {
+            name: 'function_internal',
+            mainFile: '.netlify/internal-functions/function_internal.js',
+            runtime: 'js',
+            extension: '.js',
+            srcFile: '.netlify/internal-functions/function_internal.js',
+          },
 
-        bundler === undefined && {
-          name: 'function_internal',
-          mainFile: '.netlify/internal-functions/function_internal.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'node_modules/test/index.js',
-        },
+          !shouldInlineFiles && {
+            name: 'function_internal',
+            mainFile: '.netlify/internal-functions/function_internal.js',
+            runtime: 'js',
+            extension: '.js',
+            srcFile: 'node_modules/test/index.js',
+          },
 
-        bundler === undefined && {
-          name: 'function_internal',
-          mainFile: '.netlify/internal-functions/function_internal.js',
-          runtime: 'js',
-          extension: '.json',
-          srcFile: 'node_modules/test/package.json',
-        },
+          !shouldInlineFiles && {
+            name: 'function_internal',
+            mainFile: '.netlify/internal-functions/function_internal.js',
+            runtime: 'js',
+            extension: '.json',
+            srcFile: 'node_modules/test/package.json',
+          },
 
-        {
-          name: 'function',
-          mainFile: 'netlify/functions/function.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'netlify/functions/function.js',
-        },
+          {
+            name: 'function',
+            mainFile: 'netlify/functions/function.js',
+            runtime: 'js',
+            extension: '.js',
+            srcFile: 'netlify/functions/function.js',
+          },
 
-        bundler === undefined && {
-          name: 'function',
-          mainFile: 'netlify/functions/function.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'node_modules/test/index.js',
-        },
+          !shouldInlineFiles && {
+            name: 'function',
+            mainFile: 'netlify/functions/function.js',
+            runtime: 'js',
+            extension: '.js',
+            srcFile: 'node_modules/test/index.js',
+          },
 
-        bundler === undefined && {
-          name: 'function',
-          mainFile: 'netlify/functions/function.js',
-          runtime: 'js',
-          extension: '.json',
-          srcFile: 'node_modules/test/package.json',
-        },
+          !shouldInlineFiles && {
+            name: 'function',
+            mainFile: 'netlify/functions/function.js',
+            runtime: 'js',
+            extension: '.json',
+            srcFile: 'node_modules/test/package.json',
+          },
 
-        {
-          name: 'function_user',
-          mainFile: 'netlify/functions/function_user.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'netlify/functions/function_user.js',
-        },
+          {
+            name: 'function_user',
+            mainFile: 'netlify/functions/function_user.js',
+            runtime: 'js',
+            extension: '.js',
+            srcFile: 'netlify/functions/function_user.js',
+          },
 
-        bundler === undefined && {
-          name: 'function_user',
-          mainFile: 'netlify/functions/function_user.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'node_modules/test/index.js',
-        },
+          !shouldInlineFiles && {
+            name: 'function_user',
+            mainFile: 'netlify/functions/function_user.js',
+            runtime: 'js',
+            extension: '.js',
+            srcFile: 'node_modules/test/index.js',
+          },
 
-        bundler === undefined && {
-          name: 'function_user',
-          mainFile: 'netlify/functions/function_user.js',
-          runtime: 'js',
-          extension: '.json',
-          srcFile: 'node_modules/test/package.json',
-        },
-      ]
+          !shouldInlineFiles && {
+            name: 'function_user',
+            mainFile: 'netlify/functions/function_user.js',
+            runtime: 'js',
+            extension: '.json',
+            srcFile: 'node_modules/test/package.json',
+          },
+        ],
+        'mainFile',
+      )
         .filter(Boolean)
         .map(normalizeFiles.bind(null, fixtureDir)),
     )
   },
 )
 
-testMany('Zips node modules', ['bundler_default'], async (options, t) => {
+testMany('Zips node modules', ['bundler_default', 'bundler_nft'], async (options, t) => {
   await zipNode(t, 'node-module', { opts: options })
 })
 
 testMany('Include most files from node modules', ['bundler_default'], async (options, t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-included', { opts: options })
+  const fixtureName = 'node-module-included'
+  const opts = merge(options, {
+    basePath: join(FIXTURES_DIR, fixtureName),
+  })
+  const { tmpDir } = await zipNode(t, 'node-module-included', { opts })
   const [mapExists, htmlExists] = await Promise.all([
     pathExists(`${tmpDir}/node_modules/test/test.map`),
     pathExists(`${tmpDir}/node_modules/test/test.html`),
@@ -1059,7 +1105,7 @@ testMany(
 
 testMany(
   'Exposes the main export of `node-fetch` when imported using `require()`',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-fetch', { opts: options })
     await unzipFiles(files)
@@ -1069,7 +1115,7 @@ testMany(
 
 testMany(
   '{name}/{name}.js takes precedence over {name}.js and {name}/index.js',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'conflicting-names-1', {
       opts: options,
@@ -1081,7 +1127,7 @@ testMany(
 
 testMany(
   '{name}/index.js takes precedence over {name}.js',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'conflicting-names-2', {
       opts: options,
@@ -1093,7 +1139,7 @@ testMany(
 
 testMany(
   '{name}/index.js takes precedence over {name}/index.ts',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'conflicting-names-3', {
       opts: options,
@@ -1105,7 +1151,7 @@ testMany(
 
 testMany(
   '{name}.js takes precedence over {name}.ts',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'conflicting-names-4', {
       opts: options,
@@ -1117,7 +1163,7 @@ testMany(
 
 testMany(
   '{name}.js takes precedence over {name}.zip',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'conflicting-names-5', {
       opts: options,
@@ -1129,7 +1175,7 @@ testMany(
 
 testMany(
   'Handles a TypeScript function ({name}.ts)',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-typescript', {
       opts: options,
@@ -1141,7 +1187,7 @@ testMany(
 
 testMany(
   'Handles a TypeScript function ({name}/{name}.ts)',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-typescript-directory-1', {
       opts: options,
@@ -1153,7 +1199,7 @@ testMany(
 
 testMany(
   'Handles a TypeScript function ({name}/index.ts)',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-typescript-directory-2', {
       opts: options,
@@ -1165,7 +1211,7 @@ testMany(
 
 testMany(
   'Handles a TypeScript function with imports',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-typescript-with-imports', {
       opts: options,
@@ -1199,7 +1245,7 @@ testMany(
 
 testMany(
   'Loads a tsconfig.json placed in the same directory as the function',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-typescript-tsconfig-sibling', {
       opts: options,
@@ -1211,7 +1257,7 @@ testMany(
 
 testMany(
   'Loads a tsconfig.json placed in a parent directory',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-typescript-tsconfig-parent/functions', {
       opts: options,
@@ -1223,7 +1269,7 @@ testMany(
 
 testMany(
   'Respects the target defined in the config over a `target` property defined in tsconfig',
-  ['bundler_esbuild', 'bundler_default'],
+  ['bundler_esbuild', 'bundler_default', 'todo:bundler_nft'],
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-typescript-tsconfig-target/functions', {
       opts: options,
@@ -1267,7 +1313,7 @@ test('Limits the amount of log lines produced by esbuild', async (t) => {
 // configuration properties and therefore there is nothing we could test.
 testMany(
   'Applies the configuration parameters supplied in the `config` property and returns the config in the response',
-  ['bundler_esbuild'],
+  ['bundler_esbuild', 'todo:bundler_nft'],
   async (options, t) => {
     const opts = merge(options, {
       config: {
@@ -1347,7 +1393,7 @@ testMany(
 
 testMany(
   'Generates a directory if `archiveFormat` is set to `none`',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const opts = merge(options, {
       archiveFormat: 'none',
@@ -1364,13 +1410,13 @@ testMany(
 
 testMany(
   'Includes in the bundle any paths matched by a `included_files` glob',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'included_files'
     const opts = merge(options, {
       config: {
         '*': {
-          includedFiles: ['content/*', '!content/post3.md'],
+          includedFiles: ['content/*', '!content/post3.md', 'something.md'],
           includedFilesBasePath: join(FIXTURES_DIR, fixtureName),
         },
       },
@@ -1392,6 +1438,7 @@ testMany(
     t.true(await pathExists(`${tmpDir}/content/post1.md`))
     t.true(await pathExists(`${tmpDir}/content/post2.md`))
     t.false(await pathExists(`${tmpDir}/content/post3.md`))
+    t.true(await pathExists(`${tmpDir}/something.md`))
   },
 )
 
@@ -1401,7 +1448,7 @@ test('Generates a bundle for the Node runtime version specified in the `nodeVers
   // - in Node <10 we should see `try {} catch (e) {}`
   // - in Node >= 10 we should see `try {} catch {}`
   const { files: node8Files } = await zipNode(t, 'node-module-optional-catch-binding', {
-    opts: { archiveFormat: 'none', config: { '*': { nodeBundler: ESBUILD, nodeVersion: '8.x' } } },
+    opts: { archiveFormat: 'none', config: { '*': { nodeBundler: 'esbuild', nodeVersion: '8.x' } } },
   })
 
   const node8Function = await pReadFile(`${node8Files[0].path}/src/function.js`, 'utf8')
@@ -1409,7 +1456,7 @@ test('Generates a bundle for the Node runtime version specified in the `nodeVers
   t.regex(node8Function, /catch \(\w+\) {/)
 
   const { files: node12Files } = await zipNode(t, 'node-module-optional-catch-binding', {
-    opts: { archiveFormat: 'none', config: { '*': { nodeBundler: ESBUILD, nodeVersion: '12.x' } } },
+    opts: { archiveFormat: 'none', config: { '*': { nodeBundler: 'esbuild', nodeVersion: '12.x' } } },
   })
 
   const node12Function = await pReadFile(`${node12Files[0].path}/src/function.js`, 'utf8')
@@ -1419,7 +1466,7 @@ test('Generates a bundle for the Node runtime version specified in the `nodeVers
 
 testMany(
   'Returns an `inputs` property with all the imported paths',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'node-module-and-local-imports'
     const { files, tmpDir } = await zipNode(t, fixtureName, {
@@ -1448,7 +1495,7 @@ testMany(
 
 testMany(
   'Places all user-defined files at the root of the target directory',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_parse_esbuild'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'base_path'
     const opts = merge(options, {
@@ -1479,7 +1526,7 @@ testMany(
 
 testMany(
   'Places all user-defined files in a `src/` sub-directory if there is a naming conflict with the entry file',
-  ['bundler_esbuild', 'bundler_default'],
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'base_path'
     const opts = merge(options, {
@@ -1511,7 +1558,7 @@ testMany(
 
 testMany(
   'Bundles functions from multiple directories when the first argument of `zipFunctions()` is an array',
-  ['bundler_esbuild', 'bundler_default'],
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'multiple-src-directories'
     const pathInternal = `${fixtureName}/.netlify/internal-functions`
@@ -1578,8 +1625,8 @@ test('Throws an error if the `archiveFormat` property contains an invalid value`
 })
 
 testMany(
-  'Adds `type: "functionsBundling"` to user errors (esbuild)',
-  ['bundler_default_parse_esbuild', 'bundler_esbuild'],
+  'Adds `type: "functionsBundling"` to user errors when parsing with esbuild',
+  ['bundler_esbuild'],
   async (options, t) => {
     const bundler = options.config['*'].nodeBundler
 
@@ -1593,7 +1640,7 @@ testMany(
       const { customErrorInfo } = error
 
       t.is(customErrorInfo.type, 'functionsBundling')
-      t.is(customErrorInfo.location.bundler, bundler === JS_BUNDLER_ESBUILD ? ESBUILD : JS_BUNDLER_ZISI)
+      t.is(customErrorInfo.location.bundler, bundler === 'esbuild' ? 'esbuild' : 'zisi')
       t.is(customErrorInfo.location.functionName, 'function')
       t.is(customErrorInfo.location.runtime, 'js')
     }
@@ -1603,7 +1650,7 @@ testMany(
 test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async (t) => {
   const fixtureName = 'node-module-dynamic-import'
   const { files } = await zipNode(t, fixtureName, {
-    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: ESBUILD } } },
+    opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: 'esbuild' } } },
   })
 
   t.is(files[0].nodeModulesWithDynamicImports.length, 2)
@@ -1613,7 +1660,7 @@ test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDy
 
 test('Returns an empty list of modules with dynamic imports if the modules are missing a `package.json`', async (t) => {
   const { files } = await zipNode(t, 'node-module-dynamic-import-invalid', {
-    opts: { config: { '*': { nodeBundler: ESBUILD } } },
+    opts: { config: { '*': { nodeBundler: 'esbuild' } } },
   })
 
   t.is(files[0].nodeModulesWithDynamicImports.length, 0)
@@ -1624,7 +1671,7 @@ test('Leaves dynamic imports untouched when the `processDynamicNodeImports` conf
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD, processDynamicNodeImports: false } },
+      config: { '*': { nodeBundler: 'esbuild', processDynamicNodeImports: false } },
     },
   })
   const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
@@ -1643,7 +1690,7 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   const { files, tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD } },
+      config: { '*': { nodeBundler: 'esbuild' } },
     },
   })
 
@@ -1662,7 +1709,7 @@ test('Leaves dynamic imports untouched when the files required to resolve the ex
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD } },
+      config: { '*': { nodeBundler: 'esbuild' } },
     },
   })
   const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
@@ -1678,7 +1725,7 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD } },
+      config: { '*': { nodeBundler: 'esbuild' } },
     },
   })
 
@@ -1696,7 +1743,7 @@ test('The dynamic import runtime shim handles files in nested directories', asyn
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD } },
+      config: { '*': { nodeBundler: 'esbuild' } },
     },
   })
 
@@ -1717,7 +1764,7 @@ test('The dynamic import runtime shim handles files in nested directories when u
     opts: {
       archiveFormat: 'none',
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD } },
+      config: { '*': { nodeBundler: 'esbuild' } },
     },
   })
 
@@ -1737,7 +1784,7 @@ test('Negated files in `included_files` are excluded from the bundle even if the
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: ESBUILD } },
+      config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: 'esbuild' } },
     },
   })
 
@@ -1750,7 +1797,7 @@ test('Negated files in `included_files` are excluded from the bundle even if the
 
 testMany(
   'Negated files in `included_files` are excluded from the bundle even if they match Node modules required in a function',
-  ['bundler_default', 'bundler_default_parse_esbuild', 'bundler_esbuild'],
+  ['bundler_default', 'bundler_default_nft', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'node-module-included-try-catch'
     const opts = merge(options, {
@@ -1777,7 +1824,7 @@ test('Creates dynamic import shims for functions with the same name and same shi
     length: FUNCTION_COUNT,
     opts: {
       basePath: join(FIXTURES_DIR, fixtureName),
-      config: { '*': { nodeBundler: ESBUILD } },
+      config: { '*': { nodeBundler: 'esbuild' } },
     },
   })
 
@@ -2072,7 +2119,7 @@ test.serial('Throws an error with an informative message when the Rust toolchain
 
 test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) => {
   const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
-    opts: { config: { '*': { nodeBundler: ESBUILD } } },
+    opts: { config: { '*': { nodeBundler: 'esbuild' } } },
   })
 
   t.false(await pathExists(`${tmpDir}/function.js.map`))
@@ -2085,7 +2132,7 @@ test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) =>
 if (platform !== 'win32') {
   test('Generates a sourcemap if `nodeSourcemap` is set', async (t) => {
     const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
-      opts: { config: { '*': { nodeBundler: ESBUILD, nodeSourcemap: true } } },
+      opts: { config: { '*': { nodeBundler: 'esbuild', nodeSourcemap: true } } },
     })
     const sourcemap = await pReadFile(`${tmpDir}/function.js.map`, 'utf8')
     const { sourceRoot, sources } = JSON.parse(sourcemap)
@@ -2106,7 +2153,14 @@ test('Creates a manifest file with the list of created functions if the `manifes
   const manifestPath = join(tmpDir, 'manifest.json')
   const { files } = await zipNode(t, 'many-functions', {
     length: FUNCTIONS_COUNT,
-    opts: { manifest: manifestPath },
+    opts: {
+      manifest: manifestPath,
+      config: {
+        five: {
+          schedule: '@daily',
+        },
+      },
+    },
   })
 
   const manifest = require(manifestPath)
@@ -2124,14 +2178,60 @@ test('Creates a manifest file with the list of created functions if the `manifes
     t.is(fn.name, file.name)
     t.is(fn.runtime, file.runtime)
     t.is(fn.path, file.path)
+    t.is(fn.schedule, fn.name === 'five' ? '@daily' : undefined)
   })
 })
 
-testMany('Correctly follows node_modules via symlink', ['bundler_esbuild'], async (options, t) => {
-  const { tmpDir } = await zipNode(t, 'node-module-symlinks', {
-    opts: options,
+testMany('Correctly follows node_modules via symlink', ['bundler_esbuild', 'todo:bundler_nft'], async (options, t) => {
+  const fixtureName = 'node-module-symlinks'
+  const opts = merge(options, {
+    basePath: join(FIXTURES_DIR, fixtureName),
+  })
+  const { tmpDir } = await zipNode(t, fixtureName, {
+    opts,
   })
 
   const isEven = require(`${tmpDir}/function`)
   t.is(isEven(2), '2 is even')
 })
+
+testMany(
+  'Can find Node modules in the `repositoryRoot` path, even if it is a parent directory of `basePath`',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const fixtureDir = join(FIXTURES_DIR, 'node-monorepo')
+    const basePath = join(fixtureDir, 'packages', 'site-1', 'netlify', 'functions')
+    const opts = merge(options, {
+      basePath,
+      config: {
+        '*': {
+          externalNodeModules: ['@netlify/mock-package-2'],
+        },
+      },
+      repositoryRoot: fixtureDir,
+    })
+    const result = await zipFunction(`${basePath}/function-1.js`, tmpDir, opts)
+
+    await unzipFiles([result])
+
+    const { mock1, mock2 } = require(`${tmpDir}/function-1.js`)
+
+    t.true(mock1)
+    t.true(mock2)
+  },
+)
+
+testMany(
+  'Returns a `size` property with the size of each generated archive',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const FUNCTIONS_COUNT = 6
+    const { files } = await zipNode(t, 'many-functions', {
+      length: FUNCTIONS_COUNT,
+      opts: options,
+    })
+
+    files.every(({ size }) => Number.isInteger(size) && size > 0)
+  },
+)

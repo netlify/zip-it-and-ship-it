@@ -1,0 +1,8 @@
+{
+  "name": "local-node-module",
+  "version": "1.0.0",
+  "dependencies": {
+    "@netlify/mock-package": "1.0.0",
+    "@netlify/mock-package-2": "1.0.0"
+  }
+}
