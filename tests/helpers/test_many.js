@@ -34,8 +34,6 @@ const makeTestMany = (test, matrix) => {
     const variationNames = matchVariations(Object.keys(matrix), patterns)
 
     variationNames.filter(name => !filteredVariations.includes(name)).forEach((name) => {
-      // Weird workaround to avoid running too many tests in parallel on
-      // Windows, which causes problems in the CI.
       const testTitle = `${title} [${name}]`
 
       if (name.startsWith('todo:')) {
@@ -50,6 +48,8 @@ const makeTestMany = (test, matrix) => {
         throw new Error(`Unknown variation in test: ${name}`)
       }
 
+      // Weird workaround to avoid running too many tests in parallel on
+      // Windows, which causes problems in the CI.
       const rateLimitedTestFn = getRateLimitedTestFunction(testFn)
 
       rateLimitedTestFn(testTitle, assertions.bind(null, variation), name)
