@@ -2147,13 +2147,20 @@ if (platform !== 'win32') {
   })
 }
 
-test('Creates a manifest file with the list of created functions if the `manifest` property is supplied', async (t) => {
+test.only('Creates a manifest file with the list of created functions if the `manifest` property is supplied', async (t) => {
   const FUNCTIONS_COUNT = 6
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const manifestPath = join(tmpDir, 'manifest.json')
   const { files } = await zipNode(t, 'many-functions', {
     length: FUNCTIONS_COUNT,
-    opts: { manifest: manifestPath },
+    opts: {
+      manifest: manifestPath,
+      config: {
+        five: {
+          schedule: '@daily',
+        },
+      },
+    },
   })
 
   const manifest = require(manifestPath)
@@ -2171,30 +2178,9 @@ test('Creates a manifest file with the list of created functions if the `manifes
     t.is(fn.name, file.name)
     t.is(fn.runtime, file.runtime)
     t.is(fn.path, file.path)
+    t.is(fn.schedule, fn.name === 'five' ? '@daily' : undefined)
   })
 })
-
-testMany(
-  'Includes `schedule` config in manifest',
-  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_nft'],
-  async (options, t) => {
-    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-    const manifestPath = join(tmpDir, 'manifest.json')
-    await zipNode(t, 'simple', {
-      opts: merge(options, {
-        manifest: manifestPath,
-        config: {
-          function: {
-            schedule: '@daily',
-          },
-        },
-      }),
-    })
-
-    const manifest = require(manifestPath)
-    t.is(manifest.functions[0].schedule, '@daily')
-  },
-)
 
 testMany('Correctly follows node_modules via symlink', ['bundler_esbuild', 'todo:bundler_nft'], async (options, t) => {
   const fixtureName = 'node-module-symlinks'
