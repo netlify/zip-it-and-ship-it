@@ -113,7 +113,9 @@ const traceFilesAndTranspile = async function ({
       }
     },
   })
-  const normalizedDependencyPaths = dependencyPaths.map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
+  const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
+    basePath ? resolve(basePath, path) : resolve(path),
+  )
 
   // We look at the cache object to find any paths corresponding to ESM files.
   const esmPaths = [...(cache.analysisCache?.entries() || [])].filter(([, { isESM }]) => isESM).map(([path]) => path)
@@ -150,7 +152,9 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
     includedFilesBasePath,
   )
   const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: basePath, ignore: ignoreFunction })
-  const normalizedDependencyPaths = dependencyPaths.map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
+  const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
+    basePath ? resolve(basePath, path) : resolve(path),
+  )
   const includedPaths = filterExcludedPaths([...normalizedDependencyPaths, ...includedFilePaths], excludedPaths)
 
   return includedPaths
