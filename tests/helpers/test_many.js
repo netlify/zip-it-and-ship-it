@@ -28,14 +28,12 @@ const matchVariations = (variationNames, patterns) =>
  * @returns {(name: string, matrix: import("./globify").Globify<M>[], runner: (opts: { config: import("../../src/config").Config }, t: import("ava").ExecutionContext) => any) => void}
  */
 const makeTestMany = (test, matrix) => {
+  const filteredVariations = env.ZISI_FILTER_VARIATIONS ? env.ZISI_FILTER_VARIATIONS.split(',') : []
+
   const testBundlers = (title, patterns, assertions, testFn = test) => {
     const variationNames = matchVariations(Object.keys(matrix), patterns)
 
-    variationNames.forEach((name) => {
-      if (filteredVariations.length !== 0 && !filteredVariations.includes(name)) {
-        return
-      }
-
+    variationNames.filter(name => !filteredVariations.includes(name)).forEach((name) => {
       // Weird workaround to avoid running too many tests in parallel on
       // Windows, which causes problems in the CI.
       const testTitle = `${title} [${name}]`
