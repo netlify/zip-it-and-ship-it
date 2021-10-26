@@ -49,13 +49,16 @@ const bundle: BundleFunction = async ({
   const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
 
+  // Sorting the array to make the checksum deterministic.
+  const srcFiles = [...filteredIncludedPaths, ...transpilation.keys()].sort()
+
   return {
     aliases: transpilation,
     basePath: getBasePath(dirnames),
     cleanupFunction,
     inputs: dependencyPaths,
     mainFile,
-    srcFiles: [...filteredIncludedPaths, ...transpilation.keys()],
+    srcFiles,
   }
 }
 
