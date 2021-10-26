@@ -2153,7 +2153,14 @@ test('Creates a manifest file with the list of created functions if the `manifes
   const manifestPath = join(tmpDir, 'manifest.json')
   const { files } = await zipNode(t, 'many-functions', {
     length: FUNCTIONS_COUNT,
-    opts: { manifest: manifestPath },
+    opts: {
+      manifest: manifestPath,
+      config: {
+        five: {
+          schedule: '@daily',
+        },
+      },
+    },
   })
 
   const manifest = require(manifestPath)
@@ -2171,6 +2178,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
     t.is(fn.name, file.name)
     t.is(fn.runtime, file.runtime)
     t.is(fn.path, file.path)
+    t.is(fn.schedule, fn.name === 'five' ? '@daily' : undefined)
   })
 })
 

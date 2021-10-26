@@ -18,6 +18,7 @@ interface FunctionConfig {
   nodeVersion?: NodeVersion
   processDynamicNodeImports?: boolean
   rustTargetDirectory?: string
+  schedule?: string
 }
 
 type GlobPattern = string
