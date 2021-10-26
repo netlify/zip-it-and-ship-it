@@ -1,5 +1,6 @@
 const { env } = require('process')
 
+const minimatch = require('minimatch')
 const throat = require('throat')
 
 const getRateLimitedTestFunction = (originalTestFunction) => {
@@ -11,8 +12,6 @@ const getRateLimitedTestFunction = (originalTestFunction) => {
 
   return throat(rateLimit, originalTestFunction)
 }
-
-const minimatch = require('minimatch')
 
 /**
  * @param {string[]} variationNames
