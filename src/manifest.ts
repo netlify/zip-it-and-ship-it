@@ -9,6 +9,7 @@ interface ManifestFunction {
   name: string
   path: string
   runtime: string
+  schedule?: string
 }
 
 interface Manifest {
@@ -35,7 +36,7 @@ const createManifest = async ({ functions, path }: { functions: FunctionResult[]
   await writeFile(path, JSON.stringify(payload))
 }
 
-const formatFunctionForManifest = ({ config, mainFile, name, path, runtime }: FunctionResult) => ({
+const formatFunctionForManifest = ({ config, mainFile, name, path, runtime }: FunctionResult): ManifestFunction => ({
   mainFile,
   name,
   path: resolve(path),
