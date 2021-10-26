@@ -2147,7 +2147,7 @@ if (platform !== 'win32') {
   })
 }
 
-test.only('Creates a manifest file with the list of created functions if the `manifest` property is supplied', async (t) => {
+test('Creates a manifest file with the list of created functions if the `manifest` property is supplied', async (t) => {
   const FUNCTIONS_COUNT = 6
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const manifestPath = join(tmpDir, 'manifest.json')
