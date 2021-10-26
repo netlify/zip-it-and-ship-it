@@ -2228,12 +2228,8 @@ testMany(
   },
 )
 
-testMany(
-  'Ignores node:-prefixed imports (repro #743)',
-  ['bundler_default', 'bundler_nft'],
-  async (options, t) => {
-    await zipFixture(t, 'require-stream', {
-      opts: options,
-    })
-  },
-)
+testMany('Ignores node:-prefixed imports (repro #743)', ['bundler_default', 'bundler_nft'], async (options, t) => {
+  await zipFixture(t, 'require-stream', {
+    opts: options,
+  })
+})
