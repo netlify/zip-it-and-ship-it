@@ -781,46 +781,45 @@ testMany(
       basePath: fixtureDir,
     })
     const bundler = options.config['*'].nodeBundler
-    const functions = await listFunctionsFiles(fixtureDir, opts)
-    const sortedFunctions = sortOn(functions, 'mainFile')
-    t.deepEqual(
-      sortedFunctions,
-      [
-        { name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts', srcFile: 'five/index.ts' },
+    const files = await listFunctionsFiles(fixtureDir, opts)
+    const sortedFiles = sortOn(files, ['mainFile', 'srcFile'])
+    const expectedFiles = [
+      { name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts', srcFile: 'five/index.ts' },
 
-        bundler === 'nft' && {
-          name: 'five',
-          mainFile: 'five/index.ts',
-          runtime: 'js',
-          extension: '.ts',
-          srcFile: 'five/util.ts',
-        },
+      bundler === 'nft' && {
+        name: 'five',
+        mainFile: 'five/index.ts',
+        runtime: 'js',
+        extension: '.ts',
+        srcFile: 'five/util.ts',
+      },
 
-        {
-          name: 'four',
-          mainFile: 'four.js/four.js.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'four.js/four.js.js',
-        },
-        { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
-        { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
-        { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
-        { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
+      {
+        name: 'four',
+        mainFile: 'four.js/four.js.js',
+        runtime: 'js',
+        extension: '.js',
+        srcFile: 'four.js/four.js.js',
+      },
+      { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
+      { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
+      { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
+      { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
 
-        (bundler === undefined || bundler === 'nft') && {
-          name: 'two',
-          mainFile: 'two/two.js',
-          runtime: 'js',
-          extension: '.json',
-          srcFile: 'two/three.json',
-        },
+      (bundler === undefined || bundler === 'nft') && {
+        name: 'two',
+        mainFile: 'two/two.js',
+        runtime: 'js',
+        extension: '.json',
+        srcFile: 'two/three.json',
+      },
 
-        { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' },
-      ]
-        .filter(Boolean)
-        .map(normalizeFiles.bind(null, fixtureDir)),
-    )
+      { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' },
+    ]
+      .filter(Boolean)
+      .map(normalizeFiles.bind(null, fixtureDir))
+
+    t.deepEqual(sortedFiles, sortOn(expectedFiles, ['mainFile', 'srcFile']))
   },
 )
 
