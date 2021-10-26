@@ -33,27 +33,29 @@ const makeTestMany = (test, matrix) => {
   const testBundlers = (title, patterns, assertions, testFn = test) => {
     const variationNames = matchVariations(Object.keys(matrix), patterns)
 
-    variationNames.filter(name => !filteredVariations.includes(name)).forEach((name) => {
-      const testTitle = `${title} [${name}]`
+    variationNames
+      .filter((name) => !filteredVariations.includes(name))
+      .forEach((name) => {
+        const testTitle = `${title} [${name}]`
 
-      if (name.startsWith('todo:')) {
-        testFn.todo(testTitle)
+        if (name.startsWith('todo:')) {
+          testFn.todo(testTitle)
 
-        return
-      }
+          return
+        }
 
-      const variation = matrix[name]
+        const variation = matrix[name]
 
-      if (name === undefined || variation === undefined) {
-        throw new Error(`Unknown variation in test: ${name}`)
-      }
+        if (name === undefined || variation === undefined) {
+          throw new Error(`Unknown variation in test: ${name}`)
+        }
 
-      // Weird workaround to avoid running too many tests in parallel on
-      // Windows, which causes problems in the CI.
-      const rateLimitedTestFn = getRateLimitedTestFunction(testFn)
+        // Weird workaround to avoid running too many tests in parallel on
+        // Windows, which causes problems in the CI.
+        const rateLimitedTestFn = getRateLimitedTestFunction(testFn)
 
-      rateLimitedTestFn(testTitle, assertions.bind(null, variation), name)
-    })
+        rateLimitedTestFn(testTitle, assertions.bind(null, variation), name)
+      })
   }
 
   const testFns = ['failing', 'only', 'serial', 'skip']
