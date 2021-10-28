@@ -1,4 +1,4 @@
-const fs = require('node:fs')
+const fs = require('node:stream/web')
 
 module.exports = () => {
   const stats = fs.statSync(__dirname)
