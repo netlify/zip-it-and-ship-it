@@ -1,7 +1,5 @@
-const fs = require('node:stream/web')
+const stream = require('node:stream/web')
 
 module.exports = () => {
-  const stats = fs.statSync(__dirname)
-
-  return stats.isDirectory()
+  return Boolean(stream.ReadableStream)
 }
