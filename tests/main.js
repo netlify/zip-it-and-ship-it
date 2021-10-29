@@ -2272,7 +2272,7 @@ testMany(
           error.message,
           semver.satisfies(nodeVersion, '>10')
             ? 'No such built-in module: node:stream/web'
-            : "Cannot find module: 'node:stream/web'",
+            : "Cannot find module 'node:stream/web'",
         )
       }
     }
