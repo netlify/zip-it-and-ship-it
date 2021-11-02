@@ -410,7 +410,7 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules and feature flag ON',
-  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
+  ['bundler_esbuild', 'bundler_default', 'todo:bundler_nft'],
   async (options, t) => {
     const opts = merge(options, { featureFlags: { defaultEsModulesToEsbuild: true } })
 
@@ -423,7 +423,7 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules and feature flag OFF',
-  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
+  ['bundler_esbuild', 'bundler_default', 'todo:bundler_nft'],
   async (options, t) => {
     const fixtureName = 'local-require-esm'
     const opts = merge(options, {

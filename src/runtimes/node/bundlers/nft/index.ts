@@ -12,9 +12,6 @@ import type { GetSrcFilesFunction } from '../../../runtime'
 import { getBasePath } from '../../utils/base_path'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 
-import { getPatchedESMPackages } from './es_modules'
-import { transpileMany } from './transpile'
-
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']
 
@@ -32,7 +29,7 @@ const bundle: BundleFunction = async ({
     includedFiles,
     includedFilesBasePath || basePath,
   )
-  const { paths: dependencyPaths, rewrites } = await traceFilesAndTranspile({
+  const { paths: dependencyPaths } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
     config,
     mainFile,
@@ -48,7 +45,6 @@ const bundle: BundleFunction = async ({
     basePath: getBasePath(dirnames),
     inputs: dependencyPaths,
     mainFile,
-    rewrites,
     srcFiles,
   }
 }
@@ -62,7 +58,6 @@ const ignoreFunction = (path: string) => {
 
 const traceFilesAndTranspile = async function ({
   basePath,
-  config,
   mainFile,
   pluginsModulesPath,
 }: {
@@ -72,11 +67,7 @@ const traceFilesAndTranspile = async function ({
   pluginsModulesPath?: string
 }) {
   const fsCache: FsCache = {}
-  const {
-    fileList: dependencyPaths,
-    esmFileList,
-    reasons,
-  } = await nodeFileTrace([mainFile], {
+  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
     base: basePath,
     ignore: ignoreFunction,
     readFile: async (path: string) => {
@@ -112,14 +103,9 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const esmPaths = [...esmFileList].map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
-  const transpiledPaths = await transpileMany(esmPaths, config)
-  const patchedESMPackages = await getPatchedESMPackages(esmFileList, reasons, fsCache, basePath)
-  const rewrites = new Map([...transpiledPaths, ...patchedESMPackages])
 
   return {
     paths: normalizedDependencyPaths,
-    rewrites,
   }
 }
 
