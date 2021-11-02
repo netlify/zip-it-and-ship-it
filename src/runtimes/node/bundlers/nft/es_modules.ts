@@ -32,7 +32,11 @@ const getPatchedESMPackages = async (
   const patchedPackagesMap = new Map()
 
   packages.forEach((packagePath, index) => {
-    patchedPackagesMap.set(packagePath, patchedPackages[index])
+    const transpiledPackage = patchedPackages[index]
+
+    if (transpiledPackage !== null) {
+      patchedPackagesMap.set(packagePath, transpiledPackage)
+    }
   })
 
   return patchedPackagesMap
@@ -41,6 +45,11 @@ const getPatchedESMPackages = async (
 const patchESMPackage = async (path: string, fsCache: FsCache) => {
   const file = (await cachedReadFile(fsCache, path, 'utf8')) as string
   const packageJson: PackageJson = JSON.parse(file)
+
+  if (packageJson.type !== 'module') {
+    return null
+  }
+
   const patchedPackageJson = {
     ...packageJson,
     type: 'commonjs',
