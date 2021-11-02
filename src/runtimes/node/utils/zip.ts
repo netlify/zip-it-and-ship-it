@@ -70,16 +70,16 @@ const createDirectory = async function ({
   await pMap(
     srcFiles,
     (srcFile) => {
-      const srcPath = aliases.get(srcFile) || srcFile
-      const normalizedSrcPath = normalizeFilePath({
+      const destPath = aliases.get(srcFile) || srcFile
+      const normalizedDestPath = normalizeFilePath({
         commonPrefix: basePath,
-        path: srcPath,
+        path: destPath,
         pluginsModulesPath,
         userNamespace: DEFAULT_USER_SUBDIRECTORY,
       })
-      const destPath = join(functionFolder, normalizedSrcPath)
+      const absoluteDestPath = join(functionFolder, normalizedDestPath)
 
-      return copyFile(srcFile, destPath)
+      return copyFile(srcFile, absoluteDestPath)
     },
     { concurrency: COPY_FILE_CONCURRENCY },
   )
@@ -195,10 +195,10 @@ const zipJsFile = function ({
   srcFile: string
   userNamespace: string
 }) {
-  const filename = aliases.get(srcFile) || srcFile
-  const normalizedFilename = normalizeFilePath({ commonPrefix, path: filename, pluginsModulesPath, userNamespace })
+  const destPath = aliases.get(srcFile) || srcFile
+  const normalizedDestPath = normalizeFilePath({ commonPrefix, path: destPath, pluginsModulesPath, userNamespace })
 
-  addZipFile(archive, srcFile, normalizedFilename, stat)
+  addZipFile(archive, srcFile, normalizedDestPath, stat)
 }
 
 // `adm-zip` and `require()` expect Unix paths.
