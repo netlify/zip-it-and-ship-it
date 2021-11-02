@@ -425,18 +425,23 @@ testMany(
   'Can bundle functions with `.js` extension using ES Modules and feature flag OFF',
   ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   async (options, t) => {
+    const fixtureName = 'local-require-esm'
+    const opts = merge(options, {
+      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      featureFlags: { defaultEsModulesToEsbuild: false },
+    })
     const bundler = options.config['*'].nodeBundler
 
     await (bundler === undefined
       ? t.throwsAsync(
           zipNode(t, 'local-require-esm', {
             length: 3,
-            opts: merge(options, { featureFlags: { defaultEsModulesToEsbuild: false } }),
+            opts,
           }),
         )
       : zipNode(t, 'local-require-esm', {
           length: 3,
-          opts: merge(options, { featureFlags: { defaultEsModulesToEsbuild: false } }),
+          opts,
         }))
   },
 )

@@ -26,7 +26,25 @@ type BundleFunction = (
     repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<{
+  // Aliases are used to change the path that a file should take inside the
+  // generated archive. For example:
+  //
+  // "/my-transpiled-function.js" => "/my-function.js"
+  //
+  // When "/my-transpiled-function.js" is found in the list of files, it will
+  // be added to the archive with the "/my-function.js" path.
   aliases?: Map<string, string>
+
+  // Rewrites are used to change the source file associated with a given path.
+  // For example:
+  //
+  // "/my-function.js" => "console.log(`Hello!`)"
+  //
+  // When "/my-function.js" is found in the list of files, it will be added to
+  // the archive with "console.log(`Hello!`)" as its source, replacing whatever
+  // the file at "/my-function.js" contains.
+  rewrites?: Map<string, string>
+
   basePath: string
   bundlerWarnings?: BundlerWarning[]
   cleanupFunction?: CleanupFunction
