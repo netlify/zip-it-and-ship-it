@@ -1,3 +1,5 @@
+import esm from 'esm-module'
+
 export default function getZero() {
-  return 0
+  return esm() && 0
 }

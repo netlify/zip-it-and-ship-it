@@ -7,20 +7,16 @@ import unixify from 'unixify'
 
 import type { BundleFunction } from '..'
 import type { FunctionConfig } from '../../../../config'
-import { cachedReadFile, FsCache, safeUnlink } from '../../../../utils/fs'
+import { cachedReadFile, FsCache } from '../../../../utils/fs'
 import type { GetSrcFilesFunction } from '../../../runtime'
 import { getBasePath } from '../../utils/base_path'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 
+import { getPatchedESMPackages } from './es_modules'
 import { transpileMany } from './transpile'
 
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']
-
-interface NftCache {
-  analysisCache?: Map<string, { isESM: boolean; [key: string]: unknown }>
-  [key: string]: unknown
-}
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -36,11 +32,7 @@ const bundle: BundleFunction = async ({
     includedFiles,
     includedFilesBasePath || basePath,
   )
-  const {
-    cleanupFunction,
-    paths: dependencyPaths,
-    transpilation,
-  } = await traceFilesAndTranspile({
+  const { paths: dependencyPaths, rewrites } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
     config,
     mainFile,
@@ -50,14 +42,13 @@ const bundle: BundleFunction = async ({
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
 
   // Sorting the array to make the checksum deterministic.
-  const srcFiles = [...filteredIncludedPaths, ...transpilation.keys()].sort()
+  const srcFiles = [...filteredIncludedPaths].sort()
 
   return {
-    aliases: transpilation,
     basePath: getBasePath(dirnames),
-    cleanupFunction,
     inputs: dependencyPaths,
     mainFile,
+    rewrites,
     srcFiles,
   }
 }
@@ -81,10 +72,12 @@ const traceFilesAndTranspile = async function ({
   pluginsModulesPath?: string
 }) {
   const fsCache: FsCache = {}
-  const cache: NftCache = {}
-  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
+  const {
+    fileList: dependencyPaths,
+    esmFileList,
+    reasons,
+  } = await nodeFileTrace([mainFile], {
     base: basePath,
-    cache,
     ignore: ignoreFunction,
     readFile: async (path: string) => {
       try {
@@ -119,32 +112,14 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-
-  // We look at the cache object to find any paths corresponding to ESM files.
-  const esmPaths = [...(cache.analysisCache?.entries() || [])].filter(([, { isESM }]) => isESM).map(([path]) => path)
-
-  // After transpiling the ESM files, we get back a `Map` mapping the path of
-  // each transpiled to its original path.
-  const transpilation = await transpileMany(esmPaths, config)
-
-  // Creating a `Set` with the original paths of the transpiled files so that
-  // we can do a O(1) lookup.
-  const originalPaths = new Set(transpilation.values())
-
-  // We remove the transpiled paths from the list of traced files, otherwise we
-  // would end up with duplicate files in the archive.
-  const filteredDependencyPaths = normalizedDependencyPaths.filter((path) => !originalPaths.has(path))
-
-  // The cleanup function will delete all the temporary files that were created
-  // as part of the transpilation process.
-  const cleanupFunction = async () => {
-    await Promise.all([...transpilation.keys()].map(safeUnlink))
-  }
+  const esmPaths = [...esmFileList].map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
+  const transpiledPaths = await transpileMany(esmPaths, config)
+  const patchedESMPackages = await getPatchedESMPackages(esmFileList, reasons, fsCache, basePath)
+  const rewrites = new Map([...transpiledPaths, ...patchedESMPackages])
 
   return {
-    cleanupFunction,
-    paths: filteredDependencyPaths,
-    transpilation,
+    paths: normalizedDependencyPaths,
+    rewrites,
   }
 }
 

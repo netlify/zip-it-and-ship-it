@@ -11,6 +11,7 @@ interface PackageJson {
   files?: string[]
   gypfile?: boolean
   binary?: boolean
+  type?: string
 }
 
 // Retrieve the `package.json` of a specific project or module

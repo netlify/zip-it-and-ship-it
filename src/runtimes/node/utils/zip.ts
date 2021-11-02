@@ -38,6 +38,7 @@ interface ZipNodeParameters {
   filename: string
   mainFile: string
   pluginsModulesPath?: string
+  rewrites?: Map<string, string>
   srcFiles: string[]
 }
 
@@ -49,6 +50,7 @@ const createDirectory = async function ({
   filename,
   mainFile,
   pluginsModulesPath,
+  rewrites = new Map(),
   srcFiles,
 }: ZipNodeParameters) {
   const { contents: entryContents, filename: entryFilename } = getEntryFile({
@@ -70,16 +72,20 @@ const createDirectory = async function ({
   await pMap(
     srcFiles,
     (srcFile) => {
-      const srcPath = aliases.get(srcFile) || srcFile
-      const normalizedSrcPath = normalizeFilePath({
+      const destPath = aliases.get(srcFile) || srcFile
+      const normalizedDestPath = normalizeFilePath({
         commonPrefix: basePath,
-        path: srcPath,
+        path: destPath,
         pluginsModulesPath,
         userNamespace: DEFAULT_USER_SUBDIRECTORY,
       })
-      const destPath = join(functionFolder, normalizedSrcPath)
+      const absoluteDestPath = join(functionFolder, normalizedDestPath)
 
-      return copyFile(srcFile, destPath)
+      if (rewrites.has(srcFile)) {
+        return pWriteFile(absoluteDestPath, rewrites.get(srcFile) as string)
+      }
+
+      return copyFile(srcFile, absoluteDestPath)
     },
     { concurrency: COPY_FILE_CONCURRENCY },
   )
@@ -95,6 +101,7 @@ const createZipArchive = async function ({
   filename,
   mainFile,
   pluginsModulesPath,
+  rewrites,
   srcFiles,
 }: ZipNodeParameters) {
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
@@ -126,7 +133,16 @@ const createZipArchive = async function ({
   // We ensure this is not async, so that the archive's checksum is
   // deterministic. Otherwise it depends on the order the files were added.
   srcFilesInfos.forEach(({ srcFile, stat }) => {
-    zipJsFile({ srcFile, commonPrefix: basePath, pluginsModulesPath, archive, stat, aliases, userNamespace })
+    zipJsFile({
+      aliases,
+      archive,
+      commonPrefix: basePath,
+      pluginsModulesPath,
+      rewrites,
+      srcFile,
+      stat,
+      userNamespace,
+    })
   })
 
   await endZip(archive, output)
@@ -183,6 +199,7 @@ const zipJsFile = function ({
   archive,
   commonPrefix,
   pluginsModulesPath,
+  rewrites = new Map(),
   stat,
   srcFile,
   userNamespace,
@@ -191,14 +208,19 @@ const zipJsFile = function ({
   archive: ZipArchive
   commonPrefix: string
   pluginsModulesPath?: string
+  rewrites?: Map<string, string>
   stat: Stats
   srcFile: string
   userNamespace: string
 }) {
-  const filename = aliases.get(srcFile) || srcFile
-  const normalizedFilename = normalizeFilePath({ commonPrefix, path: filename, pluginsModulesPath, userNamespace })
+  const destPath = aliases.get(srcFile) || srcFile
+  const normalizedDestPath = normalizeFilePath({ commonPrefix, path: destPath, pluginsModulesPath, userNamespace })
 
-  addZipFile(archive, srcFile, normalizedFilename, stat)
+  if (rewrites.has(srcFile)) {
+    addZipContent(archive, rewrites.get(srcFile) as string, normalizedDestPath)
+  } else {
+    addZipFile(archive, srcFile, normalizedDestPath, stat)
+  }
 }
 
 // `adm-zip` and `require()` expect Unix paths.
