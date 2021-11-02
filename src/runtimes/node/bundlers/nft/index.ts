@@ -32,7 +32,7 @@ const bundle: BundleFunction = async ({
     includedFiles,
     includedFilesBasePath || basePath,
   )
-  const { paths: dependencyPaths, rewrites } = await traceFilesAndTranspile({
+  const { paths: dependencyPaths } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
     config,
     mainFile,
@@ -48,7 +48,6 @@ const bundle: BundleFunction = async ({
     basePath: getBasePath(dirnames),
     inputs: dependencyPaths,
     mainFile,
-    rewrites,
     srcFiles,
   }
 }
