@@ -1,5 +1,3 @@
-import type { Buffer } from 'buffer'
-
 import type { Message } from '@netlify/esbuild'
 
 import type { NodeBundlerName } from '..'
