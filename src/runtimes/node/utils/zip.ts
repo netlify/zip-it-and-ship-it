@@ -1,9 +1,8 @@
 /* eslint-disable max-lines */
 import { Buffer } from 'buffer'
-import fs, { Stats } from 'fs'
+import { Stats } from 'fs'
 import os from 'os'
 import { basename, extname, join, normalize, resolve, sep } from 'path'
-import { promisify } from 'util'
 
 import copyFile from 'cp-file'
 import deleteFiles from 'del'
@@ -12,9 +11,7 @@ import pMap from 'p-map'
 import unixify from 'unixify'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive'
-
-const pStat = promisify(fs.stat)
-const pWriteFile = promisify(fs.writeFile)
+import { stat, writeFile, writeFileAndCreateDirectories } from '../../../utils/fs'
 
 // Taken from https://www.npmjs.com/package/cpy.
 const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2
@@ -66,7 +63,7 @@ const createDirectory = async function ({
   await makeDir(functionFolder)
 
   // Writing entry file.
-  await pWriteFile(join(functionFolder, entryFilename), entryContents)
+  await writeFile(join(functionFolder, entryFilename), entryContents)
 
   // Copying source files.
   await pMap(
@@ -82,7 +79,7 @@ const createDirectory = async function ({
       const absoluteDestPath = join(functionFolder, normalizedDestPath)
 
       if (rewrites.has(srcFile)) {
-        return pWriteFile(absoluteDestPath, rewrites.get(srcFile) as string)
+        return writeFileAndCreateDirectories(absoluteDestPath, rewrites.get(srcFile) as string)
       }
 
       return copyFile(srcFile, absoluteDestPath)
@@ -132,7 +129,7 @@ const createZipArchive = async function ({
 
   // We ensure this is not async, so that the archive's checksum is
   // deterministic. Otherwise it depends on the order the files were added.
-  srcFilesInfos.forEach(({ srcFile, stat }) => {
+  srcFilesInfos.forEach(({ srcFile, stat: stats }) => {
     zipJsFile({
       aliases,
       archive,
@@ -140,7 +137,7 @@ const createZipArchive = async function ({
       pluginsModulesPath,
       rewrites,
       srcFile,
-      stat,
+      stat: stats,
       userNamespace,
     })
   })
@@ -168,9 +165,9 @@ const addEntryFileToZip = function (archive: ZipArchive, { contents, filename }:
 }
 
 const addStat = async function (srcFile: string) {
-  const stat = await pStat(srcFile)
+  const stats = await stat(srcFile)
 
-  return { srcFile, stat }
+  return { srcFile, stat: stats }
 }
 
 const getEntryFile = ({
@@ -200,7 +197,7 @@ const zipJsFile = function ({
   commonPrefix,
   pluginsModulesPath,
   rewrites = new Map(),
-  stat,
+  stat: stats,
   srcFile,
   userNamespace,
 }: {
@@ -219,7 +216,7 @@ const zipJsFile = function ({
   if (rewrites.has(srcFile)) {
     addZipContent(archive, rewrites.get(srcFile) as string, normalizedDestPath)
   } else {
-    addZipFile(archive, srcFile, normalizedDestPath, stat)
+    addZipFile(archive, srcFile, normalizedDestPath, stats)
   }
 }
 

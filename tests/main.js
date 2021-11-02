@@ -447,6 +447,60 @@ testMany(
 )
 
 testMany(
+  'Can bundle functions with `.js` extension using ES Modules and feature flag OFF with `archiveFormat: "none"`',
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
+  async (options, t) => {
+    const fixtureName = 'local-require-esm'
+    const opts = merge(options, {
+      archiveFormat: 'none',
+      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      featureFlags: { defaultEsModulesToEsbuild: false },
+    })
+    const bundler = options.config['*'].nodeBundler
+
+    if (bundler === undefined) {
+      t.throwsAsync(
+        zipNode(t, 'local-require-esm', {
+          length: 3,
+          opts,
+        }),
+      )
+
+      return
+    }
+
+    const { files } = await zipNode(t, 'local-require-esm', {
+      length: 3,
+      opts,
+    })
+
+    files.forEach(({ name, path }) => {
+      const handler = require(`${path}/${name}.js`)
+
+      switch (name) {
+        case 'function':
+          t.is(handler.ZERO, 0)
+
+          return
+
+        case 'function_export_only':
+          t.is(typeof handler.howdy, 'string')
+
+          return
+
+        case 'function_import_only':
+          t.deepEqual(handler, {})
+
+          return
+
+        default:
+          t.fail()
+      }
+    })
+  },
+)
+
+testMany(
   'Can require local files deeply',
   ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
@@ -1762,7 +1816,7 @@ test('The dynamic import runtime shim handles files in nested directories', asyn
   t.throws(() => func('fr'))
 })
 
-test('The dynamic import runtime shim handles files in nested directories when using `archiveType: "none"`', async (t) => {
+test('The dynamic import runtime shim handles files in nested directories when using `archiveFormat: "none"`', async (t) => {
   const fixtureName = 'node-module-dynamic-import-4'
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
