@@ -19,7 +19,6 @@ type GetSrcFilesFunction = (
     basePath?: string
     config: FunctionConfig
     featureFlags: FeatureFlags
-    pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<string[]>
@@ -42,7 +41,6 @@ type ZipFunction = (
     config: FunctionConfig
     destFolder: string
     featureFlags: FeatureFlags
-    pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<ZipFunctionResult>

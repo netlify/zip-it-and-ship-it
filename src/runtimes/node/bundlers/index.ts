@@ -2,9 +2,8 @@ import type { Message } from '@netlify/esbuild'
 
 import type { NodeBundlerName } from '..'
 import { FunctionConfig } from '../../../config'
-import { FeatureFlag } from '../../../feature_flags'
+import { FeatureFlag, FeatureFlags } from '../../../feature_flags'
 import { FunctionSource } from '../../../function'
-import { GetSrcFilesFunction } from '../../runtime'
 
 import esbuildBundler from './esbuild'
 import nftBundler from './nft'
@@ -54,6 +53,16 @@ type BundleFunction = (
   nodeModulesWithDynamicImports?: string[]
   srcFiles: string[]
 }>
+
+type GetSrcFilesFunction = (
+  args: {
+    basePath?: string
+    config: FunctionConfig
+    featureFlags: FeatureFlags
+    pluginsModulesPath?: string
+    repositoryRoot?: string
+  } & FunctionSource,
+) => Promise<string[]>
 
 interface NodeBundler {
   bundle: BundleFunction
