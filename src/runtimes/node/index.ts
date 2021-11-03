@@ -8,7 +8,7 @@ import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime'
 import { getBundler } from './bundlers'
 import { findFunctionsInPaths } from './finder'
 import { detectEsModule } from './utils/detect_es_module'
-import { getPluginsModulesPath } from './utils/plugin_modules_path'
+import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path'
 import { zipNodeJs } from './utils/zip'
 
 export type NodeBundlerName = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
@@ -90,7 +90,7 @@ const zipFunction: ZipFunction = async function ({
   }
 
   const {
-    aliases,
+    aliases = new Map(),
     cleanupFunction,
     basePath: finalBasePath,
     bundlerWarnings,
@@ -116,6 +116,8 @@ const zipFunction: ZipFunction = async function ({
     stat,
   })
 
+  createPluginsModulesPathAliases(srcFiles, pluginsModulesPath, aliases, finalBasePath)
+
   const zipPath = await zipNodeJs({
     aliases,
     archiveFormat,
@@ -124,7 +126,6 @@ const zipFunction: ZipFunction = async function ({
     extension,
     filename,
     mainFile: finalMainFile,
-    pluginsModulesPath,
     rewrites,
     srcFiles,
   })
