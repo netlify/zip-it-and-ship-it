@@ -231,8 +231,8 @@ const normalizeFilePath = function ({
   const userNamespacePathSegment = userNamespace ? `${userNamespace}${sep}` : ''
   const pathA = normalize(path)
   const pathB = pathA.replace(commonPrefix, userNamespacePathSegment)
-  const pathD = unixify(pathB)
-  return pathD
+  const pathC = unixify(pathB)
+  return pathC
 }
 
 export { ArchiveFormat, zipNodeJs }
