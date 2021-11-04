@@ -59,14 +59,15 @@ const requireExtractedFiles = async function (t, files) {
   t.true(jsFiles.every(Boolean))
 }
 
-const unzipFiles = async function (files) {
-  await Promise.all(files.map(unzipFile))
+const unzipFiles = async function (files, targetPathGenerator) {
+  await Promise.all(files.map(({ path }) => unzipFile({ path, targetPathGenerator })))
 }
 
-const unzipFile = async function ({ path }) {
+const unzipFile = async function ({ path, targetPathGenerator }) {
   const zip = new AdmZip(path)
   const pExtractAll = promisify(zip.extractAllToAsync.bind(zip))
-  await pExtractAll(`${path}/..`, false)
+  const targetPath = targetPathGenerator ? targetPathGenerator(path) : `${path}/..`
+  await pExtractAll(targetPath, false)
 }
 
 const replaceUnzipPath = function ({ path }) {
