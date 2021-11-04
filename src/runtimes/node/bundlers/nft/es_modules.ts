@@ -10,7 +10,7 @@ import { transpile } from './transpile'
 
 const getPatchedESMPackages = async (packages: string[], fsCache: FsCache) => {
   const patchedPackages = await Promise.all(packages.map((path) => patchESMPackage(path, fsCache)))
-  const patchedPackagesMap: Map<string, string> = new Map()
+  const patchedPackagesMap = new Map<string, string>()
 
   packages.forEach((packagePath, index) => {
     patchedPackagesMap.set(packagePath, patchedPackages[index])
