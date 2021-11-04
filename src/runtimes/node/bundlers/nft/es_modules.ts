@@ -32,7 +32,7 @@ const patchESMPackage = async (path: string, fsCache: FsCache) => {
 
 const shouldTranspile = (path: string, cache: Map<string, boolean>, reasons: NodeFileTraceReasons): boolean => {
   if (cache.has(path)) {
-    return cache.get(path) as boolean
+    return cache.get(path)!
   }
 
   const reason = reasons.get(path)
