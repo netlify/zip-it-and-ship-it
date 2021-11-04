@@ -31,6 +31,10 @@ const patchESMPackage = async (path: string, fsCache: FsCache) => {
 }
 
 const shouldTranspile = (path: string, cache: Map<string, boolean>, reasons: NodeFileTraceReasons): boolean => {
+  if (cache.has(path)) {
+    return cache.get(path) as boolean
+  }
+
   const reason = reasons.get(path)
 
   // This isn't an expected case, but if the path doesn't exist in `reasons` we
