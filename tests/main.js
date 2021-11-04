@@ -429,7 +429,7 @@ testMany(
   },
 )
 
-testMany.only(
+testMany(
   'Can bundle functions with `.js` extension using ES Modules',
   ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
   async (options, t, variation) => {
