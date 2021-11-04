@@ -12,6 +12,8 @@ import type { GetSrcFilesFunction } from '../../../runtime'
 import { getBasePath } from '../../utils/base_path'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 
+import { transpileESM } from './es_modules'
+
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']
 
@@ -20,6 +22,7 @@ const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 const bundle: BundleFunction = async ({
   basePath,
   config,
+  featureFlags,
   mainFile,
   pluginsModulesPath,
   repositoryRoot = basePath,
@@ -29,11 +32,12 @@ const bundle: BundleFunction = async ({
     includedFiles,
     includedFilesBasePath || basePath,
   )
-  const { paths: dependencyPaths } = await traceFilesAndTranspile({
+  const { paths: dependencyPaths, rewrites } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
     config,
     mainFile,
     pluginsModulesPath,
+    transpile: featureFlags.nftTranspile,
   })
   const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
@@ -45,6 +49,7 @@ const bundle: BundleFunction = async ({
     basePath: getBasePath(dirnames),
     inputs: dependencyPaths,
     mainFile,
+    rewrites,
     srcFiles,
   }
 }
@@ -58,16 +63,23 @@ const ignoreFunction = (path: string) => {
 
 const traceFilesAndTranspile = async function ({
   basePath,
+  config,
   mainFile,
   pluginsModulesPath,
+  transpile,
 }: {
   basePath?: string
   config: FunctionConfig
   mainFile: string
   pluginsModulesPath?: string
+  transpile: boolean
 }) {
   const fsCache: FsCache = {}
-  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
+  const {
+    fileList: dependencyPaths,
+    esmFileList,
+    reasons,
+  } = await nodeFileTrace([mainFile], {
     base: basePath,
     ignore: ignoreFunction,
     readFile: async (path: string) => {
@@ -103,9 +115,13 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
+  const rewrites = transpile
+    ? await transpileESM({ basePath, config, esmPaths: esmFileList, fsCache, reasons })
+    : undefined
 
   return {
     paths: normalizedDependencyPaths,
+    rewrites,
   }
 }
 

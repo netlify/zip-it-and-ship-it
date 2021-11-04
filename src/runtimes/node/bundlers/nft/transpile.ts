@@ -20,18 +20,4 @@ const transpile = async (path: string, config: FunctionConfig) => {
   return transpiled.outputFiles[0].text
 }
 
-const transpileMany = async (paths: string[], config: FunctionConfig) => {
-  const transpiledPaths: Map<string, string> = new Map()
-
-  await Promise.all(
-    paths.map(async (path) => {
-      const transpiled = await transpile(path, config)
-
-      transpiledPaths.set(path, transpiled)
-    }),
-  )
-
-  return transpiledPaths
-}
-
-export { transpileMany }
+export { transpile }
