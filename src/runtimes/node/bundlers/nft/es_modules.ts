@@ -30,18 +30,29 @@ const patchESMPackage = async (path: string, fsCache: FsCache) => {
   return JSON.stringify(patchedPackageJson)
 }
 
-const shouldTranspile = (path: string, cache: Map<string, boolean>, reasons: NodeFileTraceReasons) => {
+const shouldTranspile = (path: string, cache: Map<string, boolean>, reasons: NodeFileTraceReasons): boolean => {
   const reason = reasons.get(path)
 
+  // This isn't an expected case, but if the path doesn't exist in `reasons` we
+  // don't transpile it.
   if (reason === undefined) {
+    cache.set(path, false)
+
     return false
   }
 
   const { parents } = reason
 
+  // If the path doesn't have any parents, it's safe to transpile.
+  if (parents.size === 0) {
+    cache.set(path, true)
+
+    return true
+  }
+
   // The path should be transpiled if every parent will also be transpiled, or
   // if there is no parent.
-  const shouldTranspilePath = [...parents].every((parentPath) => cache.get(parentPath) === true)
+  const shouldTranspilePath = [...parents].every((parentPath) => shouldTranspile(parentPath, cache, reasons))
 
   cache.set(path, shouldTranspilePath)
 
