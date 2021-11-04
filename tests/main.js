@@ -1,7 +1,7 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
 const { basename, dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
-const { arch, env, platform } = require('process')
+const { arch, env, platform, version: nodeVersion } = require('process')
 const { promisify } = require('util')
 
 const test = require('ava')
@@ -11,6 +11,7 @@ const del = require('del')
 const execa = require('execa')
 const makeDir = require('make-dir')
 const pathExists = require('path-exists')
+const semver = require('semver')
 const sinon = require('sinon')
 const sortOn = require('sort-on')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
@@ -428,7 +429,7 @@ testMany(
   },
 )
 
-testMany(
+testMany.only(
   'Can bundle functions with `.js` extension using ES Modules',
   ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
   async (options, t, variation) => {
@@ -450,7 +451,9 @@ testMany(
     const func3 = () => require(join(tmpDir, 'function_export_only.zip_out', 'function_export_only.js'))
     const func4 = () => require(join(tmpDir, 'function_import_only.zip_out', 'function_import_only.js'))
 
-    t.is(await func2()(), 0)
+    if (semver.gte(nodeVersion.slice(1), '13.2.0')) {
+      t.is(await func2()(), 0)
+    }
 
     if (variation === 'bundler_nft') {
       t.throws(func1)
