@@ -37,7 +37,6 @@ interface ZipNodeParameters {
   extension: string
   filename: string
   mainFile: string
-  pluginsModulesPath?: string
   rewrites?: Map<string, string>
   srcFiles: string[]
 }
@@ -49,7 +48,6 @@ const createDirectory = async function ({
   extension,
   filename,
   mainFile,
-  pluginsModulesPath,
   rewrites = new Map(),
   srcFiles,
 }: ZipNodeParameters) {
@@ -76,7 +74,6 @@ const createDirectory = async function ({
       const normalizedDestPath = normalizeFilePath({
         commonPrefix: basePath,
         path: destPath,
-        pluginsModulesPath,
         userNamespace: DEFAULT_USER_SUBDIRECTORY,
       })
       const absoluteDestPath = join(functionFolder, normalizedDestPath)
@@ -100,7 +97,6 @@ const createZipArchive = async function ({
   extension,
   filename,
   mainFile,
-  pluginsModulesPath,
   rewrites,
   srcFiles,
 }: ZipNodeParameters) {
@@ -137,7 +133,6 @@ const createZipArchive = async function ({
       aliases,
       archive,
       commonPrefix: basePath,
-      pluginsModulesPath,
       rewrites,
       srcFile,
       stat,
@@ -198,7 +193,6 @@ const zipJsFile = function ({
   aliases = new Map(),
   archive,
   commonPrefix,
-  pluginsModulesPath,
   rewrites = new Map(),
   stat,
   srcFile,
@@ -207,14 +201,13 @@ const zipJsFile = function ({
   aliases?: Map<string, string>
   archive: ZipArchive
   commonPrefix: string
-  pluginsModulesPath?: string
   rewrites?: Map<string, string>
   stat: Stats
   srcFile: string
   userNamespace: string
 }) {
   const destPath = aliases.get(srcFile) || srcFile
-  const normalizedDestPath = normalizeFilePath({ commonPrefix, path: destPath, pluginsModulesPath, userNamespace })
+  const normalizedDestPath = normalizeFilePath({ commonPrefix, path: destPath, userNamespace })
 
   if (rewrites.has(srcFile)) {
     addZipContent(archive, rewrites.get(srcFile) as string, normalizedDestPath)
@@ -229,23 +222,17 @@ const zipJsFile = function ({
 const normalizeFilePath = function ({
   commonPrefix,
   path,
-  pluginsModulesPath,
   userNamespace,
 }: {
   commonPrefix: string
   path: string
-  pluginsModulesPath?: string
   userNamespace: string
 }) {
   const userNamespacePathSegment = userNamespace ? `${userNamespace}${sep}` : ''
   const pathA = normalize(path)
-  const pathB =
-    pluginsModulesPath === undefined
-      ? pathA
-      : pathA.replace(pluginsModulesPath, `${userNamespacePathSegment}node_modules`)
-  const pathC = pathB.replace(commonPrefix, userNamespacePathSegment)
-  const pathD = unixify(pathC)
-  return pathD
+  const pathB = pathA.replace(commonPrefix, userNamespacePathSegment)
+  const pathC = unixify(pathB)
+  return pathC
 }
 
 export { ArchiveFormat, zipNodeJs }

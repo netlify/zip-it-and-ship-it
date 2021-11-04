@@ -5,7 +5,6 @@ import { Config } from './config'
 import { FeatureFlags, getFlags } from './feature_flags'
 import { FunctionSource } from './function'
 import { getFunctionsFromPaths } from './runtimes'
-import { getPluginsModulesPath } from './runtimes/node/utils/plugin_modules_path'
 import { GetSrcFilesFunction, RuntimeName } from './runtimes/runtime'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
 import { zipFunction, zipFunctions } from './zip'
@@ -25,7 +24,6 @@ interface ListFunctionsOptions {
   basePath?: string
   config?: Config
   featureFlags?: FeatureFlags
-  pluginsModulesPath?: string
 }
 
 // List all Netlify Functions main entry files for a specific directory
@@ -49,12 +47,9 @@ const listFunctionsFiles = async function (
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
-  const [functions, pluginsModulesPath] = await Promise.all([
-    getFunctionsFromPaths(paths, { config, featureFlags }),
-    getPluginsModulesPath(srcFolders[0]),
-  ])
+  const functions = await getFunctionsFromPaths(paths, { config, featureFlags })
   const listedFunctionsFiles = await Promise.all(
-    [...functions.values()].map((func) => getListedFunctionFiles(func, { basePath, featureFlags, pluginsModulesPath })),
+    [...functions.values()].map((func) => getListedFunctionFiles(func, { basePath, featureFlags })),
   )
 
   return listedFunctionsFiles.flat()
@@ -66,7 +61,7 @@ const getListedFunction = function ({ runtime, name, mainFile, extension }: Func
 
 const getListedFunctionFiles = async function (
   func: FunctionSource,
-  options: { basePath?: string; featureFlags: FeatureFlags; pluginsModulesPath?: string },
+  options: { basePath?: string; featureFlags: FeatureFlags },
 ): Promise<ListedFunctionFile[]> {
   const srcFiles = await getSrcFiles({ ...func, ...options })
   const { name, mainFile, runtime } = func
