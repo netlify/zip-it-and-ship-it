@@ -353,10 +353,26 @@ testMany(
 )
 
 testMany(
-  'Resolves dependencies from .netlify/plugins/node_modules',
+  'Resolves dependencies from .netlify/plugins/node_modules when using `zipFunctions()`',
   ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-next-image', { opts: options })
+  },
+)
+
+testMany(
+  'Resolves dependencies from .netlify/plugins/node_modules when using `zipFunction()`',
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+  async (options, t) => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const mainFile = join(FIXTURES_DIR, 'node-module-next-image', 'function', 'function.js')
+    const result = await zipFunction(mainFile, tmpDir, options)
+
+    await unzipFiles([result])
+
+    const func = require(join(tmpDir, 'function.js'))
+
+    t.true(func)
   },
 )
 
