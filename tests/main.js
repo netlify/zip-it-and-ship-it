@@ -451,6 +451,7 @@ testMany.only(
     const func3 = () => require(join(tmpDir, 'function_export_only.zip_out', 'function_export_only.js'))
     const func4 = () => require(join(tmpDir, 'function_import_only.zip_out', 'function_import_only.js'))
 
+    // Dynamic imports are not supported in Node <13.2.0.
     if (semver.gte(nodeVersion.slice(1), '13.2.0')) {
       t.is(await func2()(), 0)
     }
