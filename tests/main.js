@@ -2210,7 +2210,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
   })
 })
 
-testMany('Correctly follows node_modules via symlink', ['bundler_esbuild', 'todo:bundler_nft'], async (options, t) => {
+testMany('Correctly follows node_modules via symlink', ['bundler_esbuild', 'bundler_nft'], async (options, t) => {
   const fixtureName = 'node-module-symlinks'
   const opts = merge(options, {
     basePath: join(FIXTURES_DIR, fixtureName),
