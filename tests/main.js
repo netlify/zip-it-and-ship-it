@@ -1,7 +1,7 @@
 const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
 const { tmpdir } = require('os')
-const { dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
-const { arch, env, platform } = require('process')
+const { basename, dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
+const { arch, env, platform, version: nodeVersion } = require('process')
 const { promisify } = require('util')
 
 const test = require('ava')
@@ -11,6 +11,7 @@ const del = require('del')
 const execa = require('execa')
 const makeDir = require('make-dir')
 const pathExists = require('path-exists')
+const semver = require('semver')
 const sinon = require('sinon')
 const sortOn = require('sort-on')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
@@ -83,6 +84,10 @@ const testMany = makeTestMany(test, {
   },
   bundler_nft: {
     config: { '*': { nodeBundler: 'nft' } },
+  },
+  bundler_nft_transpile: {
+    config: { '*': { nodeBundler: 'nft' } },
+    featureFlags: { nftTranspile: true },
   },
 })
 
@@ -353,10 +358,26 @@ testMany(
 )
 
 testMany(
-  'Resolves dependencies from .netlify/plugins/node_modules',
+  'Resolves dependencies from .netlify/plugins/node_modules when using `zipFunctions()`',
   ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await zipNode(t, 'node-module-next-image', { opts: options })
+  },
+)
+
+testMany(
+  'Resolves dependencies from .netlify/plugins/node_modules when using `zipFunction()`',
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+  async (options, t) => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const mainFile = join(FIXTURES_DIR, 'node-module-next-image', 'function', 'function.js')
+    const result = await zipFunction(mainFile, tmpDir, options)
+
+    await unzipFiles([result])
+
+    const func = require(join(tmpDir, 'function.js'))
+
+    t.true(func)
   },
 )
 
@@ -409,40 +430,43 @@ testMany(
 )
 
 testMany(
-  'Can bundle functions with `.js` extension using ES Modules and feature flag ON',
-  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
-  async (options, t) => {
-    const opts = merge(options, { featureFlags: { defaultEsModulesToEsbuild: true } })
-
-    await zipNode(t, 'local-require-esm', {
-      length: 3,
-      opts,
-    })
-  },
-)
-
-testMany(
-  'Can bundle functions with `.js` extension using ES Modules and feature flag OFF',
-  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
-  async (options, t) => {
+  'Can bundle functions with `.js` extension using ES Modules',
+  ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
+  async (options, t, variation) => {
+    const length = 4
     const fixtureName = 'local-require-esm'
     const opts = merge(options, {
       basePath: `${FIXTURES_DIR}/${fixtureName}`,
       featureFlags: { defaultEsModulesToEsbuild: false },
     })
-    const bundler = options.config['*'].nodeBundler
+    const { files, tmpDir } = await zipFixture(t, 'local-require-esm', {
+      length,
+      opts,
+    })
 
-    await (bundler === undefined
-      ? t.throwsAsync(
-          zipNode(t, 'local-require-esm', {
-            length: 3,
-            opts,
-          }),
-        )
-      : zipNode(t, 'local-require-esm', {
-          length: 3,
-          opts,
-        }))
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    const func1 = () => require(join(tmpDir, 'function.zip_out', 'function.js'))
+    const func2 = () => require(join(tmpDir, 'function_cjs.zip_out', 'function_cjs.js'))
+    const func3 = () => require(join(tmpDir, 'function_export_only.zip_out', 'function_export_only.js'))
+    const func4 = () => require(join(tmpDir, 'function_import_only.zip_out', 'function_import_only.js'))
+
+    // Dynamic imports are not supported in Node <13.2.0.
+    if (semver.gte(nodeVersion, '13.2.0')) {
+      t.is(await func2()(), 0)
+    }
+
+    if (variation === 'bundler_nft') {
+      t.throws(func1)
+      t.throws(func3)
+      t.throws(func4)
+
+      return
+    }
+
+    t.is(func1().ZERO, 0)
+    t.is(typeof func3().howdy, 'string')
+    t.deepEqual(func4(), {})
   },
 )
 

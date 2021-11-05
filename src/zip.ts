@@ -9,7 +9,6 @@ import { FeatureFlags, getFlags } from './feature_flags'
 import { FunctionSource } from './function'
 import { createManifest } from './manifest'
 import { getFunctionsFromPaths } from './runtimes'
-import { getPluginsModulesPath } from './runtimes/node/utils/plugin_modules_path'
 import { addArchiveSize } from './utils/archive_size'
 import { formatZipResult } from './utils/format_result'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
@@ -20,7 +19,6 @@ interface ZipFunctionOptions {
   basePath?: string
   config?: Config
   featureFlags?: FeatureFlags
-  pluginsModulesPath?: string
   repositoryRoot?: string
 }
 
@@ -58,14 +56,7 @@ const zipFunctions = async function (
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), makeDir(destFolder)])
-  const [functions, pluginsModulesPath] = await Promise.all([
-    getFunctionsFromPaths(paths, { config, dedupe: true, featureFlags }),
-
-    // All function directories should be part of the same project root, so we
-    // can get away with computing the plugins modules path from any of the
-    // source directories.
-    getPluginsModulesPath(srcFolders[0]),
-  ])
+  const functions = await getFunctionsFromPaths(paths, { config, dedupe: true, featureFlags })
   const results = await pMap(
     functions.values(),
     async (func) => {
@@ -78,7 +69,6 @@ const zipFunctions = async function (
         filename: func.filename,
         mainFile: func.mainFile,
         name: func.name,
-        pluginsModulesPath,
         repositoryRoot,
         runtime: func.runtime,
         srcDir: func.srcDir,
@@ -116,7 +106,6 @@ const zipFunction = async function (
     basePath,
     config: inputConfig = {},
     featureFlags: inputFeatureFlags,
-    pluginsModulesPath: defaultModulesPath,
     repositoryRoot = basePath,
   }: ZipFunctionOptions = {},
 ) {
@@ -140,8 +129,6 @@ const zipFunction = async function (
     srcDir,
     stat: stats,
   }: FunctionSource = functions.values().next().value
-  const pluginsModulesPath =
-    defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
 
   await makeDir(destFolder)
 
@@ -155,7 +142,6 @@ const zipFunction = async function (
     filename,
     mainFile,
     name,
-    pluginsModulesPath,
     repositoryRoot,
     runtime,
     srcDir,

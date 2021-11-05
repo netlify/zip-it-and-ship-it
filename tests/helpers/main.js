@@ -58,12 +58,16 @@ const requireExtractedFiles = async function (t, files) {
   t.true(jsFiles.every(Boolean))
 }
 
-const unzipFiles = async function (files) {
-  await Promise.all(files.map(unzipFile))
+const unzipFiles = async function (files, targetPathGenerator) {
+  await Promise.all(files.map(({ path }) => unzipFile({ path, targetPathGenerator })))
 }
 
-const unzipFile = async function ({ path }) {
-  await execa('unzip', [path], {
+const unzipFile = async function ({ path, targetPathGenerator }) {
+  const args = [path]
+  if (targetPathGenerator) {
+    args.push("-d", targetPathGenerator(path))
+  }
+  await execa('unzip', [args], {
     cwd: dirname(path),
   })
 }

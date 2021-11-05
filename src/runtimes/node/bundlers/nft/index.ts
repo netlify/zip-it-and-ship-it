@@ -12,8 +12,7 @@ import type { GetSrcFilesFunction } from '../../../runtime'
 import { getBasePath } from '../../utils/base_path'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 
-import { getPatchedESMPackages } from './es_modules'
-import { transpileMany } from './transpile'
+import { transpileESM } from './es_modules'
 
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']
@@ -23,6 +22,7 @@ const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 const bundle: BundleFunction = async ({
   basePath,
   config,
+  featureFlags,
   mainFile,
   pluginsModulesPath,
   repositoryRoot = basePath,
@@ -37,6 +37,7 @@ const bundle: BundleFunction = async ({
     config,
     mainFile,
     pluginsModulesPath,
+    transpile: featureFlags.nftTranspile,
   })
   const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
@@ -65,11 +66,13 @@ const traceFilesAndTranspile = async function ({
   config,
   mainFile,
   pluginsModulesPath,
+  transpile,
 }: {
   basePath?: string
   config: FunctionConfig
   mainFile: string
   pluginsModulesPath?: string
+  transpile: boolean
 }) {
   const fsCache: FsCache = {}
   const {
@@ -112,10 +115,9 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const esmPaths = [...esmFileList].map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
-  const transpiledPaths = await transpileMany(esmPaths, config)
-  const patchedESMPackages = await getPatchedESMPackages(esmFileList, reasons, fsCache, basePath)
-  const rewrites = new Map([...transpiledPaths, ...patchedESMPackages])
+  const rewrites = transpile
+    ? await transpileESM({ basePath, config, esmPaths: esmFileList, fsCache, reasons })
+    : undefined
 
   return {
     paths: normalizedDependencyPaths,

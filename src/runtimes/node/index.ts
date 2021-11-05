@@ -8,6 +8,7 @@ import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime'
 import { getBundler } from './bundlers'
 import { findFunctionsInPaths } from './finder'
 import { detectEsModule } from './utils/detect_es_module'
+import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path'
 import { zipNodeJs } from './utils/zip'
 
 export type NodeBundlerName = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
@@ -47,6 +48,7 @@ const getDefaultBundler = async ({
 // A proxy for the `getSrcFiles` function which adds a default `bundler` using
 // the `getDefaultBundler` function.
 const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
+  const pluginsModulesPath = await getPluginsModulesPath(parameters.srcDir)
   const bundlerName =
     parameters.config.nodeBundler ||
     (await getDefaultBundler({
@@ -56,7 +58,7 @@ const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
     }))
   const bundler = getBundler(bundlerName)
 
-  return bundler.getSrcFiles({ ...parameters })
+  return bundler.getSrcFiles({ ...parameters, pluginsModulesPath })
 }
 
 const zipFunction: ZipFunction = async function ({
@@ -69,13 +71,13 @@ const zipFunction: ZipFunction = async function ({
   filename,
   mainFile,
   name,
-  pluginsModulesPath,
   repositoryRoot,
   runtime,
   srcDir,
   srcPath,
   stat,
 }) {
+  const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = config.nodeBundler || (await getDefaultBundler({ extension, mainFile, featureFlags }))
   const bundler = getBundler(bundlerName)
 
@@ -88,7 +90,7 @@ const zipFunction: ZipFunction = async function ({
   }
 
   const {
-    aliases,
+    aliases = new Map(),
     cleanupFunction,
     basePath: finalBasePath,
     bundlerWarnings,
@@ -114,6 +116,8 @@ const zipFunction: ZipFunction = async function ({
     stat,
   })
 
+  createPluginsModulesPathAliases(srcFiles, pluginsModulesPath, aliases, finalBasePath)
+
   const zipPath = await zipNodeJs({
     aliases,
     archiveFormat,
@@ -122,7 +126,6 @@ const zipFunction: ZipFunction = async function ({
     extension,
     filename,
     mainFile: finalMainFile,
-    pluginsModulesPath,
     rewrites,
     srcFiles,
   })
