@@ -65,9 +65,9 @@ const unzipFiles = async function (files, targetPathGenerator) {
 const unzipFile = async function ({ path, targetPathGenerator }) {
   const args = [path]
   if (targetPathGenerator) {
-    args.push("-d", targetPathGenerator(path))
+    args.push('-d', targetPathGenerator(path))
   }
-  await execa('unzip', [args], {
+  await execa('unzip', args, {
     cwd: dirname(path),
   })
 }
