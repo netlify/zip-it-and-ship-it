@@ -1,8 +1,7 @@
 const { dirname, join, resolve } = require('path')
 const { env } = require('process')
-const { promisify } = require('util')
 
-const AdmZip = require('adm-zip')
+const execa = require('execa')
 const { dir: getTmpDir } = require('tmp-promise')
 
 const { zipFunctions } = require('../..')
@@ -64,9 +63,9 @@ const unzipFiles = async function (files) {
 }
 
 const unzipFile = async function ({ path }) {
-  const zip = new AdmZip(path)
-  const pExtractAll = promisify(zip.extractAllToAsync.bind(zip))
-  await pExtractAll(`${path}/..`, false)
+  await execa('unzip', [path], {
+    cwd: dirname(path),
+  })
 }
 
 const replaceUnzipPath = function ({ path }) {
