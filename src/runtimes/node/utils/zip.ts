@@ -13,7 +13,7 @@ import unixify from 'unixify'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive'
 
-const pStat = promisify(fs.stat)
+const pLstat = promisify(fs.lstat)
 const pWriteFile = promisify(fs.writeFile)
 
 // Taken from https://www.npmjs.com/package/cpy.
@@ -168,7 +168,7 @@ const addEntryFileToZip = function (archive: ZipArchive, { contents, filename }:
 }
 
 const addStat = async function (srcFile: string) {
-  const stat = await pStat(srcFile)
+  const stat = await pLstat(srcFile)
 
   return { srcFile, stat }
 }
