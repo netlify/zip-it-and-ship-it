@@ -36,4 +36,6 @@ const endZip = async function (archive: Archiver, output: Writable): Promise<voi
 }
 
 export { startZip, addZipFile, addZipContent, endZip }
-export type { ArchiveFormat, Archiver as ZipArchive }
+export type { ArchiveFormat }
+
+export { Archiver as ZipArchive } from 'archiver'
