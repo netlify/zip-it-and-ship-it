@@ -22,9 +22,9 @@ const sanitiseFiles = (files: unknown): string[] | undefined => {
   return files.filter((file) => typeof file === 'string')
 }
 
-const sanitisePackageJson = (pack: Record<string, unknown>): PackageJson => ({
-  ...pack,
-  files: sanitiseFiles(pack.files),
+const sanitisePackageJson = (packageJson: Record<string, unknown>): PackageJson => ({
+  ...packageJson,
+  files: sanitiseFiles(packageJson.files),
 })
 
 // Retrieve the `package.json` of a specific project or module
@@ -39,8 +39,8 @@ const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   try {
     // The path depends on the user's build, i.e. must be dynamic
     // eslint-disable-next-line import/no-dynamic-require, node/global-require, @typescript-eslint/no-var-requires
-    const pack = require(packageJsonPath)
-    return sanitisePackageJson(pack)
+    const packageJson = require(packageJsonPath)
+    return sanitisePackageJson(packageJson)
   } catch (error) {
     throw new Error(`${packageJsonPath} is invalid JSON: ${error.message}`)
   }
