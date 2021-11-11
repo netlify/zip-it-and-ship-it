@@ -39,6 +39,10 @@ const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): Plugin 
 
       if (!pkg) return
 
+      if (pkg[1].startsWith('node:')) {
+        return { external: true }
+      }
+
       let directory = args.resolveDir
 
       while (true) {
