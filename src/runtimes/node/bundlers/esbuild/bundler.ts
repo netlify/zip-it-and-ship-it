@@ -11,6 +11,7 @@ import type { RuntimeName } from '../../../runtime'
 import { getBundlerTarget } from './bundler_target'
 import { getDynamicImportsPlugin } from './plugin_dynamic_imports'
 import { getNativeModulesPlugin } from './plugin_native_modules'
+import { getNodeBuiltinPlugin } from './plugin_node_builtin'
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being
@@ -63,6 +64,7 @@ const bundleJsFile = async function ({
 
   // The list of esbuild plugins to enable for this build.
   const plugins = [
+    getNodeBuiltinPlugin(),
     getNativeModulesPlugin(nativeNodeModules),
     getDynamicImportsPlugin({
       basePath,
