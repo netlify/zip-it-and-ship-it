@@ -64,6 +64,7 @@ const bundleJsFile = async function ({
 
   // The list of esbuild plugins to enable for this build.
   const plugins = [
+    getNodeBuiltinPlugin(),
     getNativeModulesPlugin(nativeNodeModules),
     getDynamicImportsPlugin({
       basePath,
@@ -72,7 +73,6 @@ const bundleJsFile = async function ({
       processImports: config.processDynamicNodeImports !== false,
       srcDir,
     }),
-    getNodeBuiltinPlugin(),
   ]
 
   // The version of ECMAScript to use as the build target. This will determine
