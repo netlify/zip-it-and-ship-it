@@ -30,7 +30,12 @@ const patchESMPackage = async (path: string, fsCache: FsCache) => {
   return JSON.stringify(patchedPackageJson)
 }
 
-const shouldTranspile = (path: string, cache: Map<string, boolean>, reasons: NodeFileTraceReasons): boolean => {
+const shouldTranspile = (
+  path: string,
+  cache: Map<string, boolean>,
+  esmPaths: Set<string>,
+  reasons: NodeFileTraceReasons,
+): boolean => {
   if (cache.has(path)) {
     return cache.get(path) as boolean
   }
@@ -47,16 +52,18 @@ const shouldTranspile = (path: string, cache: Map<string, boolean>, reasons: Nod
 
   const { parents } = reason
 
-  // If the path doesn't have any parents, it's safe to transpile.
+  // If the path is an entrypoint, we transpile it only if it's an ESM file.
   if (parents.size === 0) {
-    cache.set(path, true)
+    const isESM = esmPaths.has(path)
 
-    return true
+    cache.set(path, isESM)
+
+    return isESM
   }
 
   // The path should be transpiled if every parent will also be transpiled, or
   // if there is no parent.
-  const shouldTranspilePath = [...parents].every((parentPath) => shouldTranspile(parentPath, cache, reasons))
+  const shouldTranspilePath = [...parents].every((parentPath) => shouldTranspile(parentPath, cache, esmPaths, reasons))
 
   cache.set(path, shouldTranspilePath)
 
@@ -77,15 +84,15 @@ const transpileESM = async ({
   reasons: NodeFileTraceReasons
 }) => {
   const cache: Map<string, boolean> = new Map()
-  const paths = [...esmPaths].filter((path) => shouldTranspile(path, cache, reasons))
-  const pathsSet = new Set(paths)
+  const pathsToTranspile = [...esmPaths].filter((path) => shouldTranspile(path, cache, esmPaths, reasons))
+  const pathsToTranspileSet = new Set(pathsToTranspile)
   const packageJsonPaths: string[] = [...reasons.entries()]
     .filter(([path, reason]) => {
       if (basename(path) !== 'package.json') {
         return false
       }
 
-      const needsPatch = [...reason.parents].some((parentPath) => pathsSet.has(parentPath))
+      const needsPatch = [...reason.parents].some((parentPath) => pathsToTranspileSet.has(parentPath))
 
       return needsPatch
     })
@@ -93,7 +100,7 @@ const transpileESM = async ({
   const rewrites = await getPatchedESMPackages(packageJsonPaths, fsCache)
 
   await Promise.all(
-    paths.map(async (path) => {
+    pathsToTranspile.map(async (path) => {
       const absolutePath = basePath ? resolve(basePath, path) : resolve(path)
       const transpiled = await transpile(absolutePath, config)
 
