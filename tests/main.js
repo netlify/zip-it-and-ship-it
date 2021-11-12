@@ -2251,11 +2251,11 @@ testMany(
 )
 
 testMany(
-  'Handles built-in modules required with the `node:` prefix',
+  'Handles built-in module added in v16 required with the `node:` prefix',
   ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
   async (options, t) => {
     t.plan(3)
-    const { tmpDir, files } = await zipFixture(t, 'node-force-builtin', {
+    const { tmpDir, files } = await zipFixture(t, 'node-force-builtin-v16', {
       opts: { config: { '*': { ...options } } },
     })
 
@@ -2282,8 +2282,22 @@ testMany(
 testMany(
   'Handles built-in modules imported with the `node:` prefix',
   ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
+  async (options, t, bundler) => {
+    const importSyntaxIsCompiledAway = bundler.includes('esbuild')
+    const zip = importSyntaxIsCompiledAway ? zipNode : zipFixture
+    await zip(t, 'node-force-builtin-esm', {
+      opts: options,
+    })
+  },
+)
+
+testMany(
+  'Handles built-in modules required with the `node:` prefix',
+  ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
   async (options, t) => {
-    await zipFixture(t, 'node-force-builtin-esm', {
+    const nodePrefixIsUnderstood = semver.gte(nodeVersion, '14.18.0')
+    const zip = nodePrefixIsUnderstood ? zipNode : zipFixture
+    await zip(t, 'node-force-builtin-cjs', {
       opts: options,
     })
   },
