@@ -2283,7 +2283,9 @@ testMany(
   'Handles built-in modules imported with the `node:` prefix',
   ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
   async (options, t, bundler) => {
-    const zip = bundler.includes('esbuild') ? zipNode : zipFixture
+    const nodePrefixIsUnderstood = semver.gte(nodeVersion, '>=14.18')
+    const nodePrefixIsCompiledAway = bundler.includes('esbuild')
+    const zip = nodePrefixIsCompiledAway || nodePrefixIsUnderstood ? zipNode : zipFixture
     await zip(t, 'node-force-builtin-esm', {
       opts: options,
     })
