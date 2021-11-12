@@ -2283,7 +2283,7 @@ testMany(
   'Handles built-in modules imported with the `node:` prefix',
   ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
   async (options, t) => {
-    await zipFixture(t, 'node-force-builtin-esm', {
+    await zipNode(t, 'node-force-builtin-esm', {
       opts: options,
     })
   },
