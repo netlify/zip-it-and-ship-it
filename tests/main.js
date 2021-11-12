@@ -475,11 +475,8 @@ testMany(
   ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
   async (options, t) => {
     const fixtureName = 'node-cjs-importing-mjs'
-    const opts = merge(options, {
-      basePath: `${FIXTURES_DIR}/${fixtureName}`,
-    })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
-      opts,
+      opts: options,
     })
 
     await unzipFiles(files)
