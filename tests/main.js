@@ -482,13 +482,17 @@ testMany(
       opts,
     })
 
-    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+    await unzipFiles(files)
 
-    const func = require(join(tmpDir, 'function.zip_out', 'function.js'))
-    const { body, statusCode } = await func.handler()
+    const func = require(join(tmpDir, 'function.js'))
 
-    t.is(body, 'Hello world')
-    t.is(statusCode, 200)
+    // Dynamic imports were added in Node v13.2.0.
+    if (semver.gte(nodeVersion, '13.2.0')) {
+      const { body, statusCode } = await func.handler()
+
+      t.is(body, 'Hello world')
+      t.is(statusCode, 200)
+    }
   },
 )
 
