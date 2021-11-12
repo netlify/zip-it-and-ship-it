@@ -2251,7 +2251,7 @@ testMany(
 )
 
 testMany(
-  'Handles built-in module added n v16 required with the `node:` prefix',
+  'Handles built-in module added in v16 required with the `node:` prefix',
   ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
   async (options, t) => {
     t.plan(3)
