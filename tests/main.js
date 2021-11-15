@@ -2251,35 +2251,6 @@ testMany(
 )
 
 testMany(
-  'Handles built-in module added in v16 required with the `node:` prefix',
-  ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
-  async (options, t) => {
-    t.plan(3)
-    const { tmpDir, files } = await zipFixture(t, 'node-force-builtin-v16', {
-      opts: { config: { '*': { ...options } } },
-    })
-
-    await unzipFiles(files)
-
-    if (semver.satisfies(nodeVersion, '>=16')) {
-      const func = require(`${tmpDir}/function`)
-      t.true(func())
-    } else {
-      try {
-        require(`${tmpDir}/function`)
-      } catch (error) {
-        t.is(
-          error.message,
-          semver.satisfies(nodeVersion, '>10')
-            ? 'No such built-in module: node:stream/web'
-            : "Cannot find module 'node:stream/web'",
-        )
-      }
-    }
-  },
-)
-
-testMany(
   'Handles built-in modules imported with the `node:` prefix',
   ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
   async (options, t, bundler) => {
