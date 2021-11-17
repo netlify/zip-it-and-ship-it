@@ -12,6 +12,7 @@ import pMap from 'p-map'
 import unixify from 'unixify'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive'
+import { mkdirAndWriteFile } from '../../../utils/fs'
 
 const pStat = promisify(fs.stat)
 const pWriteFile = promisify(fs.writeFile)
@@ -79,7 +80,7 @@ const createDirectory = async function ({
       const absoluteDestPath = join(functionFolder, normalizedDestPath)
 
       if (rewrites.has(srcFile)) {
-        return pWriteFile(absoluteDestPath, rewrites.get(srcFile) as string)
+        return mkdirAndWriteFile(absoluteDestPath, rewrites.get(srcFile) as string)
       }
 
       return copyFile(srcFile, absoluteDestPath)
