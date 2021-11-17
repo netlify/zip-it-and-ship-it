@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        site: ['netlify/netlify-plugin-nextjs']
+        site: ['netlify/netlify-plugin-nextjs', 'netlify/netlify-plugin-gatsby']
     steps:
       - name: Checking out zip-it-and-ship-it
         uses: actions/checkout@v2
@@ -73,7 +73,7 @@ jobs:
           check-only-first-line: true
           unique: true
           comment: |
-            ## Next.js Integration Test (${{ matrix.site }})
+            ## Framework Integration Test: ${{ matrix.site }}
 
             - **Deploy URL**: ${{ env.deploy_url }}
             - **Deploy logs**: ${{ env.deploy_log_url }}
