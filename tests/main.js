@@ -471,6 +471,29 @@ testMany(
 )
 
 testMany(
+  'Can bundle CJS functions that import ESM files with an `import()` expression',
+  ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
+  async (options, t) => {
+    const fixtureName = 'node-cjs-importing-mjs'
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
+      opts: options,
+    })
+
+    await unzipFiles(files)
+
+    const func = require(join(tmpDir, 'function.js'))
+
+    // Dynamic imports were added in Node v13.2.0.
+    if (semver.gte(nodeVersion, '13.2.0')) {
+      const { body, statusCode } = await func.handler()
+
+      t.is(body, 'Hello world')
+      t.is(statusCode, 200)
+    }
+  },
+)
+
+testMany(
   'Can require local files deeply',
   ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
