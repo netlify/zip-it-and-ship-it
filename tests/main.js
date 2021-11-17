@@ -471,6 +471,46 @@ testMany(
 )
 
 testMany(
+  'Can bundle functions with `.js` extension using ES Modules when `archiveType` is `none`',
+  ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
+  async (options, t, variation) => {
+    const length = 4
+    const fixtureName = 'local-require-esm'
+    const opts = merge(options, {
+      archiveFormat: 'none',
+      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      featureFlags: { defaultEsModulesToEsbuild: false },
+    })
+    const { tmpDir } = await zipFixture(t, 'local-require-esm', {
+      length,
+      opts,
+    })
+
+    const func1 = () => require(join(tmpDir, 'function', 'function.js'))
+    const func2 = () => require(join(tmpDir, 'function_cjs', 'function_cjs.js'))
+    const func3 = () => require(join(tmpDir, 'function_export_only', 'function_export_only.js'))
+    const func4 = () => require(join(tmpDir, 'function_import_only', 'function_import_only.js'))
+
+    // Dynamic imports are not supported in Node <13.2.0.
+    if (semver.gte(nodeVersion, '13.2.0')) {
+      t.is(await func2()(), 0)
+    }
+
+    if (variation === 'bundler_nft') {
+      t.throws(func1)
+      t.throws(func3)
+      t.throws(func4)
+
+      return
+    }
+
+    t.is(func1().ZERO, 0)
+    t.is(typeof func3().howdy, 'string')
+    t.deepEqual(func4(), {})
+  },
+)
+
+testMany(
   'Can bundle CJS functions that import ESM files with an `import()` expression',
   ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
   async (options, t) => {
@@ -1809,7 +1849,7 @@ test('The dynamic import runtime shim handles files in nested directories', asyn
   t.throws(() => func('fr'))
 })
 
-test('The dynamic import runtime shim handles files in nested directories when using `archiveType: "none"`', async (t) => {
+test('The dynamic import runtime shim handles files in nested directories when using `archiveFormat: "none"`', async (t) => {
   const fixtureName = 'node-module-dynamic-import-4'
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
