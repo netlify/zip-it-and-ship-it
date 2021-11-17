@@ -1,17 +1,17 @@
-name: Framework Integration test
+name: Integration test
 
 on:
   pull_request:
-    branches: [main, 'chore/ci-framework-e2e']
+    branches: [main, 'chore/ci-integration-tests']
     # Run on release PRs only, or changes to this same file
-    paths: ['CHANGELOG.md', '.github/workflows/framework-e2e.yml']
+    paths: ['CHANGELOG.md', '.github/workflows/integration-tests.yml']
 
 jobs:
   integration:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        site: ['netlify/netlify-plugin-nextjs', 'netlify/netlify-plugin-gatsby']
+        site: ['netlify/netlify-plugin-nextjs']
     steps:
       - name: Checking out zip-it-and-ship-it
         uses: actions/checkout@v2
@@ -73,7 +73,7 @@ jobs:
           check-only-first-line: true
           unique: true
           comment: |
-            ## Framework Integration Test: ${{ matrix.site }}
+            ## Integration Test: ${{ matrix.site }}
 
             - **Deploy URL**: ${{ env.deploy_url }}
             - **Deploy logs**: ${{ env.deploy_log_url }}
