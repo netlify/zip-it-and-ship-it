@@ -1,27 +1,27 @@
-name: Next.js Integration test
+name: Integration test
 
 on:
   pull_request:
-    branches: [main, 'chore/ci-e2e-nextjs']
+    branches: [main, 'chore/ci-integration-tests']
     # Run on release PRs only, or changes to this same file
-    paths: ['CHANGELOG.md', '.github/workflows/e2e-nextjs.yml']
+    paths: ['CHANGELOG.md', '.github/workflows/integration-tests.yml']
 
 jobs:
   integration:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        bundler: ['default', 'esbuild']
+        site: ['netlify/netlify-plugin-nextjs']
     steps:
       - name: Checking out zip-it-and-ship-it
         uses: actions/checkout@v2
         with:
           path: zip-it-and-ship-it
-      - name: Checking out netlify-plugin-nextjs
+      - name: Checking out test site
         uses: actions/checkout@v2
         with:
-          repository: netlify/netlify-plugin-nextjs
-          path: netlify-plugin-nextjs
+          repository: '${{ matrix.site }}'
+          path: test-site
       - name: Checking out netlify-cli
         uses: actions/checkout@v2
         with:
@@ -35,22 +35,14 @@ jobs:
           # We need to add each of the lockfile paths so that the global npm cache is populated accordingly
           cache-dependency-path: |
             zip-it-and-ship-it/package-lock.json
-            netlify-plugin-nextjs/package-lock.json
+            test-site/package-lock.json
             netlify-cli/npm-shrinkwrap.json
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli
-      - name: Installing netlify-plugin-nextjs
+      - name: Installing test site
         run: npm install
-        working-directory: netlify-plugin-nextjs
-      - name: Patching netlify.toml to change the bundler
-        if: "${{ matrix.bundler != 'default' }}"
-        run:
-          'npm i @iarna/toml --no-save && node -e "const { readFileSync, writeFileSync } = require(''fs'');const {
-          parse, stringify } = require(''@iarna/toml'');const config = parse(readFileSync(''netlify.toml'',
-          ''utf-8''));config.functions = { ...config.functions, node_bundler: ''${{ matrix.bundler }}''
-          };writeFileSync(''netlify.toml'', stringify(config));"'
-        working-directory: netlify-plugin-nextjs
+        working-directory: test-site
       - name: Symlinking zip-it-and-ship-it (1/2)
         run:
           rm -rf $GITHUB_WORKSPACE/netlify-cli/node_modules/@netlify/zip-it-and-ship-it && mkdir -p
@@ -69,19 +61,19 @@ jobs:
         run:
           $GITHUB_WORKSPACE/netlify-cli/bin/run deploy --build --json --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{
           secrets.NETLIFY_TOKEN }} --functions .netlify/functions > .netlify-deploy-log.json
-        working-directory: netlify-plugin-nextjs
+        working-directory: test-site
       - name: Parsing deploy result
         run: |
           node -e "console.log('deploy_log_url=' + require('./.netlify-deploy-log.json').logs)" >> $GITHUB_ENV
           node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
-        working-directory: netlify-plugin-nextjs
+        working-directory: test-site
       - name: Posting comment
         uses: KeisukeYamashita/create-comment@v1
         with:
           check-only-first-line: true
           unique: true
           comment: |
-            ## Next.js Integration Test (${{ matrix.bundler }})
+            ## Integration Test: ${{ matrix.site }}
 
             - **Deploy URL**: ${{ env.deploy_url }}
             - **Deploy logs**: ${{ env.deploy_log_url }}
