@@ -13,6 +13,7 @@ const transpile = async (path: string, config: FunctionConfig) => {
     format: 'cjs',
     logLevel: 'error',
     platform: 'node',
+    sourcemap: Boolean(config.nodeSourcemap),
     target: [nodeTarget],
     write: false,
   })
