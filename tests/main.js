@@ -17,6 +17,8 @@ const sortOn = require('sort-on')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
 
+require('source-map-support').install()
+
 // We must require this file first because we need to stub it before the main
 // functions are required.
 // eslint-disable-next-line import/order
@@ -2350,3 +2352,29 @@ testMany(
     files.every(({ size }) => Number.isInteger(size) && size > 0)
   },
 )
+
+test('Generates a sourcemap for any transpiled files when `nodeSourcemap: true`', async (t) => {
+  const fixtureName = 'esm-throwing-error'
+  const basePath = join(FIXTURES_DIR, fixtureName)
+  const { files } = await zipFixture(t, fixtureName, {
+    opts: {
+      archiveFormat: 'none',
+      basePath,
+      config: { '*': { nodeBundler: 'nft', nodeSourcemap: true } },
+      featureFlags: { nftTranspile: true },
+    },
+  })
+  const func = require(join(files[0].path, 'function.js'))
+
+  try {
+    func.handler()
+
+    t.fail()
+  } catch (error) {
+    const filePath = join(files[0].path, 'src', 'tests', 'fixtures', fixtureName, 'function.js')
+
+    // Asserts that the line/column of the error match the position of the
+    // original source file, not the transpiled one.
+    t.true(error.stack.includes(`${filePath}:2:9`))
+  }
+})
