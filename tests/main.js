@@ -2353,6 +2353,35 @@ testMany(
   },
 )
 
+testMany(
+  'Should surface schedule declarations on a top-level `schedule` property',
+  ['bundler_default', 'bundler_default_nft', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const schedule = '* * * * *'
+    const fixtureName = 'with-schedule'
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          schedule,
+        },
+      },
+      manifest: manifestPath,
+    })
+    const { files } = await zipNode(t, fixtureName, { opts })
+
+    files.every((file) => t.is(file.schedule, schedule))
+
+    const manifest = require(manifestPath)
+
+    manifest.functions.forEach((fn) => {
+      t.is(fn.schedule, schedule)
+    })
+  },
+)
+
 test('Generates a sourcemap for any transpiled files when `nodeSourcemap: true`', async (t) => {
   const fixtureName = 'esm-throwing-error'
   const basePath = join(FIXTURES_DIR, fixtureName)
