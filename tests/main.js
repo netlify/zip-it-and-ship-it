@@ -10,6 +10,7 @@ const merge = require('deepmerge')
 const del = require('del')
 const execa = require('execa')
 const makeDir = require('make-dir')
+const pEvery = require('p-every')
 const pathExists = require('path-exists')
 const semver = require('semver')
 const sinon = require('sinon')
@@ -783,9 +784,10 @@ testMany(
 
     t.true(files.every(({ runtime }) => runtime === 'js'))
     t.true(
-      (await Promise.all(files.map(async ({ path }) => (await pReadFile(path, 'utf8')).trim() === 'test'))).every(
-        Boolean,
-      ),
+      await pEvery(files, async ({ path }) => {
+        const fileContents = await pReadFile(path, 'utf8')
+        return fileContents.trim() === 'test'
+      }),
     )
   },
 )
@@ -1982,19 +1984,15 @@ test('Zips Rust function files', async (t) => {
 
   const tcFile = `${tmpDir}/netlify-toolchain`
   t.true(await pathExists(tcFile))
-  const tc = (await pReadFile(tcFile, 'utf8')).trim()
-  t.is(tc, '{"runtime":"rs"}')
+  const tc = await pReadFile(tcFile, 'utf8')
+  t.is(tc.trim(), '{"runtime":"rs"}')
 })
 
 test('Does not zip Go function files', async (t) => {
   const { files } = await zipFixture(t, 'go-simple', { length: 1 })
 
   t.true(files.every(({ runtime }) => runtime === 'go'))
-  t.true(
-    (await Promise.all(files.map(async ({ path }) => !path.endsWith('.zip') && (await pathExists(path))))).every(
-      Boolean,
-    ),
-  )
+  t.true(await pEvery(files, async ({ path }) => !path.endsWith('.zip') && (await pathExists(path))))
 })
 
 test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
