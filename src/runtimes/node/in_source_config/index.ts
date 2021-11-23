@@ -42,9 +42,7 @@ const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISCValues>
       return null
     })
     .filter(nonNullable)
-  const mergedExports: ISCValues = iscExports.reduce((acc, obj) => ({ ...acc, ...obj }), {
-    schedule: undefined,
-  })
+  const mergedExports: ISCValues = iscExports.reduce((acc, obj) => ({ ...acc, ...obj }), {})
 
   return mergedExports
 }
