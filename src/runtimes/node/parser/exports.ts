@@ -8,7 +8,7 @@ import { isModuleExports } from './helpers'
 const getMainExport = (nodes: Statement[]) => {
   let handlerExport: ISCExport[] = []
 
-  nodes.some((node) => {
+  nodes.find((node) => {
     const esmExports = getMainExportFromESM(node)
 
     if (esmExports.length !== 0) {
