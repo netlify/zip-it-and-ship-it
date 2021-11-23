@@ -14,7 +14,7 @@ const formatZipResult = (archive: FunctionArchive) => {
     ...archive,
     inSourceConfig: undefined,
     runtime: archive.runtime.name,
-    schedule: archive.inSourceConfig?.schedule || archive?.config?.schedule,
+    schedule: archive.inSourceConfig?.schedule ?? archive?.config?.schedule,
   }
 
   return removeUndefined(functionResult)
