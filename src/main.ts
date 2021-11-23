@@ -1,6 +1,5 @@
 import { extname } from 'path'
 
-import './utils/polyfills'
 import { Config } from './config'
 import { FeatureFlags, getFlags } from './feature_flags'
 import { FunctionSource } from './function'

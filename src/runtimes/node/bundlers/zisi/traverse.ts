@@ -107,9 +107,7 @@ const getNestedModules = async function ({
       getDependencyPathsForDependency({ dependency, basedir: modulePath, state, packageJson, pluginsModulesPath }),
     ),
   )
-  // TODO: switch to Array.flat() once we drop support for Node.js < 11.0.0
-  // eslint-disable-next-line unicorn/prefer-spread
-  return ([] as string[]).concat(...depsPaths)
+  return depsPaths.flat()
 }
 
 export { getDependencyPathsForDependency }
