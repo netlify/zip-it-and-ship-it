@@ -5,6 +5,7 @@ import { FunctionSource, SourceFile } from '../function'
 import { FsCache } from '../utils/fs'
 
 import type { NodeBundlerName } from './node'
+import type { ISCValues } from './node/in_source_config'
 
 type RuntimeName = 'go' | 'js' | 'rs'
 
@@ -29,6 +30,7 @@ interface ZipFunctionResult {
   bundlerWarnings?: object[]
   config: FunctionConfig
   inputs?: string[]
+  inSourceConfig?: ISCValues
   nativeNodeModules?: object
   nodeModulesWithDynamicImports?: string[]
   path: string
