@@ -27,7 +27,7 @@ jobs:
         run: npm run benchmark
 
       - name: Run Delta
-        uses: netlify/delta-action@v1
+        uses: netlify/delta-action@v2
         with:
           title: '⏱ Benchmark results'
           token: ${{ secrets.GITHUB_TOKEN }}
