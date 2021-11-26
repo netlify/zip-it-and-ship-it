@@ -2,6 +2,6 @@
   "name": "local-node-module",
   "version": "1.0.0",
   "dependencies": {
-    "@netlify/functions": "1.0.0"
+    "@netlify/functions": "0.10.0"
   }
 }
