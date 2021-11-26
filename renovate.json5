@@ -1,10 +1,7 @@
 {
   extends: ['github>netlify/renovate-config:default'],
   ignorePresets: [':prHourlyLimit2'],
-  ignorePaths: [
-    "benchmarks/fixtures/",
-    "tests/fixtures/node_modules" // hand-built node_modules folder, used for testing. shouldn't be updated.
-  ],
+  ignorePaths: ['benchmarks/fixtures/', 'tests/fixtures'],
   semanticCommits: true,
   dependencyDashboard: true,
   automerge: false,
