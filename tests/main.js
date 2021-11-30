@@ -88,10 +88,6 @@ const testMany = makeTestMany(test, {
   bundler_nft: {
     config: { '*': { nodeBundler: 'nft' } },
   },
-  bundler_nft_transpile: {
-    config: { '*': { nodeBundler: 'nft' } },
-    featureFlags: { nftTranspile: true },
-  },
 })
 
 const getNodeBundlerString = (variation) => {
@@ -434,8 +430,8 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules',
-  ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
-  async (options, t, variation) => {
+  ['bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
     const length = 4
     const fixtureName = 'local-require-esm'
     const opts = merge(options, {
@@ -459,14 +455,6 @@ testMany(
       t.is(await func2()(), 0)
     }
 
-    if (variation === 'bundler_nft') {
-      t.throws(func1)
-      t.throws(func3)
-      t.throws(func4)
-
-      return
-    }
-
     t.is(func1().ZERO, 0)
     t.is(typeof func3().howdy, 'string')
     t.deepEqual(func4(), {})
@@ -475,8 +463,8 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules when `archiveType` is `none`',
-  ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
-  async (options, t, variation) => {
+  ['bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
     const length = 4
     const fixtureName = 'local-require-esm'
     const opts = merge(options, {
@@ -499,14 +487,6 @@ testMany(
       t.is(await func2()(), 0)
     }
 
-    if (variation === 'bundler_nft') {
-      t.throws(func1)
-      t.throws(func3)
-      t.throws(func4)
-
-      return
-    }
-
     t.is(func1().ZERO, 0)
     t.is(typeof func3().howdy, 'string')
     t.deepEqual(func4(), {})
@@ -515,7 +495,7 @@ testMany(
 
 testMany(
   'Can bundle CJS functions that import ESM files with an `import()` expression',
-  ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
+  ['bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'node-cjs-importing-mjs'
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
