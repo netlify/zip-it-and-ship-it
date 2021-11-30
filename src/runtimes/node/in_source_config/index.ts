@@ -47,13 +47,6 @@ const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISCValues>
   return mergedExports
 }
 
-const findISCDeclarationsInPaths = async (sourcePaths: string[]) => {
-  const paths = await Promise.all(sourcePaths.map(findISCDeclarationsInPath))
-  const mergedValues: ISCValues = paths.reduce((acc, obj) => ({ ...acc, ...obj }), {})
-
-  return mergedValues
-}
-
 type ISCHandlerArg = ArgumentPlaceholder | Expression | SpreadElement | JSXNamespacedName
 
 interface ISCExport {
@@ -61,5 +54,5 @@ interface ISCExport {
   args: ISCHandlerArg[]
 }
 
-export { findISCDeclarationsInPaths, IN_SOURCE_CONFIG_MODULE }
+export { findISCDeclarationsInPath, IN_SOURCE_CONFIG_MODULE }
 export type { ISCExport, ISCHandlerArg, ISCValues }

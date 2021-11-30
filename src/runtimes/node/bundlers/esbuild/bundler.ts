@@ -10,7 +10,6 @@ import type { RuntimeName } from '../../../runtime'
 
 import { getBundlerTarget } from './bundler_target'
 import { getDynamicImportsPlugin } from './plugin_dynamic_imports'
-import { getISCImportFinderPlugin } from './plugin_in_source_config'
 import { getNativeModulesPlugin } from './plugin_native_modules'
 import { getNodeBuiltinPlugin } from './plugin_node_builtin'
 
@@ -63,8 +62,6 @@ const bundleJsFile = async function ({
   // work at runtime.
   const dynamicImportsIncludedPaths: Set<string> = new Set()
 
-  const iscImporterPaths: Set<string> = new Set()
-
   // The list of esbuild plugins to enable for this build.
   const plugins = [
     getNodeBuiltinPlugin(),
@@ -76,7 +73,6 @@ const bundleJsFile = async function ({
       processImports: config.processDynamicNodeImports !== false,
       srcDir,
     }),
-    getISCImportFinderPlugin({ importerPaths: iscImporterPaths }),
   ]
 
   // The version of ECMAScript to use as the build target. This will determine
@@ -118,7 +114,6 @@ const bundleJsFile = async function ({
       bundlePaths,
       cleanTempFiles,
       inputs,
-      iscImporterPaths,
       nativeNodeModules,
       nodeModulesWithDynamicImports: [...nodeModulesWithDynamicImports],
       warnings,

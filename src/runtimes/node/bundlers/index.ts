@@ -48,7 +48,6 @@ type BundleFunction = (
   bundlerWarnings?: BundlerWarning[]
   cleanupFunction?: CleanupFunction
   inputs: string[]
-  iscImporterPaths?: Set<string>
   mainFile: string
   nativeNodeModules?: NativeNodeModules
   nodeModulesWithDynamicImports?: string[]

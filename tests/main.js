@@ -2386,21 +2386,25 @@ test('Generates a sourcemap for any transpiled files when `nodeSourcemap: true`'
   }
 })
 
-testMany('Finds in-source config declarations using the `schedule` helper', ['bundler_esbuild'], async (options, t) => {
-  const opts = merge(options, {
-    featureFlags: {
-      parseISC: true,
-    },
-  })
-  const FUNCTIONS_COUNT = 6
-  const { files } = await zipNode(t, join('in-source-config', 'functions'), {
-    opts,
-    length: FUNCTIONS_COUNT,
-  })
+testMany(
+  'Finds in-source config declarations using the `schedule` helper',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const opts = merge(options, {
+      featureFlags: {
+        parseISC: true,
+      },
+    })
+    const FUNCTIONS_COUNT = 6
+    const { files } = await zipFixture(t, join('in-source-config', 'functions'), {
+      opts,
+      length: FUNCTIONS_COUNT,
+    })
 
-  t.is(files.length, FUNCTIONS_COUNT)
+    t.is(files.length, FUNCTIONS_COUNT)
 
-  files.forEach((result) => {
-    t.is(result.schedule, '@daily')
-  })
-})
+    files.forEach((result) => {
+      t.is(result.schedule, '@daily')
+    })
+  },
+)
