@@ -34,7 +34,8 @@ const listFunctions = async function (
   const paths = await listFunctionsDirectories(srcFolders)
   const functions = await getFunctionsFromPaths(paths, { featureFlags })
   const listedFunctions = [...functions.values()].map(getListedFunction)
-  return listedFunctions
+  const listedFunctionsA = listedFunctions
+  return listedFunctionsA
 }
 
 // List all Netlify Functions files for a specific directory
