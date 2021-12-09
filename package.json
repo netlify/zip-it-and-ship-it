@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "4.29.4",
+  "version": "5.2.0",
   "description": "Zip it and ship it",
   "main": "./dist/main.js",
   "bin": {
@@ -61,7 +61,6 @@
     "@netlify/esbuild": "^0.13.6",
     "@vercel/nft": "^0.17.0",
     "archiver": "^5.3.0",
-    "array-flat-polyfill": "^1.0.1",
     "common-path-prefix": "^3.0.0",
     "cp-file": "^9.0.0",
     "del": "^6.0.0",
@@ -94,7 +93,7 @@
   },
   "devDependencies": {
     "@babel/types": "^7.15.6",
-    "@netlify/eslint-config-node": "^3.3.6",
+    "@netlify/eslint-config-node": "^4.0.0",
     "@types/archiver": "^5.1.1",
     "@types/end-of-stream": "^1.4.1",
     "@types/resolve": "^1.20.1",
@@ -109,13 +108,15 @@
     "husky": "^4.3.8",
     "npm-run-all": "^4.1.5",
     "nyc": "^15.0.0",
+    "p-every": "^2.0.0",
     "sinon": "^12.0.0",
     "sort-on": "^4.1.1",
+    "source-map-support": "^0.5.20",
     "throat": "^6.0.1",
     "typescript": "^4.4.3"
   },
   "engines": {
-    "node": ">=10.18.0"
+    "node": "^12.20.0 || ^14.14.0 || >=16.0.0"
   },
   "ava": {
     "files": [

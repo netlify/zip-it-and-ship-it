@@ -7,6 +7,7 @@ import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime'
 
 import { getBundler } from './bundlers'
 import { findFunctionsInPaths } from './finder'
+import { findISCDeclarationsInPath } from './in_source_config'
 import { detectEsModule } from './utils/detect_es_module'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path'
 import { zipNodeJs } from './utils/zip'
@@ -116,6 +117,12 @@ const zipFunction: ZipFunction = async function ({
     stat,
   })
 
+  let inSourceConfig = {}
+
+  if (featureFlags.parseISC) {
+    inSourceConfig = await findISCDeclarationsInPath(mainFile)
+  }
+
   createPluginsModulesPathAliases(srcFiles, pluginsModulesPath, aliases, finalBasePath)
 
   const zipPath = await zipNodeJs({
@@ -137,6 +144,7 @@ const zipFunction: ZipFunction = async function ({
     bundlerWarnings,
     config,
     inputs,
+    inSourceConfig,
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath,
