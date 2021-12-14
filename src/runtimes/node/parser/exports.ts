@@ -33,7 +33,10 @@ const getMainExport = (nodes: Statement[]) => {
 
 // Finds the main handler export in a CJS AST.
 const getMainExportFromCJS = (node: Statement) => {
-  const handlerPaths = [['module', 'exports', 'handler']]
+  const handlerPaths = [
+    ['module', 'exports', 'handler'],
+    ['exports', 'handler'],
+  ]
 
   return handlerPaths.flatMap((handlerPath) => {
     if (!isModuleExports(node, handlerPath) || node.expression.right.type !== 'CallExpression') {
