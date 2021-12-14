@@ -2395,7 +2395,7 @@ testMany(
         parseISC: true,
       },
     })
-    const FUNCTIONS_COUNT = 6
+    const FUNCTIONS_COUNT = 7
     const { files } = await zipFixture(t, join('in-source-config', 'functions'), {
       opts,
       length: FUNCTIONS_COUNT,
