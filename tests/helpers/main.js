@@ -1,5 +1,6 @@
+const { mkdirSync } = require('fs')
 const { dirname, join, resolve } = require('path')
-const { env } = require('process')
+const { env, platform } = require('process')
 
 const execa = require('execa')
 const { dir: getTmpDir } = require('tmp-promise')
@@ -62,14 +63,33 @@ const unzipFiles = async function (files, targetPathGenerator) {
   await Promise.all(files.map(({ path }) => unzipFile({ path, targetPathGenerator })))
 }
 
+const unzipWindows = function (source, dest) {
+  console.log("to be implemented", { source, dest })
+}
+
+const unzipLinux = function (source, dest) {
+  console.log("to be implemented", { source, dest })
+}
+
+const unzipDarwin = async function (source, dest) {
+  await execa('tar', ['-xf', source, '-C', dest])
+}
+
 const unzipFile = async function ({ path, targetPathGenerator }) {
-  const args = [path]
+  let dest = dirname(path)
   if (targetPathGenerator) {
-    args.push('-d', resolve(targetPathGenerator(path)))
+    dest = resolve(targetPathGenerator(path))
   }
-  await execa('unzip', args, {
-    cwd: dirname(path),
-  })
+
+  mkdirSync(dest, { recursive: true })
+
+  if (platform === 'win32') {
+    await unzipWindows(path, dest)
+  } else if (platform === 'darwin') {
+    await unzipDarwin(path, dest)
+  } else {
+    await unzipLinux(path, dest)
+  }
 }
 
 const replaceUnzipPath = function ({ path }) {
