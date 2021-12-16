@@ -2390,14 +2390,9 @@ testMany(
   'Finds in-source config declarations using the `schedule` helper',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
-    const opts = merge(options, {
-      featureFlags: {
-        parseISC: true,
-      },
-    })
     const FUNCTIONS_COUNT = 7
     const { files } = await zipFixture(t, join('in-source-config', 'functions'), {
-      opts,
+      opts: options,
       length: FUNCTIONS_COUNT,
     })
 
