@@ -10,12 +10,15 @@ const merge = require('deepmerge')
 const del = require('del')
 const execa = require('execa')
 const makeDir = require('make-dir')
+const pEvery = require('p-every')
 const pathExists = require('path-exists')
 const semver = require('semver')
 const sinon = require('sinon')
 const sortOn = require('sort-on')
 const { dir: getTmpDir, tmpName } = require('tmp-promise')
 const unixify = require('unixify')
+
+require('source-map-support').install()
 
 // We must require this file first because we need to stub it before the main
 // functions are required.
@@ -84,10 +87,6 @@ const testMany = makeTestMany(test, {
   },
   bundler_nft: {
     config: { '*': { nodeBundler: 'nft' } },
-  },
-  bundler_nft_transpile: {
-    config: { '*': { nodeBundler: 'nft' } },
-    featureFlags: { nftTranspile: true },
   },
 })
 
@@ -431,8 +430,8 @@ testMany(
 
 testMany(
   'Can bundle functions with `.js` extension using ES Modules',
-  ['bundler_esbuild', 'bundler_nft', 'bundler_nft_transpile'],
-  async (options, t, variation) => {
+  ['bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
     const length = 4
     const fixtureName = 'local-require-esm'
     const opts = merge(options, {
@@ -456,17 +455,64 @@ testMany(
       t.is(await func2()(), 0)
     }
 
-    if (variation === 'bundler_nft') {
-      t.throws(func1)
-      t.throws(func3)
-      t.throws(func4)
+    t.is(func1().ZERO, 0)
+    t.is(typeof func3().howdy, 'string')
+    t.deepEqual(func4(), {})
+  },
+)
 
-      return
+testMany(
+  'Can bundle functions with `.js` extension using ES Modules when `archiveType` is `none`',
+  ['bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const length = 4
+    const fixtureName = 'local-require-esm'
+    const opts = merge(options, {
+      archiveFormat: 'none',
+      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      featureFlags: { defaultEsModulesToEsbuild: false },
+    })
+    const { tmpDir } = await zipFixture(t, 'local-require-esm', {
+      length,
+      opts,
+    })
+
+    const func1 = () => require(join(tmpDir, 'function', 'function.js'))
+    const func2 = () => require(join(tmpDir, 'function_cjs', 'function_cjs.js'))
+    const func3 = () => require(join(tmpDir, 'function_export_only', 'function_export_only.js'))
+    const func4 = () => require(join(tmpDir, 'function_import_only', 'function_import_only.js'))
+
+    // Dynamic imports are not supported in Node <13.2.0.
+    if (semver.gte(nodeVersion, '13.2.0')) {
+      t.is(await func2()(), 0)
     }
 
     t.is(func1().ZERO, 0)
     t.is(typeof func3().howdy, 'string')
     t.deepEqual(func4(), {})
+  },
+)
+
+testMany(
+  'Can bundle CJS functions that import ESM files with an `import()` expression',
+  ['bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const fixtureName = 'node-cjs-importing-mjs'
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
+      opts: options,
+    })
+
+    await unzipFiles(files)
+
+    const func = require(join(tmpDir, 'function.js'))
+
+    // Dynamic imports were added in Node v13.2.0.
+    if (semver.gte(nodeVersion, '13.2.0')) {
+      const { body, statusCode } = await func.handler()
+
+      t.is(body, 'Hello world')
+      t.is(statusCode, 200)
+    }
   },
 )
 
@@ -718,9 +764,10 @@ testMany(
 
     t.true(files.every(({ runtime }) => runtime === 'js'))
     t.true(
-      (await Promise.all(files.map(async ({ path }) => (await pReadFile(path, 'utf8')).trim() === 'test'))).every(
-        Boolean,
-      ),
+      await pEvery(files, async ({ path }) => {
+        const fileContents = await pReadFile(path, 'utf8')
+        return fileContents.trim() === 'test'
+      }),
     )
   },
 )
@@ -1786,7 +1833,7 @@ test('The dynamic import runtime shim handles files in nested directories', asyn
   t.throws(() => func('fr'))
 })
 
-test('The dynamic import runtime shim handles files in nested directories when using `archiveType: "none"`', async (t) => {
+test('The dynamic import runtime shim handles files in nested directories when using `archiveFormat: "none"`', async (t) => {
   const fixtureName = 'node-module-dynamic-import-4'
   const { tmpDir } = await zipNode(t, fixtureName, {
     opts: {
@@ -1917,19 +1964,15 @@ test('Zips Rust function files', async (t) => {
 
   const tcFile = `${tmpDir}/netlify-toolchain`
   t.true(await pathExists(tcFile))
-  const tc = (await pReadFile(tcFile, 'utf8')).trim()
-  t.is(tc, '{"runtime":"rs"}')
+  const tc = await pReadFile(tcFile, 'utf8')
+  t.is(tc.trim(), '{"runtime":"rs"}')
 })
 
 test('Does not zip Go function files', async (t) => {
   const { files } = await zipFixture(t, 'go-simple', { length: 1 })
 
   t.true(files.every(({ runtime }) => runtime === 'go'))
-  t.true(
-    (await Promise.all(files.map(async ({ path }) => !path.endsWith('.zip') && (await pathExists(path))))).every(
-      Boolean,
-    ),
-  )
+  t.true(await pEvery(files, async ({ path }) => !path.endsWith('.zip') && (await pathExists(path))))
 })
 
 test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
@@ -2251,6 +2294,30 @@ testMany(
 )
 
 testMany(
+  'Handles built-in modules imported with the `node:` prefix',
+  ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
+  async (options, t, bundler) => {
+    const importSyntaxIsCompiledAway = bundler.includes('esbuild')
+    const zip = importSyntaxIsCompiledAway ? zipNode : zipFixture
+    await zip(t, 'node-force-builtin-esm', {
+      opts: options,
+    })
+  },
+)
+
+testMany(
+  'Handles built-in modules required with the `node:` prefix',
+  ['bundler_default', 'bundler_default_nft', 'bundler_nft', 'bundler_esbuild', 'bundler_esbuild_zisi'],
+  async (options, t) => {
+    const nodePrefixIsUnderstood = semver.gte(nodeVersion, '14.18.0')
+    const zip = nodePrefixIsUnderstood ? zipNode : zipFixture
+    await zip(t, 'node-force-builtin-cjs', {
+      opts: options,
+    })
+  },
+)
+
+testMany(
   'Returns a `size` property with the size of each generated archive',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
@@ -2261,5 +2328,83 @@ testMany(
     })
 
     files.every(({ size }) => Number.isInteger(size) && size > 0)
+  },
+)
+
+testMany(
+  'Should surface schedule declarations on a top-level `schedule` property',
+  ['bundler_default', 'bundler_default_nft', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const schedule = '* * * * *'
+    const fixtureName = 'with-schedule'
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          schedule,
+        },
+      },
+      manifest: manifestPath,
+    })
+    const { files } = await zipNode(t, fixtureName, { opts })
+
+    files.every((file) => t.is(file.schedule, schedule))
+
+    const manifest = require(manifestPath)
+
+    manifest.functions.forEach((fn) => {
+      t.is(fn.schedule, schedule)
+    })
+  },
+)
+
+test('Generates a sourcemap for any transpiled files when `nodeSourcemap: true`', async (t) => {
+  const fixtureName = 'esm-throwing-error'
+  const basePath = join(FIXTURES_DIR, fixtureName)
+  const { files } = await zipFixture(t, fixtureName, {
+    opts: {
+      archiveFormat: 'none',
+      basePath,
+      config: { '*': { nodeBundler: 'nft', nodeSourcemap: true } },
+      featureFlags: { nftTranspile: true },
+    },
+  })
+  const func = require(join(files[0].path, 'function.js'))
+
+  try {
+    func.handler()
+
+    t.fail()
+  } catch (error) {
+    const filePath = join(files[0].path, 'src', 'tests', 'fixtures', fixtureName, 'function.js')
+
+    // Asserts that the line/column of the error match the position of the
+    // original source file, not the transpiled one.
+    t.true(error.stack.includes(`${filePath}:2:9`))
+  }
+})
+
+testMany(
+  'Finds in-source config declarations using the `schedule` helper',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const opts = merge(options, {
+      featureFlags: {
+        parseISC: true,
+      },
+    })
+    const FUNCTIONS_COUNT = 6
+    const { files } = await zipFixture(t, join('in-source-config', 'functions'), {
+      opts,
+      length: FUNCTIONS_COUNT,
+    })
+
+    t.is(files.length, FUNCTIONS_COUNT)
+
+    files.forEach((result) => {
+      t.is(result.schedule, '@daily')
+    })
   },
 )

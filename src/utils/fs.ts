@@ -1,6 +1,8 @@
 import { lstat, readdir, readFile, stat, unlink, writeFile } from 'fs'
-import { format, join, parse, resolve } from 'path'
+import { dirname, format, join, parse, resolve } from 'path'
 import { promisify } from 'util'
+
+import makeDir from 'make-dir'
 
 import { nonNullable } from './non_nullable'
 
@@ -86,6 +88,16 @@ const resolveFunctionsDirectories = (input: string | string[]) => {
   return absoluteDirectories
 }
 
+const mkdirAndWriteFile: typeof pWriteFile = async (path, ...params) => {
+  if (typeof path === 'string') {
+    const directory = dirname(path)
+
+    await makeDir(directory)
+  }
+
+  return pWriteFile(path, ...params)
+}
+
 export {
   cachedLstat,
   cachedReaddir,
@@ -99,5 +111,6 @@ export {
   pStat as stat,
   pWriteFile as writeFile,
   pReadFile as readFile,
+  mkdirAndWriteFile,
 }
 export type { FsCache }

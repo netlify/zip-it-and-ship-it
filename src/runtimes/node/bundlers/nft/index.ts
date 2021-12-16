@@ -22,7 +22,6 @@ const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 const bundle: BundleFunction = async ({
   basePath,
   config,
-  featureFlags,
   mainFile,
   pluginsModulesPath,
   repositoryRoot = basePath,
@@ -37,7 +36,6 @@ const bundle: BundleFunction = async ({
     config,
     mainFile,
     pluginsModulesPath,
-    transpile: featureFlags.nftTranspile,
   })
   const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
@@ -66,13 +64,11 @@ const traceFilesAndTranspile = async function ({
   config,
   mainFile,
   pluginsModulesPath,
-  transpile,
 }: {
   basePath?: string
   config: FunctionConfig
   mainFile: string
   pluginsModulesPath?: string
-  transpile: boolean
 }) {
   const fsCache: FsCache = {}
   const {
@@ -115,9 +111,7 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const rewrites = transpile
-    ? await transpileESM({ basePath, config, esmPaths: esmFileList, fsCache, reasons })
-    : undefined
+  const rewrites = await transpileESM({ basePath, config, esmPaths: esmFileList, fsCache, reasons })
 
   return {
     paths: normalizedDependencyPaths,

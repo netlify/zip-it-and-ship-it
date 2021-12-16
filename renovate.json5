@@ -1,22 +1,11 @@
 {
   extends: ['github>netlify/renovate-config:default'],
   ignorePresets: [':prHourlyLimit2'],
-  ignorePaths: [
-    "benchmarks/fixtures/",
-    "tests/fixtures/node_modules" // hand-built node_modules folder, used for testing. shouldn't be updated.
-  ],
+  ignorePaths: ['benchmarks/fixtures/', 'tests/fixtures'],
   semanticCommits: true,
   dependencyDashboard: true,
   automerge: false,
   packageRules: [
-    {
-      matchPackageNames: ['p-map'],
-      allowedVersions: '<5',
-    },
-    {
-      matchPackageNames: ['yargs'],
-      allowedVersions: '<17',
-    },
     // Version 0.5.6 of adm-zip is breaking tests. See:
     // https://github.com/netlify/zip-it-and-ship-it/pull/651/checks?check_run_id=3587767454
     {
@@ -27,10 +16,6 @@
       // Fake dependencies used in tests
       packageNames: ['test'],
       enabled: false,
-    },
-    {
-      matchPackageNames: ['pkg-dir'],
-      allowedVersions: '<=5',
     },
   ],
 }

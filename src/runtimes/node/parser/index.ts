@@ -1,8 +1,10 @@
+/* eslint-disable max-lines */
 import { join, relative, resolve } from 'path'
 
 import { parse } from '@babel/parser'
 import type { BinaryExpression, CallExpression, Expression, PrivateName, TemplateLiteral, TSType } from '@babel/types'
 
+import { readFile } from '../../../utils/fs'
 import { nonNullable } from '../../../utils/non_nullable'
 
 const GLOB_WILDCARD = '**'
@@ -104,6 +106,31 @@ const parseExpression = ({
   }
 }
 
+// Parses a JS/TS file and returns the resulting AST.
+const parseFile = async (path: string) => {
+  const code = await readFile(path, 'utf8')
+  const ast = parse(code, {
+    plugins: ['typescript'],
+    sourceType: 'module',
+  })
+
+  return ast.program
+}
+
+// Attemps to parse a JS/TS file at the given path, returning its AST if
+// successful, or `null` if not.
+const safelyParseFile = async (path: string) => {
+  if (!path) {
+    return null
+  }
+
+  try {
+    return await parseFile(path)
+  } catch (error) {
+    return null
+  }
+}
+
 // Parses a `require()` and returns a glob string with an absolute path.
 const parseRequire = ({
   basePath,
@@ -200,4 +227,5 @@ const validateGlobNodes = (globNodes: string[]) => {
   return hasStrings && hasStaticHead
 }
 
-export { parseExpression }
+export { parseExpression, safelyParseFile }
+/* eslint-enable max-lines */

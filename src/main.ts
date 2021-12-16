@@ -1,13 +1,11 @@
 import { extname } from 'path'
 
-import './utils/polyfills'
 import { Config } from './config'
 import { FeatureFlags, getFlags } from './feature_flags'
 import { FunctionSource } from './function'
 import { getFunctionsFromPaths } from './runtimes'
 import { GetSrcFilesFunction, RuntimeName } from './runtimes/runtime'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
-import { zipFunction, zipFunctions } from './zip'
 
 interface ListedFunction {
   name: string
@@ -84,4 +82,6 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ extension, runtime, s
   })
 }
 
-export { zipFunctions, zipFunction, listFunctions, listFunctionsFiles }
+export { listFunctions, listFunctionsFiles }
+
+export { zipFunction, zipFunctions } from './zip'
