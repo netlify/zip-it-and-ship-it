@@ -1,4 +1,3 @@
-const { mkdirSync } = require('fs')
 const { dirname, join, resolve } = require('path')
 const { env } = require('process')
 
@@ -64,13 +63,11 @@ const unzipFiles = async function (files, targetPathGenerator) {
 }
 
 const unzipFile = async function ({ path, targetPathGenerator }) {
-  const args = ['-xf', path]
+  const args = [path]
   if (targetPathGenerator) {
-    const outPath = resolve(targetPathGenerator(path))
-    args.push('-C', outPath)
-    mkdirSync(outPath, { recursive: true })
+    args.push('-d', resolve(targetPathGenerator(path)))
   }
-  await execa('tar', args, {
+  await execa('unzip', args, {
     cwd: dirname(path),
   })
 }
