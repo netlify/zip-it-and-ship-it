@@ -26,6 +26,7 @@ jobs:
       - name: Increase open file limit
         run: sudo ulimit -Sn 65536
         if: "${{ matrix.os == 'macOS-latest' }}"
+      - run: git config --global core.symlinks true
       - name: Git checkout
         uses: actions/checkout@v2
       - name: Node.js ${{ matrix.node }}
