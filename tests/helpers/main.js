@@ -71,8 +71,9 @@ const unzipFile = async function ({ path, targetPathGenerator }) {
 
   mkdirSync(dest, { recursive: true })
 
+  // eslint-disable-next-line unicorn/prefer-ternary
   if (platform === 'win32') {
-    console.log('to be implemented')
+    await execa('Expand-Archive', ['-Force', path, dest], { shell: 'powershell.exe' })
   } else {
     await execa('unzip', ['-o', path, '-d', dest])
   }
