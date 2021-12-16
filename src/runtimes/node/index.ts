@@ -117,11 +117,7 @@ const zipFunction: ZipFunction = async function ({
     stat,
   })
 
-  let inSourceConfig = {}
-
-  if (featureFlags.parseISC) {
-    inSourceConfig = await findISCDeclarationsInPath(mainFile)
-  }
+  const inSourceConfig = await findISCDeclarationsInPath(mainFile)
 
   createPluginsModulesPathAliases(srcFiles, pluginsModulesPath, aliases, finalBasePath)
 
