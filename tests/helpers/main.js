@@ -73,7 +73,7 @@ const unzipFile = async function ({ path, targetPathGenerator }) {
 
   // eslint-disable-next-line unicorn/prefer-ternary
   if (platform === 'win32') {
-    await execa('Expand-Archive', ['-Force', path, dest], { shell: 'powershell.exe' })
+    await execa('tar', ['-xf', path, '-C', dest])
   } else {
     await execa('unzip', ['-o', path, '-d', dest])
   }
