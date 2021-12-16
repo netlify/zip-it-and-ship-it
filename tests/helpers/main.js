@@ -63,18 +63,6 @@ const unzipFiles = async function (files, targetPathGenerator) {
   await Promise.all(files.map(({ path }) => unzipFile({ path, targetPathGenerator })))
 }
 
-const unzipWindows = function (source, dest) {
-  console.log('to be implemented', { source, dest })
-}
-
-const unzipLinux = async function (source, dest) {
-  await execa('unzip', [source, '-d', dest])
-}
-
-const unzipDarwin = async function (source, dest) {
-  await execa('tar', ['-xf', source, '-C', dest])
-}
-
 const unzipFile = async function ({ path, targetPathGenerator }) {
   let dest = dirname(path)
   if (targetPathGenerator) {
@@ -84,11 +72,9 @@ const unzipFile = async function ({ path, targetPathGenerator }) {
   mkdirSync(dest, { recursive: true })
 
   if (platform === 'win32') {
-    await unzipWindows(path, dest)
-  } else if (platform === 'darwin') {
-    await unzipDarwin(path, dest)
+    console.log('to be implemented')
   } else {
-    await unzipLinux(path, dest)
+    await execa('unzip', ['-o', path, '-d', dest])
   }
 }
 
