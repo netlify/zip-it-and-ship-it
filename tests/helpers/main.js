@@ -67,8 +67,8 @@ const unzipWindows = function (source, dest) {
   console.log('to be implemented', { source, dest })
 }
 
-const unzipLinux = function (source, dest) {
-  console.log('to be implemented', { source, dest })
+const unzipLinux = async function (source, dest) {
+  await execa('unzip', [source, '-d', dest])
 }
 
 const unzipDarwin = async function (source, dest) {
