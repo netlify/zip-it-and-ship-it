@@ -64,11 +64,11 @@ const unzipFiles = async function (files, targetPathGenerator) {
 }
 
 const unzipWindows = function (source, dest) {
-  console.log("to be implemented", { source, dest })
+  console.log('to be implemented', { source, dest })
 }
 
 const unzipLinux = function (source, dest) {
-  console.log("to be implemented", { source, dest })
+  console.log('to be implemented', { source, dest })
 }
 
 const unzipDarwin = async function (source, dest) {
