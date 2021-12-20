@@ -2474,3 +2474,10 @@ test('listFunctions includes in-source config declarations', async (t) => {
     t.is(func.schedule, '@daily')
   })
 })
+
+test('listFunctionsFiles includes in-source config declarations', async (t) => {
+  const functions = await listFunctionsFiles(join(FIXTURES_DIR, 'in-source-config', 'functions'))
+  functions.forEach((func) => {
+    t.is(func.schedule, '@daily')
+  })
+})
