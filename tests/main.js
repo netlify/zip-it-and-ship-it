@@ -2253,7 +2253,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
   })
 })
 
-const skipOnWindows = (name) => (platform === 'win32' ? `skip:${name}` : name)
+const skipOnWindows = (name) => (platform === 'win32' ? `todo:${name}` : name)
 
 testMany(
   'Correctly follows node_modules via symlink',
