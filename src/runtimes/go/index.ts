@@ -7,7 +7,7 @@ import { SourceFile } from '../../function'
 import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
 import { detectBinaryRuntime } from '../detect_runtime'
-import { FindFunctionsInPathsFunction, Runtime, ZipFunction } from '../runtime'
+import { FindFunctionsInPathsFunction, GetFunctionAtPathFunction, Runtime, ZipFunction } from '../runtime'
 
 import { build } from './builder'
 
@@ -33,27 +33,27 @@ const detectGoFunction = async ({ fsCache, path }: { fsCache: FsCache; path: str
 }
 
 const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ featureFlags, fsCache, paths }) {
-  const functions = await Promise.all(
-    paths.map(async (path) => {
-      const runtime = await detectBinaryRuntime({ fsCache, path })
-
-      if (runtime === 'go') {
-        return processBinary({ fsCache, path })
-      }
-
-      if (featureFlags.buildGoSource !== true) {
-        return
-      }
-
-      const goSourceFile = await detectGoFunction({ fsCache, path })
-
-      if (goSourceFile) {
-        return processSource({ fsCache, mainFile: goSourceFile, path })
-      }
-    }),
-  )
+  const functions = await Promise.all(paths.map((path) => getFunctionAtPath(path, { featureFlags, fsCache })))
 
   return functions.filter(nonNullable)
+}
+
+const getFunctionAtPath: GetFunctionAtPathFunction = async function (path, { featureFlags, fsCache }) {
+  const runtime = await detectBinaryRuntime({ fsCache, path })
+
+  if (runtime === 'go') {
+    return processBinary({ fsCache, path })
+  }
+
+  if (featureFlags.buildGoSource !== true) {
+    return
+  }
+
+  const goSourceFile = await detectGoFunction({ fsCache, path })
+
+  if (goSourceFile) {
+    return processSource({ fsCache, mainFile: goSourceFile, path })
+  }
 }
 
 const processBinary = async ({ fsCache, path }: { fsCache: FsCache; path: string }): Promise<SourceFile> => {
@@ -114,6 +114,6 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
   return { config, path: destPath }
 }
 
-const runtime: Runtime = { findFunctionsInPaths, name: 'go', zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, getFunctionAtPath, name: 'go', zipFunction }
 
 export default runtime

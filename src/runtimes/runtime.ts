@@ -17,7 +17,7 @@ type FindFunctionsInPathsFunction = (args: {
 
 export type GetFunctionAtPathFunction = (
   path: string,
-  args?: {
+  args: {
     featureFlags: FeatureFlags
     fsCache: FsCache
   },
