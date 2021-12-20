@@ -60,7 +60,7 @@ const listFunctions = async function (
 
 // List one Netlify Functions main entry file for a specific directory
 const listFunction = async function (
-  mainFile: string,
+  path: string,
   {
     featureFlags: inputFeatureFlags,
     config,
@@ -68,7 +68,7 @@ const listFunction = async function (
   }: { featureFlags?: FeatureFlags; config?: Config; parseISC?: boolean } = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
-  const func = await getFunctionFromPath(mainFile, { featureFlags, config })
+  const func = await getFunctionFromPath(path, { featureFlags, config })
   if (!func) {
     return
   }
