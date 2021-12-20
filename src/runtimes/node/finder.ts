@@ -6,6 +6,7 @@ import locatePath from 'locate-path'
 
 import { SourceFile } from '../../function'
 import { nonNullable } from '../../utils/non_nullable'
+import { FindFunctionsInPathsFunction, GetFunctionAtPathFunction } from '../runtime'
 
 import { findISCDeclarationsInPath } from './in_source_config'
 
@@ -25,8 +26,8 @@ const sortByExtension = (fA: SourceFile, fB: SourceFile) => {
   return indexB - indexA
 }
 
-const findFunctionsInPaths = async function ({ paths }: { paths: string[] }) {
-  const functions = await Promise.all(paths.map(getFunctionAtPath))
+const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ paths, fsCache, featureFlags }) {
+  const functions = await Promise.all(paths.map((path) => getFunctionAtPath(path, { fsCache, featureFlags })))
 
   // It's fine to mutate the array since its scope is local to this function.
   const sortedFunctions = functions.filter(nonNullable).sort((fA, fB) => {
@@ -50,7 +51,7 @@ const findFunctionsInPaths = async function ({ paths }: { paths: string[] }) {
   return sortedFunctions
 }
 
-const getFunctionAtPath = async function (srcPath: string): Promise<SourceFile | undefined> {
+const getFunctionAtPath: GetFunctionAtPathFunction = async function (srcPath: string): Promise<SourceFile | undefined> {
   const filename = basename(srcPath)
 
   if (filename === 'node_modules') {
