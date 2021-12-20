@@ -2253,11 +2253,9 @@ test('Creates a manifest file with the list of created functions if the `manifes
   })
 })
 
-const skipOnWindows = (name) => (platform === 'win32' ? `todo:${name}` : name)
-
 testMany(
   'Correctly follows node_modules via symlink',
-  ['bundler_esbuild', skipOnWindows('bundler_nft')],
+  ['bundler_esbuild', platform === 'win32' ? `todo:bundle_nft` : 'bundle_nft'],
   async (options, t) => {
     const fixtureName = 'node-module-symlinks'
     const opts = merge(options, {
