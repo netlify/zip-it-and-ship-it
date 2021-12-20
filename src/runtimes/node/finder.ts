@@ -7,6 +7,8 @@ import locatePath from 'locate-path'
 import { SourceFile } from '../../function'
 import { nonNullable } from '../../utils/non_nullable'
 
+import { findISCDeclarationsInPath } from './in_source_config'
+
 const pLstat = promisify(lstat)
 
 // List of extensions that this runtime will look for, in order of precedence.
@@ -62,11 +64,13 @@ const getFunctionAtPath = async function (srcPath: string): Promise<SourceFile |
     return
   }
 
+  const iscValues = await findISCDeclarationsInPath(mainFile)
+
   const extension = extname(srcPath)
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
   const name = basename(srcPath, extname(srcPath))
 
-  return { extension, filename, mainFile, name, srcDir, srcPath, stat }
+  return { extension, filename, mainFile, name, srcDir, srcPath, stat, inSourceConfig: iscValues }
 }
 
 // Each `srcPath` can also be a directory with an `index` file or a file using

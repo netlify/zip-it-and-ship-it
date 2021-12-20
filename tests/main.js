@@ -2465,3 +2465,12 @@ test('listFunctions surfaces schedule config property', async (t) => {
   const five = functions.find((func) => func.name === 'five')
   t.is(five.schedule, '@daily')
 })
+
+test('listFunctions includes in-source config declarations', async (t) => {
+  const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'))
+  const FUNCTIONS_COUNT = 7
+  t.is(functions.length, FUNCTIONS_COUNT)
+  functions.forEach((func) => {
+    t.is(func.schedule, '@daily')
+  })
+})

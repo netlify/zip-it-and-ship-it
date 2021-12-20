@@ -1,6 +1,7 @@
 import { Stats } from 'fs'
 
 import type { FunctionConfig } from './config'
+import { ISCValues } from './runtimes/node/in_source_config'
 import type { Runtime, ZipFunctionResult } from './runtimes/runtime'
 
 // A function that has been processed and turned into an archive.
@@ -20,6 +21,7 @@ interface SourceFile {
   srcDir: string
   srcPath: string
   stat: Stats
+  inSourceConfig?: ISCValues
 }
 
 // A function associated with a runtime.

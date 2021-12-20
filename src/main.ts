@@ -54,8 +54,15 @@ const listFunctionsFiles = async function (
   return listedFunctionsFiles.flat()
 }
 
-const getListedFunction = function ({ runtime, name, mainFile, extension, config }: FunctionSource): ListedFunction {
-  return { name, mainFile, runtime: runtime.name, extension, schedule: config.schedule }
+const getListedFunction = function ({
+  runtime,
+  name,
+  mainFile,
+  extension,
+  config,
+  inSourceConfig,
+}: FunctionSource): ListedFunction {
+  return { name, mainFile, runtime: runtime.name, extension, schedule: inSourceConfig?.schedule ?? config.schedule }
 }
 
 const getListedFunctionFiles = async function (
