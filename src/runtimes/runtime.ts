@@ -15,6 +15,14 @@ type FindFunctionsInPathsFunction = (args: {
   paths: string[]
 }) => Promise<SourceFile[]>
 
+export type GetFunctionAtPathFunction = (
+  path: string,
+  args?: {
+    featureFlags: FeatureFlags
+    fsCache: FsCache
+  },
+) => Promise<SourceFile | undefined>
+
 type GetSrcFilesFunction = (
   args: {
     basePath?: string
@@ -49,6 +57,7 @@ type ZipFunction = (
 
 interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction
+  getFunctionAtPath: GetFunctionAtPathFunction
   getSrcFiles?: GetSrcFilesFunction
   name: RuntimeName
   zipFunction: ZipFunction

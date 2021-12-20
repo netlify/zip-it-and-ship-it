@@ -2478,7 +2478,7 @@ test('listFunctions includes in-source config declarations', async (t) => {
 test('listFunction includes in-source config declarations', async (t) => {
   const mainFile = join(FIXTURES_DIR, 'in-source-config', 'functions', 'cron_cjs.js')
   const func = await listFunction(mainFile)
-  t.is(func, {
+  t.deepEqual(func, {
     extension: '.js',
     mainFile,
     name: 'cron_cjs',

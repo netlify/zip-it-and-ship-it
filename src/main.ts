@@ -3,7 +3,7 @@ import { extname } from 'path'
 import { Config } from './config'
 import { FeatureFlags, getFlags } from './feature_flags'
 import { FunctionSource } from './function'
-import { getFunctionsFromPaths } from './runtimes'
+import { getFunctionFromPath, getFunctionsFromPaths } from './runtimes'
 import { GetSrcFilesFunction, RuntimeName } from './runtimes/runtime'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
 
@@ -44,9 +44,12 @@ const listFunction = async function (
   { featureFlags: inputFeatureFlags, config }: { featureFlags?: FeatureFlags; config?: Config } = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
-  const functions = await getFunctionsFromPaths([mainFile], { featureFlags, config })
-  const [listedFunction] = [...functions.values()].map(getListedFunction)
-  return listedFunction
+  const func = await getFunctionFromPath(mainFile, { featureFlags, config })
+  if (!func) {
+    return
+  }
+
+  return getListedFunction(func)
 }
 
 // List all Netlify Functions files for a specific directory

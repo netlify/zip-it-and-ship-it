@@ -110,4 +110,36 @@ const getFunctionsFromPaths = async (
   return new Map(functionsWithConfig)
 }
 
-export { getFunctionsFromPaths }
+/**
+ * Gets a list of functions found in a list of paths.
+ */
+const getFunctionFromPath = async (
+  path: string,
+  { config, featureFlags = defaultFlags }: { config?: Config; featureFlags?: FeatureFlags } = {},
+): Promise<FunctionSource | undefined> => {
+  // An object to cache filesystem operations. This allows different functions
+  // to perform IO operations on the same file (i.e. getting its stats or its
+  // contents) without duplicating work.
+  const fsCache = {}
+
+  // The order of this array determines the priority of the runtimes. If a path
+  // is used by the first time, it won't be made available to the subsequent
+  // runtimes.
+  const runtimes = [jsRuntime, goRuntime, rustRuntime]
+
+  for (const runtime of runtimes) {
+    // eslint-disable-next-line no-await-in-loop
+    const func = await runtime.getFunctionAtPath(path, { fsCache, featureFlags })
+    if (func) {
+      return {
+        ...func,
+        runtime,
+        config: getConfigForFunction({ config, func: { ...func, runtime } }),
+      }
+    }
+  }
+
+  return undefined
+}
+
+export { getFunctionsFromPaths, getFunctionFromPath }
