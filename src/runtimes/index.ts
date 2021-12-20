@@ -62,6 +62,11 @@ const findFunctionsInRuntime = async function ({
   return { functions: augmentedFunctions, remainingPaths }
 }
 
+// The order of this array determines the priority of the runtimes. If a path
+// is used by the first time, it won't be made available to the subsequent
+// runtimes.
+const RUNTIMES = [jsRuntime, goRuntime, rustRuntime]
+
 /**
  * Gets a list of functions found in a list of paths.
  */
@@ -78,16 +83,11 @@ const getFunctionsFromPaths = async (
   // contents) without duplicating work.
   const fsCache = {}
 
-  // The order of this array determines the priority of the runtimes. If a path
-  // is used by the first time, it won't be made available to the subsequent
-  // runtimes.
-  const runtimes = [jsRuntime, goRuntime, rustRuntime]
-
   // We cycle through the ordered array of runtimes, passing each one of them
   // through `findFunctionsInRuntime`. For each iteration, we collect all the
   // functions found plus the list of paths that still need to be evaluated,
   // using them as the input for the next iteration until the last runtime.
-  const { functions } = await runtimes.reduce(async (aggregate, runtime) => {
+  const { functions } = await RUNTIMES.reduce(async (aggregate, runtime) => {
     const { functions: aggregateFunctions, remainingPaths: aggregatePaths } = await aggregate
     const { functions: runtimeFunctions, remainingPaths: runtimePaths } = await findFunctionsInRuntime({
       dedupe,
@@ -122,12 +122,7 @@ const getFunctionFromPath = async (
   // contents) without duplicating work.
   const fsCache = {}
 
-  // The order of this array determines the priority of the runtimes. If a path
-  // is used by the first time, it won't be made available to the subsequent
-  // runtimes.
-  const runtimes = [jsRuntime, goRuntime, rustRuntime]
-
-  for (const runtime of runtimes) {
+  for (const runtime of RUNTIMES) {
     // eslint-disable-next-line no-await-in-loop
     const func = await runtime.getFunctionAtPath(path, { fsCache, featureFlags })
     if (func) {
