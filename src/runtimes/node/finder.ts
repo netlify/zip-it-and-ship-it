@@ -49,7 +49,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ pat
   return sortedFunctions
 }
 
-const findFunctionInPath: FindFunctionInPathFunction = async function ({ path: srcPath }): Promise<SourceFile | undefined> {
+const findFunctionInPath: FindFunctionInPathFunction = async function ({ path: srcPath }) {
   const filename = basename(srcPath)
 
   if (filename === 'node_modules') {
