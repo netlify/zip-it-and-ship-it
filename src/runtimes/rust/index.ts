@@ -7,7 +7,7 @@ import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
 import { zipBinary } from '../../zip_binary'
 import { detectBinaryRuntime } from '../detect_runtime'
-import { FindFunctionsInPathsFunction, GetFunctionAtPathFunction, Runtime, ZipFunction } from '../runtime'
+import { FindFunctionsInPathsFunction, FindFunctionInPathFunction, Runtime, ZipFunction } from '../runtime'
 
 import { build } from './builder'
 import { MANIFEST_NAME } from './constants'
@@ -50,28 +50,12 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({
   fsCache: FsCache
   paths: string[]
 }) {
-  const functions = await Promise.all(
-    paths.map((path) =>
-      getFunctionAtPath(path, {
-        featureFlags,
-        fsCache,
-      }),
-    ),
-  )
+  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ path, featureFlags, fsCache })))
 
   return functions.filter(nonNullable)
 }
 
-const getFunctionAtPath: GetFunctionAtPathFunction = async function (
-  path: string,
-  {
-    featureFlags,
-    fsCache,
-  }: {
-    featureFlags: FeatureFlags
-    fsCache: FsCache
-  },
-) {
+const findFunctionInPath: FindFunctionInPathFunction = async function ({ path, featureFlags, fsCache }) {
   const runtime = await detectBinaryRuntime({ fsCache, path })
 
   if (runtime === 'rs') {
@@ -170,6 +154,6 @@ const zipFunction: ZipFunction = async function ({
   return { config, path: destPath }
 }
 
-const runtime: Runtime = { findFunctionsInPaths, getFunctionAtPath, name: 'rs', zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: 'rs', zipFunction }
 
 export default runtime

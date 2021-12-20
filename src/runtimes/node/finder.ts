@@ -6,7 +6,7 @@ import locatePath from 'locate-path'
 
 import { SourceFile } from '../../function'
 import { nonNullable } from '../../utils/non_nullable'
-import { FindFunctionsInPathsFunction, GetFunctionAtPathFunction } from '../runtime'
+import { FindFunctionsInPathsFunction, FindFunctionInPathFunction } from '../runtime'
 
 const pLstat = promisify(lstat)
 
@@ -25,7 +25,7 @@ const sortByExtension = (fA: SourceFile, fB: SourceFile) => {
 }
 
 const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ paths, fsCache, featureFlags }) {
-  const functions = await Promise.all(paths.map((path) => getFunctionAtPath(path, { fsCache, featureFlags })))
+  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ path, fsCache, featureFlags })))
 
   // It's fine to mutate the array since its scope is local to this function.
   const sortedFunctions = functions.filter(nonNullable).sort((fA, fB) => {
@@ -49,7 +49,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ pat
   return sortedFunctions
 }
 
-const getFunctionAtPath: GetFunctionAtPathFunction = async function (srcPath: string): Promise<SourceFile | undefined> {
+const findFunctionInPath: FindFunctionInPathFunction = async function ({ path: srcPath }): Promise<SourceFile | undefined> {
   const filename = basename(srcPath)
 
   if (filename === 'node_modules') {
@@ -94,4 +94,4 @@ const getMainFile = async function (srcPath: string, filename: string, stat: Sta
   }
 }
 
-export { findFunctionsInPaths, getFunctionAtPath }
+export { findFunctionsInPaths, findFunctionInPath }
