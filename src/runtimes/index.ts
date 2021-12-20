@@ -62,6 +62,11 @@ const findFunctionsInRuntime = async function ({
   return { functions: augmentedFunctions, remainingPaths }
 }
 
+// An object to cache filesystem operations. This allows different functions
+// to perform IO operations on the same file (i.e. getting its stats or its
+// contents) without duplicating work.
+const makeFsCache = (): FsCache => ({})
+
 // The order of this array determines the priority of the runtimes. If a path
 // is used by the first time, it won't be made available to the subsequent
 // runtimes.
@@ -78,10 +83,7 @@ const getFunctionsFromPaths = async (
     featureFlags = defaultFlags,
   }: { config?: Config; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
 ): Promise<FunctionMap> => {
-  // An object to cache filesystem operations. This allows different functions
-  // to perform IO operations on the same file (i.e. getting its stats or its
-  // contents) without duplicating work.
-  const fsCache = {}
+  const fsCache = makeFsCache()
 
   // We cycle through the ordered array of runtimes, passing each one of them
   // through `findFunctionsInRuntime`. For each iteration, we collect all the
@@ -117,10 +119,7 @@ const getFunctionFromPath = async (
   path: string,
   { config, featureFlags = defaultFlags }: { config?: Config; featureFlags?: FeatureFlags } = {},
 ): Promise<FunctionSource | undefined> => {
-  // An object to cache filesystem operations. This allows different functions
-  // to perform IO operations on the same file (i.e. getting its stats or its
-  // contents) without duplicating work.
-  const fsCache = {}
+  const fsCache = makeFsCache()
 
   for (const runtime of RUNTIMES) {
     // eslint-disable-next-line no-await-in-loop
