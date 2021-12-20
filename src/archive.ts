@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer'
-import { createWriteStream, Stats } from 'fs'
+import { createWriteStream, Stats, readlinkSync } from 'fs'
 import { Writable } from 'stream'
 import { promisify } from 'util'
 
@@ -20,8 +20,18 @@ const startZip = function (destPath: string): { archive: Archiver; output: Writa
 
 // Add new file to zip
 const addZipFile = function (archive: Archiver, file: string, name: string, stat: Stats): void {
-  // Ensure sha256 stability regardless of mtime
-  archive.file(file, { name, mode: stat.mode, date: new Date(0), stats: stat })
+  if (stat.isSymbolicLink()) {
+    const linkContent = readlinkSync(file)
+    archive.symlink(name, linkContent, stat.mode)
+  } else {
+    archive.file(file, {
+      name,
+      mode: stat.mode,
+      // Ensure sha256 stability regardless of mtime
+      date: new Date(0),
+      stats: stat,
+    })
+  }
 }
 
 // Add new file content to zip
