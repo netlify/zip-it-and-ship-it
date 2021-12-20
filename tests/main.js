@@ -2467,7 +2467,9 @@ test('listFunctions surfaces schedule config property', async (t) => {
 })
 
 test('listFunctions includes in-source config declarations', async (t) => {
-  const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'))
+  const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
+    parseISC: true,
+  })
   const FUNCTIONS_COUNT = 7
   t.is(functions.length, FUNCTIONS_COUNT)
   functions.forEach((func) => {
@@ -2477,7 +2479,9 @@ test('listFunctions includes in-source config declarations', async (t) => {
 
 test('listFunction includes in-source config declarations', async (t) => {
   const mainFile = join(FIXTURES_DIR, 'in-source-config', 'functions', 'cron_cjs.js')
-  const func = await listFunction(mainFile)
+  const func = await listFunction(mainFile, {
+    parseISC: true,
+  })
   t.deepEqual(func, {
     extension: '.js',
     mainFile,
@@ -2488,7 +2492,9 @@ test('listFunction includes in-source config declarations', async (t) => {
 })
 
 test('listFunctionsFiles includes in-source config declarations', async (t) => {
-  const functions = await listFunctionsFiles(join(FIXTURES_DIR, 'in-source-config', 'functions'))
+  const functions = await listFunctionsFiles(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
+    parseISC: true,
+  })
   functions.forEach((func) => {
     t.is(func.schedule, '@daily')
   })
