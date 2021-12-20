@@ -32,6 +32,7 @@ interface AugmentedFunctionSource extends FunctionSource {
 }
 
 const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSource> => {
+  // ISC is currently only supported in JavaScript and TypeScript functions.
   if (func.runtime.name !== 'js') {
     return func
   }
