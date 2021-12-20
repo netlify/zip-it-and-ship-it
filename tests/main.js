@@ -2253,18 +2253,24 @@ test('Creates a manifest file with the list of created functions if the `manifes
   })
 })
 
-testMany('Correctly follows node_modules via symlink', ['bundler_esbuild', 'bundler_nft'], async (options, t) => {
-  const fixtureName = 'node-module-symlinks'
-  const opts = merge(options, {
-    basePath: join(FIXTURES_DIR, fixtureName),
-  })
-  const { tmpDir } = await zipNode(t, fixtureName, {
-    opts,
-  })
+const skipOnWindows = (name) => (platform === 'win32' ? `skip:${name}` : name)
 
-  const isEven = require(`${tmpDir}/function`)
-  t.is(isEven(2), '2 is even')
-})
+testMany(
+  'Correctly follows node_modules via symlink',
+  ['bundler_esbuild', skipOnWindows('bundler_nft')],
+  async (options, t) => {
+    const fixtureName = 'node-module-symlinks'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    const { tmpDir } = await zipNode(t, fixtureName, {
+      opts,
+    })
+
+    const isEven = require(`${tmpDir}/function`)
+    t.is(isEven(2), '2 is even')
+  },
+)
 
 testMany(
   'Can find Node modules in the `repositoryRoot` path, even if it is a parent directory of `basePath`',
