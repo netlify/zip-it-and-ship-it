@@ -63,7 +63,7 @@ const unzipFiles = async function (files, targetPathGenerator) {
   await Promise.all(files.map(({ path }) => unzipFile({ path, targetPathGenerator })))
 }
 
-const unzipFile = async function ({ path, targetPathGenerator }) {
+const unzipFile = function ({ path, targetPathGenerator }) {
   let dest = dirname(path)
   if (targetPathGenerator) {
     dest = resolve(targetPathGenerator(path))
@@ -74,7 +74,7 @@ const unzipFile = async function ({ path, targetPathGenerator }) {
   if (platform === 'win32') {
     execa.sync('tar', ['-xf', path, '-C', dest])
   } else {
-    await execa('unzip', ['-o', path, '-d', dest])
+    execa.sync('unzip', ['-o', path, '-d', dest])
   }
 }
 
