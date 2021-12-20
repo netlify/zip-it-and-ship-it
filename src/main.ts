@@ -58,7 +58,7 @@ const listFunctions = async function (
   return augmentedFunctions.map(getListedFunction)
 }
 
-// List one Netlify Functions main entry file for a specific directory
+// Finds a function at a specific path.
 const listFunction = async function (
   path: string,
   {
