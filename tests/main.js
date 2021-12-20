@@ -28,7 +28,7 @@ const shellUtils = require('../dist/utils/shell')
 const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
 // eslint-disable-next-line import/order
-const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
+const { zipFunction, listFunctions, listFunctionsFiles, listFunction } = require('..')
 
 const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler')
 
@@ -2472,6 +2472,18 @@ test('listFunctions includes in-source config declarations', async (t) => {
   t.is(functions.length, FUNCTIONS_COUNT)
   functions.forEach((func) => {
     t.is(func.schedule, '@daily')
+  })
+})
+
+test('listFunction includes in-source config declarations', async (t) => {
+  const mainFile = join(FIXTURES_DIR, 'in-source-config', 'functions', 'cron_cjs.js')
+  const func = await listFunction(mainFile)
+  t.is(func, {
+    extension: '.js',
+    mainFile,
+    name: 'cron_cjs',
+    runtime: 'js',
+    schedule: '@daily',
   })
 })
 

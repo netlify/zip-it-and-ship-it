@@ -38,6 +38,17 @@ const listFunctions = async function (
   return listedFunctions
 }
 
+// List one Netlify Functions main entry file for a specific directory
+const listFunction = async function (
+  mainFile: string,
+  { featureFlags: inputFeatureFlags, config }: { featureFlags?: FeatureFlags; config?: Config } = {},
+) {
+  const featureFlags = getFlags(inputFeatureFlags)
+  const functions = await getFunctionsFromPaths([mainFile], { featureFlags, config })
+  const [listedFunction] = [...functions.values()].map(getListedFunction)
+  return listedFunction
+}
+
 // List all Netlify Functions files for a specific directory
 const listFunctionsFiles = async function (
   relativeSrcFolders: string | string[],
@@ -88,6 +99,6 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ extension, runtime, s
   })
 }
 
-export { listFunctions, listFunctionsFiles }
+export { listFunctions, listFunction, listFunctionsFiles }
 
 export { zipFunction, zipFunctions } from './zip'
