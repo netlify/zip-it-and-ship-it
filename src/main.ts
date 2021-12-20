@@ -63,9 +63,7 @@ const getListedFunctionFiles = async function (
   options: { basePath?: string; featureFlags: FeatureFlags },
 ): Promise<ListedFunctionFile[]> {
   const srcFiles = await getSrcFiles({ ...func, ...options })
-  const { name, mainFile, runtime } = func
-
-  return srcFiles.map((srcFile) => ({ srcFile, name, mainFile, runtime: runtime.name, extension: extname(srcFile) }))
+  return srcFiles.map((srcFile) => ({ ...getListedFunction(func), srcFile, extension: extname(srcFile) }))
 }
 
 const getSrcFiles: GetSrcFilesFunction = async function ({ extension, runtime, srcPath, ...args }) {
