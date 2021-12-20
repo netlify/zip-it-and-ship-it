@@ -2403,3 +2403,15 @@ testMany(
     })
   },
 )
+
+test('listFunctions surfaces schedule config property', async (t) => {
+  const functions = await listFunctions(join(FIXTURES_DIR, 'many-functions'), {
+    config: {
+      five: {
+        schedule: '@daily',
+      },
+    },
+  })
+  const five = functions.find((func) => func.name === 'five')
+  t.is(five.schedule, '@daily')
+})

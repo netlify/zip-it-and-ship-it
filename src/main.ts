@@ -12,6 +12,7 @@ interface ListedFunction {
   mainFile: string
   runtime: RuntimeName
   extension: string
+  schedule?: string
 }
 
 type ListedFunctionFile = ListedFunction & {
@@ -27,12 +28,12 @@ interface ListFunctionsOptions {
 // List all Netlify Functions main entry files for a specific directory
 const listFunctions = async function (
   relativeSrcFolders: string | string[],
-  { featureFlags: inputFeatureFlags }: { featureFlags?: FeatureFlags } = {},
+  { featureFlags: inputFeatureFlags, config }: { featureFlags?: FeatureFlags; config?: Config } = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
-  const functions = await getFunctionsFromPaths(paths, { featureFlags })
+  const functions = await getFunctionsFromPaths(paths, { featureFlags, config })
   const listedFunctions = [...functions.values()].map(getListedFunction)
   return listedFunctions
 }
@@ -53,8 +54,8 @@ const listFunctionsFiles = async function (
   return listedFunctionsFiles.flat()
 }
 
-const getListedFunction = function ({ runtime, name, mainFile, extension }: FunctionSource): ListedFunction {
-  return { name, mainFile, runtime: runtime.name, extension }
+const getListedFunction = function ({ runtime, name, mainFile, extension, config }: FunctionSource): ListedFunction {
+  return { name, mainFile, runtime: runtime.name, extension, schedule: config.schedule }
 }
 
 const getListedFunctionFiles = async function (
