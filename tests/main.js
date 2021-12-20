@@ -1633,7 +1633,7 @@ testMany(
 
 testMany(
   'Bundles functions from multiple directories when the first argument of `zipFunctions()` is an array',
-  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
+  ['bundler_esbuild', platform === 'win32' ? 'todo:bundler_default' : 'bundler_default', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'multiple-src-directories'
     const pathInternal = `${fixtureName}/.netlify/internal-functions`
