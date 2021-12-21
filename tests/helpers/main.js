@@ -1,8 +1,8 @@
+const { mkdirSync } = require('fs')
 const { dirname, join, resolve } = require('path')
-const { env } = require('process')
-const { promisify } = require('util')
+const { env, platform } = require('process')
 
-const AdmZip = require('adm-zip')
+const execa = require('execa')
 const { dir: getTmpDir } = require('tmp-promise')
 
 const { zipFunctions } = require('../..')
@@ -63,11 +63,19 @@ const unzipFiles = async function (files, targetPathGenerator) {
   await Promise.all(files.map(({ path }) => unzipFile({ path, targetPathGenerator })))
 }
 
-const unzipFile = async function ({ path, targetPathGenerator }) {
-  const zip = new AdmZip(path)
-  const pExtractAll = promisify(zip.extractAllToAsync.bind(zip))
-  const targetPath = targetPathGenerator ? targetPathGenerator(path) : `${path}/..`
-  await pExtractAll(targetPath, false)
+const unzipFile = function ({ path, targetPathGenerator }) {
+  let dest = dirname(path)
+  if (targetPathGenerator) {
+    dest = resolve(targetPathGenerator(path))
+  }
+
+  mkdirSync(dest, { recursive: true })
+
+  if (platform === 'win32') {
+    execa.sync('tar', ['-xf', path, '-C', dest])
+  } else {
+    execa.sync('unzip', ['-o', path, '-d', dest])
+  }
 }
 
 const replaceUnzipPath = function ({ path }) {
