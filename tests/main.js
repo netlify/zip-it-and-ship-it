@@ -28,7 +28,7 @@ const shellUtils = require('../dist/utils/shell')
 const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
 // eslint-disable-next-line import/order
-const { zipFunction, listFunctions, listFunctionsFiles } = require('..')
+const { zipFunction, listFunctions, listFunctionsFiles, listFunction } = require('..')
 
 const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler')
 
@@ -46,10 +46,10 @@ const pWriteFile = promisify(writeFile)
 
 const EXECUTABLE_PERMISSION = 0o755
 
-const normalizeFiles = function (fixtureDir, { name, mainFile, runtime, extension, srcFile }) {
+const normalizeFiles = function (fixtureDir, { name, mainFile, runtime, extension, srcFile, schedule }) {
   const mainFileA = normalize(`${fixtureDir}/${mainFile}`)
   const srcFileA = srcFile === undefined ? {} : { srcFile: normalize(`${fixtureDir}/${srcFile}`) }
-  return { name, mainFile: mainFileA, runtime, extension, ...srcFileA }
+  return { name, mainFile: mainFileA, runtime, extension, schedule, ...srcFileA }
 }
 
 const getZipChecksum = async function (t, bundler) {
@@ -814,13 +814,13 @@ test('Can list function main files with listFunctions()', async (t) => {
   t.deepEqual(
     functions,
     [
-      { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
-      { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
-      { name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts' },
-      { name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
-      { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
-      { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
-      { name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
+      { schedule: undefined, name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
+      { schedule: undefined, name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
+      { schedule: undefined, name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts' },
+      { schedule: undefined, name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
+      { schedule: undefined, name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
+      { schedule: undefined, name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
+      { schedule: undefined, name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
     ].map(normalizeFiles.bind(null, fixtureDir)),
   )
 })
@@ -835,15 +835,34 @@ test('Can list function main files from multiple source directories with listFun
   t.deepEqual(
     functions,
     [
-      { name: 'function', mainFile: '.netlify/internal-functions/function.js', runtime: 'js', extension: '.js' },
       {
+        schedule: undefined,
+        name: 'function',
+        mainFile: '.netlify/internal-functions/function.js',
+        runtime: 'js',
+        extension: '.js',
+      },
+      {
+        schedule: undefined,
         name: 'function_internal',
         mainFile: '.netlify/internal-functions/function_internal.js',
         runtime: 'js',
         extension: '.js',
       },
-      { name: 'function', mainFile: 'netlify/functions/function.js', runtime: 'js', extension: '.js' },
-      { name: 'function_user', mainFile: 'netlify/functions/function_user.js', runtime: 'js', extension: '.js' },
+      {
+        schedule: undefined,
+        name: 'function',
+        mainFile: 'netlify/functions/function.js',
+        runtime: 'js',
+        extension: '.js',
+      },
+      {
+        schedule: undefined,
+        name: 'function_user',
+        mainFile: 'netlify/functions/function_user.js',
+        runtime: 'js',
+        extension: '.js',
+      },
     ].map(normalizeFiles.bind(null, fixtureDir)),
   )
 })
@@ -860,7 +879,14 @@ testMany(
     const files = await listFunctionsFiles(fixtureDir, opts)
     const sortedFiles = sortOn(files, ['mainFile', 'srcFile'])
     const expectedFiles = [
-      { name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts', srcFile: 'five/index.ts' },
+      {
+        name: 'five',
+        mainFile: 'five/index.ts',
+        runtime: 'js',
+        extension: '.ts',
+        schedule: undefined,
+        srcFile: 'five/index.ts',
+      },
 
       bundler === 'nft' && {
         name: 'five',
@@ -868,6 +894,7 @@ testMany(
         runtime: 'js',
         extension: '.ts',
         srcFile: 'five/util.ts',
+        schedule: undefined,
       },
 
       {
@@ -876,21 +903,44 @@ testMany(
         runtime: 'js',
         extension: '.js',
         srcFile: 'four.js/four.js.js',
+        schedule: undefined,
       },
-      { name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js', srcFile: 'one/index.js' },
-      { name: 'test', mainFile: 'test', runtime: 'go', extension: '', srcFile: 'test' },
-      { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', srcFile: 'test.js' },
-      { name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip', srcFile: 'test.zip' },
+      {
+        name: 'one',
+        mainFile: 'one/index.js',
+        runtime: 'js',
+        extension: '.js',
+        schedule: undefined,
+        srcFile: 'one/index.js',
+      },
+      { name: 'test', mainFile: 'test', runtime: 'go', extension: '', schedule: undefined, srcFile: 'test' },
+      { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', schedule: undefined, srcFile: 'test.js' },
+      {
+        name: 'test',
+        mainFile: 'test.zip',
+        runtime: 'js',
+        extension: '.zip',
+        schedule: undefined,
+        srcFile: 'test.zip',
+      },
 
       (bundler === undefined || bundler === 'nft') && {
         name: 'two',
         mainFile: 'two/two.js',
         runtime: 'js',
         extension: '.json',
+        schedule: undefined,
         srcFile: 'two/three.json',
       },
 
-      { name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js', srcFile: 'two/two.js' },
+      {
+        name: 'two',
+        mainFile: 'two/two.js',
+        runtime: 'js',
+        extension: '.js',
+        schedule: undefined,
+        srcFile: 'two/two.js',
+      },
     ]
       .filter(Boolean)
       .map(normalizeFiles.bind(null, fixtureDir))
@@ -2407,3 +2457,49 @@ testMany(
     })
   },
 )
+
+test('listFunctions surfaces schedule config property', async (t) => {
+  const functions = await listFunctions(join(FIXTURES_DIR, 'many-functions'), {
+    config: {
+      five: {
+        schedule: '@daily',
+      },
+    },
+  })
+  const five = functions.find((func) => func.name === 'five')
+  t.is(five.schedule, '@daily')
+})
+
+test('listFunctions includes in-source config declarations', async (t) => {
+  const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
+    parseISC: true,
+  })
+  const FUNCTIONS_COUNT = 7
+  t.is(functions.length, FUNCTIONS_COUNT)
+  functions.forEach((func) => {
+    t.is(func.schedule, '@daily')
+  })
+})
+
+test('listFunction includes in-source config declarations', async (t) => {
+  const mainFile = join(FIXTURES_DIR, 'in-source-config', 'functions', 'cron_cjs.js')
+  const func = await listFunction(mainFile, {
+    parseISC: true,
+  })
+  t.deepEqual(func, {
+    extension: '.js',
+    mainFile,
+    name: 'cron_cjs',
+    runtime: 'js',
+    schedule: '@daily',
+  })
+})
+
+test('listFunctionsFiles includes in-source config declarations', async (t) => {
+  const functions = await listFunctionsFiles(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
+    parseISC: true,
+  })
+  functions.forEach((func) => {
+    t.is(func.schedule, '@daily')
+  })
+})

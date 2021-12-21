@@ -6,7 +6,7 @@ import { FeatureFlags } from '../../feature_flags'
 import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime'
 
 import { getBundler } from './bundlers'
-import { findFunctionsInPaths } from './finder'
+import { findFunctionsInPaths, findFunctionInPath } from './finder'
 import { findISCDeclarationsInPath } from './in_source_config'
 import { detectEsModule } from './utils/detect_es_module'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path'
@@ -170,6 +170,7 @@ const zipWithFunctionWithFallback: ZipFunction = async ({ config = {}, ...parame
 
 const runtime: Runtime = {
   findFunctionsInPaths,
+  findFunctionInPath,
   getSrcFiles: getSrcFilesWithBundler,
   name: 'js',
   zipFunction: zipWithFunctionWithFallback,

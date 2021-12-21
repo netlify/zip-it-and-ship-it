@@ -7,7 +7,7 @@ import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
 import { zipBinary } from '../../zip_binary'
 import { detectBinaryRuntime } from '../detect_runtime'
-import { FindFunctionsInPathsFunction, Runtime, ZipFunction } from '../runtime'
+import { FindFunctionsInPathsFunction, FindFunctionInPathFunction, Runtime, ZipFunction } from '../runtime'
 
 import { build } from './builder'
 import { MANIFEST_NAME } from './constants'
@@ -50,27 +50,27 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({
   fsCache: FsCache
   paths: string[]
 }) {
-  const functions = await Promise.all(
-    paths.map(async (path) => {
-      const runtime = await detectBinaryRuntime({ fsCache, path })
-
-      if (runtime === 'rs') {
-        return processBinary({ fsCache, path })
-      }
-
-      if (featureFlags.buildRustSource !== true) {
-        return
-      }
-
-      const rustSourceFile = await detectRustFunction({ fsCache, path })
-
-      if (rustSourceFile) {
-        return processSource({ fsCache, mainFile: rustSourceFile, path })
-      }
-    }),
-  )
+  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ path, featureFlags, fsCache })))
 
   return functions.filter(nonNullable)
+}
+
+const findFunctionInPath: FindFunctionInPathFunction = async function ({ path, featureFlags, fsCache }) {
+  const runtime = await detectBinaryRuntime({ fsCache, path })
+
+  if (runtime === 'rs') {
+    return processBinary({ fsCache, path })
+  }
+
+  if (featureFlags.buildRustSource !== true) {
+    return
+  }
+
+  const rustSourceFile = await detectRustFunction({ fsCache, path })
+
+  if (rustSourceFile) {
+    return processSource({ fsCache, mainFile: rustSourceFile, path })
+  }
 }
 
 const processBinary = async ({ fsCache, path }: { fsCache: FsCache; path: string }): Promise<SourceFile> => {
@@ -154,6 +154,6 @@ const zipFunction: ZipFunction = async function ({
   return { config, path: destPath }
 }
 
-const runtime: Runtime = { findFunctionsInPaths, name: 'rs', zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: 'rs', zipFunction }
 
 export default runtime

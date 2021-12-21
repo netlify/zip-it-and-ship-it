@@ -62,6 +62,16 @@ const findFunctionsInRuntime = async function ({
   return { functions: augmentedFunctions, remainingPaths }
 }
 
+// An object to cache filesystem operations. This allows different functions
+// to perform IO operations on the same file (i.e. getting its stats or its
+// contents) without duplicating work.
+const makeFsCache = (): FsCache => ({})
+
+// The order of this array determines the priority of the runtimes. If a path
+// is used by the first time, it won't be made available to the subsequent
+// runtimes.
+const RUNTIMES = [jsRuntime, goRuntime, rustRuntime]
+
 /**
  * Gets a list of functions found in a list of paths.
  */
@@ -73,21 +83,13 @@ const getFunctionsFromPaths = async (
     featureFlags = defaultFlags,
   }: { config?: Config; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
 ): Promise<FunctionMap> => {
-  // An object to cache filesystem operations. This allows different functions
-  // to perform IO operations on the same file (i.e. getting its stats or its
-  // contents) without duplicating work.
-  const fsCache = {}
-
-  // The order of this array determines the priority of the runtimes. If a path
-  // is used by the first time, it won't be made available to the subsequent
-  // runtimes.
-  const runtimes = [jsRuntime, goRuntime, rustRuntime]
+  const fsCache = makeFsCache()
 
   // We cycle through the ordered array of runtimes, passing each one of them
   // through `findFunctionsInRuntime`. For each iteration, we collect all the
   // functions found plus the list of paths that still need to be evaluated,
   // using them as the input for the next iteration until the last runtime.
-  const { functions } = await runtimes.reduce(async (aggregate, runtime) => {
+  const { functions } = await RUNTIMES.reduce(async (aggregate, runtime) => {
     const { functions: aggregateFunctions, remainingPaths: aggregatePaths } = await aggregate
     const { functions: runtimeFunctions, remainingPaths: runtimePaths } = await findFunctionsInRuntime({
       dedupe,
@@ -110,4 +112,28 @@ const getFunctionsFromPaths = async (
   return new Map(functionsWithConfig)
 }
 
-export { getFunctionsFromPaths }
+/**
+ * Gets a list of functions found in a list of paths.
+ */
+const getFunctionFromPath = async (
+  path: string,
+  { config, featureFlags = defaultFlags }: { config?: Config; featureFlags?: FeatureFlags } = {},
+): Promise<FunctionSource | undefined> => {
+  const fsCache = makeFsCache()
+
+  for (const runtime of RUNTIMES) {
+    // eslint-disable-next-line no-await-in-loop
+    const func = await runtime.findFunctionInPath({ path, fsCache, featureFlags })
+    if (func) {
+      return {
+        ...func,
+        runtime,
+        config: getConfigForFunction({ config, func: { ...func, runtime } }),
+      }
+    }
+  }
+
+  return undefined
+}
+
+export { getFunctionsFromPaths, getFunctionFromPath }
