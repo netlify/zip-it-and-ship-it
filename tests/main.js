@@ -1633,7 +1633,7 @@ testMany(
 
 testMany(
   'Bundles functions from multiple directories when the first argument of `zipFunctions()` is an array',
-  ['bundler_esbuild', platform === 'win32' ? 'todo:bundler_default' : 'bundler_default', 'bundler_nft'],
+  ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'multiple-src-directories'
     const pathInternal = `${fixtureName}/.netlify/internal-functions`
@@ -2255,7 +2255,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
 
 testMany(
   'Correctly follows node_modules via symlink',
-  ['bundler_esbuild', platform === 'win32' ? `todo:bundler_nft` : 'bundler_nft'],
+  ['bundler_esbuild', platform === 'win32' ? 'todo:bundler_nft' : 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'node-module-symlinks'
     const opts = merge(options, {

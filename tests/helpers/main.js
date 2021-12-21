@@ -63,7 +63,7 @@ const unzipFiles = async function (files, targetPathGenerator) {
   await Promise.all(files.map(({ path }) => unzipFile({ path, targetPathGenerator })))
 }
 
-const unzipFile = async function ({ path, targetPathGenerator }) {
+const unzipFile = function ({ path, targetPathGenerator }) {
   let dest = dirname(path)
   if (targetPathGenerator) {
     dest = resolve(targetPathGenerator(path))
@@ -71,11 +71,10 @@ const unzipFile = async function ({ path, targetPathGenerator }) {
 
   mkdirSync(dest, { recursive: true })
 
-  // eslint-disable-next-line unicorn/prefer-ternary
   if (platform === 'win32') {
-    await execa('tar', ['-xf', path, '-C', dest])
+    execa.sync('tar', ['-xf', path, '-C', dest])
   } else {
-    await execa('unzip', ['-o', path, '-d', dest])
+    execa.sync('unzip', ['-o', path, '-d', dest])
   }
 }
 
