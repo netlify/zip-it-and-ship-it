@@ -45,7 +45,6 @@ const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): Plugin 
         if (path.basename(directory) !== 'node_modules') {
           const modulePath = path.join(directory, 'node_modules', pkg[1])
           const packageJsonPath = path.join(modulePath, 'package.json')
-          // eslint-disable-next-line no-await-in-loop
           const [isNative, packageJsonData] = await findNativeModule(packageJsonPath, cache)
 
           // eslint-disable-next-line max-depth

@@ -64,7 +64,6 @@ const resolvePathPreserveSymlinks = async function (path: string, baseDirs: stri
   let firstError
   for (const basedir of baseDirs) {
     try {
-      // eslint-disable-next-line no-await-in-loop
       return await resolvePathPreserveSymlinksForDir(path, basedir)
     } catch (error) {
       firstError = firstError || error

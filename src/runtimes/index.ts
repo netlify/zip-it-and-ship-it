@@ -122,7 +122,6 @@ const getFunctionFromPath = async (
   const fsCache = makeFsCache()
 
   for (const runtime of RUNTIMES) {
-    // eslint-disable-next-line no-await-in-loop
     const func = await runtime.findFunctionInPath({ path, fsCache, featureFlags })
     if (func) {
       return {
