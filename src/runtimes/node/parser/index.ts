@@ -1,10 +1,10 @@
 /* eslint-disable max-lines */
+import { promises as fs } from 'fs'
 import { join, relative, resolve } from 'path'
 
 import { parse } from '@babel/parser'
 import type { BinaryExpression, CallExpression, Expression, PrivateName, TemplateLiteral, TSType } from '@babel/types'
 
-import { readFile } from '../../../utils/fs'
 import { nonNullable } from '../../../utils/non_nullable'
 
 const GLOB_WILDCARD = '**'
@@ -108,7 +108,7 @@ const parseExpression = ({
 
 // Parses a JS/TS file and returns the resulting AST.
 const parseFile = async (path: string) => {
-  const code = await readFile(path, 'utf8')
+  const code = await fs.readFile(path, 'utf8')
   const ast = parse(code, {
     plugins: ['typescript'],
     sourceType: 'module',

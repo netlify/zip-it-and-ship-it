@@ -1,21 +1,16 @@
 /* eslint-disable max-lines */
 import { Buffer } from 'buffer'
-import fs, { Stats } from 'fs'
+import { Stats, promises as fs } from 'fs'
 import os from 'os'
 import { basename, extname, join, normalize, resolve, sep } from 'path'
-import { promisify } from 'util'
 
 import copyFile from 'cp-file'
 import deleteFiles from 'del'
-import makeDir from 'make-dir'
 import pMap from 'p-map'
 import unixify from 'unixify'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive'
 import { mkdirAndWriteFile } from '../../../utils/fs'
-
-const pLstat = promisify(fs.lstat)
-const pWriteFile = promisify(fs.writeFile)
 
 // Taken from https://www.npmjs.com/package/cpy.
 const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2
@@ -62,10 +57,10 @@ const createDirectory = async function ({
 
   // Deleting the functions directory in case it exists before creating it.
   await deleteFiles(functionFolder, { force: true })
-  await makeDir(functionFolder)
+  await fs.mkdir(functionFolder, { recursive: true })
 
   // Writing entry file.
-  await pWriteFile(join(functionFolder, entryFilename), entryContents)
+  await fs.writeFile(join(functionFolder, entryFilename), entryContents)
 
   // Copying source files.
   await pMap(
@@ -164,7 +159,7 @@ const addEntryFileToZip = function (archive: ZipArchive, { contents, filename }:
 }
 
 const addStat = async function (srcFile: string) {
-  const stat = await pLstat(srcFile)
+  const stat = await fs.lstat(srcFile)
 
   return { srcFile, stat }
 }

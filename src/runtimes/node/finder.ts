@@ -1,14 +1,11 @@
-import { lstat, Stats } from 'fs'
+import { Stats, promises as fs } from 'fs'
 import { join, dirname, basename, extname } from 'path'
-import { promisify } from 'util'
 
 import locatePath from 'locate-path'
 
 import { SourceFile } from '../../function'
 import { nonNullable } from '../../utils/non_nullable'
 import { FindFunctionsInPathsFunction, FindFunctionInPathFunction } from '../runtime'
-
-const pLstat = promisify(lstat)
 
 // List of extensions that this runtime will look for, in order of precedence.
 const allowedExtensions = ['.js', '.zip', '.cjs', '.mjs', '.ts']
@@ -56,7 +53,7 @@ const findFunctionInPath: FindFunctionInPathFunction = async function ({ path: s
     return
   }
 
-  const stat = await pLstat(srcPath)
+  const stat = await fs.lstat(srcPath)
   const mainFile = await getMainFile(srcPath, filename, stat)
 
   if (mainFile === undefined) {

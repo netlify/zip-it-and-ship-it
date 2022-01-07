@@ -1,9 +1,6 @@
-import { readFile } from 'fs'
-import { promisify } from 'util'
+import { promises as fs } from 'fs'
 
 import { init, parse } from 'es-module-lexer'
-
-const pReadFile = promisify(readFile)
 
 const detectEsModule = async ({ mainFile }: { mainFile: string }): Promise<boolean> => {
   if (!mainFile) {
@@ -11,7 +8,7 @@ const detectEsModule = async ({ mainFile }: { mainFile: string }): Promise<boole
   }
 
   try {
-    const [mainFileContents] = await Promise.all([pReadFile(mainFile, 'utf8'), init])
+    const [mainFileContents] = await Promise.all([fs.readFile(mainFile, 'utf8'), init])
     const [imports, exports] = parse(mainFileContents)
 
     return imports.length !== 0 || exports.length !== 0

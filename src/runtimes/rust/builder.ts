@@ -1,20 +1,15 @@
-import { readFile } from 'fs'
+import { promises as fs } from 'fs'
 import { basename, join } from 'path'
-import { promisify } from 'util'
 
-import makeDir from 'make-dir'
 import tmp from 'tmp-promise'
 import toml from 'toml'
 
 import { FunctionConfig } from '../../config'
-import { lstat } from '../../utils/fs'
 import { runCommand } from '../../utils/shell'
 import type { RuntimeName } from '../runtime'
 
 import { CargoManifest } from './cargo_manifest'
 import { BUILD_TARGET, MANIFEST_NAME } from './constants'
-
-const pReadFile = promisify(readFile)
 
 const runtimeName: RuntimeName = 'rs'
 
@@ -37,12 +32,12 @@ const build = async ({ config, name, srcDir }: { config: FunctionConfig; name: s
   // way to override it (https://github.com/rust-lang/cargo/issues/1706). We
   // must extract the crate name from the manifest and use it to form the path
   // to the binary.
-  const manifest = await pReadFile(join(srcDir, MANIFEST_NAME), 'utf8')
+  const manifest = await fs.readFile(join(srcDir, MANIFEST_NAME), 'utf8')
   const {
     package: { name: packageName },
   }: CargoManifest = toml.parse(manifest)
   const binaryPath = join(targetDirectory, BUILD_TARGET, 'release', packageName)
-  const stat = await lstat(binaryPath)
+  const stat = await fs.lstat(binaryPath)
 
   return {
     path: binaryPath,
@@ -101,7 +96,7 @@ const getTargetDirectory = async ({ config, name }: { config: FunctionConfig; na
     // We replace the [name] placeholder with the name of the function.
     const path = rustTargetDirectory.replace(/\[name]/g, name)
 
-    await makeDir(path)
+    await fs.mkdir(path, { recursive: true })
 
     return path
   }

@@ -1,15 +1,13 @@
-const { readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs')
+const { mkdir, readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs').promises
 const { tmpdir } = require('os')
 const { basename, dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
 const { arch, env, platform, version: nodeVersion } = require('process')
-const { promisify } = require('util')
 
 const test = require('ava')
 const cpy = require('cpy')
 const merge = require('deepmerge')
 const del = require('del')
 const execa = require('execa')
-const makeDir = require('make-dir')
 const pEvery = require('p-every')
 const pathExists = require('path-exists')
 const semver = require('semver')
@@ -35,14 +33,6 @@ const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bu
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
 const { makeTestMany } = require('./helpers/test_many')
-
-const pReadFile = promisify(readFile)
-const pChmod = promisify(chmod)
-const pSymlink = promisify(symlink)
-const pUnlink = promisify(unlink)
-const pRename = promisify(rename)
-const pStat = promisify(stat)
-const pWriteFile = promisify(writeFile)
 
 const EXECUTABLE_PERMISSION = 0o755
 
@@ -397,13 +387,13 @@ testMany(
     const srcPackageJson = `${invalidPackageJsonDir}/package.json.txt`
     const distPackageJson = `${invalidPackageJsonDir}/package.json`
 
-    await pRename(srcPackageJson, distPackageJson)
+    await rename(srcPackageJson, distPackageJson)
     try {
       await t.throwsAsync(zipNode(t, 'invalid-package-json', { opts: options, fixtureDir }), {
         message: /(invalid JSON|package.json:1:1: error: Expected string but found "{")/,
       })
     } finally {
-      await pRename(distPackageJson, srcPackageJson)
+      await rename(distPackageJson, srcPackageJson)
     }
   },
 )
@@ -587,13 +577,13 @@ if (platform !== 'win32') {
       const targetFile = `${symlinkDir}/target.js`
 
       if (!(await pathExists(symlinkFile))) {
-        await pSymlink(targetFile, symlinkFile)
+        await symlink(targetFile, symlinkFile)
       }
 
       try {
         await zipNode(t, 'symlinks', { opts, fixtureDir })
       } finally {
-        await pUnlink(symlinkFile)
+        await unlink(symlinkFile)
       }
     },
   )
@@ -765,7 +755,7 @@ testMany(
     t.true(files.every(({ runtime }) => runtime === 'js'))
     t.true(
       await pEvery(files, async ({ path }) => {
-        const fileContents = await pReadFile(path, 'utf8')
+        const fileContents = await readFile(path, 'utf8')
         return fileContents.trim() === 'test'
       }),
     )
@@ -1576,7 +1566,7 @@ test('Generates a bundle for the Node runtime version specified in the `nodeVers
     opts: { archiveFormat: 'none', config: { '*': { nodeBundler: 'esbuild', nodeVersion: '8.x' } } },
   })
 
-  const node8Function = await pReadFile(`${node8Files[0].path}/src/function.js`, 'utf8')
+  const node8Function = await readFile(`${node8Files[0].path}/src/function.js`, 'utf8')
 
   t.regex(node8Function, /catch \(\w+\) {/)
 
@@ -1584,7 +1574,7 @@ test('Generates a bundle for the Node runtime version specified in the `nodeVers
     opts: { archiveFormat: 'none', config: { '*': { nodeBundler: 'esbuild', nodeVersion: '12.x' } } },
   })
 
-  const node12Function = await pReadFile(`${node12Files[0].path}/src/function.js`, 'utf8')
+  const node12Function = await readFile(`${node12Files[0].path}/src/function.js`, 'utf8')
 
   t.regex(node12Function, /catch {/)
 })
@@ -1723,11 +1713,11 @@ test('When generating a directory for a function with `archiveFormat: "none"`, i
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const functionDirectory = join(tmpDir, 'function')
 
-  await makeDir(functionDirectory)
+  await mkdir(functionDirectory, { recursive: true })
 
   const testFilePath = join(functionDirectory, 'some-file.js')
 
-  await pWriteFile(testFilePath, 'module.exports = true')
+  await writeFile(testFilePath, 'module.exports = true')
 
   await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
     archiveFormat: 'none',
@@ -1737,7 +1727,7 @@ test('When generating a directory for a function with `archiveFormat: "none"`, i
 
   t.true(functionEntry)
 
-  await t.throwsAsync(pStat(testFilePath))
+  await t.throwsAsync(stat(testFilePath))
 })
 
 test('Throws an error if the `archiveFormat` property contains an invalid value`', async (t) => {
@@ -1799,7 +1789,7 @@ test('Leaves dynamic imports untouched when the `processDynamicNodeImports` conf
       config: { '*': { nodeBundler: 'esbuild', processDynamicNodeImports: false } },
     },
   })
-  const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
+  const functionSource = await readFile(`${tmpDir}/function.js`, 'utf8')
 
   /* eslint-disable no-template-curly-in-string */
   t.true(functionSource.includes('const require1 = require(`./files/${number}.js`);'))
@@ -1837,7 +1827,7 @@ test('Leaves dynamic imports untouched when the files required to resolve the ex
       config: { '*': { nodeBundler: 'esbuild' } },
     },
   })
-  const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
+  const functionSource = await readFile(`${tmpDir}/function.js`, 'utf8')
 
   t.true(functionSource.includes('const require1 = require(number)'))
   // eslint-disable-next-line no-template-curly-in-string
@@ -2006,7 +1996,7 @@ test('Zips Rust function files', async (t) => {
   // https://github.com/cthackers/adm-zip/issues/86
   // However `chmod()` is not cross-platform
   if (platform === 'linux') {
-    await pChmod(unzippedFile, EXECUTABLE_PERMISSION)
+    await chmod(unzippedFile, EXECUTABLE_PERMISSION)
 
     const { stdout } = await execa(unzippedFile)
     t.is(stdout, 'Hello, world!')
@@ -2014,7 +2004,7 @@ test('Zips Rust function files', async (t) => {
 
   const tcFile = `${tmpDir}/netlify-toolchain`
   t.true(await pathExists(tcFile))
-  const tc = await pReadFile(tcFile, 'utf8')
+  const tc = await readFile(tcFile, 'utf8')
   t.is(tc.trim(), '{"runtime":"rs"}')
 })
 
@@ -2026,7 +2016,7 @@ test('Does not zip Go function files', async (t) => {
 })
 
 test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
-  shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
+  shellUtilsStub.callsFake((...args) => writeFile(args[1][2], ''))
 
   const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, { length: 0 })
@@ -2036,7 +2026,7 @@ test.serial('Does not build Go functions from source if the `buildGoSource` feat
 })
 
 test.serial('Builds Go functions from source if the `buildGoSource` feature flag is enabled', async (t) => {
-  shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
+  shellUtilsStub.callsFake((...args) => writeFile(args[1][2], ''))
 
   const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, {
@@ -2102,7 +2092,7 @@ test.serial('Adds `type: "functionsBundling"` to errors resulting from compiling
 test.serial(
   'Does not build Rust functions from source if the `buildRustSource` feature flag is not enabled',
   async (t) => {
-    shellUtilsStub.callsFake((...args) => pWriteFile(args[1][2], ''))
+    shellUtilsStub.callsFake((...args) => writeFile(args[1][2], ''))
 
     const fixtureName = 'rust-source-multiple'
     const { files } = await zipFixture(t, fixtureName, { length: 0 })
@@ -2131,9 +2121,9 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
         t.is(environment.CARGO_TARGET_DIR, targetDirectory.replace('[name]', 'rust-func-2'))
       }
 
-      await makeDir(directory)
+      await mkdir(directory, { recursive: true })
 
-      return pWriteFile(binaryPath, '')
+      return writeFile(binaryPath, '')
     }
   })
 
@@ -2245,7 +2235,7 @@ test('Does not generate a sourcemap unless `nodeSourcemap` is set', async (t) =>
 
   t.false(await pathExists(`${tmpDir}/function.js.map`))
 
-  const functionSource = await pReadFile(`${tmpDir}/function.js`, 'utf8')
+  const functionSource = await readFile(`${tmpDir}/function.js`, 'utf8')
 
   t.false(functionSource.includes('sourceMappingURL'))
 })
@@ -2255,7 +2245,7 @@ if (platform !== 'win32') {
     const { tmpDir } = await zipNode(t, 'node-module-and-local-imports', {
       opts: { config: { '*': { nodeBundler: 'esbuild', nodeSourcemap: true } } },
     })
-    const sourcemap = await pReadFile(`${tmpDir}/function.js.map`, 'utf8')
+    const sourcemap = await readFile(`${tmpDir}/function.js.map`, 'utf8')
     const { sourceRoot, sources } = JSON.parse(sourcemap)
 
     await Promise.all(
