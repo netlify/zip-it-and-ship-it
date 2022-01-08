@@ -44,9 +44,7 @@ const listFunctionsDirectories = async function (srcFolders: string[]) {
   const filenamesByDirectory = await Promise.all(
     srcFolders.map(async (srcFolder) => {
       try {
-        const filenames = await listFunctionsDirectory(srcFolder)
-
-        return filenames
+        return await listFunctionsDirectory(srcFolder)
       } catch {
         return null
       }
@@ -80,9 +78,7 @@ const resolveFunctionsDirectories = (input: string | string[]) => {
 
 const mkdirAndWriteFile: typeof fs.writeFile = async (path, ...params) => {
   if (typeof path === 'string') {
-    const directory = dirname(path)
-
-    await fs.mkdir(directory, { recursive: true })
+    await fs.mkdir(dirname(path), { recursive: true })
   }
 
   return fs.writeFile(path, ...params)
