@@ -117,7 +117,7 @@ const parseFile = async (path: string) => {
   return ast.program
 }
 
-// Attemps to parse a JS/TS file at the given path, returning its AST if
+// Attempts to parse a JS/TS file at the given path, returning its AST if
 // successful, or `null` if not.
 const safelyParseFile = async (path: string) => {
   if (!path) {
