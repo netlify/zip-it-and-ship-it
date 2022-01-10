@@ -149,7 +149,7 @@ const registerModuleWithDynamicImports = async ({
     if (packageName !== undefined) {
       moduleNames.add(packageName)
     }
-  } catch (_) {
+  } catch {
     // no-op
   }
 }
