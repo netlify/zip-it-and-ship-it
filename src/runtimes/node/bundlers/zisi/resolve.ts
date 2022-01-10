@@ -14,7 +14,7 @@ const BACKSLASH_REGEXP = /\\/g
 //     - this is important because if a file does a `require('./symlink')`, we
 //       need to bundle the symlink and its target, not only the target
 //     - `path.resolve()` cannot be used for relative|absolute file paths
-//       because it does not resolve ommitted file extension,
+//       because it does not resolve omitted file extension,
 //       e.g. `require('./file')` instead of `require('./file.js')`
 //     - the CLI flag `--preserve-symlinks` can be used with Node.js, but it
 //       cannot be set runtime
