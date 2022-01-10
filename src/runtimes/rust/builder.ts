@@ -87,7 +87,7 @@ const checkRustToolchain = async () => {
     await runCommand('cargo', ['-V'])
 
     return true
-  } catch (_) {
+  } catch {
     return false
   }
 }

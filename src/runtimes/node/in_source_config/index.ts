@@ -21,7 +21,7 @@ const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISCValues>
     return {}
   }
 
-  const imports = ast.body.map((node) => getImports(node, IN_SOURCE_CONFIG_MODULE)).flat()
+  const imports = ast.body.flatMap((node) => getImports(node, IN_SOURCE_CONFIG_MODULE))
   const exports = getMainExport(ast.body)
   const iscExports = exports
     .map(({ args, local: exportName }) => {

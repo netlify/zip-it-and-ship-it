@@ -44,7 +44,7 @@ const getPathWithExtension = (path: string, extension: string) =>
 const safeUnlink = async (path: string) => {
   try {
     await pUnlink(path)
-  } catch (_) {}
+  } catch {}
 }
 
 // Takes a list of absolute paths and returns an array containing all the
@@ -57,7 +57,7 @@ const listFunctionsDirectories = async function (srcFolders: string[]) {
         const filenames = await listFunctionsDirectory(srcFolder)
 
         return filenames
-      } catch (error) {
+      } catch {
         return null
       }
     }),
@@ -76,7 +76,7 @@ const listFunctionsDirectory = async function (srcFolder: string) {
     const filenames = await pReaddir(srcFolder)
 
     return filenames.map((name) => join(srcFolder, name))
-  } catch (error) {
+  } catch {
     throw new Error(`Functions folder does not exist: ${srcFolder}`)
   }
 }
