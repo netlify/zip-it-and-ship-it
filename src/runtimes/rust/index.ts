@@ -36,7 +36,7 @@ const detectRustFunction = async ({ fsCache, path }: { fsCache: FsCache; path: s
     if (mainFile.isFile()) {
       return mainFilePath
     }
-  } catch (_) {
+  } catch {
     // no-op
   }
 }

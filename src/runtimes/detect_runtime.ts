@@ -30,7 +30,7 @@ const detectBinaryRuntime = async function ({
       default:
         return undefined
     }
-  } catch (error) {}
+  } catch {}
 }
 
 export { detectBinaryRuntime }

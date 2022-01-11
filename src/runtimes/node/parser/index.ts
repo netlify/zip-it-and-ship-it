@@ -100,7 +100,7 @@ const parseExpression = ({
         includedPathsGlob,
         type: expression.callee.name,
       }
-    } catch (_) {
+    } catch {
       // no-op
     }
   }
@@ -117,7 +117,7 @@ const parseFile = async (path: string) => {
   return ast.program
 }
 
-// Attemps to parse a JS/TS file at the given path, returning its AST if
+// Attempts to parse a JS/TS file at the given path, returning its AST if
 // successful, or `null` if not.
 const safelyParseFile = async (path: string) => {
   if (!path) {
@@ -126,7 +126,7 @@ const safelyParseFile = async (path: string) => {
 
   try {
     return await parseFile(path)
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -153,7 +153,7 @@ const parseRequire = ({
       const globNodes = parseBinaryExpression(firstArg)
 
       return getAbsoluteGlob({ basePath, globNodes, resolveDir })
-    } catch (_) {
+    } catch {
       // no-op
     }
   }

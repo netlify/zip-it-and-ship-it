@@ -8,7 +8,7 @@ const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> =
     const packageJson = await getPackageJson(srcDir)
 
     return packageJson
-  } catch (_) {
+  } catch {
     return {}
   }
 }

@@ -162,7 +162,7 @@ const zipWithFunctionWithFallback: ZipFunction = async ({ config = {}, ...parame
       const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: 'zisi' } })
 
       return { ...data, bundlerErrors: esbuildError.errors }
-    } catch (zisiError) {
+    } catch {
       throw esbuildError
     }
   }
