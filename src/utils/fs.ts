@@ -1,17 +1,7 @@
-import { lstat, readdir, readFile, stat, unlink, writeFile } from 'fs'
+import { promises as fs } from 'fs'
 import { dirname, format, join, parse, resolve } from 'path'
-import { promisify } from 'util'
-
-import makeDir from 'make-dir'
 
 import { nonNullable } from './non_nullable'
-
-const pLstat = promisify(lstat)
-const pReaddir = promisify(readdir)
-const pReadFile = promisify(readFile)
-const pStat = promisify(stat)
-const pUnlink = promisify(unlink)
-const pWriteFile = promisify(writeFile)
 
 type FsCache = Record<string, unknown>
 
@@ -34,16 +24,16 @@ const makeCachedFunction =
     return cache[key] as ReturnType
   }
 
-const cachedLstat = makeCachedFunction(pLstat)
-const cachedReaddir = makeCachedFunction(pReaddir)
-const cachedReadFile = makeCachedFunction(pReadFile)
+const cachedLstat = makeCachedFunction(fs.lstat)
+const cachedReaddir = makeCachedFunction(fs.readdir)
+const cachedReadFile = makeCachedFunction(fs.readFile)
 
 const getPathWithExtension = (path: string, extension: string) =>
   format({ ...parse(path), base: undefined, ext: extension })
 
 const safeUnlink = async (path: string) => {
   try {
-    await pUnlink(path)
+    await fs.unlink(path)
   } catch {}
 }
 
@@ -73,7 +63,7 @@ const listFunctionsDirectories = async function (srcFolders: string[]) {
 
 const listFunctionsDirectory = async function (srcFolder: string) {
   try {
-    const filenames = await pReaddir(srcFolder)
+    const filenames = await fs.readdir(srcFolder)
 
     return filenames.map((name) => join(srcFolder, name))
   } catch {
@@ -88,29 +78,25 @@ const resolveFunctionsDirectories = (input: string | string[]) => {
   return absoluteDirectories
 }
 
-const mkdirAndWriteFile: typeof pWriteFile = async (path, ...params) => {
+const mkdirAndWriteFile: typeof fs.writeFile = async (path, ...params) => {
   if (typeof path === 'string') {
     const directory = dirname(path)
 
-    await makeDir(directory)
+    await fs.mkdir(directory, { recursive: true })
   }
 
-  return pWriteFile(path, ...params)
+  return fs.writeFile(path, ...params)
 }
 
 export {
   cachedLstat,
   cachedReaddir,
   cachedReadFile,
-  pLstat as lstat,
   getPathWithExtension,
   listFunctionsDirectories,
   listFunctionsDirectory,
   resolveFunctionsDirectories,
   safeUnlink,
-  pStat as stat,
-  pWriteFile as writeFile,
-  pReadFile as readFile,
   mkdirAndWriteFile,
 }
 export type { FsCache }

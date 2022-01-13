@@ -1,6 +1,6 @@
+import { promises as fs } from 'fs'
 import { basename } from 'path'
 
-import { lstat } from '../../utils/fs'
 import { runCommand } from '../../utils/shell'
 import type { RuntimeName } from '../runtime'
 
@@ -24,7 +24,7 @@ const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFil
     throw error
   }
 
-  const stat = await lstat(destPath)
+  const stat = await fs.lstat(destPath)
 
   return {
     mainFile,

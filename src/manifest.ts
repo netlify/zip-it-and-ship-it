@@ -1,8 +1,8 @@
+import { promises as fs } from 'fs'
 import { resolve } from 'path'
 import { arch, platform } from 'process'
 
 import { FunctionResult } from './utils/format_result'
-import { writeFile } from './utils/fs'
 
 interface ManifestFunction {
   mainFile: string
@@ -33,7 +33,7 @@ const createManifest = async ({ functions, path }: { functions: FunctionResult[]
     version: MANIFEST_VERSION,
   }
 
-  await writeFile(path, JSON.stringify(payload))
+  await fs.writeFile(path, JSON.stringify(payload))
 }
 
 const formatFunctionForManifest = ({ mainFile, name, path, runtime, schedule }: FunctionResult): ManifestFunction => ({

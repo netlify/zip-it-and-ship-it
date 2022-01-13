@@ -1,6 +1,6 @@
+import { promises as fs } from 'fs'
 import { resolve } from 'path'
 
-import makeDir from 'make-dir'
 import pMap from 'p-map'
 
 import { ArchiveFormat } from './archive'
@@ -55,7 +55,7 @@ const zipFunctions = async function (
 
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
-  const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), makeDir(destFolder)])
+  const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
   const functions = await getFunctionsFromPaths(paths, { config, dedupe: true, featureFlags })
   const results = await pMap(
     functions.values(),
@@ -130,7 +130,7 @@ const zipFunction = async function (
     stat: stats,
   }: FunctionSource = functions.values().next().value
 
-  await makeDir(destFolder)
+  await fs.mkdir(destFolder, { recursive: true })
 
   const zipResult = await runtime.zipFunction({
     archiveFormat,
