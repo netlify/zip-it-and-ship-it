@@ -50,7 +50,6 @@ const zipFunctions = async function (
     manifest,
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
     repositoryRoot = basePath,
-    zipGo,
   }: ZipFunctionsOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
