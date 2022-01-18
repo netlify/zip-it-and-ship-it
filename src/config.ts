@@ -19,6 +19,7 @@ interface FunctionConfig {
   processDynamicNodeImports?: boolean
   rustTargetDirectory?: string
   schedule?: string
+  zipGo?: boolean
 }
 
 type GlobPattern = string

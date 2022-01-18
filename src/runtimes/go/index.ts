@@ -6,6 +6,7 @@ import cpFile from 'cp-file'
 import { SourceFile } from '../../function'
 import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
 import { nonNullable } from '../../utils/non_nullable'
+import { zipBinary } from '../../zip_binary'
 import { detectBinaryRuntime } from '../detect_runtime'
 import { FindFunctionInPathFunction, FindFunctionsInPathsFunction, Runtime, ZipFunction } from '../runtime'
 
@@ -102,14 +103,35 @@ const processSource = async ({
   }
 }
 
-const zipFunction: ZipFunction = async function ({ config, destFolder, filename, mainFile, srcDir, srcPath }) {
+const zipFunction: ZipFunction = async function ({ config, destFolder, filename, mainFile, srcDir, srcPath, stat }) {
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
 
   // If we're building a Go function from source, we call the build method and
-  // it'll take care of placing the binary in the right location. If not, we
-  // need to copy the existing binary file to the destination directory.
-  await (isSource ? build({ destPath, mainFile, srcDir }) : cpFile(srcPath, destPath))
+  // it'll take care of placing the binary in the right location.
+  if (isSource) {
+    await build({ destPath, mainFile, srcDir })
+
+    return { config, path: destPath }
+  }
+
+  // If `zipGo` is enabled, we create a ZIP archive with the Go binary and the
+  // bootstrap file.
+  if (config.zipGo) {
+    const zipPath = `${destPath}.zip`
+    const zipOptions = {
+      destPath: zipPath,
+      filename: basename(destPath),
+      runtime,
+    }
+
+    await zipBinary({ ...zipOptions, srcPath, stat })
+
+    return { config, path: zipPath }
+  }
+
+  // Otherwise, we copy the existing binary file to the destination directory.
+  await cpFile(srcPath, destPath)
 
   return { config, path: destPath }
 }

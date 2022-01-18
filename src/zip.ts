@@ -20,6 +20,7 @@ interface ZipFunctionOptions {
   config?: Config
   featureFlags?: FeatureFlags
   repositoryRoot?: string
+  zipGo?: boolean
 }
 
 type ZipFunctionsOptions = ZipFunctionOptions & {
@@ -49,6 +50,7 @@ const zipFunctions = async function (
     manifest,
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
     repositoryRoot = basePath,
+    zipGo,
   }: ZipFunctionsOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
@@ -66,6 +68,7 @@ const zipFunctions = async function (
         config: func.config,
         destFolder,
         extension: func.extension,
+        featureFlags,
         filename: func.filename,
         mainFile: func.mainFile,
         name: func.name,
@@ -74,7 +77,6 @@ const zipFunctions = async function (
         srcDir: func.srcDir,
         srcPath: func.srcPath,
         stat: func.stat,
-        featureFlags,
       })
 
       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
