@@ -2042,6 +2042,36 @@ test('Zips Go function binaries if the `zipGo` config property is set', async (t
   t.is(binarySha, unzippedBinarySha)
 })
 
+test.serial('Zips Go functions built from source if the `zipGo` config property is set', async (t) => {
+  const mockSource = Math.random().toString()
+  shellUtilsStub.callsFake((...args) => writeFile(args[1][2], mockSource))
+
+  const fixtureName = 'go-source'
+  const { files, tmpDir } = await zipFixture(t, fixtureName, {
+    opts: {
+      config: {
+        '*': {
+          zipGo: true,
+        },
+      },
+      featureFlags: {
+        buildGoSource: true,
+      },
+    },
+  })
+  const [func] = files
+
+  t.is(func.runtime, 'go')
+  t.true(func.path.endsWith('.zip'))
+
+  await unzipFiles([func], (path) => `${path}/../out`)
+
+  const unzippedBinaryPath = join(tmpDir, 'out', 'go-func-1')
+  const unzippedBinaryContents = await readFile(unzippedBinaryPath, 'utf8')
+
+  t.is(mockSource, unzippedBinaryContents)
+})
+
 test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
   shellUtilsStub.callsFake((...args) => writeFile(args[1][2], ''))
 

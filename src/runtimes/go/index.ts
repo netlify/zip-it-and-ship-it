@@ -12,6 +12,11 @@ import { FindFunctionInPathFunction, FindFunctionsInPathsFunction, Runtime, ZipF
 
 import { build } from './builder'
 
+interface GoBinary {
+  path: string
+  stat: Stats
+}
+
 const detectGoFunction = async ({ fsCache, path }: { fsCache: FsCache; path: string }) => {
   const stat = await cachedLstat(fsCache, path)
 
@@ -107,16 +112,24 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
 
-  // If we're building a Go function from source, we call the build method and
-  // it'll take care of placing the binary in the right location.
-  if (isSource) {
-    await build({ destPath, mainFile, srcDir })
-
-    return { config, path: destPath }
+  let binary: GoBinary = {
+    path: srcPath,
+    stat,
   }
 
-  // If `zipGo` is enabled, we create a ZIP archive with the Go binary and the
-  // bootstrap file.
+  // If we're building a Go function from source, we call the build method and
+  // update `binary` to point to the newly-created binary.
+  if (isSource) {
+    const { stat: binaryStat } = await build({ destPath, mainFile, srcDir })
+
+    binary = {
+      path: destPath,
+      stat: binaryStat,
+    }
+  }
+
+  // If `zipGo` is enabled, we create a zip archive with the Go binary and the
+  // toolchain file.
   if (config.zipGo) {
     const zipPath = `${destPath}.zip`
     const zipOptions = {
@@ -125,13 +138,17 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
       runtime,
     }
 
-    await zipBinary({ ...zipOptions, srcPath, stat })
+    await zipBinary({ ...zipOptions, srcPath: binary.path, stat: binary.stat })
 
     return { config, path: zipPath }
   }
 
-  // Otherwise, we copy the existing binary file to the destination directory.
-  await cpFile(srcPath, destPath)
+  // We don't need to zip the binary, so we can just copy it to the right path.
+  // We do this only if we're not building from source, as otherwise the build
+  // step already handled that.
+  if (!isSource) {
+    await cpFile(binary.path, destPath)
+  }
 
   return { config, path: destPath }
 }
