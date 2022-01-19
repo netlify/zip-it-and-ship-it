@@ -2008,11 +2008,38 @@ test('Zips Rust function files', async (t) => {
   t.is(tc.trim(), '{"runtime":"rs"}')
 })
 
-test('Does not zip Go function files', async (t) => {
+test('Does not zip Go function binaries by default', async (t) => {
   const { files } = await zipFixture(t, 'go-simple', { length: 1 })
 
   t.true(files.every(({ runtime }) => runtime === 'go'))
   t.true(await pEvery(files, async ({ path }) => !path.endsWith('.zip') && (await pathExists(path))))
+})
+
+test('Zips Go function binaries if the `zipGo` config property is set', async (t) => {
+  const fixtureName = 'go-simple'
+  const { files, tmpDir } = await zipFixture(t, fixtureName, {
+    length: 1,
+    opts: {
+      config: {
+        '*': {
+          zipGo: true,
+        },
+      },
+    },
+  })
+  const binaryPath = join(FIXTURES_DIR, fixtureName, 'test')
+  const binarySha = await computeSha1(binaryPath)
+  const [func] = files
+
+  t.is(func.runtime, 'go')
+  t.true(func.path.endsWith('.zip'))
+
+  await unzipFiles([func])
+
+  const unzippedBinaryPath = join(tmpDir, 'test')
+  const unzippedBinarySha = await computeSha1(unzippedBinaryPath)
+
+  t.is(binarySha, unzippedBinarySha)
 })
 
 test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
