@@ -52,7 +52,7 @@
     "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
   },
   "dependencies": {
-    "@babel/parser": "^7.15.7",
+    "@babel/parser": "7.16.8",
     "@netlify/esbuild": "^0.13.6",
     "@vercel/nft": "^0.17.0",
     "archiver": "^5.3.0",
