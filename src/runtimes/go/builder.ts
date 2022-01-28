@@ -1,14 +1,14 @@
 import { promises as fs } from 'fs'
 import { basename } from 'path'
 
-import { runCommand } from '../../utils/shell'
+import { shellUtils } from '../../utils/shell'
 import type { RuntimeName } from '../runtime'
 
 const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
   const functionName = basename(srcDir)
 
   try {
-    await runCommand('go', ['build', '-o', destPath, '-ldflags', '-s -w'], {
+    await shellUtils.runCommand('go', ['build', '-o', destPath, '-ldflags', '-s -w'], {
       cwd: srcDir,
       env: {
         CGO_ENABLED: '0',
