@@ -30,7 +30,15 @@ const { zipFunction, listFunctions, listFunctionsFiles, listFunction } = require
 
 const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler')
 
-const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
+const {
+  getRequires,
+  zipNode,
+  zipFixture,
+  unzipFiles,
+  zipCheckFunctions,
+  FIXTURES_DIR,
+  BINARY_PATH,
+} = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
 const { makeTestMany } = require('./helpers/test_many')
 
@@ -1408,11 +1416,10 @@ testMany(
 
 test('Limits the amount of log lines produced by esbuild', async (t) => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-  const binaryPath = resolve(__dirname, '../dist/bin.js')
   const fixturePath = join(FIXTURES_DIR, 'esbuild-log-limit')
 
   try {
-    await execa('node', [binaryPath, fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
+    await execa('node', [BINARY_PATH, fixturePath, tmpDir, `--config.*.nodeBundler=esbuild`])
 
     t.fail('Bundling should have thrown')
   } catch (error) {
