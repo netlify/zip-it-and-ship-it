@@ -1,4 +1,4 @@
-import { valid as validVersion, validRange, satisfies, gte as greaterThanEqual, ltr as lessThanRange } from 'semver'
+import semver from 'semver'
 
 import { PackageJson } from '../../utils/package_json'
 
@@ -82,7 +82,8 @@ const isOptionalModule = function (
 const MIN_NEXT_VERSION = '10.0.4'
 
 const satisfiesRange = (range: string): boolean =>
-  Boolean(validRange(range)) && (satisfies(MIN_NEXT_VERSION, range) || lessThanRange(MIN_NEXT_VERSION, range))
+  Boolean(semver.validRange(range)) &&
+  (semver.satisfies(MIN_NEXT_VERSION, range) || semver.ltr(MIN_NEXT_VERSION, range))
 
 // 'critters' is used only in Next.js >= 10.0.4 when enabling an experimental option and has to be installed manually
 // we ignore it if it's missing
@@ -101,8 +102,8 @@ const isExternalCrittersModule = function (
 
   // can the declared Next.js version resolve to >=10.0.4 ?
   // test exact versions
-  if (validVersion(nextVersion)) {
-    return greaterThanEqual(nextVersion, MIN_NEXT_VERSION)
+  if (semver.valid(nextVersion)) {
+    return semver.gte(nextVersion, MIN_NEXT_VERSION)
   }
 
   return satisfiesRange(nextVersion)

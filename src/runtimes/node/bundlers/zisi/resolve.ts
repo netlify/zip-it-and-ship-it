@@ -3,7 +3,7 @@ import { version as nodeVersion } from 'process'
 import findUp from 'find-up'
 import pathExists from 'path-exists'
 import resolveLib from 'resolve'
-import { lt as ltVersion } from 'semver'
+import semver from 'semver'
 
 const BACKSLASH_REGEXP = /\\/g
 
@@ -25,7 +25,7 @@ const resolvePackage = async function (moduleName: string, baseDirs: string[]): 
   try {
     return await resolvePathPreserveSymlinks(`${moduleName}/package.json`, baseDirs)
   } catch (error) {
-    if (ltVersion(nodeVersion, REQUEST_RESOLVE_MIN_VERSION)) {
+    if (semver.lt(nodeVersion, REQUEST_RESOLVE_MIN_VERSION)) {
       throw error
     }
 
