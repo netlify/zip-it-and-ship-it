@@ -1,6 +1,8 @@
 // eslint-disable-next-line node/no-unsupported-features/node-builtins
 const { performance, PerformanceObserver } = require('perf_hooks')
 
+const FIXTURES_DIR = `${__dirname}/../fixtures`
+
 const timeFunction = (func, runs = 1) =>
   new Promise((resolve) => {
     const finishedRuns = new Map()
@@ -29,4 +31,4 @@ const timeFunction = (func, runs = 1) =>
     })
   })
 
-module.exports = { timeFunction }
+module.exports = { timeFunction, FIXTURES_DIR }
