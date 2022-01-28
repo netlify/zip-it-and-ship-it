@@ -24,7 +24,7 @@ const BACKSLASH_REGEXP = /\\/g
 // However it does not give helpful error messages.
 //   https://github.com/browserify/resolve/issues/223
 // So, on errors, we fallback to `require.resolve()`
-const resolvePackage = async function (moduleName: string, baseDirs: string[]): Promise<string> {
+export const resolvePackage = async function (moduleName: string, baseDirs: string[]): Promise<string> {
   try {
     return await resolvePathPreserveSymlinks(`${moduleName}/package.json`, baseDirs)
   } catch (error) {
@@ -63,7 +63,7 @@ const resolvePathPreserveSymlinksForDir = function (path: string, basedir: strin
 // the resolve library has a `paths` option but it's not the same as multiple basedirs
 // see https://github.com/browserify/resolve/issues/188#issuecomment-679010477
 // we return the first resolved location or the first error if all failed
-const resolvePathPreserveSymlinks = async function (path: string, baseDirs: string[]): Promise<string> {
+export const resolvePathPreserveSymlinks = async function (path: string, baseDirs: string[]): Promise<string> {
   let firstError
   for (const basedir of baseDirs) {
     try {
@@ -106,5 +106,3 @@ const isPackageDir = async function (moduleName: string, dir: string) {
 
   return dir
 }
-
-export { resolvePackage, resolvePathPreserveSymlinks }

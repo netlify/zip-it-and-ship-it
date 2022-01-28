@@ -5,7 +5,7 @@ import type { FunctionArchive } from '../function'
 
 // Returns the input object with an additional `size` property containing the
 // size of the file at `path` when it is a ZIP archive.
-const addArchiveSize = async (result: FunctionArchive) => {
+export const addArchiveSize = async (result: FunctionArchive) => {
   const { path } = result
 
   if (extname(path) !== '.zip') {
@@ -16,5 +16,3 @@ const addArchiveSize = async (result: FunctionArchive) => {
 
   return { ...result, size }
 }
-
-export { addArchiveSize }

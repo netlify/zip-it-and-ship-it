@@ -7,21 +7,21 @@ import { FsCache } from '../utils/fs'
 import type { NodeBundlerName } from './node/bundlers'
 import type { ISCValues } from './node/in_source_config'
 
-type RuntimeName = 'go' | 'js' | 'rs'
+export type RuntimeName = 'go' | 'js' | 'rs'
 
-type FindFunctionsInPathsFunction = (args: {
+export type FindFunctionsInPathsFunction = (args: {
   featureFlags: FeatureFlags
   fsCache: FsCache
   paths: string[]
 }) => Promise<SourceFile[]>
 
-type FindFunctionInPathFunction = (args: {
+export type FindFunctionInPathFunction = (args: {
   featureFlags: FeatureFlags
   fsCache: FsCache
   path: string
 }) => Promise<SourceFile | undefined>
 
-type GetSrcFilesFunction = (
+export type GetSrcFilesFunction = (
   args: {
     basePath?: string
     config: FunctionConfig
@@ -30,7 +30,7 @@ type GetSrcFilesFunction = (
   } & FunctionSource,
 ) => Promise<string[]>
 
-interface ZipFunctionResult {
+export interface ZipFunctionResult {
   bundler?: NodeBundlerName
   bundlerErrors?: object[]
   bundlerWarnings?: object[]
@@ -42,7 +42,7 @@ interface ZipFunctionResult {
   path: string
 }
 
-type ZipFunction = (
+export type ZipFunction = (
   args: {
     archiveFormat: ArchiveFormat
     basePath?: string
@@ -53,20 +53,10 @@ type ZipFunction = (
   } & FunctionSource,
 ) => Promise<ZipFunctionResult>
 
-interface Runtime {
+export interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction
   findFunctionInPath: FindFunctionInPathFunction
   getSrcFiles?: GetSrcFilesFunction
   name: RuntimeName
   zipFunction: ZipFunction
-}
-
-export {
-  FindFunctionInPathFunction,
-  FindFunctionsInPathsFunction,
-  GetSrcFilesFunction,
-  Runtime,
-  RuntimeName,
-  ZipFunction,
-  ZipFunctionResult,
 }

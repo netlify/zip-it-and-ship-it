@@ -39,7 +39,7 @@ const validateArchiveFormat = (archiveFormat: ArchiveFormat) => {
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
-const zipFunctions = async function (
+export const zipFunctions = async function (
   relativeSrcFolders: string | string[],
   destFolder: string,
   {
@@ -99,7 +99,7 @@ const zipFunctions = async function (
   return formattedResults
 }
 
-const zipFunction = async function (
+export const zipFunction = async function (
   relativeSrcPath: string,
   destFolder: string,
   {
@@ -152,5 +152,3 @@ const zipFunction = async function (
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })
 }
-
-export { zipFunction, zipFunctions }

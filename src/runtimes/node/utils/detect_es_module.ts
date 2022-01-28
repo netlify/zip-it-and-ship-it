@@ -2,7 +2,7 @@ import { promises as fs } from 'fs'
 
 import { init, parse } from 'es-module-lexer'
 
-const detectEsModule = async ({ mainFile }: { mainFile: string }): Promise<boolean> => {
+export const detectEsModule = async ({ mainFile }: { mainFile: string }): Promise<boolean> => {
   if (!mainFile) {
     return false
   }
@@ -17,5 +17,3 @@ const detectEsModule = async ({ mainFile }: { mainFile: string }): Promise<boole
     return false
   }
 }
-
-export { detectEsModule }

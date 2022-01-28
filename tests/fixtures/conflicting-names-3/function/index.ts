@@ -1,5 +1,3 @@
 type MyType = string
 
-const type: MyType = 'index-ts-file-in-directory'
-
-export { type }
+export const type: MyType = 'index-ts-file-in-directory'

@@ -10,7 +10,7 @@ const versionMap = {
 type VersionKeys = keyof typeof versionMap
 type VersionValues = typeof versionMap[VersionKeys]
 
-const getBundlerTarget = (suppliedVersion?: string): VersionValues => {
+export const getBundlerTarget = (suppliedVersion?: string): VersionValues => {
   const version = normalizeVersion(suppliedVersion)
 
   if (version && version in versionMap) {
@@ -25,5 +25,3 @@ const normalizeVersion = (version?: string) => {
 
   return match ? match[1] : version
 }
-
-export { getBundlerTarget }

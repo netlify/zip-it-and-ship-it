@@ -1,5 +1,3 @@
 type MyType = string
 
-const type: MyType = '❤️ TypeScript'
-
-export { type }
+export const type: MyType = '❤️ TypeScript'

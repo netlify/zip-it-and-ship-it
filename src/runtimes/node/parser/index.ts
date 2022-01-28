@@ -68,7 +68,7 @@ const getWildcardFromASTNode = (node: Expression | PrivateName | TSType) => {
 // - `includedPathsGlob`: A glob with the files to be included in the bundle
 // - `type`: The expression type (e.g. "require", "import")
 // eslint-disable-next-line complexity
-const parseExpression = ({
+export const parseExpression = ({
   basePath,
   expression: rawExpression,
   resolveDir,
@@ -119,7 +119,7 @@ const parseFile = async (path: string) => {
 
 // Attempts to parse a JS/TS file at the given path, returning its AST if
 // successful, or `null` if not.
-const safelyParseFile = async (path: string) => {
+export const safelyParseFile = async (path: string) => {
   if (!path) {
     return null
   }
@@ -226,6 +226,4 @@ const validateGlobNodes = (globNodes: string[]) => {
 
   return hasStrings && hasStaticHead
 }
-
-export { parseExpression, safelyParseFile }
 /* eslint-enable max-lines */

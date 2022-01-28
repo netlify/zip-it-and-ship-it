@@ -3,7 +3,7 @@ import { build } from '@netlify/esbuild'
 import type { FunctionConfig } from '../../../../config'
 import { getBundlerTarget } from '../esbuild/bundler_target'
 
-const transpile = async (path: string, config: FunctionConfig) => {
+export const transpile = async (path: string, config: FunctionConfig) => {
   // The version of ECMAScript to use as the build target. This will determine
   // whether certain features are transpiled down or left untransformed.
   const nodeTarget = getBundlerTarget(config.nodeVersion)
@@ -20,5 +20,3 @@ const transpile = async (path: string, config: FunctionConfig) => {
 
   return transpiled.outputFiles[0].text
 }
-
-export { transpile }

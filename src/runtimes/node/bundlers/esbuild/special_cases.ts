@@ -14,7 +14,7 @@ const getModulesForNextJs = ({ dependencies, devDependencies }: PackageJson) => 
   }
 }
 
-const getExternalAndIgnoredModulesFromSpecialCases = async ({ srcDir }: { srcDir: string }) => {
+export const getExternalAndIgnoredModulesFromSpecialCases = async ({ srcDir }: { srcDir: string }) => {
   const { dependencies = {}, devDependencies = {} } = await getPackageJsonIfAvailable(srcDir)
   const { externalModules: nextJsExternalModules, ignoredModules: nextJsIgnoredModules } = getModulesForNextJs({
     dependencies,
@@ -28,5 +28,3 @@ const getExternalAndIgnoredModulesFromSpecialCases = async ({ srcDir }: { srcDir
     ignoredModules,
   }
 }
-
-export { getExternalAndIgnoredModulesFromSpecialCases }

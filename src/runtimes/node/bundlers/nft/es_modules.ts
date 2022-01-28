@@ -48,7 +48,7 @@ const patchESMPackage = async (path: string, fsCache: FsCache) => {
   return JSON.stringify(patchedPackageJson)
 }
 
-const processESM = async ({
+export const processESM = async ({
   basePath,
   config,
   esmPaths,
@@ -174,5 +174,3 @@ const transpileESM = async ({
 
   return rewrites
 }
-
-export { processESM }

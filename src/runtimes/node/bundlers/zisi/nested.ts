@@ -5,7 +5,7 @@ import { PackageJson } from '../../utils/package_json'
 // Apply the Node.js module logic recursively on its own dependencies, using
 // the `package.json` `dependencies`, `peerDependencies` and
 // `optionalDependencies` keys
-const getNestedDependencies = function ({
+export const getNestedDependencies = function ({
   dependencies = {},
   peerDependencies = {},
   optionalDependencies = {},
@@ -48,7 +48,7 @@ const EXCLUDED_PEER_DEPENDENCIES = new Set(['@prisma/cli', 'prisma2', 'prisma'])
 // `optionalDependencies`:
 //  - are not reported when missing
 //  - are included in module dependencies
-const handleModuleNotFound = function ({
+export const handleModuleNotFound = function ({
   error,
   moduleName,
   packageJson,
@@ -108,5 +108,3 @@ const isExternalCrittersModule = function (
 
   return satisfiesRange(nextVersion)
 }
-
-export { getNestedDependencies, handleModuleNotFound }

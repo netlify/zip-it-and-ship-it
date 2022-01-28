@@ -4,7 +4,7 @@ import { basename } from 'path'
 import { shellUtils } from '../../utils/shell'
 import type { RuntimeName } from '../runtime'
 
-const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
+export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
   const functionName = basename(srcDir)
 
   try {
@@ -34,5 +34,3 @@ const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFil
     stat,
   }
 }
-
-export { build }

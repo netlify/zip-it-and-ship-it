@@ -12,7 +12,7 @@ interface ManifestFunction {
   schedule?: string
 }
 
-interface Manifest {
+export interface Manifest {
   functions: ManifestFunction[]
   system: {
     arch: string
@@ -24,7 +24,7 @@ interface Manifest {
 
 const MANIFEST_VERSION = 1
 
-const createManifest = async ({ functions, path }: { functions: FunctionResult[]; path: string }) => {
+export const createManifest = async ({ functions, path }: { functions: FunctionResult[]; path: string }) => {
   const formattedFunctions = functions.map(formatFunctionForManifest)
   const payload: Manifest = {
     functions: formattedFunctions,
@@ -43,6 +43,3 @@ const formatFunctionForManifest = ({ mainFile, name, path, runtime, schedule }: 
   runtime,
   schedule,
 })
-
-export { createManifest }
-export type { Manifest }

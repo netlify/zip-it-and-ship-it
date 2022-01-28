@@ -20,7 +20,7 @@ import { shouldTreeShake } from './tree_shake'
 // Retrieve the paths to the Node.js files to zip.
 // We only include the files actually needed by the function because AWS Lambda
 // has a size limit for the zipped file. It also makes cold starts faster.
-const getSrcFiles: GetSrcFilesFunction = async function ({
+export const getSrcFiles: GetSrcFilesFunction = async function ({
   config,
   featureFlags,
   mainFile,
@@ -204,6 +204,4 @@ const getTreeShakedDependencies = async function ({
   })
   return [path, ...depsPath]
 }
-
-export { getSrcFiles }
 /* eslint-enable max-lines */

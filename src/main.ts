@@ -8,6 +8,8 @@ import { findISCDeclarationsInPath, ISCValues } from './runtimes/node/in_source_
 import { GetSrcFilesFunction, RuntimeName } from './runtimes/runtime'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
 
+export { zipFunction, zipFunctions } from './zip'
+
 interface ListedFunction {
   name: string
   mainFile: string
@@ -42,7 +44,7 @@ const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSo
 }
 
 // List all Netlify Functions main entry files for a specific directory
-const listFunctions = async function (
+export const listFunctions = async function (
   relativeSrcFolders: string | string[],
   {
     featureFlags: inputFeatureFlags,
@@ -60,7 +62,7 @@ const listFunctions = async function (
 }
 
 // Finds a function at a specific path.
-const listFunction = async function (
+export const listFunction = async function (
   path: string,
   {
     featureFlags: inputFeatureFlags,
@@ -80,7 +82,7 @@ const listFunction = async function (
 }
 
 // List all Netlify Functions files for a specific directory
-const listFunctionsFiles = async function (
+export const listFunctionsFiles = async function (
   relativeSrcFolders: string | string[],
   { basePath, config, featureFlags: inputFeatureFlags, parseISC = false }: ListFunctionsOptions = {},
 ) {
@@ -130,7 +132,3 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ extension, runtime, s
     ...args,
   })
 }
-
-export { listFunctions, listFunction, listFunctionsFiles }
-
-export { zipFunction, zipFunctions } from './zip'

@@ -4,7 +4,7 @@ import { startZip, addZipFile, addZipContent, endZip } from './archive'
 import { Runtime } from './runtimes/runtime'
 
 // Zip a binary function file
-const zipBinary = async function ({
+export const zipBinary = async function ({
   destPath,
   filename,
   runtime,
@@ -22,5 +22,3 @@ const zipBinary = async function ({
   addZipContent(archive, JSON.stringify({ runtime: runtime.name }), 'netlify-toolchain')
   await endZip(archive, output)
 }
-
-export { zipBinary }

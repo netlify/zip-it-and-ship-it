@@ -3,7 +3,7 @@ import { basename, extname } from 'path'
 import type { ModuleFormat } from './module_format'
 import { normalizeFilePath } from './normalize_path'
 
-interface EntryFile {
+export interface EntryFile {
   contents: string
   filename: string
 }
@@ -18,7 +18,7 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
   return `export { handler } from '${importPath}'`
 }
 
-const getEntryFile = ({
+export const getEntryFile = ({
   commonPrefix,
   filename,
   mainFile,
@@ -41,5 +41,3 @@ const getEntryFile = ({
     filename: entryFilename,
   }
 }
-
-export { EntryFile, getEntryFile }

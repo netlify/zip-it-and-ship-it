@@ -1,3 +1,1 @@
-import { type } from './lib/util'
-
-export { type }
+export { type } from './lib/util'

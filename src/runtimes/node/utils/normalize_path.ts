@@ -5,7 +5,7 @@ import unixify from 'unixify'
 // `adm-zip` and `require()` expect Unix paths.
 // We remove the common path prefix.
 // With files on different Windows drives, we remove the drive letter.
-const normalizeFilePath = function ({
+export const normalizeFilePath = function ({
   commonPrefix,
   path,
   userNamespace,
@@ -20,5 +20,3 @@ const normalizeFilePath = function ({
   const pathC = unixify(pathB)
   return pathC
 }
-
-export { normalizeFilePath }
