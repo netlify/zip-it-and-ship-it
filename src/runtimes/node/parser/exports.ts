@@ -1,8 +1,8 @@
 import { CallExpression, Statement } from '@babel/types'
 
-import type { ISCExport } from '../in_source_config'
+import type { ISCExport } from '../in_source_config/index.js'
 
-import { isModuleExports } from './helpers'
+import { isModuleExports } from './helpers.js'
 
 // Finds the main handler export in an AST.
 export const getMainExport = (nodes: Statement[]) => {

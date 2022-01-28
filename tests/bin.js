@@ -5,7 +5,7 @@ const test = require('ava')
 const execa = require('execa')
 const { tmpName } = require('tmp-promise')
 
-const { FIXTURES_DIR, BINARY_PATH } = require('./helpers/main')
+const { FIXTURES_DIR, BINARY_PATH } = require('./helpers/main.js')
 
 const ROOT_PACKAGE_JSON = `${__dirname}/../package.json`
 

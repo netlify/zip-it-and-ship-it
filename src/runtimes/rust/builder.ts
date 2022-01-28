@@ -4,12 +4,12 @@ import { basename, join } from 'path'
 import tmp from 'tmp-promise'
 import toml from 'toml'
 
-import { FunctionConfig } from '../../config'
-import { shellUtils } from '../../utils/shell'
-import type { RuntimeName } from '../runtime'
+import { FunctionConfig } from '../../config.js'
+import { shellUtils } from '../../utils/shell.js'
+import type { RuntimeName } from '../runtime.js'
 
-import { CargoManifest } from './cargo_manifest'
-import { BUILD_TARGET, MANIFEST_NAME } from './constants'
+import { CargoManifest } from './cargo_manifest.js'
+import { BUILD_TARGET, MANIFEST_NAME } from './constants.js'
 
 const runtimeName: RuntimeName = 'rs'
 

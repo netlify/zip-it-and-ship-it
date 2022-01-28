@@ -1,7 +1,7 @@
 import { Stats } from 'fs'
 
-import type { FunctionConfig } from './config'
-import type { Runtime, ZipFunctionResult } from './runtimes/runtime'
+import type { FunctionConfig } from './config.js'
+import type { Runtime, ZipFunctionResult } from './runtimes/runtime.js'
 
 // A function that has been processed and turned into an archive.
 export type FunctionArchive = ZipFunctionResult & {

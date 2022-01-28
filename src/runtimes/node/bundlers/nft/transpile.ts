@@ -1,7 +1,7 @@
 import { build } from '@netlify/esbuild'
 
-import type { FunctionConfig } from '../../../../config'
-import { getBundlerTarget } from '../esbuild/bundler_target'
+import type { FunctionConfig } from '../../../../config.js'
+import { getBundlerTarget } from '../esbuild/bundler_target.js'
 
 export const transpile = async (path: string, config: FunctionConfig) => {
   // The version of ECMAScript to use as the build target. This will determine

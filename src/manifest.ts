@@ -2,7 +2,7 @@ import { promises as fs } from 'fs'
 import { resolve } from 'path'
 import { arch, platform } from 'process'
 
-import { FunctionResult } from './utils/format_result'
+import { FunctionResult } from './utils/format_result.js'
 
 interface ManifestFunction {
   mainFile: string

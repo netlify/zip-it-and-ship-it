@@ -1,7 +1,7 @@
-import { FunctionArchive } from '../function'
-import { RuntimeName } from '../runtimes/runtime'
+import { FunctionArchive } from '../function.js'
+import { RuntimeName } from '../runtimes/runtime.js'
 
-import { removeUndefined } from './remove_undefined'
+import { removeUndefined } from './remove_undefined.js'
 
 export type FunctionResult = Omit<FunctionArchive, 'runtime'> & {
   runtime: RuntimeName

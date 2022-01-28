@@ -1,7 +1,7 @@
 import type { Stats } from 'fs'
 
-import { startZip, addZipFile, addZipContent, endZip } from './archive'
-import { Runtime } from './runtimes/runtime'
+import { startZip, addZipFile, addZipContent, endZip } from './archive.js'
+import { Runtime } from './runtimes/runtime.js'
 
 // Zip a binary function file
 export const zipBinary = async function ({

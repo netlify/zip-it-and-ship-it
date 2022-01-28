@@ -6,8 +6,8 @@ const { pathToFileURL } = require('url')
 const execa = require('execa')
 const { dir: getTmpDir } = require('tmp-promise')
 
-const { zipFunctions } = require('../..')
-const { listImports } = require('../../dist/runtimes/node/bundlers/zisi/list_imports')
+const { zipFunctions } = require('../../dist/main.js')
+const { listImports } = require('../../dist/runtimes/node/bundlers/zisi/list_imports.js')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 const BINARY_PATH = join(__dirname, '..', '..', 'dist', 'bin.js')

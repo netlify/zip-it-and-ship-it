@@ -7,12 +7,12 @@ import copyFile from 'cp-file'
 import deleteFiles from 'del'
 import pMap from 'p-map'
 
-import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive'
-import { mkdirAndWriteFile } from '../../../utils/fs'
+import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive.js'
+import { mkdirAndWriteFile } from '../../../utils/fs.js'
 
-import { EntryFile, getEntryFile } from './entry_file'
-import type { ModuleFormat } from './module_format'
-import { normalizeFilePath } from './normalize_path'
+import { EntryFile, getEntryFile } from './entry_file.js'
+import type { ModuleFormat } from './module_format.js'
+import { normalizeFilePath } from './normalize_path.js'
 
 // Taken from https://www.npmjs.com/package/cpy.
 const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2

@@ -1,6 +1,6 @@
 import semver from 'semver'
 
-import { PackageJson } from '../../utils/package_json'
+import { PackageJson } from '../../utils/package_json.js'
 
 // Apply the Node.js module logic recursively on its own dependencies, using
 // the `package.json` `dependencies`, `peerDependencies` and

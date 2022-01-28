@@ -3,9 +3,9 @@ import { join, dirname, basename, extname } from 'path'
 
 import locatePath from 'locate-path'
 
-import { SourceFile } from '../../function'
-import { nonNullable } from '../../utils/non_nullable'
-import { FindFunctionsInPathsFunction, FindFunctionInPathFunction } from '../runtime'
+import { SourceFile } from '../../function.js'
+import { nonNullable } from '../../utils/non_nullable.js'
+import { FindFunctionsInPathsFunction, FindFunctionInPathFunction } from '../runtime.js'
 
 // List of extensions that this runtime will look for, in order of precedence.
 const allowedExtensions = ['.js', '.zip', '.cjs', '.mjs', '.ts']

@@ -1,7 +1,7 @@
 import { basename, extname } from 'path'
 
-import type { ModuleFormat } from './module_format'
-import { normalizeFilePath } from './normalize_path'
+import type { ModuleFormat } from './module_format.js'
+import { normalizeFilePath } from './normalize_path.js'
 
 export interface EntryFile {
   contents: string

@@ -2,14 +2,14 @@ import { basename, dirname, resolve } from 'path'
 
 import { NodeFileTraceReasons } from '@vercel/nft'
 
-import type { FunctionConfig } from '../../../../config'
-import { FeatureFlags } from '../../../../feature_flags'
-import { cachedReadFile, FsCache } from '../../../../utils/fs'
-import { ModuleFormat } from '../../utils/module_format'
-import { getNodeSupportMatrix } from '../../utils/node_version'
-import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json'
+import type { FunctionConfig } from '../../../../config.js'
+import { FeatureFlags } from '../../../../feature_flags.js'
+import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
+import { ModuleFormat } from '../../utils/module_format.js'
+import { getNodeSupportMatrix } from '../../utils/node_version.js'
+import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
 
-import { transpile } from './transpile'
+import { transpile } from './transpile.js'
 
 const getPatchedESMPackages = async (packages: string[], fsCache: FsCache) => {
   const patchedPackages = await Promise.all(packages.map((path) => patchESMPackage(path, fsCache)))

@@ -1,14 +1,14 @@
 import type { Message } from '@netlify/esbuild'
 
-import { FunctionConfig } from '../../../config'
-import { FeatureFlag, FeatureFlags } from '../../../feature_flags'
-import { FunctionSource } from '../../../function'
-import { detectEsModule } from '../utils/detect_es_module'
-import { ModuleFormat } from '../utils/module_format'
+import { FunctionConfig } from '../../../config.js'
+import { FeatureFlag, FeatureFlags } from '../../../feature_flags.js'
+import { FunctionSource } from '../../../function.js'
+import { detectEsModule } from '../utils/detect_es_module.js'
+import { ModuleFormat } from '../utils/module_format.js'
 
-import esbuildBundler from './esbuild'
-import nftBundler from './nft'
-import zisiBundler from './zisi'
+import esbuildBundler from './esbuild/index.js'
+import nftBundler from './nft/index.js'
+import zisiBundler from './zisi/index.js'
 
 export type NodeBundlerName = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
 

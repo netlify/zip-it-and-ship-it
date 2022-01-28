@@ -1,9 +1,9 @@
 import mergeOptions from 'merge-options'
 import minimatch from 'minimatch'
 
-import { FunctionSource } from './function'
-import type { NodeVersionString } from './runtimes/node'
-import type { NodeBundlerName } from './runtimes/node/bundlers'
+import { FunctionSource } from './function.js'
+import type { NodeBundlerName } from './runtimes/node/bundlers/index.js'
+import type { NodeVersionString } from './runtimes/node/index.js'
 
 export interface FunctionConfig {
   externalNodeModules?: string[]

@@ -1,6 +1,6 @@
 const test = require('ava')
 
-const { getFlags } = require('../dist/feature_flags')
+const { getFlags } = require('../dist/feature_flags.js')
 
 test('Respects default value of flags', (t) => {
   const flags = getFlags({}, { someFlag: false })

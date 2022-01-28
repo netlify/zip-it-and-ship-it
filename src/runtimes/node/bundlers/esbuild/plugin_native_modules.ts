@@ -3,9 +3,9 @@ import path from 'path'
 import type { Plugin } from '@netlify/esbuild'
 import readPackageJson from 'read-package-json-fast'
 
-import type { NativeNodeModules } from '..'
-import { isNativeModule } from '../../utils/detect_native_module'
-import { PackageJson } from '../../utils/package_json'
+import { isNativeModule } from '../../utils/detect_native_module.js'
+import { PackageJson } from '../../utils/package_json.js'
+import type { NativeNodeModules } from '../index.js'
 
 type NativeModuleCacheEntry = [boolean | undefined, PackageJson]
 type NativeModuleCache = Record<string, Promise<NativeModuleCacheEntry>>

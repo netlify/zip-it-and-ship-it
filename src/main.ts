@@ -1,14 +1,14 @@
 import { extname } from 'path'
 
-import { Config } from './config'
-import { FeatureFlags, getFlags } from './feature_flags'
-import { FunctionSource } from './function'
-import { getFunctionFromPath, getFunctionsFromPaths } from './runtimes'
-import { findISCDeclarationsInPath, ISCValues } from './runtimes/node/in_source_config'
-import { GetSrcFilesFunction, RuntimeName } from './runtimes/runtime'
-import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
+import { Config } from './config.js'
+import { FeatureFlags, getFlags } from './feature_flags.js'
+import { FunctionSource } from './function.js'
+import { getFunctionFromPath, getFunctionsFromPaths } from './runtimes/index.js'
+import { findISCDeclarationsInPath, ISCValues } from './runtimes/node/in_source_config/index.js'
+import { GetSrcFilesFunction, RuntimeName } from './runtimes/runtime.js'
+import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 
-export { zipFunction, zipFunctions } from './zip'
+export { zipFunction, zipFunctions } from './zip.js'
 
 interface ListedFunction {
   name: string

@@ -1,19 +1,19 @@
 import { basename, dirname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
-import resolveDependency from '@vercel/nft/out/resolve-dependency'
+import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
 import minimatch from 'minimatch'
 import unixify from 'unixify'
 
-import type { BundleFunction } from '..'
-import type { FunctionConfig } from '../../../../config'
-import { FeatureFlags } from '../../../../feature_flags'
-import { cachedReadFile, FsCache } from '../../../../utils/fs'
-import type { GetSrcFilesFunction } from '../../../runtime'
-import { getBasePath } from '../../utils/base_path'
-import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
+import type { FunctionConfig } from '../../../../config.js'
+import { FeatureFlags } from '../../../../feature_flags.js'
+import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
+import type { GetSrcFilesFunction } from '../../../runtime.js'
+import { getBasePath } from '../../utils/base_path.js'
+import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
+import type { BundleFunction } from '../index.js'
 
-import { processESM } from './es_modules'
+import { processESM } from './es_modules.js'
 
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']

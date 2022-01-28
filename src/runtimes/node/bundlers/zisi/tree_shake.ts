@@ -1,4 +1,4 @@
-import { getModuleName } from '../../utils/module'
+import { getModuleName } from '../../utils/module.js'
 
 const LOCAL_IMPORT_REGEXP = /^(\.|\/)/
 

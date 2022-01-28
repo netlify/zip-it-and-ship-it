@@ -3,16 +3,16 @@ import { resolve } from 'path'
 
 import pMap from 'p-map'
 
-import { ArchiveFormat } from './archive'
-import { Config } from './config'
-import { FeatureFlags, getFlags } from './feature_flags'
-import { FunctionSource } from './function'
-import { createManifest } from './manifest'
-import { getFunctionsFromPaths } from './runtimes'
-import { addArchiveSize } from './utils/archive_size'
-import { formatZipResult } from './utils/format_result'
-import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs'
-import { nonNullable } from './utils/non_nullable'
+import { ArchiveFormat } from './archive.js'
+import { Config } from './config.js'
+import { FeatureFlags, getFlags } from './feature_flags.js'
+import { FunctionSource } from './function.js'
+import { createManifest } from './manifest.js'
+import { getFunctionsFromPaths } from './runtimes/index.js'
+import { addArchiveSize } from './utils/archive_size.js'
+import { formatZipResult } from './utils/format_result.js'
+import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
+import { nonNullable } from './utils/non_nullable.js'
 
 interface ZipFunctionOptions {
   archiveFormat?: ArchiveFormat
