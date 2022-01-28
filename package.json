@@ -29,8 +29,8 @@
     "test:ci": "npm run build && c8 -r lcovonly -r text -r json ava"
   },
   "config": {
-    "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{js,ts,md,html}\" \"*.{js,ts,md,html}\" \".*.{js,ts,md,html}\"",
-    "prettier": "--ignore-path .gitignore --loglevel=warn \"{src,tests,.github}/**/*.{js,ts,md,yml,json,html}\" \"*.{js,ts,yml,json,html}\" \".*.{js,ts,yml,json,html}\" \"!package-lock.json\""
+    "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{js,ts,md,html}\" \"*.{cjs,js,ts,md,html}\" \".*.{cjs,js,ts,md,html}\"",
+    "prettier": "--ignore-path .gitignore --loglevel=warn \"{src,tests,.github}/**/*.{js,ts,md,yml,json,html}\" \"*.{cjs,js,ts,yml,json,html}\" \".*.{cjs,js,ts,yml,json,html}\" \"!package-lock.json\""
   },
   "eslintIgnore": [
     "benchmarks/fixtures/**"
