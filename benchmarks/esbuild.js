@@ -1,8 +1,8 @@
-const { join } = require('path')
+import { join } from 'path'
 
-const { zipFunctions } = require('..')
+import { zipFunctions } from '../dist/main.js'
 
-const { timeFunction, FIXTURES_DIR } = require('./helpers/main')
+import { timeFunction, FIXTURES_DIR } from './helpers/main.js'
 
 const BENCHMARK_OUTPUT = 'benchmarks/output'
 const RUNS = 3
