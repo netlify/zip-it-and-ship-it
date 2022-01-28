@@ -1,6 +1,6 @@
-const { env } = require('process')
+import { env } from 'process'
 
-const throat = require('throat')
+import throat from 'throat'
 
 const getRateLimitedTestFunction = (originalTestFunction) => {
   const rateLimit = Number.parseInt(env.ZISI_TEST_RATE_LIMIT)
@@ -18,7 +18,7 @@ const getRateLimitedTestFunction = (originalTestFunction) => {
  * @param {Record<M, { config: import("../../src/config").Config }>} matrix
  * @returns {(name: string, matrix: M[], runner: (opts: { config: import("../../src/config").Config }, t: import("ava").ExecutionContext) => any) => void}
  */
-const makeTestMany = (test, matrix) => {
+export const makeTestMany = (test, matrix) => {
   const filteredVariations = env.ZISI_FILTER_VARIATIONS ? env.ZISI_FILTER_VARIATIONS.split(',') : []
 
   const testBundlers = (title, variationNames, assertions, testFn = test) => {
@@ -58,5 +58,3 @@ const makeTestMany = (test, matrix) => {
 
   return testBundlers
 }
-
-module.exports = { makeTestMany }

@@ -1,3 +1,4 @@
+// @ts-ignore
 import mergeOptions from 'merge-options'
 import minimatch from 'minimatch'
 

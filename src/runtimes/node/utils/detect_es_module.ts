@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 
+// @ts-ignore
 import { init, parse } from 'es-module-lexer'
 
 export const detectEsModule = async ({ mainFile }: { mainFile: string }): Promise<boolean> => {

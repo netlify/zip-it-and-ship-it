@@ -3,8 +3,11 @@ import { Stats, promises as fs } from 'fs'
 import os from 'os'
 import { basename, join, resolve } from 'path'
 
+// @ts-ignore
 import copyFile from 'cp-file'
+// @ts-ignore
 import deleteFiles from 'del'
+// @ts-ignore
 import pMap from 'p-map'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive.js'
@@ -65,6 +68,7 @@ const createDirectory = async function ({
   // Copying source files.
   await pMap(
     srcFiles,
+    // @ts-ignore
     (srcFile) => {
       const destPath = aliases.get(srcFile) || srcFile
       const normalizedDestPath = normalizeFilePath({

@@ -24,12 +24,15 @@ const runCli = async function () {
 }
 
 const parseArgs = function () {
-  return yargs(hideBin(argv))
-    .command('* <srcFolder> <destFolder>', 'Create ZIP archives from a directory')
-    .options(OPTIONS)
-    .usage(USAGE)
-    .strict()
-    .parse()
+  return (
+    yargs(hideBin(argv))
+      // @ts-ignore
+      .command('* <srcFolder> <destFolder>', 'Create ZIP archives from a directory')
+      .options(OPTIONS)
+      .usage(USAGE)
+      .strict()
+      .parse()
+  )
 }
 
 const archiveFormats: ArchiveFormat[] = ['none', 'zip']

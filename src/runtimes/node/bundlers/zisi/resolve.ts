@@ -1,12 +1,15 @@
 import { createRequire } from 'module'
 import { version as nodeVersion } from 'process'
 
+// @ts-ignore
 import findUp from 'find-up'
+// @ts-ignore
 import pathExists from 'path-exists'
-import resolveLib from 'resolve'
+// @ts-ignore
+import { async as resolveLib } from 'resolve'
 import semver from 'semver'
 
-const requireLib = createRequire(__filename)
+const requireLib = createRequire(import.meta.url)
 
 const BACKSLASH_REGEXP = /\\/g
 
@@ -49,7 +52,8 @@ const REQUEST_RESOLVE_MIN_VERSION = '8.9.0'
 //   https://github.com/browserify/resolve/issues/151#issuecomment-368210310
 const resolvePathPreserveSymlinksForDir = function (path: string, basedir: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line promise/prefer-await-to-callbacks
+    /* eslint-disable promise/prefer-await-to-callbacks */
+    // @ts-ignore
     resolveLib(path, { basedir, preserveSymlinks: true }, (error, resolvedLocation) => {
       if (error || resolvedLocation === undefined) {
         return reject(error)
@@ -57,6 +61,7 @@ const resolvePathPreserveSymlinksForDir = function (path: string, basedir: strin
 
       resolve(resolvedLocation)
     })
+    /* eslint-enable promise/prefer-await-to-callbacks */
   })
 }
 

@@ -1,6 +1,7 @@
 import { Stats, promises as fs } from 'fs'
 import { join, dirname, basename, extname } from 'path'
 
+// @ts-ignore
 import locatePath from 'locate-path'
 
 import { SourceFile } from '../../function.js'

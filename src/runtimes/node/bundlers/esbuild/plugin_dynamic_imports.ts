@@ -1,6 +1,7 @@
 import { basename, join, relative } from 'path'
 
 import type { Plugin } from '@netlify/esbuild'
+// @ts-ignore
 import findUp from 'find-up'
 import readPackageJson from 'read-package-json-fast'
 import unixify from 'unixify'
@@ -72,6 +73,7 @@ export const getDynamicImportsPlugin = ({
 
 const getPackageName = async ({ resolveDir, srcDir }: { resolveDir: string; srcDir: string }) => {
   const packageJsonPath = await findUp(
+    // @ts-ignore
     async (directory) => {
       // We stop traversing if we're about to leave the boundaries of the
       // function directory or any node_modules directory.

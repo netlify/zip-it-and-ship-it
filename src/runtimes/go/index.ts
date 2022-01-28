@@ -1,6 +1,7 @@
 import type { Stats } from 'fs'
 import { basename, dirname, extname, join } from 'path'
 
+// @ts-ignore
 import cpFile from 'cp-file'
 
 import { SourceFile } from '../../function.js'

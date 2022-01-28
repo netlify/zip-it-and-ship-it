@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { dirname, basename, normalize } from 'path'
 
+// @ts-ignore
 import { not as notJunk } from 'junk'
 import precinct from 'precinct'
 

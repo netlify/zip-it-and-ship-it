@@ -2,6 +2,9 @@ const { overrides } = require('@netlify/eslint-config-node')
 
 module.exports = {
   extends: '@netlify/eslint-config-node',
+  parserOptions: {
+    sourceType: 'module',
+  },
   rules: {
     'import/extensions': ['error', 'ignorePackages'],
     'node/no-missing-import': 'off',
@@ -18,6 +21,8 @@ module.exports = {
         // in imports
         'import/extensions': 'off',
         'import/no-namespace': 'off',
+        // TODO: remove this once we have removed all @ts-ignore comments
+        '@typescript-eslint/ban-ts-comment': 'off',
       },
     },
     {
@@ -27,12 +32,6 @@ module.exports = {
         'max-lines-per-function': 'off',
         'max-statements': 'off',
         'no-magic-numbers': 'off',
-      },
-    },
-    {
-      files: '*.md/*.js',
-      parserOptions: {
-        sourceType: 'module',
       },
     },
   ],

@@ -1,10 +1,10 @@
-const test = require('ava')
+import test from 'ava'
 
-const {
+import {
   DEFAULT_NODE_VERSION,
   getNodeVersion,
   parseVersion,
-} = require('../../../../../dist/runtimes/node/utils/node_version.js')
+} from '../../../../../dist/runtimes/node/utils/node_version.js'
 
 test('getNodeVersion', (t) => {
   t.is(getNodeVersion('nodejs12.x'), 12)

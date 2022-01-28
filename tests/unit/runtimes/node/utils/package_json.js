@@ -1,6 +1,6 @@
-const test = require('ava')
+import test from 'ava'
 
-const { sanitisePackageJson } = require('../../../../../dist/runtimes/node/utils/package_json.js')
+import { sanitisePackageJson } from '../../../../../dist/runtimes/node/utils/package_json.js'
 
 test('sanitisePackageJson', (t) => {
   t.deepEqual(

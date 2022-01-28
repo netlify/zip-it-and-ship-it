@@ -1,5 +1,6 @@
 import { join } from 'path'
 
+// @ts-ignore
 import cpFile from 'cp-file'
 
 import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime.js'

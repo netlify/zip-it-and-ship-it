@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import { resolve } from 'path'
 
+// @ts-ignore
 import pMap from 'p-map'
 
 import { ArchiveFormat } from './archive.js'
@@ -60,6 +61,7 @@ export const zipFunctions = async function (
   const functions = await getFunctionsFromPaths(paths, { config, dedupe: true, featureFlags })
   const results = await pMap(
     functions.values(),
+    // @ts-ignore
     async (func) => {
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
@@ -85,6 +87,7 @@ export const zipFunctions = async function (
     },
   )
   const formattedResults = await Promise.all(
+    // @ts-ignore
     results.filter(nonNullable).map(async (result) => {
       const resultWithSize = await addArchiveSize(result)
 

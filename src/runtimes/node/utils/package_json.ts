@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 
+// @ts-ignore
 import pkgDir from 'pkg-dir'
 
 export interface PackageJson {

@@ -1,13 +1,14 @@
-const { promises: fs } = require('fs')
-const { join } = require('path')
+import { promises as fs } from 'fs'
+import { join } from 'path'
+import { fileURLToPath } from 'url'
 
-const test = require('ava')
-const execa = require('execa')
-const { tmpName } = require('tmp-promise')
+import test from 'ava'
+import execa from 'execa'
+import { tmpName } from 'tmp-promise'
 
-const { FIXTURES_DIR, BINARY_PATH } = require('./helpers/main.js')
+import { FIXTURES_DIR, BINARY_PATH } from './helpers/main.js'
 
-const ROOT_PACKAGE_JSON = `${__dirname}/../package.json`
+const ROOT_PACKAGE_JSON = fileURLToPath(new URL('../package.json', import.meta.url))
 
 const exec = (args, options) => execa('node', [BINARY_PATH, ...args], options)
 

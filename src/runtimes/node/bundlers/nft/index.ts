@@ -103,7 +103,7 @@ const traceFilesAndTranspile = async function ({
     },
     resolve: async (specifier, parent, ...args) => {
       try {
-        return await resolveDependency(specifier, parent, ...args)
+        return await resolveDependency.default(specifier, parent, ...args)
       } catch (error) {
         // If we get a `MODULE_NOT_FOUND` error for what appears to be a module
         // name, we try to resolve it a second time using `pluginsModulesPath`
@@ -111,7 +111,7 @@ const traceFilesAndTranspile = async function ({
         if (error.code === 'MODULE_NOT_FOUND' && pluginsModulesPath && appearsToBeModuleName(specifier)) {
           const newParent = join(pluginsModulesPath, basename(parent))
 
-          return await resolveDependency(specifier, newParent, ...args)
+          return await resolveDependency.default(specifier, newParent, ...args)
         }
 
         throw error
