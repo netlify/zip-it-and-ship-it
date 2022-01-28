@@ -1,3 +1,5 @@
+import { promises as fs } from 'fs'
+
 import pkgDir from 'pkg-dir'
 
 interface PackageJson {
@@ -38,8 +40,7 @@ const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   const packageJsonPath = `${packageRoot}/package.json`
   try {
     // The path depends on the user's build, i.e. must be dynamic
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require, @typescript-eslint/no-var-requires
-    const packageJson = require(packageJsonPath)
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'))
     return sanitisePackageJson(packageJson)
   } catch (error) {
     throw new Error(`${packageJsonPath} is invalid JSON: ${error.message}`)

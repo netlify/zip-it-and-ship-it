@@ -1,3 +1,4 @@
+import { promises as fs } from 'fs'
 import { dirname } from 'path'
 
 import { nonNullable } from '../../../../utils/non_nullable'
@@ -74,8 +75,7 @@ const getDependenciesForModuleName = async function ({
   state.modulePaths.add(modulePath)
 
   // The path depends on the user's build, i.e. must be dynamic
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require, @typescript-eslint/no-var-requires
-  const packageJson = require(packagePath)
+  const packageJson = JSON.parse(await fs.readFile(packagePath, 'utf8'))
 
   const [publishedFiles, sideFiles, depsPaths] = await Promise.all([
     getPublishedFiles(modulePath),
