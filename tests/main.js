@@ -40,6 +40,7 @@ const {
   zipCheckFunctions,
   FIXTURES_DIR,
   BINARY_PATH,
+  importFunctionFile,
 } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
 const { makeTestMany } = require('./helpers/test_many')
@@ -201,7 +202,7 @@ testMany(
       opts: options,
     })
 
-    const func = require(`${tmpDir}/function.js`)
+    const func = await importFunctionFile(`${tmpDir}/function.js`)
 
     t.deepEqual(func, { mock: { stack: 'jam' }, stack: 'jam' })
   },
@@ -254,7 +255,7 @@ testMany(
     t.false(await pathExists(`${tmpDir}/node_modules/aws-sdk`))
 
     try {
-      const func = require(`${tmpDir}/function.js`)
+      const func = await importFunctionFile(`${tmpDir}/function.js`)
 
       func()
 
@@ -374,7 +375,7 @@ testMany(
 
     await unzipFiles([result])
 
-    const func = require(join(tmpDir, 'function.js'))
+    const func = await importFunctionFile(join(tmpDir, 'function.js'))
 
     t.true(func)
   },
@@ -456,10 +457,10 @@ testMany(
       join(tmpDir, 'function_export_only.zip_out', 'function_export_only.js'),
       join(tmpDir, 'function_import_only.zip_out', 'function_import_only.js'),
     ]
-    const func1 = () => require(functionPaths[0])
-    const func2 = () => require(functionPaths[1])
-    const func3 = () => require(functionPaths[2])
-    const func4 = () => require(functionPaths[3])
+    const func1 = () => importFunctionFile(functionPaths[0])
+    const func2 = () => importFunctionFile(functionPaths[1])
+    const func3 = () => importFunctionFile(functionPaths[2])
+    const func4 = () => importFunctionFile(functionPaths[3])
 
     const functionsAreESM = await Promise.all(
       functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
@@ -470,12 +471,15 @@ testMany(
 
     // Dynamic imports are not supported in Node <13.2.0.
     if (semver.gte(nodeVersion, '13.2.0')) {
-      t.is(await func2()(), 0)
+      const func2Default = await func2()
+      t.is(await func2Default(), 0)
     }
 
-    t.is(func1().ZERO, 0)
-    t.is(typeof func3().howdy, 'string')
-    t.deepEqual(func4(), {})
+    const { ZERO } = await func1()
+    t.is(ZERO, 0)
+    const { howdy } = await func3()
+    t.is(typeof howdy, 'string')
+    t.deepEqual(await func4(), {})
   },
 )
 
@@ -506,10 +510,10 @@ testMany(
       join(tmpDir, 'function_export_only', 'function_export_only.js'),
       join(tmpDir, 'function_import_only', 'function_import_only.js'),
     ]
-    const func1 = () => require(functionPaths[0])
-    const func2 = () => require(functionPaths[1])
-    const func3 = () => require(functionPaths[2])
-    const func4 = () => require(functionPaths[3])
+    const func1 = () => importFunctionFile(functionPaths[0])
+    const func2 = () => importFunctionFile(functionPaths[1])
+    const func3 = () => importFunctionFile(functionPaths[2])
+    const func4 = () => importFunctionFile(functionPaths[3])
 
     const functionsAreESM = await Promise.all(
       functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
@@ -520,12 +524,15 @@ testMany(
 
     // Dynamic imports are not supported in Node <13.2.0.
     if (semver.gte(nodeVersion, '13.2.0')) {
-      t.is(await func2()(), 0)
+      const func2Default = await func2()
+      t.is(await func2Default(), 0)
     }
 
-    t.is(func1().ZERO, 0)
-    t.is(typeof func3().howdy, 'string')
-    t.deepEqual(func4(), {})
+    const { ZERO } = await func1()
+    t.is(ZERO, 0)
+    const { howdy } = await func3()
+    t.is(typeof howdy, 'string')
+    t.deepEqual(await func4(), {})
   },
 )
 
@@ -540,7 +547,7 @@ testMany(
 
     await unzipFiles(files)
 
-    const func = require(join(tmpDir, 'function.js'))
+    const func = await importFunctionFile(join(tmpDir, 'function.js'))
 
     // Dynamic imports were added in Node v13.2.0.
     if (semver.gte(nodeVersion, '13.2.0')) {
@@ -718,7 +725,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.true(require(`${tmpDir}/function.js`))
+    const returnValue = await importFunctionFile(`${tmpDir}/function.js`)
+    t.true(returnValue)
     t.is(files[0].mainFile, join(FIXTURES_DIR, fixtureName, 'function', 'index.js'))
   },
 )
@@ -1333,7 +1341,8 @@ testMany(
   async (options, t) => {
     const { files, tmpDir } = await zipFixture(t, 'node-fetch', { opts: options })
     await unzipFiles(files)
-    t.true(typeof require(`${tmpDir}/function.js`) === 'function')
+    const returnValue = await importFunctionFile(`${tmpDir}/function.js`)
+    t.true(typeof returnValue === 'function')
   },
 )
 
@@ -1345,7 +1354,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.is(require(`${tmpDir}/function.js`), 'function-js-file-in-directory')
+    const returnValue = await importFunctionFile(`${tmpDir}/function.js`)
+    t.is(returnValue, 'function-js-file-in-directory')
   },
 )
 
@@ -1357,7 +1367,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.is(require(`${tmpDir}/function.js`), 'index-js-file-in-directory')
+    const returnValue = await importFunctionFile(`${tmpDir}/function.js`)
+    t.is(returnValue, 'index-js-file-in-directory')
   },
 )
 
@@ -1369,7 +1380,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.is(require(`${tmpDir}/function.js`).type, 'index-js-file-in-directory')
+    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.is(type, 'index-js-file-in-directory')
   },
 )
 
@@ -1381,7 +1393,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.is(require(`${tmpDir}/function.js`).type, 'function-js-file')
+    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.is(type, 'function-js-file')
   },
 )
 
@@ -1393,7 +1406,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.is(require(`${tmpDir}/function.js`).type, 'function-js-file')
+    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.is(type, 'function-js-file')
   },
 )
 
@@ -1405,7 +1419,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.true(typeof type === 'string')
   },
 )
 
@@ -1417,7 +1432,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.true(typeof type === 'string')
   },
 )
 
@@ -1429,7 +1445,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.true(typeof type === 'string')
   },
 )
 
@@ -1441,7 +1458,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.true(typeof require(`${tmpDir}/function.js`).type === 'string')
+    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.true(typeof type === 'string')
   },
 )
 
@@ -1461,9 +1479,12 @@ testMany(
       t.is(file.bundler, 'esbuild')
     })
 
-    t.true(require(`${tmpDir}/func1.js`).handler())
-    t.true(require(`${tmpDir}/func2.js`).handler())
-    t.true(require(`${tmpDir}/func3.js`).handler())
+    const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
+    t.true(handler1())
+    const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
+    t.true(handler2())
+    const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+    t.true(handler3())
   },
 )
 
@@ -1475,7 +1496,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.true(require(`${tmpDir}/function.js`).value)
+    const { value } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.true(value)
   },
 )
 
@@ -1487,7 +1509,8 @@ testMany(
       opts: options,
     })
     await unzipFiles(files)
-    t.true(require(`${tmpDir}/function.js`).value)
+    const { value } = await importFunctionFile(`${tmpDir}/function.js`)
+    t.true(value)
   },
 )
 
@@ -1500,7 +1523,7 @@ testMany(
     })
     await unzipFiles(files)
 
-    const result = require(`${tmpDir}/function.js`)
+    const result = await importFunctionFile(`${tmpDir}/function.js`)
 
     // We want to assert that the `target` specified in the tsconfig file (es5)
     // was overridden by our own target. It's not easy to assert that without
@@ -1625,7 +1648,7 @@ testMany(
       opts,
     })
 
-    const functionEntry = require(`${files[0].path}/function.js`)
+    const functionEntry = await importFunctionFile(`${files[0].path}/function.js`)
 
     t.true(functionEntry)
   },
@@ -1648,7 +1671,7 @@ testMany(
       opts,
     })
 
-    const func = require(`${tmpDir}/func1.js`)
+    const func = await importFunctionFile(`${tmpDir}/func1.js`)
 
     const { body: body1 } = await func.handler({ queryStringParameters: { name: 'post1' } })
     const { body: body2 } = await func.handler({ queryStringParameters: { name: 'post2' } })
@@ -1710,7 +1733,7 @@ testMany(
       t.false(files[0].inputs.includes(join(FIXTURES_DIR, fixtureName, 'node_modules', 'test-child', 'unused_file.js')))
     }
 
-    const functionEntry = require(`${tmpDir}/function.js`)
+    const functionEntry = await importFunctionFile(`${tmpDir}/function.js`)
 
     t.true(functionEntry)
   },
@@ -1733,7 +1756,7 @@ testMany(
       opts,
     })
 
-    const function1Entry = require(`${tmpDir}/func1.js`)
+    const function1Entry = await importFunctionFile(`${tmpDir}/func1.js`)
 
     // The function should not be on a `src/` namespace.
     t.false(unixify(function1Entry[0]).includes('/src/'))
@@ -1764,7 +1787,7 @@ testMany(
       opts,
     })
 
-    const function2Entry = require(`${tmpDir}/func2.js`)
+    const function2Entry = await importFunctionFile(`${tmpDir}/func2.js`)
 
     // The function should be on a `src/` namespace because there's a conflict
     // with the /func2.js path present in `includedFiles`.
@@ -1794,9 +1817,9 @@ testMany(
       opts,
     })
 
-    const functionCommon = require(`${tmpDir}/function.js`)
-    const functionInternal = require(`${tmpDir}/function_internal.js`)
-    const functionUser = require(`${tmpDir}/function_user.js`)
+    const functionCommon = await importFunctionFile(`${tmpDir}/function.js`)
+    const functionInternal = await importFunctionFile(`${tmpDir}/function_internal.js`)
+    const functionUser = await importFunctionFile(`${tmpDir}/function_user.js`)
 
     // Functions from rightmost directories in the array take precedence.
     t.is(functionCommon, 'user')
@@ -1831,7 +1854,7 @@ test('When generating a directory for a function with `archiveFormat: "none"`, i
     archiveFormat: 'none',
   })
 
-  const functionEntry = require(`${functionDirectory}/function.js`)
+  const functionEntry = await importFunctionFile(`${functionDirectory}/function.js`)
 
   t.true(functionEntry)
 
@@ -1917,7 +1940,7 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
     },
   })
 
-  const func = require(`${tmpDir}/function.js`)
+  const func = await importFunctionFile(`${tmpDir}/function.js`)
   const values = func('one')
   const expectedLength = 5
 
@@ -1952,7 +1975,7 @@ test('Adds a runtime shim and includes the files needed for dynamic imports usin
     },
   })
 
-  const func = require(`${tmpDir}/function.js`)
+  const func = await importFunctionFile(`${tmpDir}/function.js`)
 
   t.deepEqual(func('en')[0], ['yes', 'no'])
   t.deepEqual(func('en')[1], ['yes', 'no'])
@@ -1970,7 +1993,7 @@ test('The dynamic import runtime shim handles files in nested directories', asyn
     },
   })
 
-  const func = require(`${tmpDir}/function.js`)
+  const func = await importFunctionFile(`${tmpDir}/function.js`)
 
   t.deepEqual(func('en')[0], ['yes', 'no'])
   t.deepEqual(func('en')[1], ['yes', 'no'])
@@ -1991,7 +2014,7 @@ test('The dynamic import runtime shim handles files in nested directories when u
     },
   })
 
-  const func = require(`${tmpDir}/function/function.js`)
+  const func = await importFunctionFile(`${tmpDir}/function/function.js`)
 
   t.deepEqual(func('en')[0], ['yes', 'no'])
   t.deepEqual(func('en')[1], ['yes', 'no'])
@@ -2011,7 +2034,7 @@ test('Negated files in `included_files` are excluded from the bundle even if the
     },
   })
 
-  const func = require(`${tmpDir}/function.js`)
+  const func = await importFunctionFile(`${tmpDir}/function.js`)
 
   t.deepEqual(func('pt')[0], ['sim', 'não'])
   t.deepEqual(func('pt')[1], ['sim', 'não'])
@@ -2052,7 +2075,7 @@ test('Creates dynamic import shims for functions with the same name and same shi
   })
 
   for (let ind = 1; ind <= FUNCTION_COUNT; ind++) {
-    const func = require(`${tmpDir}/function${ind}.js`)
+    const func = await importFunctionFile(`${tmpDir}/function${ind}.js`)
 
     t.deepEqual(func('en')[0], ['yes', 'no'])
     t.deepEqual(func('en')[1], ['yes', 'no'])
@@ -2072,7 +2095,7 @@ test('Creates dynamic import shims for functions using `zipFunction`', async (t)
 
   await unzipFiles([result])
 
-  const func = require(`${tmpDir}/function.js`)
+  const func = await importFunctionFile(`${tmpDir}/function.js`)
 
   t.deepEqual(func('en')[0], ['yes', 'no'])
   t.deepEqual(func('en')[1], ['yes', 'no'])
@@ -2438,6 +2461,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
     },
   })
 
+  // eslint-disable-next-line import/no-dynamic-require, node/global-require
   const manifest = require(manifestPath)
 
   t.is(manifest.version, 1)
@@ -2469,7 +2493,7 @@ testMany(
       opts,
     })
 
-    const isEven = require(`${tmpDir}/function`)
+    const isEven = await importFunctionFile(`${tmpDir}/function.js`)
     t.is(isEven(2), '2 is even')
   },
 )
@@ -2494,7 +2518,7 @@ testMany(
 
     await unzipFiles([result])
 
-    const { mock1, mock2 } = require(`${tmpDir}/function-1.js`)
+    const { mock1, mock2 } = await importFunctionFile(`${tmpDir}/function-1.js`)
 
     t.true(mock1)
     t.true(mock2)
@@ -2560,6 +2584,7 @@ testMany(
 
     files.every((file) => t.is(file.schedule, schedule))
 
+    // eslint-disable-next-line import/no-dynamic-require, node/global-require
     const manifest = require(manifestPath)
 
     manifest.functions.forEach((fn) => {
@@ -2579,7 +2604,7 @@ test('Generates a sourcemap for any transpiled files when `nodeSourcemap: true`'
       featureFlags: { nftTranspile: true },
     },
   })
-  const func = require(join(files[0].path, 'function.js'))
+  const func = await importFunctionFile(join(files[0].path, 'function.js'))
 
   try {
     func.handler()
