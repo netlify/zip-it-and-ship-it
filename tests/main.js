@@ -2,6 +2,7 @@ const { mkdir, readFile, chmod, symlink, unlink, rename, stat, writeFile } = req
 const { tmpdir } = require('os')
 const { basename, dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
 const { arch, env, platform, version: nodeVersion } = require('process')
+const { pathToFileURL } = require('url')
 
 const test = require('ava')
 const cpy = require('cpy')
@@ -561,8 +562,8 @@ testMany(
     await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
     const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
-    const func1 = await import(functionPaths[0])
-    const func2 = await import(functionPaths[1])
+    const func1 = await import(pathToFileURL(functionPaths[0]))
+    const func2 = await import(pathToFileURL(functionPaths[1]))
 
     t.true(func1.handler())
     t.true(func2.handler())
@@ -576,14 +577,13 @@ testMany(
 )
 
 testMany(
-  'Can bundle ESM functions and transpile them to CJS when the Node version is >=14 and the `zisi_pure_esm` flag is on',
+  'Can bundle ESM functions and transpile them to CJS when the Node version is >=14 and the `zisi_pure_esm` flag is off',
   ['bundler_nft'],
   async (options, t) => {
     const length = 2
     const fixtureName = 'node-esm'
     const opts = merge(options, {
       basePath: `${FIXTURES_DIR}/${fixtureName}`,
-      featureFlags: { zisi_pure_esm: true },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -593,8 +593,8 @@ testMany(
     await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
     const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
-    const func1 = await import(functionPaths[0])
-    const func2 = await import(functionPaths[1])
+    const func1 = await import(pathToFileURL(functionPaths[0]))
+    const func2 = await import(pathToFileURL(functionPaths[1]))
 
     t.true(func1.handler())
     t.true(func2.handler())
@@ -603,7 +603,7 @@ testMany(
       functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
     )
 
-    t.true(functionsAreESM.every(Boolean))
+    t.false(functionsAreESM.some(Boolean))
   },
 )
 
