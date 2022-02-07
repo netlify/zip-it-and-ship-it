@@ -13,6 +13,7 @@ import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath
 import { zipNodeJs } from './utils/zip'
 
 export type NodeBundlerName = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
+export { NodeVersion } from './utils/node_version'
 
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.

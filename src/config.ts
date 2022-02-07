@@ -2,11 +2,7 @@ import mergeOptions from 'merge-options'
 import minimatch from 'minimatch'
 
 import { FunctionSource } from './function'
-import type { NodeBundlerName } from './runtimes/node'
-
-// eslint-disable-next-line no-magic-numbers
-type SupportedVersionNumbers = 8 | 10 | 12 | 14
-type NodeVersion = `${SupportedVersionNumbers}.x` | `nodejs${SupportedVersionNumbers}.x`
+import type { NodeBundlerName, NodeVersion } from './runtimes/node'
 
 interface FunctionConfig {
   externalNodeModules?: string[]
