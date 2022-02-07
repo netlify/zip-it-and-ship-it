@@ -42,5 +42,12 @@ const parseVersion = (input: string | undefined) => {
   return version
 }
 
-export { getNodeSupportMatrix, getNodeVersion, NodeVersionString, NodeVersionSupport }
+export {
+  DEFAULT_NODE_VERSION,
+  getNodeSupportMatrix,
+  getNodeVersion,
+  NodeVersionString,
+  NodeVersionSupport,
+  parseVersion,
+}
 /* eslint-enable no-magic-numbers */
