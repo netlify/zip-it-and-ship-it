@@ -112,7 +112,8 @@
   },
   "ava": {
     "files": [
-      "tests/*"
+      "tests/*",
+      "tests/unit/**/*.js"
     ],
     "verbose": true,
     "timeout": "2m"
