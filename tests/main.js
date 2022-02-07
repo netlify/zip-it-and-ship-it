@@ -2200,7 +2200,6 @@ test.serial('Builds Rust functions from source if the `buildRustSource` feature 
   })
 
   t.is(files.length, 2)
-  // eslint-disable-next-line no-magic-numbers
   t.is(shellUtilsStub.callCount, 4)
 
   const { args: call1 } = shellUtilsStub.getCall(0)
