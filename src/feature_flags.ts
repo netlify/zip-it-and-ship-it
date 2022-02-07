@@ -6,6 +6,7 @@ const FLAGS: Record<string, boolean> = {
   defaultEsModulesToEsbuild: Boolean(env.NETLIFY_EXPERIMENTAL_DEFAULT_ES_MODULES_TO_ESBUILD),
   parseWithEsbuild: false,
   traceWithNft: false,
+  zisi_pure_esm: false,
 }
 
 type FeatureFlag = keyof typeof FLAGS

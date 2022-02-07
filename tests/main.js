@@ -543,32 +543,69 @@ testMany(
   },
 )
 
-testMany('Can bundle native ESM functions when the Node version is >=14', ['bundler_nft'], async (options, t) => {
-  const length = 2
-  const fixtureName = 'node-esm'
-  const opts = merge(options, {
-    basePath: `${FIXTURES_DIR}/${fixtureName}`,
-  })
-  const { files, tmpDir } = await zipFixture(t, fixtureName, {
-    length,
-    opts,
-  })
+testMany(
+  'Can bundle native ESM functions when the Node version is >=14 and the `zisi_pure_esm` flag is on',
+  ['bundler_nft'],
+  async (options, t) => {
+    const length = 2
+    const fixtureName = 'node-esm'
+    const opts = merge(options, {
+      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      featureFlags: { zisi_pure_esm: true },
+    })
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
+      length,
+      opts,
+    })
 
-  await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
-  const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
-  const func1 = await import(functionPaths[0])
-  const func2 = await import(functionPaths[1])
+    const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
+    const func1 = await import(functionPaths[0])
+    const func2 = await import(functionPaths[1])
 
-  t.true(func1.handler())
-  t.true(func2.handler())
+    t.true(func1.handler())
+    t.true(func2.handler())
 
-  const functionsAreESM = await Promise.all(
-    functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
-  )
+    const functionsAreESM = await Promise.all(
+      functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
+    )
 
-  t.true(functionsAreESM.every(Boolean))
-})
+    t.true(functionsAreESM.every(Boolean))
+  },
+)
+
+testMany(
+  'Can bundle ESM functions and transpile them to CJS when the Node version is >=14 and the `zisi_pure_esm` flag is on',
+  ['bundler_nft'],
+  async (options, t) => {
+    const length = 2
+    const fixtureName = 'node-esm'
+    const opts = merge(options, {
+      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      featureFlags: { zisi_pure_esm: true },
+    })
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
+      length,
+      opts,
+    })
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
+    const func1 = await import(functionPaths[0])
+    const func2 = await import(functionPaths[1])
+
+    t.true(func1.handler())
+    t.true(func2.handler())
+
+    const functionsAreESM = await Promise.all(
+      functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
+    )
+
+    t.true(functionsAreESM.every(Boolean))
+  },
+)
 
 testMany(
   'Can require local files deeply',

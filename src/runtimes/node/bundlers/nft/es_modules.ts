@@ -3,6 +3,7 @@ import { basename, dirname, resolve } from 'path'
 import { NodeFileTraceReasons } from '@vercel/nft'
 
 import type { FunctionConfig } from '../../../../config'
+import { FeatureFlags } from '../../../../feature_flags'
 import { cachedReadFile, FsCache } from '../../../../utils/fs'
 import { ModuleFormat } from '../../utils/module_format'
 import { getNodeSupportMatrix } from '../../utils/node_version'
@@ -51,6 +52,7 @@ const processESM = async ({
   basePath,
   config,
   esmPaths,
+  featureFlags,
   fsCache,
   mainFile,
   reasons,
@@ -58,6 +60,7 @@ const processESM = async ({
   basePath: string | undefined
   config: FunctionConfig
   esmPaths: Set<string>
+  featureFlags: FeatureFlags
   fsCache: FsCache
   mainFile: string
   reasons: NodeFileTraceReasons
@@ -73,7 +76,7 @@ const processESM = async ({
   const packageJson = await getPackageJson(dirname(mainFile))
   const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
-  if (packageJson.type === 'module' && nodeSupport.esm) {
+  if (featureFlags.zisi_pure_esm && packageJson.type === 'module' && nodeSupport.esm) {
     return {
       moduleFormat: 'esm',
     }
