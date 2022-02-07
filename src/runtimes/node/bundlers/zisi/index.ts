@@ -42,6 +42,7 @@ const bundle: BundleFunction = async ({
     basePath: getBasePath(dirnames),
     inputs: srcFiles,
     mainFile,
+    moduleFormat: 'cjs',
     srcFiles,
   }
 }

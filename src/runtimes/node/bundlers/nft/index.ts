@@ -12,7 +12,7 @@ import type { GetSrcFilesFunction } from '../../../runtime'
 import { getBasePath } from '../../utils/base_path'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 
-import { transpileESM } from './es_modules'
+import { processESM } from './es_modules'
 
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']
@@ -31,7 +31,11 @@ const bundle: BundleFunction = async ({
     includedFiles,
     includedFilesBasePath || basePath,
   )
-  const { paths: dependencyPaths, rewrites } = await traceFilesAndTranspile({
+  const {
+    moduleFormat,
+    paths: dependencyPaths,
+    rewrites,
+  } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
     config,
     mainFile,
@@ -47,6 +51,7 @@ const bundle: BundleFunction = async ({
     basePath: getBasePath(dirnames),
     inputs: dependencyPaths,
     mainFile,
+    moduleFormat,
     rewrites,
     srcFiles,
   }
@@ -111,9 +116,17 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const rewrites = await transpileESM({ basePath, config, esmPaths: esmFileList, fsCache, reasons })
+  const { moduleFormat, rewrites } = await processESM({
+    basePath,
+    config,
+    esmPaths: esmFileList,
+    fsCache,
+    mainFile,
+    reasons,
+  })
 
   return {
+    moduleFormat,
     paths: normalizedDependencyPaths,
     rewrites,
   }
