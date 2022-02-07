@@ -7,7 +7,6 @@ import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime'
 import { getBundler, getDefaultBundler } from './bundlers'
 import { findFunctionsInPaths, findFunctionInPath } from './finder'
 import { findISCDeclarationsInPath } from './in_source_config'
-import { getNodeVersion } from './utils/node_version'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path'
 import { zipNodeJs } from './utils/zip'
 

@@ -5,7 +5,6 @@ import { FeatureFlag, FeatureFlags } from '../../../feature_flags'
 import { FunctionSource } from '../../../function'
 import { detectEsModule } from '../utils/detect_es_module'
 import { ModuleFormat } from '../utils/module_format'
-import { NodeVersionString } from '../utils/node_version'
 
 import esbuildBundler from './esbuild'
 import nftBundler from './nft'
