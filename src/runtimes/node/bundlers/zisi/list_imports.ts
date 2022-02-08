@@ -2,7 +2,7 @@ import * as esbuild from '@netlify/esbuild'
 import isBuiltinModule from 'is-builtin-module'
 import { tmpName } from 'tmp-promise'
 
-import type { NodeBundlerName } from '../..'
+import type { NodeBundlerName } from '..'
 import { safeUnlink } from '../../../../utils/fs'
 import type { RuntimeName } from '../../../runtime'
 
