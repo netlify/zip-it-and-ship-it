@@ -3,7 +3,7 @@ import { basename, dirname, extname, resolve, join } from 'path'
 import { build, Metafile } from '@netlify/esbuild'
 import { tmpName } from 'tmp-promise'
 
-import type { NodeBundlerName } from '../..'
+import type { NodeBundlerName } from '..'
 import type { FunctionConfig } from '../../../../config'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs'
 import type { RuntimeName } from '../../../runtime'

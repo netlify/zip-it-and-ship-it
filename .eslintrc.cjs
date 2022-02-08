@@ -11,13 +11,14 @@ module.exports = {
       },
     },
     {
-      files: 'tests/*.js',
+      files: 'tests/**/*.js',
       rules: {
         'import/max-dependencies': 'off',
         'import/no-dynamic-require': 'off',
         'max-lines-per-function': 'off',
         'max-statements': 'off',
         'node/global-require': 'off',
+        'no-magic-numbers': 'off',
       },
     },
   ],

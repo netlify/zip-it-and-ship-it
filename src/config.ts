@@ -2,11 +2,8 @@ import mergeOptions from 'merge-options'
 import minimatch from 'minimatch'
 
 import { FunctionSource } from './function'
-import type { NodeBundlerName } from './runtimes/node'
-
-// eslint-disable-next-line no-magic-numbers
-type SupportedVersionNumbers = 8 | 10 | 12 | 14
-type NodeVersion = `${SupportedVersionNumbers}.x` | `nodejs${SupportedVersionNumbers}.x`
+import type { NodeVersionString } from './runtimes/node'
+import type { NodeBundlerName } from './runtimes/node/bundlers'
 
 interface FunctionConfig {
   externalNodeModules?: string[]
@@ -15,7 +12,7 @@ interface FunctionConfig {
   ignoredNodeModules?: string[]
   nodeBundler?: NodeBundlerName
   nodeSourcemap?: boolean
-  nodeVersion?: NodeVersion
+  nodeVersion?: NodeVersionString
   processDynamicNodeImports?: boolean
   rustTargetDirectory?: string
   schedule?: string
