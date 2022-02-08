@@ -114,9 +114,10 @@ const shouldTranspile = (
   }
 
   const { parents } = reason
+  const parentPaths = [...parents].filter((parentPath) => parentPath !== path)
 
   // If the path is an entrypoint, we transpile it only if it's an ESM file.
-  if (parents.size === 0) {
+  if (parentPaths.length === 0) {
     const isESM = esmPaths.has(path)
 
     cache.set(path, isESM)
@@ -126,7 +127,7 @@ const shouldTranspile = (
 
   // The path should be transpiled if every parent will also be transpiled, or
   // if there is no parent.
-  const shouldTranspilePath = [...parents].every((parentPath) => shouldTranspile(parentPath, cache, esmPaths, reasons))
+  const shouldTranspilePath = parentPaths.every((parentPath) => shouldTranspile(parentPath, cache, esmPaths, reasons))
 
   cache.set(path, shouldTranspilePath)
 
