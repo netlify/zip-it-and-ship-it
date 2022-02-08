@@ -7,7 +7,7 @@ import { cachedReadFile, FsCache } from '../utils/fs'
 import type { RuntimeName } from './runtime'
 
 // Try to guess the runtime by inspecting the binary file.
-const detectBinaryRuntime = async function ({
+export const detectBinaryRuntime = async function ({
   fsCache,
   path,
 }: {
@@ -32,5 +32,3 @@ const detectBinaryRuntime = async function ({
     }
   } catch {}
 }
-
-export { detectBinaryRuntime }

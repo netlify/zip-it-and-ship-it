@@ -4,7 +4,7 @@ import { getPackageJson, PackageJson } from '../../utils/package_json'
 import { getNewCache, TraversalCache } from '../../utils/traversal_cache'
 import { getDependencyPathsForDependency } from '../zisi/traverse'
 
-const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {
+export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {
   const { externalNodeModules = [], includedFiles = [], includedFilesBasePath } = config
   const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
@@ -77,5 +77,3 @@ const getSrcFilesForDependency = async function ({
     throw error
   }
 }
-
-export { getSrcFiles }

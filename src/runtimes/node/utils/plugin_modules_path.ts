@@ -4,7 +4,7 @@ import findUp from 'find-up'
 
 const AUTO_PLUGINS_DIR = '.netlify/plugins/'
 
-const createAliases = (
+export const createAliases = (
   paths: string[],
   pluginsModulesPath: string | undefined,
   aliases: Map<string, string>,
@@ -21,7 +21,5 @@ const createAliases = (
   })
 }
 
-const getPluginsModulesPath = (srcDir: string): Promise<string | undefined> =>
+export const getPluginsModulesPath = (srcDir: string): Promise<string | undefined> =>
   findUp(`${AUTO_PLUGINS_DIR}node_modules`, { cwd: srcDir, type: 'directory' })
-
-export { createAliases, getPluginsModulesPath }

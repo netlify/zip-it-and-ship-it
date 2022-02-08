@@ -30,7 +30,13 @@ const getListImportsPlugin = ({ imports, path }: { imports: Set<string>; path: s
   },
 })
 
-const listImports = async ({ functionName, path }: { functionName: string; path: string }): Promise<string[]> => {
+export const listImports = async ({
+  functionName,
+  path,
+}: {
+  functionName: string
+  path: string
+}): Promise<string[]> => {
   // We're not interested in the output that esbuild generates, we're just
   // using it for its parsing capabilities in order to find import/require
   // statements. However, if we don't give esbuild a path in `outfile`, it
@@ -66,5 +72,3 @@ const listImports = async ({ functionName, path }: { functionName: string; path:
 
   return [...imports]
 }
-
-export { listImports }

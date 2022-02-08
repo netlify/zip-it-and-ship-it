@@ -16,14 +16,14 @@ import { getNodeBuiltinPlugin } from './plugin_node_builtin'
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being
 // sent in the Go<>Node IPC channel.
-const ESBUILD_LOG_LIMIT = 10
+export const ESBUILD_LOG_LIMIT = 10
 
 // When resolving imports with no extension (e.g. require('./foo')), these are
 // the extensions that esbuild will look for, in this order.
 const RESOLVE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json']
 
 // eslint-disable-next-line max-statements
-const bundleJsFile = async function ({
+export const bundleJsFile = async function ({
   additionalModulePaths,
   basePath,
   config,
@@ -173,5 +173,3 @@ const getBundlePaths = ({
 const getCleanupFunction = (paths: string[]) => async () => {
   await Promise.all(paths.filter(Boolean).map(safeUnlink))
 }
-
-export { bundleJsFile, ESBUILD_LOG_LIMIT }

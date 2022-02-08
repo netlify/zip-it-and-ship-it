@@ -2,7 +2,7 @@ import { promises as fs } from 'fs'
 
 import pkgDir from 'pkg-dir'
 
-interface PackageJson {
+export interface PackageJson {
   name?: string
   version?: string
   dependencies?: Record<string, string>
@@ -24,13 +24,13 @@ const sanitiseFiles = (files: unknown): string[] | undefined => {
   return files.filter((file) => typeof file === 'string')
 }
 
-const sanitisePackageJson = (packageJson: Record<string, unknown>): PackageJson => ({
+export const sanitisePackageJson = (packageJson: Record<string, unknown>): PackageJson => ({
   ...packageJson,
   files: sanitiseFiles(packageJson.files),
 })
 
 // Retrieve the `package.json` of a specific project or module
-const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
+export const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   const packageRoot = await pkgDir(srcDir)
 
   if (packageRoot === undefined) {
@@ -47,7 +47,7 @@ const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   }
 }
 
-const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> => {
+export const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> => {
   try {
     const packageJson = await getPackageJson(srcDir)
 
@@ -56,5 +56,3 @@ const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> =
     return {}
   }
 }
-
-export { getPackageJson, getPackageJsonIfAvailable, PackageJson, sanitisePackageJson }

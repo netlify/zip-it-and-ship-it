@@ -6,12 +6,14 @@ import { promisify } from 'util'
 import archiver, { Archiver } from 'archiver'
 import endOfStream from 'end-of-stream'
 
-type ArchiveFormat = 'none' | 'zip'
+export { Archiver as ZipArchive } from 'archiver'
+
+export type ArchiveFormat = 'none' | 'zip'
 
 const pEndOfStream = promisify(endOfStream)
 
 // Start zipping files
-const startZip = function (destPath: string): { archive: Archiver; output: Writable } {
+export const startZip = function (destPath: string): { archive: Archiver; output: Writable } {
   const output = createWriteStream(destPath)
   const archive = archiver('zip')
   archive.pipe(output)
@@ -19,7 +21,7 @@ const startZip = function (destPath: string): { archive: Archiver; output: Writa
 }
 
 // Add new file to zip
-const addZipFile = function (archive: Archiver, file: string, name: string, stat: Stats): void {
+export const addZipFile = function (archive: Archiver, file: string, name: string, stat: Stats): void {
   if (stat.isSymbolicLink()) {
     const linkContent = readlinkSync(file)
     archive.symlink(name, linkContent, stat.mode)
@@ -35,17 +37,12 @@ const addZipFile = function (archive: Archiver, file: string, name: string, stat
 }
 
 // Add new file content to zip
-const addZipContent = function (archive: Archiver, content: Buffer | string, name: string): void {
+export const addZipContent = function (archive: Archiver, content: Buffer | string, name: string): void {
   archive.append(content, { name, date: new Date(0) })
 }
 
 // End zipping files
-const endZip = async function (archive: Archiver, output: Writable): Promise<void> {
+export const endZip = async function (archive: Archiver, output: Writable): Promise<void> {
   archive.finalize()
   await pEndOfStream(output)
 }
-
-export { startZip, addZipFile, addZipContent, endZip }
-export type { ArchiveFormat }
-
-export { Archiver as ZipArchive } from 'archiver'

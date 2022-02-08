@@ -4,7 +4,7 @@ import { PackageJson } from './package_json'
 
 const markerModules = ['bindings', 'nan', 'node-gyp', 'node-gyp-build', 'node-pre-gyp', 'prebuild']
 
-const isNativeModule = ({
+export const isNativeModule = ({
   binary,
   dependencies = {},
   devDependencies = {},
@@ -25,5 +25,3 @@ const isNativeModule = ({
 
   return hasBinaryFile
 }
-
-export { isNativeModule }

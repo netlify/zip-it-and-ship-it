@@ -5,7 +5,7 @@ import { FunctionSource } from './function'
 import type { NodeVersionString } from './runtimes/node'
 import type { NodeBundlerName } from './runtimes/node/bundlers'
 
-interface FunctionConfig {
+export interface FunctionConfig {
   externalNodeModules?: string[]
   includedFiles?: string[]
   includedFilesBasePath?: string
@@ -21,9 +21,9 @@ interface FunctionConfig {
 
 type GlobPattern = string
 
-type Config = Record<GlobPattern, FunctionConfig>
+export type Config = Record<GlobPattern, FunctionConfig>
 
-const getConfigForFunction = ({
+export const getConfigForFunction = ({
   config,
   func,
 }: {
@@ -56,6 +56,3 @@ const getConfigForFunction = ({
 
   return mergeOptions.apply({ concatArrays: true, ignoreUndefined: true }, matches)
 }
-
-export { getConfigForFunction }
-export type { Config, FunctionConfig }

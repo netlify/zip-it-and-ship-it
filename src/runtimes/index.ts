@@ -75,7 +75,7 @@ const RUNTIMES = [jsRuntime, goRuntime, rustRuntime]
 /**
  * Gets a list of functions found in a list of paths.
  */
-const getFunctionsFromPaths = async (
+export const getFunctionsFromPaths = async (
   paths: string[],
   {
     config,
@@ -115,7 +115,7 @@ const getFunctionsFromPaths = async (
 /**
  * Gets a list of functions found in a list of paths.
  */
-const getFunctionFromPath = async (
+export const getFunctionFromPath = async (
   path: string,
   { config, featureFlags = defaultFlags }: { config?: Config; featureFlags?: FeatureFlags } = {},
 ): Promise<FunctionSource | undefined> => {
@@ -134,5 +134,3 @@ const getFunctionFromPath = async (
 
   return undefined
 }
-
-export { getFunctionsFromPaths, getFunctionFromPath }

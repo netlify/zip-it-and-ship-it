@@ -8,7 +8,7 @@ const pGlob = promisify(glob)
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
-const filterExcludedPaths = (paths: string[], exclude: string[] = []) => {
+export const filterExcludedPaths = (paths: string[], exclude: string[] = []) => {
   if (exclude.length === 0) {
     return paths
   }
@@ -18,7 +18,7 @@ const filterExcludedPaths = (paths: string[], exclude: string[] = []) => {
   return excludedPaths
 }
 
-const getPathsOfIncludedFiles = async (
+export const getPathsOfIncludedFiles = async (
   includedFiles: string[],
   basePath?: string,
 ): Promise<{ exclude: string[]; paths: string[] }> => {
@@ -59,5 +59,3 @@ const getPathsOfIncludedFiles = async (
 
   return { exclude, paths: [...new Set(normalizedPaths)] }
 }
-
-export { filterExcludedPaths, getPathsOfIncludedFiles }

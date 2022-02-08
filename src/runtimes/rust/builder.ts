@@ -13,7 +13,7 @@ import { BUILD_TARGET, MANIFEST_NAME } from './constants'
 
 const runtimeName: RuntimeName = 'rs'
 
-const build = async ({ config, name, srcDir }: { config: FunctionConfig; name: string; srcDir: string }) => {
+export const build = async ({ config, name, srcDir }: { config: FunctionConfig; name: string; srcDir: string }) => {
   const functionName = basename(srcDir)
 
   try {
@@ -124,5 +124,3 @@ const installToolchainOnce = () => {
 
   return toolchainInstallation
 }
-
-export { build }

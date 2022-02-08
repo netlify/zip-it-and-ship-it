@@ -28,7 +28,7 @@ const findNativeModule = (packageJsonPath: string, cache: NativeModuleCache) => 
   return cache[packageJsonPath]
 }
 
-const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): Plugin => ({
+export const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): Plugin => ({
   name: 'external-native-modules',
   setup(build) {
     const cache: NativeModuleCache = {}
@@ -78,5 +78,3 @@ const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): Plugin 
     })
   },
 })
-
-export { getNativeModulesPlugin }

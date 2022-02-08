@@ -17,9 +17,9 @@ type BundlerWarning = Message
 
 type CleanupFunction = () => Promise<void>
 
-type NativeNodeModules = Record<string, Record<string, string | undefined>>
+export type NativeNodeModules = Record<string, Record<string, string | undefined>>
 
-type BundleFunction = (
+export type BundleFunction = (
   args: {
     basePath?: string
     config: FunctionConfig
@@ -58,7 +58,7 @@ type BundleFunction = (
   srcFiles: string[]
 }>
 
-type GetSrcFilesFunction = (
+export type GetSrcFilesFunction = (
   args: {
     basePath?: string
     config: FunctionConfig
@@ -73,7 +73,7 @@ interface NodeBundler {
   getSrcFiles: GetSrcFilesFunction
 }
 
-const getBundler = (name: NodeBundlerName): NodeBundler => {
+export const getBundler = (name: NodeBundlerName): NodeBundler => {
   switch (name) {
     case 'esbuild':
     case 'esbuild_zisi':
@@ -92,7 +92,7 @@ const getBundler = (name: NodeBundlerName): NodeBundler => {
 
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
-const getDefaultBundler = async ({
+export const getDefaultBundler = async ({
   extension,
   mainFile,
   featureFlags,
@@ -121,6 +121,3 @@ const getDefaultBundler = async ({
 
   return 'zisi'
 }
-
-export { getBundler, getDefaultBundler }
-export type { BundleFunction, GetSrcFilesFunction, NativeNodeModules }

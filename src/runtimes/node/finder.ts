@@ -21,7 +21,7 @@ const sortByExtension = (fA: SourceFile, fB: SourceFile) => {
   return indexB - indexA
 }
 
-const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ paths, fsCache, featureFlags }) {
+export const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ paths, fsCache, featureFlags }) {
   const functions = await Promise.all(paths.map((path) => findFunctionInPath({ path, fsCache, featureFlags })))
 
   // It's fine to mutate the array since its scope is local to this function.
@@ -46,7 +46,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ pat
   return sortedFunctions
 }
 
-const findFunctionInPath: FindFunctionInPathFunction = async function ({ path: srcPath }) {
+export const findFunctionInPath: FindFunctionInPathFunction = async function ({ path: srcPath }) {
   const filename = basename(srcPath)
 
   if (filename === 'node_modules') {
@@ -90,5 +90,3 @@ const getMainFile = async function (srcPath: string, filename: string, stat: Sta
     return srcPath
   }
 }
-
-export { findFunctionsInPaths, findFunctionInPath }

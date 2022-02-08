@@ -5,7 +5,7 @@ import type { ISCExport } from '../in_source_config'
 import { isModuleExports } from './helpers'
 
 // Finds the main handler export in an AST.
-const getMainExport = (nodes: Statement[]) => {
+export const getMainExport = (nodes: Statement[]) => {
   let handlerExport: ISCExport[] = []
 
   nodes.find((node) => {
@@ -86,5 +86,3 @@ const getExportsFromCallExpression = (node: CallExpression) => {
 
   return exports
 }
-
-export { getMainExport }

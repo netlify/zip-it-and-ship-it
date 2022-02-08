@@ -5,7 +5,7 @@ import { nonNullable } from '../../../utils/non_nullable'
 import { isImport, isRequire } from './helpers'
 
 // Finds import/require statements of a given path in an AST.
-const getImports = (node: Statement, importPath: string) => {
+export const getImports = (node: Statement, importPath: string) => {
   const esmImports = getImportsFromESM(node, importPath)
 
   if (esmImports.length !== 0) {
@@ -77,5 +77,3 @@ const getImportsFromESM = (node: Statement, importPath: string) => {
 
   return imports
 }
-
-export { getImports }

@@ -4,7 +4,7 @@ import type { FunctionConfig } from './config'
 import type { Runtime, ZipFunctionResult } from './runtimes/runtime'
 
 // A function that has been processed and turned into an archive.
-type FunctionArchive = ZipFunctionResult & {
+export type FunctionArchive = ZipFunctionResult & {
   mainFile: string
   name: string
   runtime: Runtime
@@ -12,7 +12,7 @@ type FunctionArchive = ZipFunctionResult & {
 }
 
 // A function file found on the filesystem.
-interface SourceFile {
+export interface SourceFile {
   extension: string
   filename: string
   mainFile: string
@@ -23,9 +23,7 @@ interface SourceFile {
 }
 
 // A function associated with a runtime.
-type FunctionSource = SourceFile & {
+export type FunctionSource = SourceFile & {
   config: FunctionConfig
   runtime: Runtime
 }
-
-export { FunctionArchive, FunctionSource, SourceFile }

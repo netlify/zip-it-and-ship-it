@@ -1,7 +1,5 @@
-interface CargoManifest {
+export interface CargoManifest {
   package: {
     name: string
   }
 }
-
-export { CargoManifest }
