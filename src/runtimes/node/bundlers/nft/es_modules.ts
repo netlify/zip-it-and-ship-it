@@ -127,7 +127,7 @@ const shouldTranspile = (
 
   // The path should be transpiled if every parent will also be transpiled, or
   // if there is no parent.
-  const shouldTranspilePath = [...parents].every((parentPath) => shouldTranspile(parentPath, cache, esmPaths, reasons))
+  const shouldTranspilePath = parentPaths.every((parentPath) => shouldTranspile(parentPath, cache, esmPaths, reasons))
 
   cache.set(path, shouldTranspilePath)
 
