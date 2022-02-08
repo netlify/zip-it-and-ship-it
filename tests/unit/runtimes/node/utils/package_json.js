@@ -1,6 +1,6 @@
 const test = require('ava')
 
-const { sanitisePackageJson } = require('../dist/runtimes/node/utils/package_json')
+const { sanitisePackageJson } = require('../../../../../dist/runtimes/node/utils/package_json')
 
 test('sanitisePackageJson', (t) => {
   t.deepEqual(

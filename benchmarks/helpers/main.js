@@ -1,7 +1,9 @@
-// eslint-disable-next-line node/no-unsupported-features/node-builtins
-const { performance, PerformanceObserver } = require('perf_hooks')
+import { performance, PerformanceObserver } from 'perf_hooks'
+import { fileURLToPath } from 'url'
 
-const timeFunction = (func, runs = 1) =>
+export const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url))
+
+export const timeFunction = (func, runs = 1) =>
   new Promise((resolve) => {
     const finishedRuns = new Map()
 
@@ -28,5 +30,3 @@ const timeFunction = (func, runs = 1) =>
       performance.measure(`run-${index}`, `run-${index}-start`)
     })
   })
-
-module.exports = { timeFunction }
