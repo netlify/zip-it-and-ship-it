@@ -32,15 +32,11 @@ npm install @netlify/zip-it-and-ship-it
 - _Return value_: `Promise<object[]>`
 
 ```js
-const { zipFunctions } = require('@netlify/zip-it-and-ship-it')
+import { zipFunctions } from '@netlify/zip-it-and-ship-it'
 
-const zipNetlifyFunctions = async function () {
-  const archives = await zipFunctions('functions', 'functions-dist', {
-    archiveFormat: 'zip',
-  })
-
-  return archives
-}
+const archives = await zipFunctions('functions', 'functions-dist', {
+  archiveFormat: 'zip',
+})
 ```
 
 Creates Zip `archives` from Node.js, Go, and Rust programs. Those `archives` are ready to be uploaded to AWS Lambda.
@@ -258,13 +254,9 @@ Additionally, the following properties also exist for Node.js functions:
 - _Return value_: `object | undefined`
 
 ```js
-const { zipFunction } = require('@netlify/zip-it-and-ship-it')
+import { zipFunction } from '@netlify/zip-it-and-ship-it'
 
-const zipNetlifyFunctions = async function () {
-  const archive = await zipFunctions('functions/function.js', 'functions-dist')
-
-  return archive
-}
+const archive = await zipFunctions('functions/function.js', 'functions-dist')
 ```
 
 This is like [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options) except it bundles a single Function.
@@ -276,13 +268,9 @@ The return value is `undefined` if the function is invalid.
 Returns the list of functions to bundle.
 
 ```js
-const { listFunctions } = require('@netlify/zip-it-and-ship-it')
+import { listFunctions } from '@netlify/zip-it-and-ship-it'
 
-const listNetlifyFunctions = async function () {
-  const functions = await listFunctions('functions/function.js')
-
-  return functions
-}
+const functions = await listFunctions('functions/function.js')
 ```
 
 ### `srcFolders`
@@ -326,12 +314,9 @@ Like [`listFunctions()`](#listfunctionssrcfolder), except it returns not only th
 their required files. This is much slower.
 
 ```js
-const { listFunctionsFiles } = require('@netlify/zip-it-and-ship-it')
+import { listFunctionsFiles } from '@netlify/zip-it-and-ship-it'
 
-const listNetlifyFunctionsFiles = async function () {
-  const functions = await listFunctionsFiles('functions/function.js')
-  return functions
-}
+const functions = await listFunctionsFiles('functions/function.js')
 ```
 
 ### `srcFolders`
@@ -400,20 +385,16 @@ included in the bundle.
 You can enable esbuild by setting the [`config` option](#config) when calling `zipFunction` or `zipFunctions`:
 
 ```js
-const { zipFunctions } = require('@netlify/zip-it-and-ship-it')
+import { zipFunctions } from '@netlify/zip-it-and-ship-it'
 
-const zipNetlifyFunctions = async function () {
-  const archives = await zipFunctions('functions', 'functions-dist', {
-    config: {
-      // Applying these settings to all functions.
-      '*': {
-        nodeBundler: 'esbuild',
-      },
+const archives = await zipFunctions('functions', 'functions-dist', {
+  config: {
+    // Applying these settings to all functions.
+    '*': {
+      nodeBundler: 'esbuild',
     },
-  })
-
-  return archives
-}
+  },
+})
 ```
 
 # Feature flags
