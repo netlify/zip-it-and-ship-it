@@ -22,7 +22,7 @@ require('source-map-support').install()
 // We must require this file first because we need to stub it before the main
 // functions are required.
 // eslint-disable-next-line import/order
-const shellUtils = require('../dist/utils/shell')
+const { shellUtils } = require('../dist/utils/shell')
 
 const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 

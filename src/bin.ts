@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { exit } from 'process'
+import { argv, exit } from 'process'
 
 import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 
 import type { ArchiveFormat } from './archive'
 import { zipFunctions } from './main'
@@ -23,7 +24,7 @@ const runCli = async function () {
 }
 
 const parseArgs = function () {
-  return yargs
+  return yargs(hideBin(argv))
     .command('* <srcFolder> <destFolder>', 'Create ZIP archives from a directory')
     .options(OPTIONS)
     .usage(USAGE)
