@@ -1,18 +1,14 @@
-const { join } = require('path')
+import { zipFunctions } from '../dist/main.js'
 
-const { zipFunctions } = require('../dist/main')
-
-const { timeFunction } = require('./helpers/main')
+import { timeFunction, FIXTURES_DIR } from './helpers/main.js'
 
 const BENCHMARK_OUTPUT = 'benchmarks/output'
 const RUNS = 3
 
 const runBenchmarks = async function () {
-  const func = join(__dirname, 'fixtures')
-
   const largeDepsNft = await timeFunction(
     () =>
-      zipFunctions(func, BENCHMARK_OUTPUT, {
+      zipFunctions(FIXTURES_DIR, BENCHMARK_OUTPUT, {
         config: { '*': { nodeBundler: 'nft' } },
       }),
     RUNS,

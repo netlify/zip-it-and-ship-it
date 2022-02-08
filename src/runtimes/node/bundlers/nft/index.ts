@@ -7,12 +7,13 @@ import unixify from 'unixify'
 
 import type { BundleFunction } from '..'
 import type { FunctionConfig } from '../../../../config'
+import { FeatureFlags } from '../../../../feature_flags'
 import { cachedReadFile, FsCache } from '../../../../utils/fs'
 import type { GetSrcFilesFunction } from '../../../runtime'
 import { getBasePath } from '../../utils/base_path'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files'
 
-import { transpileESM } from './es_modules'
+import { processESM } from './es_modules'
 
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']
@@ -22,6 +23,7 @@ const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 const bundle: BundleFunction = async ({
   basePath,
   config,
+  featureFlags,
   mainFile,
   pluginsModulesPath,
   repositoryRoot = basePath,
@@ -31,9 +33,14 @@ const bundle: BundleFunction = async ({
     includedFiles,
     includedFilesBasePath || basePath,
   )
-  const { paths: dependencyPaths, rewrites } = await traceFilesAndTranspile({
+  const {
+    moduleFormat,
+    paths: dependencyPaths,
+    rewrites,
+  } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
     config,
+    featureFlags,
     mainFile,
     pluginsModulesPath,
   })
@@ -47,6 +54,7 @@ const bundle: BundleFunction = async ({
     basePath: getBasePath(dirnames),
     inputs: dependencyPaths,
     mainFile,
+    moduleFormat,
     rewrites,
     srcFiles,
   }
@@ -62,11 +70,13 @@ const ignoreFunction = (path: string) => {
 const traceFilesAndTranspile = async function ({
   basePath,
   config,
+  featureFlags,
   mainFile,
   pluginsModulesPath,
 }: {
   basePath?: string
   config: FunctionConfig
+  featureFlags: FeatureFlags
   mainFile: string
   pluginsModulesPath?: string
 }) {
@@ -111,9 +121,18 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const rewrites = await transpileESM({ basePath, config, esmPaths: esmFileList, fsCache, reasons })
+  const { moduleFormat, rewrites } = await processESM({
+    basePath,
+    config,
+    esmPaths: esmFileList,
+    featureFlags,
+    fsCache,
+    mainFile,
+    reasons,
+  })
 
   return {
+    moduleFormat,
     paths: normalizedDependencyPaths,
     rewrites,
   }

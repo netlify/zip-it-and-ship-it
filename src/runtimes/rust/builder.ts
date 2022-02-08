@@ -5,7 +5,7 @@ import tmp from 'tmp-promise'
 import toml from 'toml'
 
 import { FunctionConfig } from '../../config'
-import { runCommand } from '../../utils/shell'
+import { shellUtils } from '../../utils/shell'
 import type { RuntimeName } from '../runtime'
 
 import { CargoManifest } from './cargo_manifest'
@@ -55,7 +55,7 @@ const cargoBuild = async ({
   targetDirectory: string
 }) => {
   try {
-    await runCommand('cargo', ['build', '--target', BUILD_TARGET, '--release'], {
+    await shellUtils.runCommand('cargo', ['build', '--target', BUILD_TARGET, '--release'], {
       cwd: srcDir,
       env: {
         CARGO_TARGET_DIR: targetDirectory,
@@ -79,7 +79,7 @@ const cargoBuild = async ({
 
 const checkRustToolchain = async () => {
   try {
-    await runCommand('cargo', ['-V'])
+    await shellUtils.runCommand('cargo', ['-V'])
 
     return true
   } catch {
@@ -113,8 +113,8 @@ let toolchainInstallation: Promise<void>
 // `BUILD_TARGET`. The Promise is saved to `toolchainInstallation`, so
 // that we run the command just once for multiple Rust functions.
 const installToolchain = async () => {
-  await runCommand('rustup', ['default', 'stable'])
-  await runCommand('rustup', ['target', 'add', BUILD_TARGET])
+  await shellUtils.runCommand('rustup', ['default', 'stable'])
+  await shellUtils.runCommand('rustup', ['target', 'add', BUILD_TARGET])
 }
 
 const installToolchainOnce = () => {

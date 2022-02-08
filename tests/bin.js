@@ -6,9 +6,7 @@ const { tmpName } = require('tmp-promise')
 
 const { version } = require('../package.json')
 
-const { FIXTURES_DIR } = require('./helpers/main')
-
-const BINARY_PATH = join(__dirname, '..', 'dist', 'bin.js')
+const { FIXTURES_DIR, BINARY_PATH } = require('./helpers/main')
 
 const exec = (args, options) => execa('node', [BINARY_PATH, ...args], options)
 

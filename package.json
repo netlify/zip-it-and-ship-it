@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "5.5.2",
+  "version": "5.7.1",
   "description": "Zip it and ship it",
   "main": "./dist/main.js",
   "bin": {
@@ -29,8 +29,8 @@
     "test:ci": "npm run build && c8 -r lcovonly -r text -r json ava"
   },
   "config": {
-    "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{js,ts,md,html}\" \"*.{js,ts,md,html}\" \".*.{js,ts,md,html}\"",
-    "prettier": "--ignore-path .gitignore --loglevel=warn \"{src,tests,.github}/**/*.{js,ts,md,yml,json,html}\" \"*.{js,ts,yml,json,html}\" \".*.{js,ts,yml,json,html}\" \"!package-lock.json\""
+    "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{mjs,cjs,js,mts,cts,ts,md,html}\" \"*.{cjs,mjs,js,cts,mts,ts,md,html}\" \".*.{cjs,mjs,js,cts,mts,ts,md,html}\"",
+    "prettier": "--ignore-path .gitignore --loglevel=warn \"{src,tests,.github}/**/*.{cjs,mjs,js,cts,mts,ts,md,yml,json,html}\" \"*.{cjs,mjs,js,cts,mts,ts,yml,json,html}\" \".*.{cjs,mjs,js,cts,mts,ts,yml,json,html}\" \"!package-lock.json\""
   },
   "eslintIgnore": [
     "benchmarks/fixtures/**"
@@ -87,7 +87,7 @@
   },
   "devDependencies": {
     "@babel/types": "^7.15.6",
-    "@netlify/eslint-config-node": "^4.1.7",
+    "@netlify/eslint-config-node": "^5.1.4",
     "@types/archiver": "^5.1.1",
     "@types/end-of-stream": "^1.4.1",
     "@types/resolve": "^1.20.1",
@@ -102,7 +102,7 @@
     "husky": "^7.0.4",
     "npm-run-all": "^4.1.5",
     "p-every": "^2.0.0",
-    "sinon": "^12.0.0",
+    "sinon": "^13.0.0",
     "sort-on": "^4.1.1",
     "source-map-support": "^0.5.20",
     "throat": "^6.0.1"
@@ -112,7 +112,8 @@
   },
   "ava": {
     "files": [
-      "tests/*"
+      "tests/*",
+      "tests/unit/**/*.js"
     ],
     "verbose": true,
     "timeout": "2m"
