@@ -19,6 +19,12 @@ module.exports = {
         'no-magic-numbers': 'off',
       },
     },
+    {
+      files: '*.md/*.js',
+      parserOptions: {
+        sourceType: 'module',
+      },
+    },
   ],
   ignorePatterns: ['tests/fixtures/**/*'],
 }
