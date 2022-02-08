@@ -2,9 +2,9 @@ import * as esbuild from '@netlify/esbuild'
 import isBuiltinModule from 'is-builtin-module'
 import { tmpName } from 'tmp-promise'
 
-import type { NodeBundlerName } from '..'
-import { safeUnlink } from '../../../../utils/fs'
-import type { RuntimeName } from '../../../runtime'
+import { safeUnlink } from '../../../../utils/fs.js'
+import type { RuntimeName } from '../../../runtime.js'
+import type { NodeBundlerName } from '../index.js'
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being

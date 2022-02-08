@@ -1,8 +1,8 @@
 import { Statement } from '@babel/types'
 
-import { nonNullable } from '../../../utils/non_nullable'
+import { nonNullable } from '../../../utils/non_nullable.js'
 
-import { isImport, isRequire } from './helpers'
+import { isImport, isRequire } from './helpers.js'
 
 // Finds import/require statements of a given path in an AST.
 export const getImports = (node: Statement, importPath: string) => {

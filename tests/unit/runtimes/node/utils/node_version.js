@@ -4,7 +4,7 @@ const {
   DEFAULT_NODE_VERSION,
   getNodeVersion,
   parseVersion,
-} = require('../../../../../dist/runtimes/node/utils/node_version')
+} = require('../../../../../dist/runtimes/node/utils/node_version.js')
 
 test('getNodeVersion', (t) => {
   t.is(getNodeVersion('nodejs12.x'), 12)

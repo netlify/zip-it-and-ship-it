@@ -1,15 +1,15 @@
 import { promises as fs } from 'fs'
 import { dirname } from 'path'
 
-import { nonNullable } from '../../../../utils/non_nullable'
-import { getModuleName } from '../../utils/module'
-import { PackageJson } from '../../utils/package_json'
-import { TraversalCache } from '../../utils/traversal_cache'
+import { nonNullable } from '../../../../utils/non_nullable.js'
+import { getModuleName } from '../../utils/module.js'
+import { PackageJson } from '../../utils/package_json.js'
+import { TraversalCache } from '../../utils/traversal_cache.js'
 
-import { getNestedDependencies, handleModuleNotFound } from './nested'
-import { getPublishedFiles } from './published'
-import { resolvePackage } from './resolve'
-import { getSideFiles } from './side_files'
+import { getNestedDependencies, handleModuleNotFound } from './nested.js'
+import { getPublishedFiles } from './published.js'
+import { resolvePackage } from './resolve.js'
+import { getSideFiles } from './side_files.js'
 
 const EXCLUDED_MODULES = new Set(['aws-sdk'])
 

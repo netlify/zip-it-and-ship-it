@@ -5,7 +5,7 @@ import { join, relative, resolve } from 'path'
 import { parse } from '@babel/parser'
 import type { BinaryExpression, CallExpression, Expression, PrivateName, TemplateLiteral, TSType } from '@babel/types'
 
-import { nonNullable } from '../../../utils/non_nullable'
+import { nonNullable } from '../../../utils/non_nullable.js'
 
 const GLOB_WILDCARD = '**'
 

@@ -3,15 +3,15 @@ import { basename, dirname, extname, resolve, join } from 'path'
 import { build, Metafile } from '@netlify/esbuild'
 import { tmpName } from 'tmp-promise'
 
-import type { NodeBundlerName } from '..'
-import type { FunctionConfig } from '../../../../config'
-import { getPathWithExtension, safeUnlink } from '../../../../utils/fs'
-import type { RuntimeName } from '../../../runtime'
+import type { FunctionConfig } from '../../../../config.js'
+import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
+import type { RuntimeName } from '../../../runtime.js'
+import type { NodeBundlerName } from '../index.js'
 
-import { getBundlerTarget } from './bundler_target'
-import { getDynamicImportsPlugin } from './plugin_dynamic_imports'
-import { getNativeModulesPlugin } from './plugin_native_modules'
-import { getNodeBuiltinPlugin } from './plugin_node_builtin'
+import { getBundlerTarget } from './bundler_target.js'
+import { getDynamicImportsPlugin } from './plugin_dynamic_imports.js'
+import { getNativeModulesPlugin } from './plugin_native_modules.js'
+import { getNodeBuiltinPlugin } from './plugin_node_builtin.js'
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being

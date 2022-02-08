@@ -3,6 +3,8 @@ const { overrides } = require('@netlify/eslint-config-node')
 module.exports = {
   extends: '@netlify/eslint-config-node',
   rules: {
+    'import/extensions': ['error', 'ignorePackages'],
+    'node/no-missing-import': 'off',
     // This rule enforces using Buffers with `JSON.parse()`. However, TypeScript
     // does not recognize yet that `JSON.parse()` accepts Buffers as argument.
     'unicorn/prefer-json-parse-buffer': 'off',
@@ -12,6 +14,9 @@ module.exports = {
     {
       files: '*.ts',
       rules: {
+        // Pure ES modules with TypeScript require using `.js` instead of `.ts`
+        // in imports
+        'import/extensions': 'off',
         'import/no-namespace': 'off',
       },
     },

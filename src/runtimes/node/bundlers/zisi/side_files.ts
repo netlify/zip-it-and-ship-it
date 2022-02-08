@@ -1,4 +1,4 @@
-import { getPublishedFiles } from './published'
+import { getPublishedFiles } from './published.js'
 
 // Some modules generate source files on `postinstall` that are not located
 // inside the module's directory itself.

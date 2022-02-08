@@ -1,14 +1,14 @@
 import { extname, basename } from 'path'
 
-import { Config, getConfigForFunction } from '../config'
-import { defaultFlags, FeatureFlags } from '../feature_flags'
-import { FunctionSource } from '../function'
-import { FsCache } from '../utils/fs'
+import { Config, getConfigForFunction } from '../config.js'
+import { defaultFlags, FeatureFlags } from '../feature_flags.js'
+import { FunctionSource } from '../function.js'
+import { FsCache } from '../utils/fs.js'
 
-import goRuntime from './go'
-import jsRuntime from './node'
-import type { Runtime } from './runtime'
-import rustRuntime from './rust'
+import goRuntime from './go/index.js'
+import jsRuntime from './node/index.js'
+import type { Runtime } from './runtime.js'
+import rustRuntime from './rust/index.js'
 
 // A `Map` of functions, indexed by their name.
 type FunctionMap = Map<string, FunctionSource>

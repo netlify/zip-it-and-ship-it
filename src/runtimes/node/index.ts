@@ -2,15 +2,15 @@ import { join } from 'path'
 
 import cpFile from 'cp-file'
 
-import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime'
+import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime.js'
 
-import { getBundler, getDefaultBundler } from './bundlers'
-import { findFunctionsInPaths, findFunctionInPath } from './finder'
-import { findISCDeclarationsInPath } from './in_source_config'
-import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path'
-import { zipNodeJs } from './utils/zip'
+import { getBundler, getDefaultBundler } from './bundlers/index.js'
+import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
+import { findISCDeclarationsInPath } from './in_source_config/index.js'
+import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
+import { zipNodeJs } from './utils/zip.js'
 
-export { NodeVersionString } from './utils/node_version'
+export { NodeVersionString } from './utils/node_version.js'
 
 // A proxy for the `getSrcFiles` function which adds a default `bundler` using
 // the `getDefaultBundler` function.

@@ -1,4 +1,4 @@
-import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json'
+import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
 
 const EXTERNAL_MODULES = ['@prisma/client']
 const IGNORED_MODULES = ['aws-sdk']

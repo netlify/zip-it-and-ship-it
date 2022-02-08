@@ -1,14 +1,14 @@
 import { dirname, normalize } from 'path'
 
-import type { BundleFunction } from '..'
-import type { FunctionConfig } from '../../../../config'
-import { getPathWithExtension } from '../../../../utils/fs'
-import { nonNullable } from '../../../../utils/non_nullable'
-import { getBasePath } from '../../utils/base_path'
+import type { FunctionConfig } from '../../../../config.js'
+import { getPathWithExtension } from '../../../../utils/fs.js'
+import { nonNullable } from '../../../../utils/non_nullable.js'
+import { getBasePath } from '../../utils/base_path.js'
+import type { BundleFunction } from '../index.js'
 
-import { bundleJsFile } from './bundler'
-import { getExternalAndIgnoredModulesFromSpecialCases } from './special_cases'
-import { getSrcFiles } from './src_files'
+import { bundleJsFile } from './bundler.js'
+import { getExternalAndIgnoredModulesFromSpecialCases } from './special_cases.js'
+import { getSrcFiles } from './src_files.js'
 
 const getFunctionBasePath = ({
   basePathFromConfig,

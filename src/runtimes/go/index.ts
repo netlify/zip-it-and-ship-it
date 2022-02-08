@@ -3,14 +3,14 @@ import { basename, dirname, extname, join } from 'path'
 
 import cpFile from 'cp-file'
 
-import { SourceFile } from '../../function'
-import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
-import { nonNullable } from '../../utils/non_nullable'
-import { zipBinary } from '../../zip_binary'
-import { detectBinaryRuntime } from '../detect_runtime'
-import { FindFunctionInPathFunction, FindFunctionsInPathsFunction, Runtime, ZipFunction } from '../runtime'
+import { SourceFile } from '../../function.js'
+import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs.js'
+import { nonNullable } from '../../utils/non_nullable.js'
+import { zipBinary } from '../../zip_binary.js'
+import { detectBinaryRuntime } from '../detect_runtime.js'
+import { FindFunctionInPathFunction, FindFunctionsInPathsFunction, Runtime, ZipFunction } from '../runtime.js'
 
-import { build } from './builder'
+import { build } from './builder.js'
 
 interface GoBinary {
   path: string

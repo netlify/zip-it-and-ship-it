@@ -22,15 +22,15 @@ require('source-map-support').install()
 // We must require this file first because we need to stub it before the main
 // functions are required.
 // eslint-disable-next-line import/order
-const { shellUtils } = require('../dist/utils/shell')
+const { shellUtils } = require('../dist/utils/shell.js')
 
 const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 
 // eslint-disable-next-line import/order
-const { zipFunction, listFunctions, listFunctionsFiles, listFunction } = require('..')
+const { zipFunction, listFunctions, listFunctionsFiles, listFunction } = require('../dist/main.js')
 
-const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler')
-const { detectEsModule } = require('../dist/runtimes/node/utils/detect_es_module')
+const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler.js')
+const { detectEsModule } = require('../dist/runtimes/node/utils/detect_es_module.js')
 
 const {
   getRequires,
@@ -41,9 +41,9 @@ const {
   FIXTURES_DIR,
   BINARY_PATH,
   importFunctionFile,
-} = require('./helpers/main')
-const { computeSha1 } = require('./helpers/sha')
-const { makeTestMany } = require('./helpers/test_many')
+} = require('./helpers/main.js')
+const { computeSha1 } = require('./helpers/sha.js')
+const { makeTestMany } = require('./helpers/test_many.js')
 
 const EXECUTABLE_PERMISSION = 0o755
 

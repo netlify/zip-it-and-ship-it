@@ -1,9 +1,9 @@
 import { dirname, normalize } from 'path'
 
-import type { BundleFunction } from '..'
-import { getBasePath } from '../../utils/base_path'
+import { getBasePath } from '../../utils/base_path.js'
+import type { BundleFunction } from '../index.js'
 
-import { getSrcFiles } from './src_files'
+import { getSrcFiles } from './src_files.js'
 
 const bundle: BundleFunction = async ({
   basePath,

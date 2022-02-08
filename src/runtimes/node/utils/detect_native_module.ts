@@ -1,6 +1,6 @@
 import { extname } from 'path'
 
-import { PackageJson } from './package_json'
+import { PackageJson } from './package_json.js'
 
 const markerModules = ['bindings', 'nan', 'node-gyp', 'node-gyp-build', 'node-pre-gyp', 'prebuild']
 

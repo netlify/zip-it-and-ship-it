@@ -1,11 +1,11 @@
-import { ArchiveFormat } from '../archive'
-import { FunctionConfig } from '../config'
-import { FeatureFlags } from '../feature_flags'
-import { FunctionSource, SourceFile } from '../function'
-import { FsCache } from '../utils/fs'
+import { ArchiveFormat } from '../archive.js'
+import { FunctionConfig } from '../config.js'
+import { FeatureFlags } from '../feature_flags.js'
+import { FunctionSource, SourceFile } from '../function.js'
+import { FsCache } from '../utils/fs.js'
 
-import type { NodeBundlerName } from './node/bundlers'
-import type { ISCValues } from './node/in_source_config'
+import type { NodeBundlerName } from './node/bundlers/index.js'
+import type { ISCValues } from './node/in_source_config/index.js'
 
 export type RuntimeName = 'go' | 'js' | 'rs'
 

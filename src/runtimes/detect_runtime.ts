@@ -2,9 +2,9 @@ import type { Buffer } from 'buffer'
 
 import { detect, Runtime } from 'elf-cam'
 
-import { cachedReadFile, FsCache } from '../utils/fs'
+import { cachedReadFile, FsCache } from '../utils/fs.js'
 
-import type { RuntimeName } from './runtime'
+import type { RuntimeName } from './runtime.js'
 
 // Try to guess the runtime by inspecting the binary file.
 export const detectBinaryRuntime = async function ({

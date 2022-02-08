@@ -1,11 +1,11 @@
 import { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
-import { nonNullable } from '../../../utils/non_nullable'
-import { safelyParseFile } from '../parser'
-import { getMainExport } from '../parser/exports'
-import { getImports } from '../parser/imports'
+import { nonNullable } from '../../../utils/non_nullable.js'
+import { getMainExport } from '../parser/exports.js'
+import { getImports } from '../parser/imports.js'
+import { safelyParseFile } from '../parser/index.js'
 
-import { parse as parseSchedule } from './properties/schedule'
+import { parse as parseSchedule } from './properties/schedule.js'
 
 export const IN_SOURCE_CONFIG_MODULE = '@netlify/functions'
 

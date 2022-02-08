@@ -1,8 +1,8 @@
 import { promises as fs } from 'fs'
 import { basename } from 'path'
 
-import { shellUtils } from '../../utils/shell'
-import type { RuntimeName } from '../runtime'
+import { shellUtils } from '../../utils/shell.js'
+import type { RuntimeName } from '../runtime.js'
 
 export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
   const functionName = basename(srcDir)

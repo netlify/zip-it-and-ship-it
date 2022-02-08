@@ -5,7 +5,7 @@ import findUp from 'find-up'
 import readPackageJson from 'read-package-json-fast'
 import unixify from 'unixify'
 
-import { parseExpression } from '../../parser'
+import { parseExpression } from '../../parser/index.js'
 
 type PackageCache = Map<string, Promise<string | undefined>>
 

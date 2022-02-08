@@ -4,8 +4,8 @@ import { argv, exit } from 'process'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
-import type { ArchiveFormat } from './archive'
-import { zipFunctions } from './main'
+import type { ArchiveFormat } from './archive.js'
+import { zipFunctions } from './main.js'
 
 // CLI entry point
 const runCli = async function () {

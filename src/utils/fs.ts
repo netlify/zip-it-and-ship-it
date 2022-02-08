@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
 import { dirname, format, join, parse, resolve } from 'path'
 
-import { nonNullable } from './non_nullable'
+import { nonNullable } from './non_nullable.js'
 
 export type FsCache = Record<string, unknown>
 

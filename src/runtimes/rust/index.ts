@@ -1,16 +1,16 @@
 import type { Stats } from 'fs'
 import { join, extname, dirname, basename } from 'path'
 
-import { FeatureFlags } from '../../feature_flags'
-import { SourceFile } from '../../function'
-import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs'
-import { nonNullable } from '../../utils/non_nullable'
-import { zipBinary } from '../../zip_binary'
-import { detectBinaryRuntime } from '../detect_runtime'
-import { FindFunctionsInPathsFunction, FindFunctionInPathFunction, Runtime, ZipFunction } from '../runtime'
+import { FeatureFlags } from '../../feature_flags.js'
+import { SourceFile } from '../../function.js'
+import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs.js'
+import { nonNullable } from '../../utils/non_nullable.js'
+import { zipBinary } from '../../zip_binary.js'
+import { detectBinaryRuntime } from '../detect_runtime.js'
+import { FindFunctionsInPathsFunction, FindFunctionInPathFunction, Runtime, ZipFunction } from '../runtime.js'
 
-import { build } from './builder'
-import { MANIFEST_NAME } from './constants'
+import { build } from './builder.js'
+import { MANIFEST_NAME } from './constants.js'
 
 const detectRustFunction = async ({ fsCache, path }: { fsCache: FsCache; path: string }) => {
   const stat = await cachedLstat(fsCache, path)
