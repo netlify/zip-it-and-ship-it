@@ -1,6 +1,7 @@
 const { mkdirSync } = require('fs')
 const { dirname, join, resolve } = require('path')
 const { env, platform } = require('process')
+const { pathToFileURL } = require('url')
 
 const execa = require('execa')
 const { dir: getTmpDir } = require('tmp-promise')
@@ -56,7 +57,7 @@ const zipCheckFunctions = async function (t, fixture, { length = 1, fixtureDir =
 const requireExtractedFiles = async function (t, files) {
   await unzipFiles(files)
 
-  const jsFiles = files.map(replaceUnzipPath).map(require)
+  const jsFiles = await Promise.all(files.map(replaceUnzipPath).map((file) => importFunctionFile(file)))
   t.true(jsFiles.every(Boolean))
 }
 
@@ -107,6 +108,13 @@ const getRequires = async function ({ depth = Number.POSITIVE_INFINITY, filePath
   return [...requires, ...childRequires]
 }
 
+// Import a file exporting a function.
+// Returns `default` exports as is.
+const importFunctionFile = async function (functionPath) {
+  const result = await import(pathToFileURL(functionPath))
+  return result.default === undefined ? result : result.default
+}
+
 module.exports = {
   getRequires,
   zipNode,
@@ -115,4 +123,5 @@ module.exports = {
   zipCheckFunctions,
   FIXTURES_DIR,
   BINARY_PATH,
+  importFunctionFile,
 }
