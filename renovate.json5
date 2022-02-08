@@ -17,5 +17,11 @@
       packageNames: ['test'],
       enabled: false,
     },
+
+    // https://github.com/netlify/zip-it-and-ship-it/pull/966
+    {
+      matchPackageNames: ['@babel/parser'],
+      allowedVersions: '<=7.16.8',
+    },
   ],
 }
