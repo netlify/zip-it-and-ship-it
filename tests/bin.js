@@ -1,18 +1,19 @@
+const { promises: fs } = require('fs')
 const { join } = require('path')
 
 const test = require('ava')
 const execa = require('execa')
 const { tmpName } = require('tmp-promise')
 
-const { version } = require('../package.json')
-
 const { FIXTURES_DIR, BINARY_PATH } = require('./helpers/main')
+
+const ROOT_PACKAGE_JSON = `${__dirname}/../package.json`
 
 const exec = (args, options) => execa('node', [BINARY_PATH, ...args], options)
 
 test('CLI | --version', async (t) => {
   const { stdout } = await exec(['--version'])
-
+  const { version } = JSON.parse(await fs.readFile(ROOT_PACKAGE_JSON))
   t.is(stdout, version)
 })
 
