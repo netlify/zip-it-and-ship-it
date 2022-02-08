@@ -46,4 +46,14 @@ const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   }
 }
 
-export { getPackageJson, PackageJson, sanitisePackageJson }
+const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> => {
+  try {
+    const packageJson = await getPackageJson(srcDir)
+
+    return packageJson
+  } catch {
+    return {}
+  }
+}
+
+export { getPackageJson, getPackageJsonIfAvailable, PackageJson, sanitisePackageJson }
