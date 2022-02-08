@@ -1,16 +1,18 @@
-/* eslint-disable max-lines */
 import { Buffer } from 'buffer'
 import { Stats, promises as fs } from 'fs'
 import os from 'os'
-import { basename, extname, join, normalize, resolve, sep } from 'path'
+import { basename, join, resolve } from 'path'
 
 import copyFile from 'cp-file'
 import deleteFiles from 'del'
 import pMap from 'p-map'
-import unixify from 'unixify'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive'
 import { mkdirAndWriteFile } from '../../../utils/fs'
+
+import { EntryFile, getEntryFile } from './entry_file'
+import type { ModuleFormat } from './module_format'
+import { normalizeFilePath } from './normalize_path'
 
 // Taken from https://www.npmjs.com/package/cpy.
 const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2
@@ -21,11 +23,6 @@ const DEFAULT_USER_SUBDIRECTORY = 'src'
 
 type ArchiveFormat = 'none' | 'zip'
 
-interface EntryFile {
-  contents: string
-  filename: string
-}
-
 interface ZipNodeParameters {
   aliases?: Map<string, string>
   basePath: string
@@ -33,6 +30,7 @@ interface ZipNodeParameters {
   extension: string
   filename: string
   mainFile: string
+  moduleFormat: ModuleFormat
   rewrites?: Map<string, string>
   srcFiles: string[]
 }
@@ -44,6 +42,7 @@ const createDirectory = async function ({
   extension,
   filename,
   mainFile,
+  moduleFormat,
   rewrites = new Map(),
   srcFiles,
 }: ZipNodeParameters) {
@@ -51,6 +50,7 @@ const createDirectory = async function ({
     commonPrefix: basePath,
     filename,
     mainFile,
+    moduleFormat,
     userNamespace: DEFAULT_USER_SUBDIRECTORY,
   })
   const functionFolder = join(destFolder, basename(filename, extension))
@@ -93,6 +93,7 @@ const createZipArchive = async function ({
   extension,
   filename,
   mainFile,
+  moduleFormat,
   rewrites,
   srcFiles,
 }: ZipNodeParameters) {
@@ -115,7 +116,7 @@ const createZipArchive = async function ({
   const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
   if (needsEntryFile) {
-    const entryFile = getEntryFile({ commonPrefix: basePath, filename, mainFile, userNamespace })
+    const entryFile = getEntryFile({ commonPrefix: basePath, filename, mainFile, moduleFormat, userNamespace })
 
     addEntryFileToZip(archive, entryFile)
   }
@@ -164,27 +165,6 @@ const addStat = async function (srcFile: string) {
   return { srcFile, stat }
 }
 
-const getEntryFile = ({
-  commonPrefix,
-  filename,
-  mainFile,
-  userNamespace,
-}: {
-  commonPrefix: string
-  filename: string
-  mainFile: string
-  userNamespace: string
-}): EntryFile => {
-  const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
-  const extension = extname(filename)
-  const entryFilename = `${basename(filename, extension)}.js`
-
-  return {
-    contents: `module.exports = require('.${mainPath.startsWith('/') ? mainPath : `/${mainPath}`}')`,
-    filename: entryFilename,
-  }
-}
-
 const zipJsFile = function ({
   aliases = new Map(),
   archive,
@@ -212,24 +192,4 @@ const zipJsFile = function ({
   }
 }
 
-// `adm-zip` and `require()` expect Unix paths.
-// We remove the common path prefix.
-// With files on different Windows drives, we remove the drive letter.
-const normalizeFilePath = function ({
-  commonPrefix,
-  path,
-  userNamespace,
-}: {
-  commonPrefix: string
-  path: string
-  userNamespace: string
-}) {
-  const userNamespacePathSegment = userNamespace ? `${userNamespace}${sep}` : ''
-  const pathA = normalize(path)
-  const pathB = pathA.replace(commonPrefix, userNamespacePathSegment)
-  const pathC = unixify(pathB)
-  return pathC
-}
-
 export { ArchiveFormat, zipNodeJs }
-/* eslint-enable max-lines */

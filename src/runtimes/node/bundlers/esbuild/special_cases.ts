@@ -1,17 +1,7 @@
-import { getPackageJson, PackageJson } from '../../utils/package_json'
+import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json'
 
 const EXTERNAL_MODULES = ['@prisma/client']
 const IGNORED_MODULES = ['aws-sdk']
-
-const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> => {
-  try {
-    const packageJson = await getPackageJson(srcDir)
-
-    return packageJson
-  } catch {
-    return {}
-  }
-}
 
 const getModulesForNextJs = ({ dependencies, devDependencies }: PackageJson) => {
   const allDependencies = { ...dependencies, ...devDependencies }
