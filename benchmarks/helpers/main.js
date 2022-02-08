@@ -30,8 +30,3 @@ export const timeFunction = (func, runs = 1) =>
       performance.measure(`run-${index}`, `run-${index}-start`)
     })
   })
-<<<<<<< HEAD
-
-module.exports = { timeFunction, FIXTURES_DIR }
-=======
->>>>>>> 9afae99 (fix: use ES modules in benchmarks)
