@@ -1,13 +1,16 @@
 import type { Message } from '@netlify/esbuild'
 
-import type { NodeBundlerName } from '..'
 import { FunctionConfig } from '../../../config'
 import { FeatureFlag, FeatureFlags } from '../../../feature_flags'
 import { FunctionSource } from '../../../function'
+import { detectEsModule } from '../utils/detect_es_module'
+import { ModuleFormat } from '../utils/module_format'
 
 import esbuildBundler from './esbuild'
 import nftBundler from './nft'
 import zisiBundler from './zisi'
+
+export type NodeBundlerName = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
 
 // TODO: Create a generic warning type
 type BundlerWarning = Message
@@ -49,6 +52,7 @@ type BundleFunction = (
   cleanupFunction?: CleanupFunction
   inputs: string[]
   mainFile: string
+  moduleFormat: ModuleFormat
   nativeNodeModules?: NativeNodeModules
   nodeModulesWithDynamicImports?: string[]
   srcFiles: string[]
@@ -86,5 +90,37 @@ const getBundler = (name: NodeBundlerName): NodeBundler => {
   }
 }
 
-export { getBundler }
+// We use ZISI as the default bundler, except for certain extensions, for which
+// esbuild is the only option.
+const getDefaultBundler = async ({
+  extension,
+  mainFile,
+  featureFlags,
+}: {
+  extension: string
+  mainFile: string
+  featureFlags: FeatureFlags
+}): Promise<NodeBundlerName> => {
+  const { defaultEsModulesToEsbuild, traceWithNft } = featureFlags
+
+  if (['.mjs', '.ts'].includes(extension)) {
+    return 'esbuild'
+  }
+
+  if (traceWithNft) {
+    return 'nft'
+  }
+
+  if (defaultEsModulesToEsbuild) {
+    const isEsModule = await detectEsModule({ mainFile })
+
+    if (isEsModule) {
+      return 'esbuild'
+    }
+  }
+
+  return 'zisi'
+}
+
+export { getBundler, getDefaultBundler }
 export type { BundleFunction, GetSrcFilesFunction, NativeNodeModules }
