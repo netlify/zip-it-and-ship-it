@@ -7,7 +7,7 @@ import { FeatureFlags } from '../../../../feature_flags'
 import { cachedReadFile, FsCache } from '../../../../utils/fs'
 import { ModuleFormat } from '../../utils/module_format'
 import { getNodeSupportMatrix } from '../../utils/node_version'
-import { getPackageJson, PackageJson } from '../../utils/package_json'
+import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json'
 
 import { transpile } from './transpile'
 
@@ -73,7 +73,7 @@ const processESM = async ({
     }
   }
 
-  const packageJson = await getPackageJson(dirname(mainFile))
+  const packageJson = await getPackageJsonIfAvailable(dirname(mainFile))
   const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
   if (featureFlags.zisi_pure_esm && packageJson.type === 'module' && nodeSupport.esm) {
