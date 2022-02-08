@@ -1804,9 +1804,9 @@ testMany(
     t.not(functionInternalEntry, undefined)
     t.not(functionUserEntry, undefined)
 
-    t.is(dirname(functionCommonEntry.mainFile), resolve(join(__dirname, 'fixtures', pathUser)))
-    t.is(dirname(functionInternalEntry.mainFile), resolve(join(__dirname, 'fixtures', pathInternal)))
-    t.is(dirname(functionUserEntry.mainFile), resolve(join(__dirname, 'fixtures', pathUser)))
+    t.is(dirname(functionCommonEntry.mainFile), resolve(join(FIXTURES_DIR, pathUser)))
+    t.is(dirname(functionInternalEntry.mainFile), resolve(join(FIXTURES_DIR, pathInternal)))
+    t.is(dirname(functionUserEntry.mainFile), resolve(join(FIXTURES_DIR, pathUser)))
   },
 )
 
