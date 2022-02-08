@@ -2461,8 +2461,7 @@ test('Creates a manifest file with the list of created functions if the `manifes
     },
   })
 
-  // eslint-disable-next-line import/no-dynamic-require, node/global-require
-  const manifest = require(manifestPath)
+  const manifest = JSON.parse(await readFile(manifestPath))
 
   t.is(manifest.version, 1)
   t.is(manifest.system.arch, arch)
@@ -2584,8 +2583,7 @@ testMany(
 
     files.every((file) => t.is(file.schedule, schedule))
 
-    // eslint-disable-next-line import/no-dynamic-require, node/global-require
-    const manifest = require(manifestPath)
+    const manifest = JSON.parse(await readFile(manifestPath))
 
     manifest.functions.forEach((fn) => {
       t.is(fn.schedule, schedule)
