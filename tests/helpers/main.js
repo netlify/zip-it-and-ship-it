@@ -9,6 +9,7 @@ const { zipFunctions } = require('../..')
 const { listImports } = require('../../dist/runtimes/node/bundlers/zisi/list_imports')
 
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
+const BINARY_PATH = join(__dirname, '..', '..', 'dist', 'bin.js')
 
 const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
   const { files, tmpDir } = await zipFixture(t, fixture, {
@@ -113,4 +114,5 @@ module.exports = {
   unzipFiles,
   zipCheckFunctions,
   FIXTURES_DIR,
+  BINARY_PATH,
 }
