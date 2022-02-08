@@ -1,9 +1,12 @@
+import { createRequire } from 'module'
 import { version as nodeVersion } from 'process'
 
 import findUp from 'find-up'
 import pathExists from 'path-exists'
 import resolveLib from 'resolve'
 import semver from 'semver'
+
+const requireLib = createRequire(__filename)
 
 const BACKSLASH_REGEXP = /\\/g
 
@@ -74,7 +77,7 @@ const resolvePathPreserveSymlinks = async function (path: string, baseDirs: stri
 }
 
 const resolvePathFollowSymlinks = function (path: string, baseDirs: string[]) {
-  return require.resolve(path, { paths: baseDirs })
+  return requireLib.resolve(path, { paths: baseDirs })
 }
 
 // `require.resolve()` on a module's specific file (like `package.json`)
