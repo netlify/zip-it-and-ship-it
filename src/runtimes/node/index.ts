@@ -2,50 +2,15 @@ import { join } from 'path'
 
 import cpFile from 'cp-file'
 
-import { FeatureFlags } from '../../feature_flags'
 import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime'
 
-import { getBundler } from './bundlers'
+import { getBundler, getDefaultBundler } from './bundlers'
 import { findFunctionsInPaths, findFunctionInPath } from './finder'
 import { findISCDeclarationsInPath } from './in_source_config'
-import { detectEsModule } from './utils/detect_es_module'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path'
 import { zipNodeJs } from './utils/zip'
 
-export type NodeBundlerName = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
-export { NodeVersion } from './utils/node_version'
-
-// We use ZISI as the default bundler, except for certain extensions, for which
-// esbuild is the only option.
-const getDefaultBundler = async ({
-  extension,
-  mainFile,
-  featureFlags,
-}: {
-  extension: string
-  mainFile: string
-  featureFlags: FeatureFlags
-}): Promise<NodeBundlerName> => {
-  const { defaultEsModulesToEsbuild, traceWithNft } = featureFlags
-
-  if (['.mjs', '.ts'].includes(extension)) {
-    return 'esbuild'
-  }
-
-  if (traceWithNft) {
-    return 'nft'
-  }
-
-  if (defaultEsModulesToEsbuild) {
-    const isEsModule = await detectEsModule({ mainFile })
-
-    if (isEsModule) {
-      return 'esbuild'
-    }
-  }
-
-  return 'zisi'
-}
+export { NodeVersionString } from './utils/node_version'
 
 // A proxy for the `getSrcFiles` function which adds a default `bundler` using
 // the `getDefaultBundler` function.
@@ -98,6 +63,7 @@ const zipFunction: ZipFunction = async function ({
     bundlerWarnings,
     inputs,
     mainFile: finalMainFile = mainFile,
+    moduleFormat,
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     rewrites,
@@ -130,6 +96,7 @@ const zipFunction: ZipFunction = async function ({
     extension,
     filename,
     mainFile: finalMainFile,
+    moduleFormat,
     rewrites,
     srcFiles,
   })

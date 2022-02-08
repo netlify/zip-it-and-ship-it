@@ -2,6 +2,7 @@ const { mkdir, readFile, chmod, symlink, unlink, rename, stat, writeFile } = req
 const { tmpdir } = require('os')
 const { basename, dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
 const { arch, env, platform, version: nodeVersion } = require('process')
+const { pathToFileURL } = require('url')
 
 const test = require('ava')
 const cpy = require('cpy')
@@ -29,6 +30,7 @@ const shellUtilsStub = sinon.stub(shellUtils, 'runCommand')
 const { zipFunction, listFunctions, listFunctionsFiles, listFunction } = require('..')
 
 const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler')
+const { detectEsModule } = require('../dist/runtimes/node/utils/detect_es_module')
 
 const { getRequires, zipNode, zipFixture, unzipFiles, zipCheckFunctions, FIXTURES_DIR } = require('./helpers/main')
 const { computeSha1 } = require('./helpers/sha')
@@ -419,26 +421,44 @@ testMany(
 )
 
 testMany(
-  'Can bundle functions with `.js` extension using ES Modules',
-  ['bundler_esbuild', 'bundler_nft'],
+  'Can bundle ESM functions and transpile them to CJS when the Node version is <14',
+  ['bundler_nft'],
   async (options, t) => {
     const length = 4
     const fixtureName = 'local-require-esm'
     const opts = merge(options, {
       basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      config: {
+        '*': {
+          nodeVersion: 'nodejs12.x',
+        },
+      },
       featureFlags: { defaultEsModulesToEsbuild: false },
     })
-    const { files, tmpDir } = await zipFixture(t, 'local-require-esm', {
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
       opts,
     })
 
     await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
-    const func1 = () => require(join(tmpDir, 'function.zip_out', 'function.js'))
-    const func2 = () => require(join(tmpDir, 'function_cjs.zip_out', 'function_cjs.js'))
-    const func3 = () => require(join(tmpDir, 'function_export_only.zip_out', 'function_export_only.js'))
-    const func4 = () => require(join(tmpDir, 'function_import_only.zip_out', 'function_import_only.js'))
+    const functionPaths = [
+      join(tmpDir, 'function.zip_out', 'function.js'),
+      join(tmpDir, 'function_cjs.zip_out', 'function_cjs.js'),
+      join(tmpDir, 'function_export_only.zip_out', 'function_export_only.js'),
+      join(tmpDir, 'function_import_only.zip_out', 'function_import_only.js'),
+    ]
+    const func1 = () => require(functionPaths[0])
+    const func2 = () => require(functionPaths[1])
+    const func3 = () => require(functionPaths[2])
+    const func4 = () => require(functionPaths[3])
+
+    const functionsAreESM = await Promise.all(
+      functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
+    )
+
+    // None of the functions should be ESM since we're transpiling them to CJS.
+    t.false(functionsAreESM.some(Boolean))
 
     // Dynamic imports are not supported in Node <13.2.0.
     if (semver.gte(nodeVersion, '13.2.0')) {
@@ -452,7 +472,7 @@ testMany(
 )
 
 testMany(
-  'Can bundle functions with `.js` extension using ES Modules when `archiveType` is `none`',
+  'Can bundle ESM functions and transpile them to CJS when the Node version is <14 and `archiveType` is `none`',
   ['bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
     const length = 4
@@ -460,17 +480,35 @@ testMany(
     const opts = merge(options, {
       archiveFormat: 'none',
       basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      config: {
+        '*': {
+          nodeVersion: 'nodejs12.x',
+        },
+      },
       featureFlags: { defaultEsModulesToEsbuild: false },
     })
-    const { tmpDir } = await zipFixture(t, 'local-require-esm', {
+    const { tmpDir } = await zipFixture(t, fixtureName, {
       length,
       opts,
     })
 
-    const func1 = () => require(join(tmpDir, 'function', 'function.js'))
-    const func2 = () => require(join(tmpDir, 'function_cjs', 'function_cjs.js'))
-    const func3 = () => require(join(tmpDir, 'function_export_only', 'function_export_only.js'))
-    const func4 = () => require(join(tmpDir, 'function_import_only', 'function_import_only.js'))
+    const functionPaths = [
+      join(tmpDir, 'function', 'function.js'),
+      join(tmpDir, 'function_cjs', 'function_cjs.js'),
+      join(tmpDir, 'function_export_only', 'function_export_only.js'),
+      join(tmpDir, 'function_import_only', 'function_import_only.js'),
+    ]
+    const func1 = () => require(functionPaths[0])
+    const func2 = () => require(functionPaths[1])
+    const func3 = () => require(functionPaths[2])
+    const func4 = () => require(functionPaths[3])
+
+    const functionsAreESM = await Promise.all(
+      functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
+    )
+
+    // None of the functions should be ESM since we're transpiling them to CJS.
+    t.false(functionsAreESM.some(Boolean))
 
     // Dynamic imports are not supported in Node <13.2.0.
     if (semver.gte(nodeVersion, '13.2.0')) {
@@ -503,6 +541,69 @@ testMany(
       t.is(body, 'Hello world')
       t.is(statusCode, 200)
     }
+  },
+)
+
+testMany(
+  'Can bundle native ESM functions when the Node version is >=14 and the `zisi_pure_esm` flag is on',
+  ['bundler_nft'],
+  async (options, t) => {
+    const length = 2
+    const fixtureName = 'node-esm'
+    const opts = merge(options, {
+      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      featureFlags: { zisi_pure_esm: true },
+    })
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
+      length,
+      opts,
+    })
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
+    const func1 = await import(pathToFileURL(functionPaths[0]))
+    const func2 = await import(pathToFileURL(functionPaths[1]))
+
+    t.true(func1.handler())
+    t.true(func2.handler())
+
+    const functionsAreESM = await Promise.all(
+      functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
+    )
+
+    t.true(functionsAreESM.every(Boolean))
+  },
+)
+
+testMany(
+  'Can bundle ESM functions and transpile them to CJS when the Node version is >=14 and the `zisi_pure_esm` flag is off',
+  ['bundler_nft'],
+  async (options, t) => {
+    const length = 2
+    const fixtureName = 'node-esm'
+    const opts = merge(options, {
+      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+    })
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
+      length,
+      opts,
+    })
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
+    const func1 = await import(pathToFileURL(functionPaths[0]))
+    const func2 = await import(pathToFileURL(functionPaths[1]))
+
+    t.true(func1.handler())
+    t.true(func2.handler())
+
+    const functionsAreESM = await Promise.all(
+      functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
+    )
+
+    t.false(functionsAreESM.some(Boolean))
   },
 )
 

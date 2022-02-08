@@ -1,12 +1,24 @@
-// eslint-disable-next-line no-magic-numbers
+/* eslint-disable no-magic-numbers */
 type SupportedVersionNumbers = 8 | 10 | 12 | 14
-type NodeVersion = `${SupportedVersionNumbers}.x` | `nodejs${SupportedVersionNumbers}.x`
+type NodeVersionString = `${SupportedVersionNumbers}.x` | `nodejs${SupportedVersionNumbers}.x`
+
+interface NodeVersionSupport {
+  esm: boolean
+}
 
 // Must match the default version used in Bitballoon.
 const DEFAULT_NODE_VERSION = 14
 const VERSION_REGEX = /(nodejs)?(\d+)\.x/
 
 const getNodeVersion = (configVersion?: string) => parseVersion(configVersion) ?? DEFAULT_NODE_VERSION
+
+const getNodeSupportMatrix = (configVersion?: string): NodeVersionSupport => {
+  const versionNumber = getNodeVersion(configVersion)
+
+  return {
+    esm: versionNumber >= 14,
+  }
+}
 
 // Takes a string in the format defined by the `NodeVersion` type and returns
 // the numeric major version (e.g. "nodejs14.x" => 14).
@@ -30,4 +42,12 @@ const parseVersion = (input: string | undefined) => {
   return version
 }
 
-export { DEFAULT_NODE_VERSION, getNodeVersion, parseVersion, NodeVersion }
+export {
+  DEFAULT_NODE_VERSION,
+  getNodeSupportMatrix,
+  getNodeVersion,
+  NodeVersionString,
+  NodeVersionSupport,
+  parseVersion,
+}
+/* eslint-enable no-magic-numbers */
