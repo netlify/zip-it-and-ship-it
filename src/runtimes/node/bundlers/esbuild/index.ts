@@ -122,6 +122,7 @@ const bundle: BundleFunction = async ({
     bundlerWarnings,
     inputs,
     mainFile: normalizedMainFile,
+    moduleFormat: 'cjs',
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     srcFiles: [...supportingSrcFiles, ...bundlePaths.keys()],
