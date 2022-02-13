@@ -431,7 +431,7 @@ testMany(
 
 testMany(
   'Can bundle ESM functions and transpile them to CJS when the Node version is <14',
-  ['bundler_nft'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
     const length = 4
     const fixtureName = 'local-require-esm'
@@ -442,7 +442,7 @@ testMany(
           nodeVersion: 'nodejs12.x',
         },
       },
-      featureFlags: { zisi_pure_esm: false },
+      featureFlags: { zisi_detect_esm: true, zisi_pure_esm: false },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -485,7 +485,7 @@ testMany(
 
 testMany(
   'Can bundle ESM functions and transpile them to CJS when the Node version is <14 and `archiveType` is `none`',
-  ['bundler_esbuild', 'bundler_nft'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
     const length = 4
     const fixtureName = 'local-require-esm'
@@ -497,7 +497,7 @@ testMany(
           nodeVersion: 'nodejs12.x',
         },
       },
-      featureFlags: { zisi_pure_esm: false },
+      featureFlags: { zisi_detect_esm: true, zisi_pure_esm: false },
     })
     const { tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -538,11 +538,14 @@ testMany(
 
 testMany(
   'Can bundle CJS functions that import ESM files with an `import()` expression',
-  ['bundler_esbuild', 'bundler_nft'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
     const fixtureName = 'node-cjs-importing-mjs'
+    const opts = merge(options, {
+      featureFlags: { zisi_detect_esm: true },
+    })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
-      opts: options,
+      opts,
     })
 
     await unzipFiles(files)
@@ -561,7 +564,7 @@ testMany(
 
 testMany(
   'Can bundle native ESM functions when the Node version is >=14 and the `zisi_pure_esm` flag is on',
-  ['bundler_default', 'bundler_nft'],
+  ['bundler_default', 'bundler_nft', 'bundler_esbuild'],
   async (options, t) => {
     const length = 2
     const fixtureName = 'node-esm'
@@ -593,7 +596,7 @@ testMany(
 
 testMany(
   'Can bundle ESM functions and transpile them to CJS when the Node version is >=14 and the `zisi_pure_esm` flag is off',
-  ['bundler_default', 'bundler_nft'],
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
     const length = 2
     const fixtureName = 'node-esm'
