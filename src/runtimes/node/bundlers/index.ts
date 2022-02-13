@@ -101,21 +101,19 @@ export const getDefaultBundler = async ({
   mainFile: string
   featureFlags: FeatureFlags
 }): Promise<NodeBundlerName> => {
-  const { defaultEsModulesToEsbuild, traceWithNft } = featureFlags
-
   if (['.mjs', '.ts'].includes(extension)) {
     return 'esbuild'
   }
 
-  if (traceWithNft) {
+  if (featureFlags.traceWithNft) {
     return 'nft'
   }
 
-  if (defaultEsModulesToEsbuild) {
-    const isEsModule = await detectEsModule({ mainFile })
+  if (featureFlags.zisi_detect_esm) {
+    const functionIsESM = await detectEsModule({ mainFile })
 
-    if (isEsModule) {
-      return 'esbuild'
+    if (functionIsESM) {
+      return 'nft'
     }
   }
 
