@@ -436,7 +436,7 @@ testMany(
     const length = 4
     const fixtureName = 'local-require-esm'
     const opts = merge(options, {
-      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      basePath: join(FIXTURES_DIR, fixtureName),
       config: {
         '*': {
           nodeVersion: 'nodejs12.x',
@@ -491,7 +491,7 @@ testMany(
     const fixtureName = 'local-require-esm'
     const opts = merge(options, {
       archiveFormat: 'none',
-      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      basePath: join(FIXTURES_DIR, fixtureName),
       config: {
         '*': {
           nodeVersion: 'nodejs12.x',
@@ -569,7 +569,7 @@ testMany(
     const length = 2
     const fixtureName = 'node-esm'
     const opts = merge(options, {
-      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      basePath: join(FIXTURES_DIR, fixtureName),
       featureFlags: { zisi_detect_esm: true, zisi_pure_esm: true },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
@@ -601,7 +601,7 @@ testMany(
     const length = 2
     const fixtureName = 'node-esm'
     const opts = merge(options, {
-      basePath: `${FIXTURES_DIR}/${fixtureName}`,
+      basePath: join(FIXTURES_DIR, fixtureName),
       featureFlags: { zisi_detect_esm: true },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
