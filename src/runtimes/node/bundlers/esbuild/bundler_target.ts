@@ -23,20 +23,24 @@ const getBundlerTarget = (suppliedVersion?: string): VersionValues => {
   return versionMap[`${DEFAULT_NODE_VERSION}.x`]
 }
 
-const getModuleFormat = async (srcDir: string, featureFlags: FeatureFlags, configVersion?: string) => {
+const getModuleFormat = async (
+  srcDir: string,
+  featureFlags: FeatureFlags,
+  configVersion?: string,
+): Promise<{ includedFiles: string[]; moduleFormat: ModuleFormat }> => {
   const packageJsonFile = await getClosestPackageJson(srcDir)
   const nodeSupport = getNodeSupportMatrix(configVersion)
 
   if (featureFlags.zisi_pure_esm && packageJsonFile?.contents.type === 'module' && nodeSupport.esm) {
     return {
       includedFiles: [packageJsonFile.path],
-      moduleFormat: 'esm' as ModuleFormat,
+      moduleFormat: 'esm',
     }
   }
 
   return {
     includedFiles: [],
-    moduleFormat: 'cjs' as ModuleFormat,
+    moduleFormat: 'cjs',
   }
 }
 
