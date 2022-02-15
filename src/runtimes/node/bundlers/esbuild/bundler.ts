@@ -4,11 +4,12 @@ import { build, Metafile } from '@netlify/esbuild'
 import { tmpName } from 'tmp-promise'
 
 import type { FunctionConfig } from '../../../../config.js'
+import { FeatureFlags } from '../../../../feature_flags.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
 import type { RuntimeName } from '../../../runtime.js'
 import type { NodeBundlerName } from '../index.js'
 
-import { getBundlerTarget } from './bundler_target.js'
+import { getBundlerTarget, getModuleFormat } from './bundler_target.js'
 import { getDynamicImportsPlugin } from './plugin_dynamic_imports.js'
 import { getNativeModulesPlugin } from './plugin_native_modules.js'
 import { getNodeBuiltinPlugin } from './plugin_node_builtin.js'
@@ -28,6 +29,7 @@ export const bundleJsFile = async function ({
   basePath,
   config,
   externalModules = [],
+  featureFlags,
   ignoredModules = [],
   name,
   srcDir,
@@ -37,6 +39,7 @@ export const bundleJsFile = async function ({
   basePath?: string
   config: FunctionConfig
   externalModules: string[]
+  featureFlags: FeatureFlags
   ignoredModules: string[]
   name: string
   srcDir: string
@@ -84,11 +87,21 @@ export const bundleJsFile = async function ({
   // URLs, not paths, so even on Windows they should use forward slashes.
   const sourceRoot = targetDirectory.replace(/\\/g, '/')
 
+  // Configuring the output format of esbuild. The `includedFiles` array we get
+  // here contains additional paths to include with the bundle, like the path
+  // to a `package.json` with {"type": "module"} in case of an ESM function.
+  const { includedFiles: includedFilesFromModuleDetection, moduleFormat } = await getModuleFormat(
+    srcDir,
+    featureFlags,
+    config.nodeVersion,
+  )
+
   try {
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
       bundle: true,
       entryPoints: [srcFile],
       external,
+      format: moduleFormat,
       logLevel: 'warning',
       logLimit: ESBUILD_LOG_LIMIT,
       metafile: true,
@@ -108,12 +121,14 @@ export const bundleJsFile = async function ({
     })
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
+    const additionalPaths = [...dynamicImportsIncludedPaths, ...includedFilesFromModuleDetection]
 
     return {
-      additionalPaths: [...dynamicImportsIncludedPaths],
+      additionalPaths,
       bundlePaths,
       cleanTempFiles,
       inputs,
+      moduleFormat,
       nativeNodeModules,
       nodeModulesWithDynamicImports: [...nodeModulesWithDynamicImports],
       warnings,
