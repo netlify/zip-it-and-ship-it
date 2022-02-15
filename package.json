@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "5.7.4",
+  "version": "5.7.5",
   "description": "Zip it and ship it",
   "main": "./dist/main.js",
   "bin": {
@@ -70,7 +70,7 @@
     "junk": "^3.1.0",
     "locate-path": "^6.0.0",
     "merge-options": "^3.0.4",
-    "minimatch": "^3.0.4",
+    "minimatch": "^4.0.0",
     "p-map": "^4.0.0",
     "path-exists": "^4.0.0",
     "pkg-dir": "^5.0.0",
@@ -81,7 +81,6 @@
     "semver": "^7.0.0",
     "tmp-promise": "^3.0.2",
     "toml": "^3.0.0",
-    "typescript": "^4.6.0-beta",
     "unixify": "^1.0.0",
     "yargs": "^16.0.0"
   },
@@ -105,7 +104,8 @@
     "sinon": "^13.0.0",
     "sort-on": "^4.1.1",
     "source-map-support": "^0.5.20",
-    "throat": "^6.0.1"
+    "throat": "^6.0.1",
+    "typescript": "^4.6.0-beta"
   },
   "engines": {
     "node": "^12.20.0 || ^14.14.0 || >=16.0.0"
