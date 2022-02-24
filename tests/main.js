@@ -62,13 +62,13 @@ const getZipChecksum = async function (t, bundler) {
 }
 
 test.before(async () => {
-  // Renaming malformed `.json-template` files to `.json`
+  // Renaming malformed `.malformed-json` files to `.json`
   await rename(
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.json-template'),
+    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.malformed-json'),
     join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.json'),
   )
   await rename(
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.json-template'),
+    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.malformed-json'),
     join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.json'),
   )
 })
@@ -78,14 +78,14 @@ test.after.always(async () => {
     await del(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
   }
 
-  // Renaming malformed `.json` files back to `.json-template`
+  // Renaming malformed `.json` files back to `.malformed-json`
   await rename(
     join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.json'),
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.json-template'),
+    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.malformed-json'),
   )
   await rename(
     join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.json'),
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.json-template'),
+    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.malformed-json'),
   )
 })
 
