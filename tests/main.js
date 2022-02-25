@@ -564,9 +564,9 @@ testMany(
 
 testMany(
   'Can bundle native ESM functions when the Node version is >=14 and the `zisi_pure_esm` flag is on',
-  ['bundler_default', 'bundler_nft', 'bundler_esbuild'],
-  async (options, t) => {
-    const length = 2
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t, variation) => {
+    const length = 3
     const fixtureName = 'node-esm'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
@@ -582,6 +582,15 @@ testMany(
     const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
     const func1 = await import(pathToFileURL(functionPaths[0]))
     const func2 = await import(pathToFileURL(functionPaths[1]))
+
+    // We can't use TypeScript if we're forcing the bundle to be NFT.
+    if (variation !== 'bundler_nft') {
+      functionPaths.push(join(tmpDir, 'func3.zip_out', 'func3.js'))
+
+      const func3 = await import(pathToFileURL(functionPaths[2]))
+
+      t.true(func3.handler())
+    }
 
     t.true(func1.handler())
     t.true(func2.handler())
