@@ -28,7 +28,7 @@ jobs:
           repository: netlify/cli
           path: netlify-cli
       - name: Installing Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '*'
           cache: 'npm'
