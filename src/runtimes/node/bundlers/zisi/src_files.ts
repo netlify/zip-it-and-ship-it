@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { dirname, basename, normalize } from 'path'
 
+import isBuiltinModule from 'is-builtin-module'
 import { not as notJunk } from 'junk'
 import precinct from 'precinct'
 
@@ -87,6 +88,19 @@ const getDependencies = async function ({
   }
 }
 
+const paperwork = async (path: string) => {
+  const modules = await precinct.paperwork(path, { includeCore: true })
+  return modules.filter((moduleName) => {
+    // only require("node:test") refers to the
+    // builtin, require("test") doesn't
+    if (moduleName === 'test') {
+      return true
+    }
+
+    return !isBuiltinModule(moduleName)
+  })
+}
+
 const getFileDependencies = async function ({
   featureFlags,
   functionName,
@@ -111,9 +125,8 @@ const getFileDependencies = async function ({
   state.localFiles.add(path)
 
   const basedir = dirname(path)
-  const dependencies = featureFlags.parseWithEsbuild
-    ? await listImports({ functionName, path })
-    : await precinct.paperwork(path, { includeCore: false })
+  const dependencies = featureFlags.parseWithEsbuild ? await listImports({ functionName, path }) : await paperwork(path)
+
   const depsPaths = await Promise.all(
     dependencies.filter(nonNullable).map((dependency) =>
       getImportDependencies({
