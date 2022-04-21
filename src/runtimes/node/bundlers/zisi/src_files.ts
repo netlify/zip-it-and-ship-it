@@ -1,8 +1,10 @@
 /* eslint-disable max-lines */
 import { dirname, basename, normalize } from 'path'
+import * as process from 'process'
 
 import { not as notJunk } from 'junk'
 import precinct from 'precinct'
+import semver from 'semver'
 
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { nonNullable } from '../../../../utils/non_nullable.js'
@@ -87,6 +89,32 @@ const getDependencies = async function ({
   }
 }
 
+const paperwork = async (path: string) => {
+  if (semver.lt(process.version, '18.0.0')) {
+    return await precinct.paperwork(path, { includeCore: false })
+  }
+
+  // for Node v18, we're temporarily using our own mechanism to filter out core dependencies, until
+  // https://github.com/dependents/node-precinct/pull/108 landed
+  const modules = await precinct.paperwork(path, { includeCore: true })
+  return modules.filter((moduleName) => {
+    if (moduleName.startsWith('node:')) {
+      return false
+    }
+
+    // only require("node:test") refers to the
+    // builtin, require("test") doesn't
+    if (moduleName === 'test') {
+      return true
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isNativeModule = moduleName in (process as any).binding('natives')
+
+    return !isNativeModule
+  })
+}
+
 const getFileDependencies = async function ({
   featureFlags,
   functionName,
@@ -111,9 +139,8 @@ const getFileDependencies = async function ({
   state.localFiles.add(path)
 
   const basedir = dirname(path)
-  const dependencies = featureFlags.parseWithEsbuild
-    ? await listImports({ functionName, path })
-    : await precinct.paperwork(path, { includeCore: false })
+  const dependencies = featureFlags.parseWithEsbuild ? await listImports({ functionName, path }) : await paperwork(path)
+
   const depsPaths = await Promise.all(
     dependencies.filter(nonNullable).map((dependency) =>
       getImportDependencies({
