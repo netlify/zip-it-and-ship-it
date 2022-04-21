@@ -4,6 +4,7 @@ import * as process from 'process'
 
 import { not as notJunk } from 'junk'
 import precinct from 'precinct'
+import semver from 'semver'
 
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { nonNullable } from '../../../../utils/non_nullable.js'
@@ -88,9 +89,13 @@ const getDependencies = async function ({
   }
 }
 
-// we're temporarily using our own mechanism to filter out core dependencies, until
-// https://github.com/dependents/node-precinct/pull/108 landed
 const paperwork = async (path: string) => {
+  if (semver.lt(process.version, '18.0.0')) {
+    return await precinct.paperwork(path, { includeCore: false })
+  }
+
+  // for Node v18, we're temporarily using our own mechanism to filter out core dependencies, until
+  // https://github.com/dependents/node-precinct/pull/108 landed
   const modules = await precinct.paperwork(path, { includeCore: true })
   return modules.filter((moduleName) => {
     if (moduleName.startsWith('node:')) {
