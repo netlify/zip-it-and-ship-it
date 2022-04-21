@@ -93,16 +93,18 @@ const getDependencies = async function ({
 const paperwork = async (path: string) => {
   const modules = await precinct.paperwork(path, { includeCore: true })
   return modules.filter((moduleName) => {
+    if (moduleName.startsWith('node:')) {
+      return false
+    }
+
     // only require("node:test") refers to the
     // builtin, require("test") doesn't
     if (moduleName === 'test') {
       return true
     }
 
-    const normalisedModuleName = moduleName.startsWith('node:') ? moduleName.slice('node:'.length) : moduleName
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const isNativeModule = normalisedModuleName in (process as any).binding('natives')
+    const isNativeModule = moduleName in (process as any).binding('natives')
 
     return !isNativeModule
   })
