@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { dirname, basename, normalize } from 'path'
+import * as process from 'process'
 
-import isBuiltinModule from 'is-builtin-module'
 import { not as notJunk } from 'junk'
 import precinct from 'precinct'
 
@@ -88,6 +88,8 @@ const getDependencies = async function ({
   }
 }
 
+// we're temporarily using our own mechanism to filter out core dependencies, until
+// https://github.com/dependents/node-precinct/pull/108 landed
 const paperwork = async (path: string) => {
   const modules = await precinct.paperwork(path, { includeCore: true })
   return modules.filter((moduleName) => {
@@ -97,7 +99,12 @@ const paperwork = async (path: string) => {
       return true
     }
 
-    return !isBuiltinModule(moduleName)
+    const normalisedModuleName = moduleName.startsWith('node:') ? moduleName.slice('node:'.length) : moduleName
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isNativeModule = normalisedModuleName in (process as any).binding('natives')
+
+    return !isNativeModule
   })
 }
 
