@@ -67,6 +67,21 @@ jobs:
           node -e "console.log('deploy_log_url=' + require('./.netlify-deploy-log.json').logs)" >> $GITHUB_ENV
           node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
         working-directory: test-site/demos/default
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          browser: chrome
+          headless: true
+          record: true
+          parallel: true
+          config-file: test-site/cypress/config/ci.json
+          group: 'ZISI Integration Test - Next'
+          spec: test-site/cypress/integration/default/*
+        env:
+          DEBUG: '@cypress/github-action'
+          CYPRESS_baseUrl: ${{ env.deploy_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CYPRESS_RECORD_KEY: ${{ secrets.DEFAULT_CYPRESS_RECORD_KEY }}
       - name: Posting comment
         uses: KeisukeYamashita/create-comment@v1
         with:
