@@ -9,9 +9,6 @@ on:
 jobs:
   integration:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        site: ['netlify/netlify-plugin-nextjs']
     steps:
       - name: Checking out zip-it-and-ship-it
         uses: actions/checkout@v3
@@ -20,7 +17,7 @@ jobs:
       - name: Checking out test site
         uses: actions/checkout@v3
         with:
-          repository: '${{ matrix.site }}'
+          repository: netlify/netlify-plugin-nextjs
           path: test-site
       - name: Checking out netlify-cli
         uses: actions/checkout@v3
@@ -61,19 +58,35 @@ jobs:
         run:
           $GITHUB_WORKSPACE/netlify-cli/bin/run deploy --build --json --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{
           secrets.NETLIFY_TOKEN }} --functions .netlify/functions > .netlify-deploy-log.json
-        working-directory: test-site
+        working-directory: test-site/demos/default
       - name: Parsing deploy result
         run: |
           node -e "console.log('deploy_log_url=' + require('./.netlify-deploy-log.json').logs)" >> $GITHUB_ENV
           node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
-        working-directory: test-site
+        working-directory: test-site/demos/default
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          working-directory: test-site
+          browser: chrome
+          headless: true
+          record: true
+          parallel: true
+          config-file: cypress/config/ci.json
+          group: 'ZISI Integration Test - Next'
+          spec: cypress/integration/default/*
+        env:
+          DEBUG: '@cypress/github-action'
+          CYPRESS_baseUrl: ${{ env.deploy_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CYPRESS_RECORD_KEY: ${{ secrets.DEFAULT_CYPRESS_RECORD_KEY }}
       - name: Posting comment
         uses: KeisukeYamashita/create-comment@v1
         with:
           check-only-first-line: true
           unique: true
           comment: |
-            ## Integration Test: ${{ matrix.site }}
+            ## Integration Test: netlify/netlify-plugin-nextjs
 
             - **Deploy URL**: ${{ env.deploy_url }}
             - **Deploy logs**: ${{ env.deploy_log_url }}
