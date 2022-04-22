@@ -70,13 +70,14 @@ jobs:
       - name: Cypress run
         uses: cypress-io/github-action@v2
         with:
+          working-directory: test-site
           browser: chrome
           headless: true
           record: true
           parallel: true
-          config-file: test-site/cypress/config/ci.json
+          config-file: cypress/config/ci.json
           group: 'ZISI Integration Test - Next'
-          spec: test-site/cypress/integration/default/*
+          spec: cypress/integration/default/*
         env:
           DEBUG: '@cypress/github-action'
           CYPRESS_baseUrl: ${{ env.deploy_url }}
