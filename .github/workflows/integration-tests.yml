@@ -66,7 +66,7 @@ jobs:
         run: |
           node -e "console.log('deploy_log_url=' + require('./.netlify-deploy-log.json').logs)" >> $GITHUB_ENV
           node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
-        working-directory: test-site
+        working-directory: test-site/demos/default
       - name: Posting comment
         uses: KeisukeYamashita/create-comment@v1
         with:
