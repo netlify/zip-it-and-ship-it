@@ -9,9 +9,6 @@ on:
 jobs:
   integration:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        site: ['netlify/netlify-plugin-nextjs']
     steps:
       - name: Checking out zip-it-and-ship-it
         uses: actions/checkout@v3
@@ -20,7 +17,7 @@ jobs:
       - name: Checking out test site
         uses: actions/checkout@v3
         with:
-          repository: '${{ matrix.site }}'
+          repository: netlify/netlify-plugin-nextjs
           path: test-site
       - name: Checking out netlify-cli
         uses: actions/checkout@v3
@@ -89,7 +86,7 @@ jobs:
           check-only-first-line: true
           unique: true
           comment: |
-            ## Integration Test: ${{ matrix.site }}
+            ## Integration Test: netlify/netlify-plugin-nextjs
 
             - **Deploy URL**: ${{ env.deploy_url }}
             - **Deploy logs**: ${{ env.deploy_log_url }}
