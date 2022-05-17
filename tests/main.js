@@ -1897,6 +1897,23 @@ testMany(
   },
 )
 
+test('Adds `type: "functionsBundling"` to user errors when transpiling esm in nft bundler', async (t) => {
+  try {
+    await zipNode(t, 'node-esm-top-level-await-error', {
+      opts: { config: { '*': { nodeBundler: 'nft' } } },
+    })
+
+    t.fail('Bundling should have thrown')
+  } catch (error) {
+    const { customErrorInfo } = error
+
+    t.is(customErrorInfo.type, 'functionsBundling')
+    t.is(customErrorInfo.location.bundler, 'nft')
+    t.is(customErrorInfo.location.functionName, 'function')
+    t.is(customErrorInfo.location.runtime, 'js')
+  }
+})
+
 test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async (t) => {
   const fixtureName = 'node-module-dynamic-import'
   const { files } = await zipNode(t, fixtureName, {
