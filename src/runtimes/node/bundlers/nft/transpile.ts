@@ -26,6 +26,7 @@ export const transpile = async (path: string, config: FunctionConfig, functionNa
   } catch (error) {
     const bundler: NodeBundlerName = 'nft'
     const runtime: RuntimeName = 'js'
+
     error.customErrorInfo = {
       type: 'functionsBundling',
       location: { bundler, functionName, runtime },
