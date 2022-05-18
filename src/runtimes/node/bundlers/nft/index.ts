@@ -25,6 +25,7 @@ const bundle: BundleFunction = async ({
   config,
   featureFlags,
   mainFile,
+  name,
   pluginsModulesPath,
   repositoryRoot = basePath,
 }) => {
@@ -43,6 +44,7 @@ const bundle: BundleFunction = async ({
     featureFlags,
     mainFile,
     pluginsModulesPath,
+    name,
   })
   const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
@@ -73,12 +75,14 @@ const traceFilesAndTranspile = async function ({
   featureFlags,
   mainFile,
   pluginsModulesPath,
+  name,
 }: {
   basePath?: string
   config: FunctionConfig
   featureFlags: FeatureFlags
   mainFile: string
   pluginsModulesPath?: string
+  name: string
 }) {
   const fsCache: FsCache = {}
   const {
@@ -129,6 +133,7 @@ const traceFilesAndTranspile = async function ({
     fsCache,
     mainFile,
     reasons,
+    name,
   })
 
   return {
