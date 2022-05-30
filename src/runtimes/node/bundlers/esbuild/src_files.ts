@@ -17,7 +17,10 @@ export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, plugi
   })
   const includedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
 
-  return [...includedPaths, mainFile]
+  return {
+    srcFiles: [...includedPaths, mainFile],
+    includedFiles: filterExcludedPaths(includedFilePaths, excludedPaths),
+  }
 }
 
 const getSrcFilesForDependencies = async function ({

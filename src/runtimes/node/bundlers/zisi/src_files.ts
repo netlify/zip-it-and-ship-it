@@ -45,9 +45,9 @@ export const getSrcFiles: GetSrcFilesFunction = async function ({
   // We sort so that the archive's checksum is deterministic.
   // Mutating is fine since `Array.filter()` returns a shallow copy
   const filteredFiles = uniqueFiles.filter(isNotJunk).sort()
-  const includedPaths = filterExcludedPaths([...filteredFiles, ...includedFilePaths], excludedPaths)
+  const srcFiles = filterExcludedPaths([...filteredFiles, ...includedFilePaths], excludedPaths)
 
-  return includedPaths
+  return { srcFiles, includedFiles: filterExcludedPaths(includedFilePaths, excludedPaths) }
 }
 
 // Remove temporary files like *~, *.swp, etc.
