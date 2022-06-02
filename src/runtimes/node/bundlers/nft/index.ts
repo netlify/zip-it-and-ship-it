@@ -8,10 +8,9 @@ import unixify from 'unixify'
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
-import type { GetSrcFilesFunction } from '../../../runtime.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import type { BundleFunction } from '../index.js'
+import type { GetSrcFilesFunction, BundleFunction } from '../index.js'
 
 import { processESM } from './es_modules.js'
 
@@ -25,6 +24,7 @@ const bundle: BundleFunction = async ({
   config,
   featureFlags,
   mainFile,
+  name,
   pluginsModulesPath,
   repositoryRoot = basePath,
 }) => {
@@ -43,6 +43,7 @@ const bundle: BundleFunction = async ({
     featureFlags,
     mainFile,
     pluginsModulesPath,
+    name,
   })
   const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
@@ -52,6 +53,7 @@ const bundle: BundleFunction = async ({
 
   return {
     basePath: getBasePath(dirnames),
+    includedFiles: filterExcludedPaths(includedFilePaths, excludedPaths),
     inputs: dependencyPaths,
     mainFile,
     moduleFormat,
@@ -73,12 +75,14 @@ const traceFilesAndTranspile = async function ({
   featureFlags,
   mainFile,
   pluginsModulesPath,
+  name,
 }: {
   basePath?: string
   config: FunctionConfig
   featureFlags: FeatureFlags
   mainFile: string
   pluginsModulesPath?: string
+  name: string
 }) {
   const fsCache: FsCache = {}
   const {
@@ -129,6 +133,7 @@ const traceFilesAndTranspile = async function ({
     fsCache,
     mainFile,
     reasons,
+    name,
   })
 
   return {
@@ -148,9 +153,13 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const includedPaths = filterExcludedPaths([...normalizedDependencyPaths, ...includedFilePaths], excludedPaths)
+  const srcFiles = filterExcludedPaths(normalizedDependencyPaths, excludedPaths)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludedPaths)
 
-  return includedPaths
+  return {
+    srcFiles: [...srcFiles, ...includedPaths],
+    includedFiles: includedPaths,
+  }
 }
 
 const bundler = { bundle, getSrcFiles }

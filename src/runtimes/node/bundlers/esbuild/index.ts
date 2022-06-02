@@ -85,7 +85,7 @@ const bundle: BundleFunction = async ({
     srcFile: mainFile,
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings
-  const srcFiles = await getSrcFiles({
+  const { srcFiles, includedFiles } = await getSrcFiles({
     basePath,
     config: {
       ...config,
@@ -122,6 +122,7 @@ const bundle: BundleFunction = async ({
     cleanupFunction: cleanTempFiles,
     basePath: functionBasePath,
     bundlerWarnings,
+    includedFiles,
     inputs,
     mainFile: normalizedMainFile,
     moduleFormat,

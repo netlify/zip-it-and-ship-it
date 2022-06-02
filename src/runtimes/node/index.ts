@@ -24,8 +24,9 @@ const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
       mainFile: parameters.mainFile,
     }))
   const bundler = getBundler(bundlerName)
+  const result = await bundler.getSrcFiles({ ...parameters, pluginsModulesPath })
 
-  return bundler.getSrcFiles({ ...parameters, pluginsModulesPath })
+  return result.srcFiles
 }
 
 const zipFunction: ZipFunction = async function ({
@@ -61,6 +62,7 @@ const zipFunction: ZipFunction = async function ({
     cleanupFunction,
     basePath: finalBasePath,
     bundlerWarnings,
+    includedFiles,
     inputs,
     mainFile: finalMainFile = mainFile,
     moduleFormat,
@@ -108,6 +110,7 @@ const zipFunction: ZipFunction = async function ({
     bundlerWarnings,
     config,
     inputs,
+    includedFiles,
     inSourceConfig,
     nativeNodeModules,
     nodeModulesWithDynamicImports,
