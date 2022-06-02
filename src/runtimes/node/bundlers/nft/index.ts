@@ -153,11 +153,12 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const srcFiles = filterExcludedPaths([...normalizedDependencyPaths, ...includedFilePaths], excludedPaths)
+  const srcFiles = filterExcludedPaths(normalizedDependencyPaths, excludedPaths)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludedPaths)
 
   return {
-    srcFiles,
-    includedFiles: filterExcludedPaths(includedFilePaths, excludedPaths),
+    srcFiles: [...srcFiles, ...includedPaths],
+    includedFiles: includedPaths,
   }
 }
 
