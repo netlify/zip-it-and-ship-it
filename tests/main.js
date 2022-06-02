@@ -381,6 +381,27 @@ testMany(
   },
 )
 
+testMany(
+  'Includes includedFiles in the response of zipFunction',
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+  async (options, t) => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test2' })
+    const mainFile = join(FIXTURES_DIR, 'node-module-next-image', 'function', 'function.js')
+    const result = await zipFunction(mainFile, tmpDir, {
+      ...options,
+      basePath: join(FIXTURES_DIR, 'node-module-next-image'),
+      config: {
+        '*': {
+          includedFiles: ['included/*.js'],
+        },
+      },
+    })
+
+    t.true(Array.isArray(result.includedFiles))
+    t.regex(unixify(result.includedFiles[0]), /node-module-next-image\/included\/abc\.js/)
+  },
+)
+
 // We persist `package.json` as `package.json.txt` in git. Otherwise ESLint
 // tries to load when linting sibling JavaScript files. In this test, we
 // temporarily rename it to an actual `package.json`.

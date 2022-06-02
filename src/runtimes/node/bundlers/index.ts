@@ -50,6 +50,7 @@ export type BundleFunction = (
   basePath: string
   bundlerWarnings?: BundlerWarning[]
   cleanupFunction?: CleanupFunction
+  includedFiles: string[]
   inputs: string[]
   mainFile: string
   moduleFormat: ModuleFormat
@@ -66,7 +67,7 @@ export type GetSrcFilesFunction = (
     pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
-) => Promise<string[]>
+) => Promise<{ srcFiles: string[]; includedFiles: string[] }>
 
 interface NodeBundler {
   bundle: BundleFunction
