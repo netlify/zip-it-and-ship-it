@@ -26,6 +26,9 @@ jobs:
       - name: Run benchmarks
         run: npm run benchmark
 
+      - name: Debug
+        run: cat .delta.*
+
       - name: Run Delta
         uses: netlify/delta-action@v3
         with:
