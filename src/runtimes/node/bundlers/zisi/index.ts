@@ -19,7 +19,7 @@ const bundle: BundleFunction = async ({
   srcPath,
   stat,
 }) => {
-  const srcFiles = await getSrcFiles({
+  const { srcFiles, includedFiles } = await getSrcFiles({
     basePath,
     config: {
       ...config,
@@ -40,6 +40,7 @@ const bundle: BundleFunction = async ({
 
   return {
     basePath: getBasePath(dirnames),
+    includedFiles,
     inputs: srcFiles,
     mainFile,
     moduleFormat: 'cjs',

@@ -8,10 +8,9 @@ import unixify from 'unixify'
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
-import type { GetSrcFilesFunction } from '../../../runtime.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import type { BundleFunction } from '../index.js'
+import type { GetSrcFilesFunction, BundleFunction } from '../index.js'
 
 import { processESM } from './es_modules.js'
 
@@ -54,6 +53,7 @@ const bundle: BundleFunction = async ({
 
   return {
     basePath: getBasePath(dirnames),
+    includedFiles: filterExcludedPaths(includedFilePaths, excludedPaths),
     inputs: dependencyPaths,
     mainFile,
     moduleFormat,
@@ -153,9 +153,13 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const includedPaths = filterExcludedPaths([...normalizedDependencyPaths, ...includedFilePaths], excludedPaths)
+  const srcFiles = filterExcludedPaths(normalizedDependencyPaths, excludedPaths)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludedPaths)
 
-  return includedPaths
+  return {
+    srcFiles: [...srcFiles, ...includedPaths],
+    includedFiles: includedPaths,
+  }
 }
 
 const bundler = { bundle, getSrcFiles }
