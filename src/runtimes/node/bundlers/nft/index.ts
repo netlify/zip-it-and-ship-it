@@ -2,12 +2,11 @@ import { basename, dirname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
-import minimatch from 'minimatch'
-import unixify from 'unixify'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
+import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../index.js'
@@ -63,8 +62,7 @@ const bundle: BundleFunction = async ({
 }
 
 const ignoreFunction = (path: string) => {
-  const normalizedPath = unixify(path)
-  const shouldIgnore = ignore.some((expression) => minimatch(normalizedPath, expression))
+  const shouldIgnore = ignore.some((expression) => minimatch(path, expression))
 
   return shouldIgnore
 }

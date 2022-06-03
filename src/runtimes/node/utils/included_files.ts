@@ -1,10 +1,6 @@
 import { normalize, resolve } from 'path'
-import { promisify } from 'util'
 
-import glob from 'glob'
-import minimatch from 'minimatch'
-
-const pGlob = promisify(glob)
+import { minimatch, glob } from '../../../utils/matching'
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
@@ -49,7 +45,7 @@ export const getPathsOfIncludedFiles = async (
     { include: [], exclude: [] },
   )
   const pathGroups = await Promise.all(
-    include.map((expression) => pGlob(expression, { absolute: true, cwd: basePath, ignore: exclude, nodir: true })),
+    include.map((expression) => glob(expression, { absolute: true, cwd: basePath, ignore: exclude, nodir: true })),
   )
 
   // `pathGroups` is an array containing the paths for each expression in the

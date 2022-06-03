@@ -1,13 +1,9 @@
-import { promisify } from 'util'
-
-import glob from 'glob'
-
-const pGlob = promisify(glob)
+import { glob } from '../../../../utils/matching'
 
 // We use all the files published by the Node.js except some that are not needed
 export const getPublishedFiles = async function (modulePath: string): Promise<string[]> {
   const ignore = getIgnoredFiles(modulePath)
-  const publishedFiles = await pGlob(`${modulePath}/**`, {
+  const publishedFiles = await glob(`${modulePath}/**`, {
     ignore,
     nodir: true,
     absolute: true,
