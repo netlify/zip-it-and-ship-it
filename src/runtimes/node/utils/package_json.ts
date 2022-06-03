@@ -2,7 +2,6 @@ import { promises as fs } from 'fs'
 import { basename, join } from 'path'
 
 import findUp from 'find-up'
-import pkgDir from 'pkg-dir'
 
 export interface PackageJson {
   name?: string
@@ -54,13 +53,8 @@ export const getClosestPackageJson = async (resolveDir: string): Promise<Package
 
 // Retrieve the `package.json` of a specific project or module
 export const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
-  const packageRoot = await pkgDir(srcDir)
-
-  if (packageRoot === undefined) {
-    return {}
-  }
-
-  return readPackageJson(`${packageRoot}/package.json`)
+  const result = await getClosestPackageJson(srcDir)
+  return result?.contents ?? {}
 }
 
 export const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> => {
