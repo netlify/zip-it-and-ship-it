@@ -6,7 +6,7 @@ import { getDependencyPathsForDependency } from '../zisi/traverse.js'
 
 export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {
   const { externalNodeModules = [], includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+  const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
   )
@@ -15,8 +15,8 @@ export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, plugi
     basedir: srcDir,
     pluginsModulesPath,
   })
-  const srcFiles = filterExcludedPaths(dependencyPaths, excludedPaths)
-  const includedPaths = filterExcludedPaths(includedFilePaths, excludedPaths)
+  const srcFiles = filterExcludedPaths(dependencyPaths, excludePatterns)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
 
   return {
     srcFiles: [...srcFiles, ...includedPaths, mainFile],

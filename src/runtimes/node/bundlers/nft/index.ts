@@ -28,7 +28,7 @@ const bundle: BundleFunction = async ({
   repositoryRoot = basePath,
 }) => {
   const { includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+  const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath || basePath,
   )
@@ -44,7 +44,8 @@ const bundle: BundleFunction = async ({
     pluginsModulesPath,
     name,
   })
-  const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
+  const filteredIncludedPaths = [...filterExcludedPaths(dependencyPaths, excludePatterns), ...includedPaths]
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
 
   // Sorting the array to make the checksum deterministic.
@@ -52,7 +53,7 @@ const bundle: BundleFunction = async ({
 
   return {
     basePath: getBasePath(dirnames),
-    includedFiles: filterExcludedPaths(includedFilePaths, excludedPaths),
+    includedFiles: includedPaths,
     inputs: dependencyPaths,
     mainFile,
     moduleFormat,
@@ -143,7 +144,7 @@ const traceFilesAndTranspile = async function ({
 
 const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mainFile }) {
   const { includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+  const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
   )
@@ -151,8 +152,8 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const srcFiles = filterExcludedPaths(normalizedDependencyPaths, excludedPaths)
-  const includedPaths = filterExcludedPaths(includedFilePaths, excludedPaths)
+  const srcFiles = filterExcludedPaths(normalizedDependencyPaths, excludePatterns)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
 
   return {
     srcFiles: [...srcFiles, ...includedPaths],

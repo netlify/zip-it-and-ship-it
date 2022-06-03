@@ -31,7 +31,7 @@ export const getSrcFiles: GetSrcFilesFunction = async function ({
   stat,
 }) {
   const { includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+  const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
   )
@@ -45,8 +45,8 @@ export const getSrcFiles: GetSrcFilesFunction = async function ({
   // We sort so that the archive's checksum is deterministic.
   // Mutating is fine since `Array.filter()` returns a shallow copy
   const filteredFiles = uniqueFiles.filter(isNotJunk).sort()
-  const srcFiles = filterExcludedPaths(filteredFiles, excludedPaths)
-  const includedPaths = filterExcludedPaths(includedFilePaths, excludedPaths)
+  const srcFiles = filterExcludedPaths(filteredFiles, excludePatterns)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
 
   return { srcFiles: [...srcFiles, ...includedPaths], includedFiles: includedPaths }
 }
