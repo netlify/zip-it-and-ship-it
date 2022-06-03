@@ -2,12 +2,11 @@ import { basename, dirname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
-import minimatch from 'minimatch'
-import unixify from 'unixify'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
+import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../index.js'
@@ -29,7 +28,7 @@ const bundle: BundleFunction = async ({
   repositoryRoot = basePath,
 }) => {
   const { includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+  const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath || basePath,
   )
@@ -45,7 +44,8 @@ const bundle: BundleFunction = async ({
     pluginsModulesPath,
     name,
   })
-  const filteredIncludedPaths = filterExcludedPaths([...dependencyPaths, ...includedFilePaths], excludedPaths)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
+  const filteredIncludedPaths = [...filterExcludedPaths(dependencyPaths, excludePatterns), ...includedPaths]
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
 
   // Sorting the array to make the checksum deterministic.
@@ -53,7 +53,7 @@ const bundle: BundleFunction = async ({
 
   return {
     basePath: getBasePath(dirnames),
-    includedFiles: filterExcludedPaths(includedFilePaths, excludedPaths),
+    includedFiles: includedPaths,
     inputs: dependencyPaths,
     mainFile,
     moduleFormat,
@@ -63,8 +63,7 @@ const bundle: BundleFunction = async ({
 }
 
 const ignoreFunction = (path: string) => {
-  const normalizedPath = unixify(path)
-  const shouldIgnore = ignore.some((expression) => minimatch(normalizedPath, expression))
+  const shouldIgnore = ignore.some((expression) => minimatch(path, expression))
 
   return shouldIgnore
 }
@@ -145,7 +144,7 @@ const traceFilesAndTranspile = async function ({
 
 const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mainFile }) {
   const { includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+  const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
   )
@@ -153,8 +152,8 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
-  const srcFiles = filterExcludedPaths(normalizedDependencyPaths, excludedPaths)
-  const includedPaths = filterExcludedPaths(includedFilePaths, excludedPaths)
+  const srcFiles = filterExcludedPaths(normalizedDependencyPaths, excludePatterns)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
 
   return {
     srcFiles: [...srcFiles, ...includedPaths],
