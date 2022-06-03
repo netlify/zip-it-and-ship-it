@@ -82,7 +82,7 @@
     "tmp-promise": "^3.0.2",
     "toml": "^3.0.0",
     "unixify": "^1.0.0",
-    "yargs": "^16.0.0"
+    "yargs": "^17.0.0"
   },
   "devDependencies": {
     "@babel/types": "^7.15.6",
