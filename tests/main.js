@@ -2,7 +2,6 @@ const { mkdir, readFile, chmod, symlink, unlink, rename, stat, writeFile } = req
 const { tmpdir } = require('os')
 const { basename, dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
 const { arch, env, platform, version: nodeVersion } = require('process')
-const { pathToFileURL } = require('url')
 
 const test = require('ava')
 const cpy = require('cpy')
@@ -601,8 +600,8 @@ testMany(
     await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
     const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
-    const func1 = await import(pathToFileURL(functionPaths[0]))
-    const func2 = await import(pathToFileURL(functionPaths[1]))
+    const func1 = await importFunctionFile(functionPaths[0])
+    const func2 = await importFunctionFile(functionPaths[1])
 
     t.true(func1.handler())
     t.true(func2.handler())
@@ -633,8 +632,8 @@ testMany(
     await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
     const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
-    const func1 = await import(pathToFileURL(functionPaths[0]))
-    const func2 = await import(pathToFileURL(functionPaths[1]))
+    const func1 = await importFunctionFile(functionPaths[0])
+    const func2 = await importFunctionFile(functionPaths[1])
 
     t.true(func1.handler())
     t.true(func2.handler())
