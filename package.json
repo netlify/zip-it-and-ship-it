@@ -74,7 +74,6 @@
     "normalize-path": "^3.0.0",
     "p-map": "^4.0.0",
     "path-exists": "^4.0.0",
-    "pkg-dir": "^5.0.0",
     "precinct": "^9.0.1",
     "read-package-json-fast": "^2.0.2",
     "require-package-name": "^2.0.1",
