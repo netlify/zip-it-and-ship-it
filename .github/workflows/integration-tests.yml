@@ -88,5 +88,7 @@ jobs:
           comment: |
             ## Integration Test: netlify/netlify-plugin-nextjs
 
+            ✅ Cypress tests passed
+
             - **Deploy URL**: ${{ env.deploy_url }}
             - **Deploy logs**: ${{ env.deploy_log_url }}

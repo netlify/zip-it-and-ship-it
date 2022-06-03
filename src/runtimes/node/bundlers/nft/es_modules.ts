@@ -56,6 +56,7 @@ export const processESM = async ({
   fsCache,
   mainFile,
   reasons,
+  name,
 }: {
   basePath: string | undefined
   config: FunctionConfig
@@ -64,6 +65,7 @@ export const processESM = async ({
   fsCache: FsCache
   mainFile: string
   reasons: NodeFileTraceReasons
+  name: string
 }): Promise<{ rewrites?: Map<string, string>; moduleFormat: ModuleFormat }> => {
   const entrypointIsESM = isEntrypointESM({ basePath, esmPaths, mainFile })
 
@@ -82,7 +84,7 @@ export const processESM = async ({
     }
   }
 
-  const rewrites = await transpileESM({ basePath, config, esmPaths, fsCache, reasons })
+  const rewrites = await transpileESM({ basePath, config, esmPaths, fsCache, reasons, name })
 
   return {
     moduleFormat: 'cjs',
@@ -140,12 +142,14 @@ const transpileESM = async ({
   esmPaths,
   fsCache,
   reasons,
+  name,
 }: {
   basePath: string | undefined
   config: FunctionConfig
   esmPaths: Set<string>
   fsCache: FsCache
   reasons: NodeFileTraceReasons
+  name: string
 }) => {
   const cache: Map<string, boolean> = new Map()
   const pathsToTranspile = [...esmPaths].filter((path) => shouldTranspile(path, cache, esmPaths, reasons))
@@ -166,7 +170,7 @@ const transpileESM = async ({
   await Promise.all(
     pathsToTranspile.map(async (path) => {
       const absolutePath = resolvePath(path, basePath)
-      const transpiled = await transpile(absolutePath, config)
+      const transpiled = await transpile(absolutePath, config, name)
 
       rewrites.set(absolutePath, transpiled)
     }),
