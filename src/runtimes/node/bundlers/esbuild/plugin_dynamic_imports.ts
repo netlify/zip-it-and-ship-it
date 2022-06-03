@@ -2,8 +2,8 @@ import { basename, join, relative } from 'path'
 
 import type { Plugin } from '@netlify/esbuild'
 import findUp from 'find-up'
+import normalizePath from 'normalize-path'
 import readPackageJson from 'read-package-json-fast'
-import unixify from 'unixify'
 
 import { parseExpression } from '../../parser/index.js'
 
@@ -125,7 +125,7 @@ const getShimContents = ({
   // relative to the main bundle file, since esbuild will flatten everything
   // into a single file.
   const relativeResolveDir = relative(srcDir, resolveDir)
-  const requireArg = relativeResolveDir ? `\`./${unixify(relativeResolveDir)}/$\{args}\`` : 'args'
+  const requireArg = relativeResolveDir ? `\`./${normalizePath(relativeResolveDir)}/$\{args}\`` : 'args'
 
   if (expressionType === 'require') {
     return `module.exports = args => require(${requireArg})`
