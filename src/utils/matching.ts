@@ -14,6 +14,7 @@ const pGlob = promisify(globFunction)
 
 export const glob = function (pattern: string, options: globFunction.IOptions): Promise<string[]> {
   let normalizedIgnore
+
   if (options.ignore) {
     normalizedIgnore =
       typeof options.ignore === 'string'

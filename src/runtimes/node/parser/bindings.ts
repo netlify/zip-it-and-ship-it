@@ -46,6 +46,7 @@ export type BindingMethod = () => Bindings
 export const createBindingsMethod = function (nodes: Statement[]): BindingMethod {
   // memoize the result for these nodes
   let result: Bindings
+
   return () => {
     if (!result) {
       result = getAllBindings(nodes)

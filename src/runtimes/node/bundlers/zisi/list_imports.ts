@@ -60,6 +60,7 @@ export const listImports = async ({
   } catch (error) {
     const bundler: NodeBundlerName = 'zisi'
     const runtime: RuntimeName = 'js'
+
     error.customErrorInfo = {
       type: 'functionsBundling',
       location: { bundler, functionName, runtime },

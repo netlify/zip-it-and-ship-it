@@ -80,6 +80,7 @@ const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) =>
 // or with StringLiteral `export { x as "handler" }`
 const isHandlerExport = (node: ExportNamedDeclaration['specifiers'][number]): node is ExportSpecifier => {
   const { type, exported } = node
+
   return (
     type === 'ExportSpecifier' &&
     ((exported.type === 'Identifier' && exported.name === 'handler') ||

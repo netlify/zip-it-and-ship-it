@@ -17,6 +17,7 @@ export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; 
     })
   } catch (error) {
     const runtime: RuntimeName = 'go'
+
     error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime } }
 
     console.error(`Could not compile Go function ${functionName}:\n`)

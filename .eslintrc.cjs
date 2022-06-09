@@ -12,6 +12,14 @@ module.exports = {
     // This rule enforces using Buffers with `JSON.parse()`. However, TypeScript
     // does not recognize yet that `JSON.parse()` accepts Buffers as argument.
     'unicorn/prefer-json-parse-buffer': 'off',
+    'padding-line-between-statements': [
+      'error',
+      // Require newline before return
+      { blankLine: 'always', prev: '*', next: 'return' },
+      // Require newline after a batch of variable declarations
+      { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
+      { blankLine: 'any', prev: ['const', 'let', 'var'], next: ['const', 'let', 'var'] },
+    ],
   },
   overrides: [
     ...overrides,
@@ -31,6 +39,7 @@ module.exports = {
         'max-lines-per-function': 'off',
         'max-statements': 'off',
         'no-magic-numbers': 'off',
+        'padding-line-between-statements': 'off',
       },
     },
     {

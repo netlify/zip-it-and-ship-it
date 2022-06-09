@@ -9,6 +9,7 @@ export const getPublishedFiles = async function (modulePath: string): Promise<st
     absolute: true,
     dot: true,
   })
+
   return publishedFiles
 }
 

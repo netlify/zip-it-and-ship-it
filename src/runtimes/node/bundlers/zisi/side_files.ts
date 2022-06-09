@@ -4,6 +4,7 @@ import { getPublishedFiles } from './published.js'
 // inside the module's directory itself.
 export const getSideFiles = async function (modulePath: string, moduleName: string): Promise<string[]> {
   const sideFiles = SIDE_FILES[moduleName]
+
   if (sideFiles === undefined) {
     return []
   }

@@ -6,6 +6,7 @@ export const parse = ({ args }: { args: ISCHandlerArg[] }, getAllBindings: Bindi
 
   if (expression.type === 'Identifier') {
     const binding = getAllBindings().get(expression.name)
+
     if (binding) {
       expression = binding
     }
