@@ -1,10 +1,4 @@
-import type {
-  ExportDefaultSpecifier,
-  ExportNamespaceSpecifier,
-  ExportSpecifier,
-  Expression,
-  Statement,
-} from '@babel/types'
+import type { ExportNamedDeclaration, ExportSpecifier, Expression, Statement } from '@babel/types'
 
 import type { ISCExport } from '../in_source_config/index.js'
 
@@ -81,16 +75,23 @@ const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) =>
   return exports
 }
 
-const getExportsFromBindings = (
-  specifiers: (ExportSpecifier | ExportDefaultSpecifier | ExportNamespaceSpecifier)[],
-  getAllBindings: BindingMethod,
-) => {
-  const specifier = specifiers.find(
-    ({ type, exported }) =>
-      type === 'ExportSpecifier' &&
-      ((exported.type === 'Identifier' && exported.name === 'handler') ||
-        (exported.type === 'StringLiteral' && exported.value === 'handler')),
-  ) as ExportSpecifier | undefined
+// Check if the Node is an ExportSpecifier that has a named export called `handler`
+// either with Identifier `export { handler }`
+// or with StringLiteral `export { x as "handler" }`
+const isHandlerExport = (node: ExportNamedDeclaration['specifiers'][number]): node is ExportSpecifier => {
+  const { type, exported } = node
+  return (
+    type === 'ExportSpecifier' &&
+    ((exported.type === 'Identifier' && exported.name === 'handler') ||
+      (exported.type === 'StringLiteral' && exported.value === 'handler'))
+  )
+}
+
+// Tries to resolve the export from a binding (variable)
+// for example `let handler; handler = () => {}; export { handler }` would
+// resolve correctly to the handler function
+const getExportsFromBindings = (specifiers: ExportNamedDeclaration['specifiers'], getAllBindings: BindingMethod) => {
+  const specifier = specifiers.find(isHandlerExport)
 
   if (!specifier) {
     return []
