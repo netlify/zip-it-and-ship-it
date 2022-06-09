@@ -20,7 +20,7 @@ const getBindingsFromNode = function (node: Statement, bindings: Bindings): void
     node.expression.type === 'AssignmentExpression' &&
     node.expression.left.type === 'Identifier'
   ) {
-    // The variable was reassigned, so lets store the new value
+    // The variable was reassigned, so let's store the new value
     bindings.set(node.expression.left.name, node.expression.right)
   } else if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'VariableDeclaration') {
     // A `export const|let ...` creates a binding that can later be referenced again
