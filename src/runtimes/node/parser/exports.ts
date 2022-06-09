@@ -106,6 +106,7 @@ const getExportsFromExpression = (node: Expression | undefined | null) => {
   if (node?.type !== 'CallExpression') {
     return []
   }
+
   const { arguments: args, callee } = node
 
   if (callee.type !== 'Identifier') {
