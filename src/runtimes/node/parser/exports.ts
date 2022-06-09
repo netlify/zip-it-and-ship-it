@@ -103,6 +103,8 @@ const getExportsFromBindings = (
 }
 
 const getExportsFromExpression = (node: Expression | undefined | null) => {
+  // We're only interested in expressions representing function calls, because
+  // the ISC patterns we implement at the moment are all helper functions.
   if (node?.type !== 'CallExpression') {
     return []
   }
