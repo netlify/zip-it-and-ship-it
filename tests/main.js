@@ -2662,7 +2662,7 @@ testMany(
   'Finds in-source config declarations using the `schedule` helper',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
-    const FUNCTIONS_COUNT = 7
+    const FUNCTIONS_COUNT = 11
     const { files } = await zipFixture(t, join('in-source-config', 'functions'), {
       opts: options,
       length: FUNCTIONS_COUNT,
@@ -2692,7 +2692,7 @@ test('listFunctions includes in-source config declarations', async (t) => {
   const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
     parseISC: true,
   })
-  const FUNCTIONS_COUNT = 7
+  const FUNCTIONS_COUNT = 11
   t.is(functions.length, FUNCTIONS_COUNT)
   functions.forEach((func) => {
     t.is(func.schedule, '@daily')

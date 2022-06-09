@@ -1,6 +1,7 @@
 import { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
 import { nonNullable } from '../../../utils/non_nullable.js'
+import { createBindingsMethod } from '../parser/bindings.js'
 import { getMainExport } from '../parser/exports.js'
 import { getImports } from '../parser/imports.js'
 import { safelyParseFile } from '../parser/index.js'
@@ -22,7 +23,8 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
   }
 
   const imports = ast.body.flatMap((node) => getImports(node, IN_SOURCE_CONFIG_MODULE))
-  const mainExports = getMainExport(ast.body)
+  const getAllBindings = createBindingsMethod(ast.body)
+  const mainExports = getMainExport(ast.body, getAllBindings)
   const iscExports = mainExports
     .map(({ args, local: exportName }) => {
       const matchingImport = imports.find(({ local: importName }) => importName === exportName)
@@ -33,7 +35,7 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
 
       switch (matchingImport.imported) {
         case 'schedule':
-          return parseSchedule({ args })
+          return parseSchedule({ args }, getAllBindings)
 
         default:
         // no-op

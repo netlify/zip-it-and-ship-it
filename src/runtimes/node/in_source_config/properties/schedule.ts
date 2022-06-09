@@ -1,7 +1,16 @@
+import type { BindingMethod } from '../../parser/bindings.js'
 import type { ISCHandlerArg } from '../index.js'
 
-export const parse = ({ args }: { args: ISCHandlerArg[] }) => {
-  const [expression] = args
+export const parse = ({ args }: { args: ISCHandlerArg[] }, getAllBindings: BindingMethod) => {
+  let [expression] = args
+
+  if (expression.type === 'Identifier') {
+    const binding = getAllBindings().get(expression.name)
+    if (binding) {
+      expression = binding
+    }
+  }
+
   const schedule = expression.type === 'StringLiteral' ? expression.value : undefined
 
   return {
