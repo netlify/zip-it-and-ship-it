@@ -82,6 +82,7 @@ const getDependenciesForModuleName = async function ({
     getSideFiles(modulePath, moduleName),
     getNestedModules({ modulePath, state, packageJson, pluginsModulesPath }),
   ])
+
   return [...publishedFiles, ...sideFiles, ...depsPaths]
 }
 
@@ -107,5 +108,6 @@ const getNestedModules = async function ({
       getDependencyPathsForDependency({ dependency, basedir: modulePath, state, packageJson, pluginsModulesPath }),
     ),
   )
+
   return depsPaths.flat()
 }

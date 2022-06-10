@@ -16,7 +16,9 @@ const pEndOfStream = promisify(endOfStream)
 export const startZip = function (destPath: string): { archive: Archiver; output: Writable } {
   const output = createWriteStream(destPath)
   const archive = archiver('zip')
+
   archive.pipe(output)
+
   return { archive, output }
 }
 
@@ -24,6 +26,7 @@ export const startZip = function (destPath: string): { archive: Archiver; output
 export const addZipFile = function (archive: Archiver, file: string, name: string, stat: Stats): void {
   if (stat.isSymbolicLink()) {
     const linkContent = readlinkSync(file)
+
     archive.symlink(name, linkContent, stat.mode)
   } else {
     archive.file(file, {

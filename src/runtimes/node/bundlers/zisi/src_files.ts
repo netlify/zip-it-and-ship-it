@@ -154,6 +154,7 @@ const getImportDependencies = function ({
   treeShakeNext: boolean
 }): Promise<string[]> {
   const shouldTreeShakeNext = treeShakeNext || isNextOnNetlify(dependency)
+
   if (shouldTreeShake(dependency, shouldTreeShakeNext)) {
     return getTreeShakedDependencies({
       dependency,
@@ -204,6 +205,7 @@ const getTreeShakedDependencies = async function ({
     state,
     treeShakeNext,
   })
+
   return [path, ...depsPath]
 }
 /* eslint-enable max-lines */

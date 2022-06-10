@@ -53,7 +53,9 @@ const zipFunction: ZipFunction = async function ({
   // We simply copy it to the destination path with no further processing.
   if (extension === '.zip') {
     const destPath = join(destFolder, filename)
+
     await cpFile(srcPath, destPath)
+
     return { config, path: destPath }
   }
 

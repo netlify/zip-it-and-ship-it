@@ -54,6 +54,7 @@ export const getClosestPackageJson = async (resolveDir: string): Promise<Package
 // Retrieve the `package.json` of a specific project or module
 export const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
   const result = await getClosestPackageJson(srcDir)
+
   return result?.contents ?? {}
 }
 
@@ -71,6 +72,7 @@ const readPackageJson = async (path: string) => {
   try {
     // The path depends on the user's build, i.e. must be dynamic
     const packageJson = JSON.parse(await fs.readFile(path, 'utf8'))
+
     return sanitisePackageJson(packageJson)
   } catch (error) {
     throw new Error(`${path} is invalid JSON: ${error.message}`)

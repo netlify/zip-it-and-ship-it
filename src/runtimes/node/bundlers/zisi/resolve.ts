@@ -65,6 +65,7 @@ const resolvePathPreserveSymlinksForDir = function (path: string, basedir: strin
 // we return the first resolved location or the first error if all failed
 export const resolvePathPreserveSymlinks = async function (path: string, baseDirs: string[]): Promise<string> {
   let firstError
+
   for (const basedir of baseDirs) {
     try {
       return await resolvePathPreserveSymlinksForDir(path, basedir)
@@ -91,9 +92,11 @@ const resolvePathFollowSymlinks = function (path: string, baseDirs: string[]) {
 const resolvePackageFallback = async function (moduleName: string, baseDirs: string[], error: Error) {
   const mainFilePath = resolvePathFollowSymlinks(moduleName, baseDirs)
   const packagePath = await findUp(isPackageDir.bind(null, moduleName), { cwd: mainFilePath, type: 'directory' })
+
   if (packagePath === undefined) {
     throw error
   }
+
   return packagePath
 }
 

@@ -18,5 +18,6 @@ export const normalizeFilePath = function ({
   const pathA = normalize(path)
   const pathB = pathA.replace(commonPrefix, userNamespacePathSegment)
   const pathC = unixify(pathB)
+
   return pathC
 }

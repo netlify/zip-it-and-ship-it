@@ -123,6 +123,7 @@ export const getFunctionFromPath = async (
 
   for (const runtime of RUNTIMES) {
     const func = await runtime.findFunctionInPath({ path, fsCache, featureFlags })
+
     if (func) {
       return {
         ...func,
