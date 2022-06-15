@@ -44,15 +44,11 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ fea
   return functions.filter(nonNullable)
 }
 
-const findFunctionInPath: FindFunctionInPathFunction = async function ({ featureFlags, fsCache, path }) {
+const findFunctionInPath: FindFunctionInPathFunction = async function ({ fsCache, path }) {
   const runtime = await detectBinaryRuntime({ fsCache, path })
 
   if (runtime === 'go') {
     return processBinary({ fsCache, path })
-  }
-
-  if (featureFlags.buildGoSource !== true) {
-    return
   }
 
   const goSourceFile = await detectGoFunction({ fsCache, path })

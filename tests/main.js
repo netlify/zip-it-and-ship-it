@@ -462,7 +462,7 @@ testMany(
           nodeVersion: 'nodejs12.x',
         },
       },
-      featureFlags: { zisi_detect_esm: true, zisi_pure_esm: false },
+      featureFlags: { zisi_pure_esm: false },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -517,7 +517,7 @@ testMany(
           nodeVersion: 'nodejs12.x',
         },
       },
-      featureFlags: { zisi_detect_esm: true, zisi_pure_esm: false },
+      featureFlags: { zisi_pure_esm: false },
     })
     const { tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -559,11 +559,8 @@ testMany(
 testMany(
   'Can bundle CJS functions that import ESM files with an `import()` expression',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
-  async (options, t) => {
+  async (opts, t) => {
     const fixtureName = 'node-cjs-importing-mjs'
-    const opts = merge(options, {
-      featureFlags: { zisi_detect_esm: true },
-    })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       opts,
     })
@@ -590,7 +587,7 @@ testMany(
     const fixtureName = 'node-esm'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
-      featureFlags: { zisi_detect_esm: true, zisi_pure_esm: true },
+      featureFlags: { zisi_pure_esm: true },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -622,7 +619,6 @@ testMany(
     const fixtureName = 'node-esm'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
-      featureFlags: { zisi_detect_esm: true },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -2226,9 +2222,6 @@ test.serial('Zips Go functions built from source if the `zipGo` config property 
           zipGo: true,
         },
       },
-      featureFlags: {
-        buildGoSource: true,
-      },
     },
   })
   const [func] = files
@@ -2244,27 +2237,12 @@ test.serial('Zips Go functions built from source if the `zipGo` config property 
   t.is(mockSource, unzippedBinaryContents)
 })
 
-test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
-  shellUtilsStub.callsFake((...args) => writeFile(args[1][2], ''))
-
-  const fixtureName = 'go-source-multiple'
-  const { files } = await zipFixture(t, fixtureName, { length: 0 })
-
-  t.is(files.length, 0)
-  t.is(shellUtilsStub.callCount, 0)
-})
-
-test.serial('Builds Go functions from source if the `buildGoSource` feature flag is enabled', async (t) => {
+test.serial('Builds Go functions from source', async (t) => {
   shellUtilsStub.callsFake((...args) => writeFile(args[1][2], ''))
 
   const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, {
     length: 2,
-    opts: {
-      featureFlags: {
-        buildGoSource: true,
-      },
-    },
   })
 
   t.is(shellUtilsStub.callCount, 2)
@@ -2301,13 +2279,7 @@ test.serial('Adds `type: "functionsBundling"` to errors resulting from compiling
   })
 
   try {
-    await zipFixture(t, 'go-source', {
-      opts: {
-        featureFlags: {
-          buildGoSource: true,
-        },
-      },
-    })
+    await zipFixture(t, 'go-source')
 
     t.fail('Expected catch block')
   } catch (error) {
@@ -2640,7 +2612,6 @@ test('Generates a sourcemap for any transpiled files when `nodeSourcemap: true`'
       archiveFormat: 'none',
       basePath,
       config: { '*': { nodeBundler: 'nft', nodeSourcemap: true } },
-      featureFlags: { nftTranspile: true },
     },
   })
   const func = await importFunctionFile(join(files[0].path, 'function.js'))

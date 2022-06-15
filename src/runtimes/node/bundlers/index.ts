@@ -110,13 +110,7 @@ export const getDefaultBundler = async ({
     return 'nft'
   }
 
-  if (featureFlags.zisi_detect_esm) {
-    const functionIsESM = await detectEsModule({ mainFile })
+  const functionIsESM = await detectEsModule({ mainFile })
 
-    if (functionIsESM) {
-      return 'nft'
-    }
-  }
-
-  return 'zisi'
+  return functionIsESM ? 'nft' : 'zisi'
 }

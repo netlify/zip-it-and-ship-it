@@ -1,11 +1,9 @@
 import { env } from 'process'
 
 export const defaultFlags: Record<string, boolean> = {
-  buildGoSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_GO_SOURCE),
   buildRustSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_RUST_SOURCE),
   parseWithEsbuild: false,
   traceWithNft: false,
-  zisi_detect_esm: false,
   zisi_pure_esm: false,
 }
 
