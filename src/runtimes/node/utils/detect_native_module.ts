@@ -21,7 +21,10 @@ export const isNativeModule = ({
     return true
   }
 
-  const hasBinaryFile = files.some((path) => !path.startsWith('!') && extname(path) === '.node')
+  // Check if files is an array, as we never know (see https://github.com/math-utils/hamming-distance/pull/4)
+  const hasBinaryFile = Array.isArray(files)
+    ? files.some((path) => !path.startsWith('!') && extname(path) === '.node')
+    : false
 
   return hasBinaryFile
 }
