@@ -23,11 +23,23 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
   }
 
   const imports = ast.body.flatMap((node) => getImports(node, IN_SOURCE_CONFIG_MODULE))
+  let scheduledFuncsExpected = 0;
+  let scheduledFuncsFound = 0;
+
+  imports.forEach(imp => {
+    if (imp.imported === 'schedule') { scheduledFuncsExpected += 1 } 
+  })
+
+  // I'd rather write the above as this but it's throwing errors??
+  // const expectedScheduledFuncsCount = imports.filter(import => import.imported === 'schedule').length
+
   const getAllBindings = createBindingsMethod(ast.body)
   const mainExports = getMainExport(ast.body, getAllBindings)
   const iscExports = mainExports
     .map(({ args, local: exportName }) => {
       const matchingImport = imports.find(({ local: importName }) => importName === exportName)
+
+      console.log(args)
 
       if (matchingImport === undefined) {
         return null
@@ -35,6 +47,8 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
 
       switch (matchingImport.imported) {
         case 'schedule':
+          scheduledFuncsFound += 1
+
           return parseSchedule({ args }, getAllBindings)
 
         default:
@@ -44,6 +58,11 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
       return null
     })
     .filter(nonNullable)
+
+  if (scheduledFuncsFound < scheduledFuncsExpected) {
+    throw new Error ("Warning: unable to find cron expression for scheduled function. `schedule` imported but not called or exported. If you meant to schedule a function, please check that `schedule` is invoked with an appropriate cron expression.")
+  }
+  
   const mergedExports: ISCValues = iscExports.reduce((acc, obj) => ({ ...acc, ...obj }), {})
 
   return mergedExports
