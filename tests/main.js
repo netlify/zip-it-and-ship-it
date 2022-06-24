@@ -2659,7 +2659,7 @@ testMany(
     await zipFixture(t, join('in-source-config', 'functions_missing_cron_expression'), {
       opts: options,
       length: FUNCTIONS_COUNT,
-    }).catch(rejected);
+    }).catch(rejected)
   },
 )
 

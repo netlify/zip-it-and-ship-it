@@ -32,7 +32,7 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
   const iscExports = mainExports
     .map(({ args, local: exportName }) => {
       const matchingImport = imports.find(({ local: importName }) => importName === exportName)
-      let parsed;
+      let parsed
 
       if (matchingImport === undefined) {
         return null
@@ -40,7 +40,6 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
 
       switch (matchingImport.imported) {
         case 'schedule':
-
           parsed = parseSchedule({ args }, getAllBindings)
 
           if (parsed.schedule) {
