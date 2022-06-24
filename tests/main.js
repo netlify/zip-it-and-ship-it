@@ -2651,19 +2651,15 @@ testMany(
   'Throws error when `schedule` helper is imported but cron expression not found',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
-    const FUNCTIONS_COUNT = 2
-    const { files } = await zipFixture(t, join('in-source-config', 'functions_missing_cron_expression'), {
+    const rejected = (error) => {
+      t.true(error.message.startsWith('Warning: unable to find cron expression for scheduled function.'))
+    }
+
+    const FUNCTIONS_COUNT = 3
+    await zipFixture(t, join('in-source-config', 'functions_missing_cron_expression'), {
       opts: options,
       length: FUNCTIONS_COUNT,
-    })
-
-    files.forEach(() => {
-      try {
-        t.fail()
-      } catch (error) {
-        t.true(error.message.startsWith('Warning: unable to find cron expression for scheduled function.'))
-      }
-    })
+    }).catch(rejected);
   },
 )
 
