@@ -2633,7 +2633,7 @@ testMany(
   'Finds in-source config declarations using the `schedule` helper',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
-    const FUNCTIONS_COUNT = 11
+    const FUNCTIONS_COUNT = 12
     const { files } = await zipFixture(t, join('in-source-config', 'functions'), {
       opts: options,
       length: FUNCTIONS_COUNT,
@@ -2644,6 +2644,22 @@ testMany(
     files.forEach((result) => {
       t.is(result.schedule, '@daily')
     })
+  },
+)
+
+testMany(
+  'Throws error when `schedule` helper is imported but cron expression not found',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const rejected = (error) => {
+      t.true(error.message.startsWith('Warning: unable to find cron expression for scheduled function.'))
+    }
+
+    const FUNCTIONS_COUNT = 3
+    await zipFixture(t, join('in-source-config', 'functions_missing_cron_expression'), {
+      opts: options,
+      length: FUNCTIONS_COUNT,
+    }).catch(rejected)
   },
 )
 
@@ -2663,7 +2679,7 @@ test('listFunctions includes in-source config declarations', async (t) => {
   const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
     parseISC: true,
   })
-  const FUNCTIONS_COUNT = 11
+  const FUNCTIONS_COUNT = 12
   t.is(functions.length, FUNCTIONS_COUNT)
   functions.forEach((func) => {
     t.is(func.schedule, '@daily')
