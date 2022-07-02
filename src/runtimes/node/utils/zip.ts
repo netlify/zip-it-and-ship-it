@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Buffer } from 'buffer'
 import { Stats, promises as fs } from 'fs'
 import os from 'os'
@@ -8,6 +9,7 @@ import deleteFiles from 'del'
 import pMap from 'p-map'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive.js'
+import { FeatureFlags } from '../../../feature_flags.js'
 import { mkdirAndWriteFile } from '../../../utils/fs.js'
 
 import { EntryFile, getEntryFile } from './entry_file.js'
@@ -28,6 +30,7 @@ interface ZipNodeParameters {
   basePath: string
   destFolder: string
   extension: string
+  featureFlags: FeatureFlags
   filename: string
   mainFile: string
   moduleFormat: ModuleFormat
@@ -40,14 +43,16 @@ const createDirectory = async function ({
   basePath,
   destFolder,
   extension,
+  featureFlags,
   filename,
   mainFile,
   moduleFormat,
   rewrites = new Map(),
   srcFiles,
 }: ZipNodeParameters) {
-  const { contents: entryContents, filename: entryFilename } = getEntryFile({
+  const { contents: entryContents, filename: entryFilename } = await getEntryFile({
     commonPrefix: basePath,
+    featureFlags,
     filename,
     mainFile,
     moduleFormat,
@@ -91,6 +96,7 @@ const createZipArchive = async function ({
   basePath,
   destFolder,
   extension,
+  featureFlags,
   filename,
   mainFile,
   moduleFormat,
@@ -116,7 +122,14 @@ const createZipArchive = async function ({
   const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
   if (needsEntryFile) {
-    const entryFile = getEntryFile({ commonPrefix: basePath, filename, mainFile, moduleFormat, userNamespace })
+    const entryFile = await getEntryFile({
+      commonPrefix: basePath,
+      featureFlags,
+      filename,
+      mainFile,
+      moduleFormat,
+      userNamespace,
+    })
 
     addEntryFileToZip(archive, entryFile)
   }
@@ -191,3 +204,4 @@ const zipJsFile = function ({
     addZipFile(archive, srcFile, normalizedDestPath, stat)
   }
 }
+/* eslint-enable max-lines */

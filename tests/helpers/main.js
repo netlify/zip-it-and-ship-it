@@ -111,7 +111,6 @@ const getRequires = async function ({ depth = Number.POSITIVE_INFINITY, filePath
 // Import a file exporting a function.
 // Returns `default` exports as is.
 const importFunctionFile = async function (functionPath) {
-  // eslint-disable-next-line import/no-dynamic-require
   const result = await import(pathToFileURL(functionPath))
   return result.default === undefined ? result : result.default
 }

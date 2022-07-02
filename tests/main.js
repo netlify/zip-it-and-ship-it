@@ -2708,3 +2708,23 @@ test('listFunctionsFiles includes in-source config declarations', async (t) => {
     t.is(func.schedule, '@daily')
   })
 })
+
+testMany.only('Supports v2 of the runtime API', ['bundler_default', 'bundler_nft'], async (options, t) => {
+  const fixtureName = 'node-api-v2'
+  const opts = merge(options, {
+    featureFlags: { zisi_functions_api_v2: true },
+  })
+  const { files, tmpDir } = await zipFixture(t, fixtureName, {
+    opts,
+  })
+
+  await unzipFiles(files)
+
+  const { handler } = await importFunctionFile(`${tmpDir}/func1.js`)
+  const { body, headers, statusCode } = await handler({ headers: {}, rawUrl: 'https://example.netlify' })
+
+  t.deepEqual(JSON.parse(body), { one: 1 })
+  t.is(headers['content-type'], 'application/json')
+  t.is(headers['set-cookie'], 'new-cookie=some-value')
+  t.is(statusCode, 200)
+})
