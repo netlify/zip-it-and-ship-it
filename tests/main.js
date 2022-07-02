@@ -2709,7 +2709,7 @@ test('listFunctionsFiles includes in-source config declarations', async (t) => {
   })
 })
 
-testMany.only('Supports v2 of the runtime API', ['bundler_default', 'bundler_nft'], async (options, t) => {
+testMany('Supports v2 of the runtime API', ['bundler_default', 'bundler_nft'], async (options, t) => {
   const fixtureName = 'node-api-v2'
   const opts = merge(options, {
     featureFlags: { zisi_functions_api_v2: true },
