@@ -1,7 +1,7 @@
 import { basename, extname } from 'path'
 
 import { FeatureFlags } from '../../../feature_flags.js'
-import { getRuntimeLayer } from '../runtime_api/index.js'
+import { getRuntimeLayer } from '../runtime_layer/index.js'
 
 import type { ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
