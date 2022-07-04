@@ -29,7 +29,7 @@
     "test:ci": "npm run build && c8 -r lcovonly -r text -r json ava"
   },
   "config": {
-    "eslint": "--ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{mjs,cjs,js,mts,cts,ts,md,html}\" \"*.{cjs,mjs,js,cts,mts,ts,md,html}\" \".*.{cjs,mjs,js,cts,mts,ts,md,html}\"",
+    "eslint": "--report-unused-disable-directives --ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{mjs,cjs,js,mts,cts,ts,md,html}\" \"*.{cjs,mjs,js,cts,mts,ts,md,html}\" \".*.{cjs,mjs,js,cts,mts,ts,md,html}\"",
     "prettier": "--ignore-path .gitignore --loglevel=warn \"{src,tests,.github}/**/*.{cjs,mjs,js,cts,mts,ts,md,yml,json,html}\" \"*.{cjs,mjs,js,cts,mts,ts,yml,json,html}\" \".*.{cjs,mjs,js,cts,mts,ts,yml,json,html}\" \"!package-lock.json\""
   },
   "eslintIgnore": [
