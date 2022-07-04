@@ -23,6 +23,10 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
   }
 
   const imports = ast.body.flatMap((node) => getImports(node, IN_SOURCE_CONFIG_MODULE))
+
+  const scheduledFuncsExpected = imports.filter(({ imported }) => imported === 'schedule').length
+  let scheduledFuncsFound = 0
+
   const getAllBindings = createBindingsMethod(ast.body)
   const mainExports = getMainExport(ast.body, getAllBindings)
   const iscExports = mainExports
@@ -34,9 +38,15 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
       }
 
       switch (matchingImport.imported) {
-        case 'schedule':
-          return parseSchedule({ args }, getAllBindings)
+        case 'schedule': {
+          const parsed = parseSchedule({ args }, getAllBindings)
 
+          if (parsed.schedule) {
+            scheduledFuncsFound += 1
+          }
+
+          return parsed
+        }
         default:
         // no-op
       }
@@ -44,6 +54,13 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
       return null
     })
     .filter(nonNullable)
+
+  if (scheduledFuncsFound < scheduledFuncsExpected) {
+    throw new Error(
+      'Warning: unable to find cron expression for scheduled function. `schedule` imported but not called or exported. If you meant to schedule a function, please check that `schedule` is invoked with an appropriate cron expression.',
+    )
+  }
+
   const mergedExports: ISCValues = iscExports.reduce((acc, obj) => ({ ...acc, ...obj }), {})
 
   return mergedExports
