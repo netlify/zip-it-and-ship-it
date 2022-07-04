@@ -2708,3 +2708,14 @@ test('listFunctionsFiles includes in-source config declarations', async (t) => {
     t.is(func.schedule, '@daily')
   })
 })
+
+test('listFunctionsFiles does not include wrong arch functions and warns', async (t) => {
+  sinon.spy(console, 'warn')
+  const functions = await listFunctionsFiles(join(FIXTURES_DIR, 'wrong-prebuilt-architecture'))
+
+  t.is(functions.length, 0)
+  t.is(console.warn.called, true)
+  t.is(console.warn.calledWith(sinon.match(/Darwin\/Arm64/)), true)
+
+  console.warn.restore()
+})
