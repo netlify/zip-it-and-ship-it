@@ -7,6 +7,11 @@ import { hideBin } from 'yargs/helpers'
 import type { ArchiveFormat } from './archive.js'
 import { zipFunctions } from './main.js'
 
+declare global {
+  // eslint-disable-next-line no-var
+  var ZISI_CLI: boolean
+}
+
 // CLI entry point
 const runCli = async function () {
   // @ts-expect-error TODO: `destFolder` and  `srcFolder` are not being passed
@@ -14,6 +19,7 @@ const runCli = async function () {
   const { destFolder, srcFolder, ...options } = parseArgs()
 
   try {
+    global.ZISI_CLI = true
     // @ts-expect-error TODO: `options` is not getting the right types.
     const zipped = await zipFunctions(srcFolder, destFolder, options)
 

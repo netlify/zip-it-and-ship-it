@@ -8,6 +8,18 @@ import type { RuntimeName } from './runtime.js'
 
 const isValidFunctionBinary = (info: BinaryInfo) => info.arch === Arch.Amd64 && info.platform === Platform.Linux
 
+const warnIncompatibleBinary = function (path: string, binaryInfo: BinaryInfo): undefined {
+  if (!global.ZISI_CLI) {
+    console.warn(`
+Found incompatible prebuilt function binary in ${path}.
+The binary needs to be built for Linux/Amd64, but it was built for ${Platform[binaryInfo.platform]}/${
+      Arch[binaryInfo.arch]
+    }`)
+  }
+
+  return undefined
+}
+
 // Try to guess the runtime by inspecting the binary file.
 export const detectBinaryRuntime = async function ({
   fsCache,
@@ -25,13 +37,7 @@ export const detectBinaryRuntime = async function ({
     const binaryInfo = detect(buffer as Buffer)
 
     if (!isValidFunctionBinary(binaryInfo)) {
-      console.warn(`
-Found incompatible prebuilt function binary in ${path}.
-The binary needs to be built for Linux/Amd64, but it was built for ${Platform[binaryInfo.platform]}/${
-        Arch[binaryInfo.arch]
-      }`)
-
-      return undefined
+      return warnIncompatibleBinary(path, binaryInfo)
     }
 
     switch (binaryInfo.runtime) {
