@@ -41,34 +41,36 @@ export const safeUnlink = async (path: string) => {
 // filenames within those directories, if at least one of the directories
 // exists. If not, an error is thrown.
 export const listFunctionsDirectories = async function (srcFolders: string[]) {
-  const filenamesByDirectory = await Promise.all(
-    srcFolders.map(async (srcFolder) => {
-      try {
-        const filenames = await listFunctionsDirectory(srcFolder)
+  const filenamesByDirectory = await Promise.allSettled(
+    srcFolders.map((srcFolder) => listFunctionsDirectory(srcFolder)),
+  )
+  const errorMessages: string[] = []
+  const validDirectories = filenamesByDirectory
+    .map((result) => {
+      if (result.status === 'rejected') {
+        if (result.reason instanceof Error && (result.reason as NodeJS.ErrnoException).code !== 'ENOENT') {
+          throw result.reason
+        }
 
-        return filenames
-      } catch {
         return null
       }
-    }),
-  )
-  const validDirectories = filenamesByDirectory.filter(nonNullable)
+
+      return result.value
+    })
+    .filter(nonNullable)
 
   if (validDirectories.length === 0) {
-    throw new Error(`Functions folder does not exist: ${srcFolders.join(', ')}`)
+    throw new Error(`Functions folders do not exist: ${srcFolders.join(', ')}
+${errorMessages.join('\n')}`)
   }
 
   return validDirectories.flat()
 }
 
-export const listFunctionsDirectory = async function (srcFolder: string) {
-  try {
-    const filenames = await fs.readdir(srcFolder)
+const listFunctionsDirectory = async function (srcFolder: string) {
+  const filenames = await fs.readdir(srcFolder)
 
-    return filenames.map((name) => join(srcFolder, name))
-  } catch {
-    throw new Error(`Functions folder does not exist: ${srcFolder}`)
-  }
+  return filenames.map((name) => join(srcFolder, name))
 }
 
 export const resolveFunctionsDirectories = (input: string | string[]) => {

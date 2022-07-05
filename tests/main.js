@@ -823,7 +823,7 @@ testMany(
   ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
   async (options, t) => {
     await t.throwsAsync(zipNode(t, 'does-not-exist', { opts: options }), {
-      message: /Functions folder does not exist/,
+      message: /Functions folders do not exist/,
     })
   },
 )
@@ -2698,6 +2698,22 @@ test('listFunction includes in-source config declarations', async (t) => {
     runtime: 'js',
     schedule: '@daily',
   })
+})
+
+test('listFunctionsFiles throws if all function directories do not exist', async (t) => {
+  const error = await t.throwsAsync(
+    async () =>
+      await listFunctionsFiles([
+        join(FIXTURES_DIR, 'missing-functions-folder', 'functions'),
+        join(FIXTURES_DIR, 'missing-functions-folder', 'functions2'),
+      ]),
+  )
+  t.regex(error.message, /Functions folders do not exist: /)
+})
+
+test('listFunctionsFiles does not hide errors that have nothing todo with folder existents', async (t) => {
+  const error = await t.throwsAsync(async () => await listFunctionsFiles([true]))
+  t.notRegex(error.message, /Functions folders do not exist: /)
 })
 
 test('listFunctionsFiles includes in-source config declarations', async (t) => {
