@@ -40,6 +40,7 @@ const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSo
   }
 
   const inSourceConfig = await findISCDeclarationsInPath(func.mainFile)
+
   return { ...func, inSourceConfig }
 }
 
@@ -58,6 +59,7 @@ export const listFunctions = async function (
   const functionsMap = await getFunctionsFromPaths(paths, { featureFlags, config })
   const functions = [...functionsMap.values()]
   const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions
+
   return augmentedFunctions.map(getListedFunction)
 }
 
@@ -72,6 +74,7 @@ export const listFunction = async function (
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
   const func = await getFunctionFromPath(path, { featureFlags, config })
+
   if (!func) {
     return
   }
@@ -115,6 +118,7 @@ const getListedFunctionFiles = async function (
   options: { basePath?: string; featureFlags: FeatureFlags },
 ): Promise<ListedFunctionFile[]> {
   const srcFiles = await getSrcFiles({ ...func, ...options })
+
   return srcFiles.map((srcFile) => ({ ...getListedFunction(func), srcFile, extension: extname(srcFile) }))
 }
 

@@ -18,6 +18,7 @@ export const zipBinary = async function ({
   stat: Stats
 }) {
   const { archive, output } = startZip(destPath)
+
   addZipFile(archive, srcPath, filename, stat)
   addZipContent(archive, JSON.stringify({ runtime: runtime.name }), 'netlify-toolchain')
   await endZip(archive, output)

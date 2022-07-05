@@ -7,5 +7,6 @@ const BACKSLASH_REGEXP = /\\/g
 export const getModuleName = function (dependency: string): string {
   const dependencyA = dependency.replace(BACKSLASH_REGEXP, '/')
   const moduleName = requirePackageName(dependencyA)
+
   return moduleName
 }

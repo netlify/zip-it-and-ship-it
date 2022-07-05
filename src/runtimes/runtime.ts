@@ -36,6 +36,7 @@ export interface ZipFunctionResult {
   bundlerWarnings?: object[]
   config: FunctionConfig
   inputs?: string[]
+  includedFiles?: string[]
   inSourceConfig?: ISCValues
   nativeNodeModules?: object
   nodeModulesWithDynamicImports?: string[]

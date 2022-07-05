@@ -2,7 +2,6 @@ import { promises as fs } from 'fs'
 import { basename, join } from 'path'
 
 import findUp from 'find-up'
-import pkgDir from 'pkg-dir'
 
 export interface PackageJson {
   name?: string
@@ -54,13 +53,9 @@ export const getClosestPackageJson = async (resolveDir: string): Promise<Package
 
 // Retrieve the `package.json` of a specific project or module
 export const getPackageJson = async function (srcDir: string): Promise<PackageJson> {
-  const packageRoot = await pkgDir(srcDir)
+  const result = await getClosestPackageJson(srcDir)
 
-  if (packageRoot === undefined) {
-    return {}
-  }
-
-  return readPackageJson(`${packageRoot}/package.json`)
+  return result?.contents ?? {}
 }
 
 export const getPackageJsonIfAvailable = async (srcDir: string): Promise<PackageJson> => {
@@ -77,6 +72,7 @@ const readPackageJson = async (path: string) => {
   try {
     // The path depends on the user's build, i.e. must be dynamic
     const packageJson = JSON.parse(await fs.readFile(path, 'utf8'))
+
     return sanitisePackageJson(packageJson)
   } catch (error) {
     throw new Error(`${path} is invalid JSON: ${error.message}`)

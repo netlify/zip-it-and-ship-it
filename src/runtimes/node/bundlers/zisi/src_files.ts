@@ -31,7 +31,7 @@ export const getSrcFiles: GetSrcFilesFunction = async function ({
   stat,
 }) {
   const { includedFiles = [], includedFilesBasePath } = config
-  const { exclude: excludedPaths, paths: includedFilePaths } = await getPathsOfIncludedFiles(
+  const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
   )
@@ -45,9 +45,10 @@ export const getSrcFiles: GetSrcFilesFunction = async function ({
   // We sort so that the archive's checksum is deterministic.
   // Mutating is fine since `Array.filter()` returns a shallow copy
   const filteredFiles = uniqueFiles.filter(isNotJunk).sort()
-  const includedPaths = filterExcludedPaths([...filteredFiles, ...includedFilePaths], excludedPaths)
+  const srcFiles = filterExcludedPaths(filteredFiles, excludePatterns)
+  const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
 
-  return includedPaths
+  return { srcFiles: [...srcFiles, ...includedPaths], includedFiles: includedPaths }
 }
 
 // Remove temporary files like *~, *.swp, etc.
@@ -114,6 +115,7 @@ const getFileDependencies = async function ({
   const dependencies = featureFlags.parseWithEsbuild
     ? await listImports({ functionName, path })
     : await precinct.paperwork(path, { includeCore: false })
+
   const depsPaths = await Promise.all(
     dependencies.filter(nonNullable).map((dependency) =>
       getImportDependencies({
@@ -152,6 +154,7 @@ const getImportDependencies = function ({
   treeShakeNext: boolean
 }): Promise<string[]> {
   const shouldTreeShakeNext = treeShakeNext || isNextOnNetlify(dependency)
+
   if (shouldTreeShake(dependency, shouldTreeShakeNext)) {
     return getTreeShakedDependencies({
       dependency,
@@ -202,6 +205,7 @@ const getTreeShakedDependencies = async function ({
     state,
     treeShakeNext,
   })
+
   return [path, ...depsPath]
 }
 /* eslint-enable max-lines */

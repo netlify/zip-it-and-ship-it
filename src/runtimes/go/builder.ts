@@ -13,10 +13,12 @@ export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; 
       env: {
         CGO_ENABLED: '0',
         GOOS: 'linux',
+        GOARCH: 'amd64',
       },
     })
   } catch (error) {
     const runtime: RuntimeName = 'go'
+
     error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime } }
 
     console.error(`Could not compile Go function ${functionName}:\n`)

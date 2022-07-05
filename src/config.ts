@@ -2,11 +2,11 @@ import { promises as fs } from 'fs'
 import { basename, extname, dirname, join } from 'path'
 
 import mergeOptions from 'merge-options'
-import minimatch from 'minimatch'
 
 import { FunctionSource } from './function.js'
 import type { NodeBundlerName } from './runtimes/node/bundlers/index.js'
 import type { NodeVersionString } from './runtimes/node/index.js'
+import { minimatch } from './utils/matching.js'
 
 interface FunctionConfig {
   externalNodeModules?: string[]

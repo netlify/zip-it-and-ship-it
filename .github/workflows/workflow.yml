@@ -28,9 +28,9 @@ jobs:
         if: "${{ matrix.os == 'macOS-latest' }}"
       - run: git config --global core.symlinks true
       - name: Git checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -52,7 +52,7 @@ jobs:
           echo "::set-output name=os::${os/-latest/}"
           echo "::set-output name=node::node_${node//[.*]/}"
         shell: bash
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
         with:
           file: coverage/coverage-final.json
           flags: ${{ steps.test-coverage-flags.outputs.os }},${{ steps.test-coverage-flags.outputs.node }}

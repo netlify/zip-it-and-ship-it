@@ -2,7 +2,6 @@ const { mkdir, readFile, chmod, symlink, unlink, rename, stat, writeFile } = req
 const { tmpdir } = require('os')
 const { basename, dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
 const { arch, env, platform, version: nodeVersion } = require('process')
-const { pathToFileURL } = require('url')
 
 const test = require('ava')
 const cpy = require('cpy')
@@ -403,6 +402,27 @@ testMany(
   },
 )
 
+testMany(
+  'Includes includedFiles in the response of zipFunction',
+  ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+  async (options, t) => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test2' })
+    const mainFile = join(FIXTURES_DIR, 'node-module-next-image', 'function', 'function.js')
+    const result = await zipFunction(mainFile, tmpDir, {
+      ...options,
+      basePath: join(FIXTURES_DIR, 'node-module-next-image'),
+      config: {
+        '*': {
+          includedFiles: ['included/*.js'],
+        },
+      },
+    })
+
+    t.true(Array.isArray(result.includedFiles))
+    t.regex(unixify(result.includedFiles[0]), /node-module-next-image\/included\/abc\.js/)
+  },
+)
+
 // We persist `package.json` as `package.json.txt` in git. Otherwise ESLint
 // tries to load when linting sibling JavaScript files. In this test, we
 // temporarily rename it to an actual `package.json`.
@@ -464,7 +484,7 @@ testMany(
           nodeVersion: 'nodejs12.x',
         },
       },
-      featureFlags: { zisi_detect_esm: true, zisi_pure_esm: false },
+      featureFlags: { zisi_pure_esm: false },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -519,7 +539,7 @@ testMany(
           nodeVersion: 'nodejs12.x',
         },
       },
-      featureFlags: { zisi_detect_esm: true, zisi_pure_esm: false },
+      featureFlags: { zisi_pure_esm: false },
     })
     const { tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -561,11 +581,8 @@ testMany(
 testMany(
   'Can bundle CJS functions that import ESM files with an `import()` expression',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
-  async (options, t) => {
+  async (opts, t) => {
     const fixtureName = 'node-cjs-importing-mjs'
-    const opts = merge(options, {
-      featureFlags: { zisi_detect_esm: true },
-    })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       opts,
     })
@@ -592,7 +609,7 @@ testMany(
     const fixtureName = 'node-esm'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
-      featureFlags: { zisi_detect_esm: true, zisi_pure_esm: true },
+      featureFlags: { zisi_pure_esm: true },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -602,8 +619,8 @@ testMany(
     await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
     const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
-    const func1 = await import(pathToFileURL(functionPaths[0]))
-    const func2 = await import(pathToFileURL(functionPaths[1]))
+    const func1 = await importFunctionFile(functionPaths[0])
+    const func2 = await importFunctionFile(functionPaths[1])
 
     t.true(func1.handler())
     t.true(func2.handler())
@@ -624,7 +641,6 @@ testMany(
     const fixtureName = 'node-esm'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
-      featureFlags: { zisi_detect_esm: true },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,
@@ -634,8 +650,8 @@ testMany(
     await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
     const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
-    const func1 = await import(pathToFileURL(functionPaths[0]))
-    const func2 = await import(pathToFileURL(functionPaths[1]))
+    const func1 = await importFunctionFile(functionPaths[0])
+    const func2 = await importFunctionFile(functionPaths[1])
 
     t.true(func1.handler())
     t.true(func2.handler())
@@ -1919,6 +1935,23 @@ testMany(
   },
 )
 
+test('Adds `type: "functionsBundling"` to user errors when transpiling esm in nft bundler', async (t) => {
+  try {
+    await zipNode(t, 'node-esm-top-level-await-error', {
+      opts: { config: { '*': { nodeBundler: 'nft' } } },
+    })
+
+    t.fail('Bundling should have thrown')
+  } catch (error) {
+    const { customErrorInfo } = error
+
+    t.is(customErrorInfo.type, 'functionsBundling')
+    t.is(customErrorInfo.location.bundler, 'nft')
+    t.is(customErrorInfo.location.functionName, 'function')
+    t.is(customErrorInfo.location.runtime, 'js')
+  }
+})
+
 test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async (t) => {
   const fixtureName = 'node-module-dynamic-import'
   const { files } = await zipNode(t, fixtureName, {
@@ -2211,9 +2244,6 @@ test.serial('Zips Go functions built from source if the `zipGo` config property 
           zipGo: true,
         },
       },
-      featureFlags: {
-        buildGoSource: true,
-      },
     },
   })
   const [func] = files
@@ -2229,27 +2259,12 @@ test.serial('Zips Go functions built from source if the `zipGo` config property 
   t.is(mockSource, unzippedBinaryContents)
 })
 
-test.serial('Does not build Go functions from source if the `buildGoSource` feature flag is not enabled', async (t) => {
-  shellUtilsStub.callsFake((...args) => writeFile(args[1][2], ''))
-
-  const fixtureName = 'go-source-multiple'
-  const { files } = await zipFixture(t, fixtureName, { length: 0 })
-
-  t.is(files.length, 0)
-  t.is(shellUtilsStub.callCount, 0)
-})
-
-test.serial('Builds Go functions from source if the `buildGoSource` feature flag is enabled', async (t) => {
+test.serial('Builds Go functions from source', async (t) => {
   shellUtilsStub.callsFake((...args) => writeFile(args[1][2], ''))
 
   const fixtureName = 'go-source-multiple'
   const { files } = await zipFixture(t, fixtureName, {
     length: 2,
-    opts: {
-      featureFlags: {
-        buildGoSource: true,
-      },
-    },
   })
 
   t.is(shellUtilsStub.callCount, 2)
@@ -2286,13 +2301,7 @@ test.serial('Adds `type: "functionsBundling"` to errors resulting from compiling
   })
 
   try {
-    await zipFixture(t, 'go-source', {
-      opts: {
-        featureFlags: {
-          buildGoSource: true,
-        },
-      },
-    })
+    await zipFixture(t, 'go-source')
 
     t.fail('Expected catch block')
   } catch (error) {
@@ -2625,7 +2634,6 @@ test('Generates a sourcemap for any transpiled files when `nodeSourcemap: true`'
       archiveFormat: 'none',
       basePath,
       config: { '*': { nodeBundler: 'nft', nodeSourcemap: true } },
-      featureFlags: { nftTranspile: true },
     },
   })
   const func = await importFunctionFile(join(files[0].path, 'function.js'))
@@ -2647,7 +2655,7 @@ testMany(
   'Finds in-source config declarations using the `schedule` helper',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (options, t) => {
-    const FUNCTIONS_COUNT = 7
+    const FUNCTIONS_COUNT = 12
     const { files } = await zipFixture(t, join('in-source-config', 'functions'), {
       opts: options,
       length: FUNCTIONS_COUNT,
@@ -2658,6 +2666,22 @@ testMany(
     files.forEach((result) => {
       t.is(result.schedule, '@daily')
     })
+  },
+)
+
+testMany(
+  'Throws error when `schedule` helper is imported but cron expression not found',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const rejected = (error) => {
+      t.true(error.message.startsWith('Warning: unable to find cron expression for scheduled function.'))
+    }
+
+    const FUNCTIONS_COUNT = 3
+    await zipFixture(t, join('in-source-config', 'functions_missing_cron_expression'), {
+      opts: options,
+      length: FUNCTIONS_COUNT,
+    }).catch(rejected)
   },
 )
 
@@ -2677,7 +2701,7 @@ test('listFunctions includes in-source config declarations', async (t) => {
   const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
     parseISC: true,
   })
-  const FUNCTIONS_COUNT = 7
+  const FUNCTIONS_COUNT = 12
   t.is(functions.length, FUNCTIONS_COUNT)
   functions.forEach((func) => {
     t.is(func.schedule, '@daily')
@@ -2812,3 +2836,13 @@ testMany(
     t.false(await pathExists(`${tmpDir}/my-function-1.zip_out/blog/one.md`))
   },
 )
+test('listFunctionsFiles does not include wrong arch functions and warns', async (t) => {
+  sinon.spy(console, 'warn')
+  const functions = await listFunctionsFiles(join(FIXTURES_DIR, 'wrong-prebuilt-architecture'))
+
+  t.is(functions.length, 0)
+  t.is(console.warn.called, true)
+  t.is(console.warn.calledWith(sinon.match(/Darwin\/Arm64/)), true)
+
+  console.warn.restore()
+})

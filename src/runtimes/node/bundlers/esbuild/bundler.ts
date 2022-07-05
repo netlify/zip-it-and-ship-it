@@ -136,6 +136,7 @@ export const bundleJsFile = async function ({
   } catch (error) {
     const bundler: NodeBundlerName = 'esbuild'
     const runtime: RuntimeName = 'js'
+
     error.customErrorInfo = {
       type: 'functionsBundling',
       location: { bundler, functionName: name, runtime },

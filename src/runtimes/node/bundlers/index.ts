@@ -50,6 +50,7 @@ export type BundleFunction = (
   basePath: string
   bundlerWarnings?: BundlerWarning[]
   cleanupFunction?: CleanupFunction
+  includedFiles: string[]
   inputs: string[]
   mainFile: string
   moduleFormat: ModuleFormat
@@ -66,7 +67,7 @@ export type GetSrcFilesFunction = (
     pluginsModulesPath?: string
     repositoryRoot?: string
   } & FunctionSource,
-) => Promise<string[]>
+) => Promise<{ srcFiles: string[]; includedFiles: string[] }>
 
 interface NodeBundler {
   bundle: BundleFunction
@@ -109,13 +110,7 @@ export const getDefaultBundler = async ({
     return 'nft'
   }
 
-  if (featureFlags.zisi_detect_esm) {
-    const functionIsESM = await detectEsModule({ mainFile })
+  const functionIsESM = await detectEsModule({ mainFile })
 
-    if (functionIsESM) {
-      return 'nft'
-    }
-  }
-
-  return 'zisi'
+  return functionIsESM ? 'nft' : 'zisi'
 }
