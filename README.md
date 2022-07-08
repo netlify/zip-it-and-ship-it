@@ -441,9 +441,9 @@ need to be the same as the one used when installing those native modules.
 
 In Netlify, this is done by ensuring that the following Node.js versions are the same:
 
-- Build-time Node.js version: this defaults to Node `12`, but can be
+- Build-time Node.js version: this defaults to Node `16`, but can be
   [overridden with a `.nvmrc` or `NODE_VERSION` environment variable](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript).
-- Function runtime Node.js version: this defaults to `nodejs12.x` but can be
+- Function runtime Node.js version: this defaults to `nodejs16.x` but can be
   [overridden with a `AWS_LAMBDA_JS_RUNTIME` environment variable](https://docs.netlify.com/functions/build-with-javascript/#runtime-settings).
 
 Note that this problem might not apply for Node.js native modules using the [N-API](https://nodejs.org/api/n-api.html).
