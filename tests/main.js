@@ -60,32 +60,10 @@ const getZipChecksum = async function (t, bundler) {
   return sha1sum
 }
 
-test.before(async () => {
-  // Renaming malformed `.malformed-json` files to `.json`
-  await rename(
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.malformed-json'),
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.json'),
-  )
-  await rename(
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.malformed-json'),
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.json'),
-  )
-})
-
 test.after.always(async () => {
   if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
     await del(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
   }
-
-  // Renaming malformed `.json` files back to `.malformed-json`
-  await rename(
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.json'),
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-1', 'my-function-1.malformed-json'),
-  )
-  await rename(
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.json'),
-    join(FIXTURES_DIR, 'config-files-malformed-json', 'my-function-2.malformed-json'),
-  )
 })
 
 test.afterEach(() => {
@@ -2731,111 +2709,6 @@ test('listFunctionsFiles includes in-source config declarations', async (t) => {
   })
 })
 
-testMany(
-  'Loads function configuration properties from a JSON file if the function is inside one of `configFileDirectories`',
-  ['bundler_nft', 'bundler_esbuild', 'bundler_default'],
-  async (options, t) => {
-    const fixtureName = 'config-files-select-directories'
-    const pathInternal = join(fixtureName, '.netlify', 'functions-internal')
-    const pathUser = join(fixtureName, 'netlify', 'functions')
-    const opts = merge(options, {
-      basePath: join(FIXTURES_DIR, fixtureName),
-      configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
-      featureFlags: { zisi_detect_esm: true },
-    })
-    const { files, tmpDir } = await zipFixture(t, [pathInternal, pathUser], {
-      length: 2,
-      opts,
-    })
-
-    const func1Entry = files.find(({ name }) => name === 'internal-function')
-    const func2Entry = files.find(({ name }) => name === 'user-function')
-
-    t.deepEqual(func1Entry.config.includedFiles, ['blog/*.md'])
-    t.is(func2Entry.config.includedFiles, undefined)
-
-    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
-
-    const functionPaths = [
-      join(tmpDir, 'internal-function.zip_out', 'internal-function.js'),
-      join(tmpDir, 'user-function.zip_out', 'user-function.js'),
-    ]
-    const func1 = await importFunctionFile(functionPaths[0])
-    const func2 = await importFunctionFile(functionPaths[1])
-
-    t.true(func1.handler())
-    t.true(func2.handler())
-
-    t.true(await pathExists(`${tmpDir}/internal-function.zip_out/blog/one.md`))
-    t.false(await pathExists(`${tmpDir}/user-function.zip_out/blog/one.md`))
-  },
-)
-
-testMany(
-  'Ignores function configuration files with a missing or invalid `version` property',
-  ['bundler_nft', 'bundler_esbuild', 'bundler_default'],
-  async (options, t) => {
-    const fixtureName = 'config-files-invalid-version'
-    const fixtureDir = join(FIXTURES_DIR, fixtureName)
-    const opts = merge(options, {
-      basePath: fixtureDir,
-      configFileDirectories: [fixtureDir],
-      featureFlags: { zisi_detect_esm: true },
-    })
-    const { files, tmpDir } = await zipFixture(t, fixtureName, {
-      length: 2,
-      opts,
-    })
-
-    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
-
-    const functionPaths = [
-      join(tmpDir, 'my-function-1.zip_out', 'my-function-1.js'),
-      join(tmpDir, 'my-function-2.zip_out', 'my-function-2.js'),
-    ]
-    const func1 = await importFunctionFile(functionPaths[0])
-    const func2 = await importFunctionFile(functionPaths[1])
-
-    t.true(func1.handler())
-    t.true(func2.handler())
-    t.is(files[0].config.includedFiles, undefined)
-    t.is(files[1].config.includedFiles, undefined)
-    t.false(await pathExists(`${tmpDir}/my-function-1.zip_out/blog/one.md`))
-  },
-)
-
-testMany(
-  'Ignores function configuration files with malformed JSON',
-  ['bundler_nft', 'bundler_esbuild', 'bundler_default'],
-  async (options, t) => {
-    const fixtureName = 'config-files-malformed-json'
-    const fixtureDir = join(FIXTURES_DIR, fixtureName)
-    const opts = merge(options, {
-      basePath: fixtureDir,
-      configFileDirectories: [fixtureDir],
-      featureFlags: { zisi_detect_esm: true },
-    })
-    const { files, tmpDir } = await zipFixture(t, fixtureName, {
-      length: 2,
-      opts,
-    })
-
-    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
-
-    const functionPaths = [
-      join(tmpDir, 'my-function-1.zip_out', 'my-function-1.js'),
-      join(tmpDir, 'my-function-2.zip_out', 'my-function-2.js'),
-    ]
-    const func1 = await importFunctionFile(functionPaths[0])
-    const func2 = await importFunctionFile(functionPaths[1])
-
-    t.true(func1.handler())
-    t.true(func2.handler())
-    t.is(files[0].config.includedFiles, undefined)
-    t.is(files[1].config.includedFiles, undefined)
-    t.false(await pathExists(`${tmpDir}/my-function-1.zip_out/blog/one.md`))
-  },
-)
 test('listFunctionsFiles does not include wrong arch functions and warns', async (t) => {
   sinon.spy(console, 'warn')
   const functions = await listFunctionsFiles(join(FIXTURES_DIR, 'wrong-prebuilt-architecture'))
