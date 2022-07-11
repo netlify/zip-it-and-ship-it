@@ -24,7 +24,6 @@ interface ZipFunctionOptions {
 }
 
 type ZipFunctionsOptions = ZipFunctionOptions & {
-  configFileDirectories?: string[]
   manifest?: string
   parallelLimit?: number
 }
@@ -47,7 +46,6 @@ export const zipFunctions = async function (
     archiveFormat = 'zip',
     basePath,
     config = {},
-    configFileDirectories,
     featureFlags: inputFeatureFlags,
     manifest,
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
@@ -59,7 +57,7 @@ export const zipFunctions = async function (
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
-  const functions = await getFunctionsFromPaths(paths, { config, configFileDirectories, dedupe: true, featureFlags })
+  const functions = await getFunctionsFromPaths(paths, { config, dedupe: true, featureFlags })
   const results = await pMap(
     functions.values(),
     async (func) => {

@@ -25,11 +25,6 @@ interface FunctionConfig {
   zipGo?: boolean
 }
 
-interface FunctionConfigFile {
-  config: FunctionConfig
-  version: number
-}
-
 interface FunctionInSourceConfig {
   nodeBundler?: NodeBundlerName
   includedFiles?: string[]
@@ -42,11 +37,9 @@ type FunctionWithoutConfig = Omit<FunctionSource, 'config'>
 
 const getConfigForFunction = async ({
   config,
-  configFileDirectories,
   func,
 }: {
   config?: Config
-  configFileDirectories?: string[]
   func: FunctionWithoutConfig
 }): Promise<FunctionConfig> => {
   let fromConfig = getFromMainConfig({ config, func })
@@ -58,20 +51,7 @@ const getConfigForFunction = async ({
     fromConfig = { ...fromConfig, ...inSourceConfig }
   }
 
-  // We try to read from a function config file if the function directory is
-  // inside one of `configFileDirectories`.
-  const shouldReadConfigFile = configFileDirectories?.some((directory) => func.srcDir.startsWith(directory))
-
-  if (!shouldReadConfigFile) {
-    return fromConfig
-  }
-
-  const fromFile = await getFromFile(func)
-
-  return {
-    ...fromConfig,
-    ...fromFile,
-  }
+  return fromConfig
 }
 
 const getFromMainConfig = ({
@@ -79,7 +59,6 @@ const getFromMainConfig = ({
   func,
 }: {
   config?: Config
-  configFileDirectories?: string[]
   func: FunctionWithoutConfig
 }): FunctionConfig => {
   if (!config) {
@@ -109,25 +88,7 @@ const getFromMainConfig = ({
   return mergeOptions.apply({ concatArrays: true, ignoreUndefined: true }, matches)
 }
 
-const getFromFile = async (func: FunctionWithoutConfig): Promise<FunctionConfig> => {
-  const filename = `${basename(func.mainFile, extname(func.mainFile))}.json`
-  const configFilePath = join(dirname(func.mainFile), filename)
-
-  try {
-    const data = await fs.readFile(configFilePath, 'utf8')
-    const configFile = JSON.parse(data) as FunctionConfigFile
-
-    if (configFile.version === 1) {
-      return configFile.config
-    }
-  } catch {
-    // no-op
-  }
-
-  return {}
-}
-
-const getConfigObjectFromFunction = async (sourcePath: string) => {
+const getConfigObjectFromFunction = async (sourcePath: string): Promise<FunctionInSourceConfig> => {
   const ast = await safelyParseFile(sourcePath)
 
   if (ast === null) {

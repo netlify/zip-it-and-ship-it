@@ -79,10 +79,9 @@ export const getFunctionsFromPaths = async (
   paths: string[],
   {
     config,
-    configFileDirectories = [],
     dedupe = false,
     featureFlags = defaultFlags,
-  }: { config?: Config; configFileDirectories?: string[]; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
+  }: { config?: Config; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
 ): Promise<FunctionMap> => {
   const fsCache = makeFsCache()
 
@@ -106,7 +105,7 @@ export const getFunctionsFromPaths = async (
     }
   }, Promise.resolve({ functions: [], remainingPaths: paths } as { functions: FunctionTupleWithoutConfig[]; remainingPaths: string[] }))
   const functionConfigs = await Promise.all(
-    functions.map(([, func]) => getConfigForFunction({ config, configFileDirectories, func })),
+    functions.map(([, func]) => getConfigForFunction({ config, func })),
   )
   const functionsWithConfig: FunctionTuple[] = functions.map(([name, func], index) => [
     name,
