@@ -112,8 +112,6 @@ const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod, ex
     return type === 'VariableDeclarator' && id.type === 'Identifier' && id.name === exportType
   })
 
-  console.log(handlerDeclaration, 'handlerDeclaration')
-
   const exports =
     exportType === 'handler'
       ? getExportsFromExpression(handlerDeclaration?.init)

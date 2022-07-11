@@ -1,4 +1,4 @@
-import { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
+import { ArgumentPlaceholder, Expression, Node, SpreadElement, JSXNamespacedName } from '@babel/types'
 
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { createBindingsMethod } from '../parser/bindings.js'
@@ -66,8 +66,7 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
   return mergedExports
 }
 
-export type ISCHandlerArg = ArgumentPlaceholder | Expression | SpreadElement | JSXNamespacedName | any
-
+export type ISCHandlerArg = ArgumentPlaceholder | Expression | SpreadElement | JSXNamespacedName | Node
 export interface ISCExport {
   local: string
   args: ISCHandlerArg[]

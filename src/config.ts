@@ -31,7 +31,7 @@ interface FunctionConfigFile {
 }
 
 interface FunctionInSourceConfig {
-  nodeBundler?: NodeBundlerName,
+  nodeBundler?: NodeBundlerName
   includedFiles?: string[]
 }
 
@@ -51,7 +51,7 @@ const getConfigForFunction = async ({
 }): Promise<FunctionConfig> => {
   let fromConfig = getFromMainConfig({ config, func })
 
-  const inSourceConfig = await getConfigObjectFromFunction(func.mainFile)
+  const inSourceConfig: FunctionInSourceConfig = await getConfigObjectFromFunction(func.mainFile)
 
   if (Object.keys(inSourceConfig).length !== 0) {
     // inSourceConfig config values are preferred to the main config values
@@ -136,26 +136,20 @@ const getConfigObjectFromFunction = async (sourcePath: string) => {
 
   const configObj = getConfigExport(ast.body, createBindingsMethod(ast.body))
 
-  const testObj: any = []
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  let configObject: any = {}
 
-  // eslint-disable-next-line array-callback-return
-  configObj.map(({ args }) => {
-    args.forEach((arg) => {
-      testObj.push({
-        // eslint-disable-next-line max-nested-callbacks
+  configObj.map(({ args }) =>
+    args.forEach((arg: any) => {
+      configObject = {
+        ...configObject,
         [arg.key.name]:
           // eslint-disable-next-line max-nested-callbacks
           arg.value.type === 'ArrayExpression' ? arg.value.elements.map((val: any) => val.value) : arg.value.value,
-      })
-    })
-  })
-
-  const configObject: any = {}
-
-  for (const element of testObj) {
-    // eslint-disable-next-line prefer-destructuring
-    configObject[Object.keys(element)[0]] = Object.values(element)[0]
-  }
+      }
+    }),
+  )
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   return configObject
 }
