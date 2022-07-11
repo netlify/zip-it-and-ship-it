@@ -5,6 +5,8 @@ import type { ISCExport } from '../in_source_config/index.js'
 import type { BindingMethod } from './bindings.js'
 import { isModuleExports } from './helpers.js'
 
+type ExportType = 'config' | 'handler'
+
 // Finds the main handler export in an AST.
 export const getMainExport = (nodes: Statement[], getAllBindings: BindingMethod) => {
   let handlerExport: ISCExport[] = []
@@ -32,24 +34,64 @@ export const getMainExport = (nodes: Statement[], getAllBindings: BindingMethod)
   return handlerExport
 }
 
+export const getConfigExport = (nodes: Statement[], getAllBindings: BindingMethod) => {
+  let configExport: ISCExport[] = []
+
+  nodes.find((node) => {
+    const esmExports = getMainExportFromESM(node, getAllBindings, 'config')
+
+    if (esmExports.length !== 0) {
+      configExport = esmExports
+
+      return true
+    }
+
+    const cjsExports = getMainExportFromCJS(node, 'config')
+
+    if (cjsExports.length !== 0) {
+      configExport = cjsExports
+
+      return true
+    }
+
+    return false
+  })
+
+  return configExport
+}
+
 // Finds the main handler export in a CJS AST.
-const getMainExportFromCJS = (node: Statement) => {
+const getMainExportFromCJS = (node: Statement, exportType: ExportType = 'handler') => {
   const handlerPaths = [
     ['module', 'exports', 'handler'],
     ['exports', 'handler'],
   ]
 
-  return handlerPaths.flatMap((handlerPath) => {
-    if (!isModuleExports(node, handlerPath)) {
-      return []
-    }
+  const configPaths = [
+    ['module', 'exports', 'config'],
+    ['exports', 'config'],
+  ]
 
-    return getExportsFromExpression(node.expression.right)
-  })
+  return exportType === 'handler'
+    ? handlerPaths.flatMap((handlerPath) => {
+        if (!isModuleExports(node, handlerPath)) {
+          return []
+        }
+
+        return getExportsFromExpression(node.expression.right)
+      })
+    : configPaths.flatMap((handlerPath) => {
+        if (!isModuleExports(node, handlerPath)) {
+          return []
+        }
+
+        return getConfigFromExpression(node.expression.right)
+      })
 }
 
 // Finds the main handler export in an ESM AST.
-const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) => {
+// eslint-disable-next-line complexity
+const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod, exportType: ExportType = 'handler') => {
   if (node.type !== 'ExportNamedDeclaration' || node.exportKind !== 'value') {
     return []
   }
@@ -57,7 +99,7 @@ const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) =>
   const { declaration, specifiers } = node
 
   if (specifiers?.length > 0) {
-    return getExportsFromBindings(specifiers, getAllBindings)
+    return getExportsFromBindings(specifiers, getAllBindings, exportType)
   }
 
   if (declaration?.type !== 'VariableDeclaration') {
@@ -67,10 +109,15 @@ const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) =>
   const handlerDeclaration = declaration.declarations.find((childDeclaration) => {
     const { id, type } = childDeclaration
 
-    return type === 'VariableDeclarator' && id.type === 'Identifier' && id.name === 'handler'
+    return type === 'VariableDeclarator' && id.type === 'Identifier' && id.name === exportType
   })
 
-  const exports = getExportsFromExpression(handlerDeclaration?.init)
+  console.log(handlerDeclaration, 'handlerDeclaration')
+
+  const exports =
+    exportType === 'handler'
+      ? getExportsFromExpression(handlerDeclaration?.init)
+      : getConfigFromExpression(handlerDeclaration?.init)
 
   return exports
 }
@@ -88,18 +135,35 @@ const isHandlerExport = (node: ExportNamedDeclaration['specifiers'][number]): no
   )
 }
 
+// Check if the Node is an ExportSpecifier that has a named export called `config`
+// either with Identifier `export { config }`
+// or with StringLiteral `export { x as "config" }`
+const isConfigExport = (node: ExportNamedDeclaration['specifiers'][number]): node is ExportSpecifier => {
+  const { type, exported } = node
+
+  return (
+    type === 'ExportSpecifier' &&
+    ((exported.type === 'Identifier' && exported.name === 'config') ||
+      (exported.type === 'StringLiteral' && exported.value === 'config'))
+  )
+}
+
 // Tries to resolve the export from a binding (variable)
 // for example `let handler; handler = () => {}; export { handler }` would
 // resolve correctly to the handler function
-const getExportsFromBindings = (specifiers: ExportNamedDeclaration['specifiers'], getAllBindings: BindingMethod) => {
-  const specifier = specifiers.find(isHandlerExport)
+const getExportsFromBindings = (
+  specifiers: ExportNamedDeclaration['specifiers'],
+  getAllBindings: BindingMethod,
+  exportType: ExportType = 'handler',
+) => {
+  const specifier = specifiers.find(exportType === 'handler' ? isHandlerExport : isConfigExport)
 
   if (!specifier) {
     return []
   }
 
   const binding = getAllBindings().get(specifier.local.name)
-  const exports = getExportsFromExpression(binding)
+  const exports = exportType === 'handler' ? getExportsFromExpression(binding) : getConfigFromExpression(binding)
 
   return exports
 }
@@ -118,6 +182,16 @@ const getExportsFromExpression = (node: Expression | undefined | null) => {
   }
 
   const exports = [{ local: callee.name, args }]
+
+  return exports
+}
+
+const getConfigFromExpression = (node: Expression | undefined | null) => {
+  if (node?.type !== 'ObjectExpression') {
+    return []
+  }
+  const { properties: args } = node
+  const exports = [{ local: 'config', args }]
 
   return exports
 }

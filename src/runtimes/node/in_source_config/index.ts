@@ -66,7 +66,7 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
   return mergedExports
 }
 
-export type ISCHandlerArg = ArgumentPlaceholder | Expression | SpreadElement | JSXNamespacedName
+export type ISCHandlerArg = ArgumentPlaceholder | Expression | SpreadElement | JSXNamespacedName | any
 
 export interface ISCExport {
   local: string

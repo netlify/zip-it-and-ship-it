@@ -6,6 +6,9 @@ import mergeOptions from 'merge-options'
 import { FunctionSource } from './function.js'
 import type { NodeBundlerName } from './runtimes/node/bundlers/index.js'
 import type { NodeVersionString } from './runtimes/node/index.js'
+import { createBindingsMethod } from './runtimes/node/parser/bindings.js'
+import { getConfigExport } from './runtimes/node/parser/exports.js'
+import { safelyParseFile } from './runtimes/node/parser/index.js'
 import { minimatch } from './utils/matching.js'
 
 interface FunctionConfig {
@@ -27,6 +30,11 @@ interface FunctionConfigFile {
   version: number
 }
 
+interface FunctionInSourceConfig {
+  nodeBundler?: NodeBundlerName,
+  includedFiles?: string[]
+}
+
 type GlobPattern = string
 
 type Config = Record<GlobPattern, FunctionConfig>
@@ -41,7 +49,14 @@ const getConfigForFunction = async ({
   configFileDirectories?: string[]
   func: FunctionWithoutConfig
 }): Promise<FunctionConfig> => {
-  const fromConfig = getFromMainConfig({ config, func })
+  let fromConfig = getFromMainConfig({ config, func })
+
+  const inSourceConfig = await getConfigObjectFromFunction(func.mainFile)
+
+  if (Object.keys(inSourceConfig).length !== 0) {
+    // inSourceConfig config values are preferred to the main config values
+    fromConfig = { ...fromConfig, ...inSourceConfig }
+  }
 
   // We try to read from a function config file if the function directory is
   // inside one of `configFileDirectories`.
@@ -110,6 +125,39 @@ const getFromFile = async (func: FunctionWithoutConfig): Promise<FunctionConfig>
   }
 
   return {}
+}
+
+const getConfigObjectFromFunction = async (sourcePath: string) => {
+  const ast = await safelyParseFile(sourcePath)
+
+  if (ast === null) {
+    return {}
+  }
+
+  const configObj = getConfigExport(ast.body, createBindingsMethod(ast.body))
+
+  const testObj: any = []
+
+  // eslint-disable-next-line array-callback-return
+  configObj.map(({ args }) => {
+    args.forEach((arg) => {
+      testObj.push({
+        // eslint-disable-next-line max-nested-callbacks
+        [arg.key.name]:
+          // eslint-disable-next-line max-nested-callbacks
+          arg.value.type === 'ArrayExpression' ? arg.value.elements.map((val: any) => val.value) : arg.value.value,
+      })
+    })
+  })
+
+  const configObject: any = {}
+
+  for (const element of testObj) {
+    // eslint-disable-next-line prefer-destructuring
+    configObject[Object.keys(element)[0]] = Object.values(element)[0]
+  }
+
+  return configObject
 }
 
 export { Config, FunctionConfig, FunctionWithoutConfig, getConfigForFunction }
