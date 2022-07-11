@@ -1,6 +1,3 @@
-import { promises as fs } from 'fs'
-import { basename, extname, dirname, join } from 'path'
-
 import mergeOptions from 'merge-options'
 
 import { FunctionSource } from './function.js'
@@ -54,13 +51,7 @@ const getConfigForFunction = async ({
   return fromConfig
 }
 
-const getFromMainConfig = ({
-  config,
-  func,
-}: {
-  config?: Config
-  func: FunctionWithoutConfig
-}): FunctionConfig => {
+const getFromMainConfig = ({ config, func }: { config?: Config; func: FunctionWithoutConfig }): FunctionConfig => {
   if (!config) {
     return {}
   }
