@@ -2719,3 +2719,124 @@ test('listFunctionsFiles does not include wrong arch functions and warns', async
 
   console.warn.restore()
 })
+
+testMany(
+  'Loads function configuration from in source function config object',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const fixtureName = 'in-source-functions-config'
+    const pathUser = join(fixtureName, 'netlify', 'functions')
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      featureFlags: { zisi_detect_esm: true },
+    })
+    const { files, tmpDir } = await zipFixture(t, pathUser, {
+      opts,
+      length: 2,
+    })
+
+    const funcEntry = files.find(({ name }) => name === 'hello')
+
+    t.deepEqual(funcEntry.config.includedFiles, ['blog/*.md'])
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    t.true(await pathExists(`${tmpDir}/hello.zip_out/blog/test.md`))
+  },
+)
+
+testMany(
+  'In source configuration is preferred over netlify.toml configuration',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const fixtureName = 'in-source-functions-config'
+    const pathUser = join(fixtureName, 'netlify', 'functions')
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      featureFlags: { zisi_detect_esm: true },
+      config: {
+        '*': {
+          includedFiles: ['blog/*.txt'],
+        },
+      },
+    })
+    const { files, tmpDir } = await zipFixture(t, pathUser, {
+      opts,
+      length: 2,
+    })
+
+    const funcEntry = files.find(({ name }) => name === 'hello')
+
+    t.deepEqual(funcEntry.config.includedFiles, ['blog/*.md'])
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    t.true(await pathExists(`${tmpDir}/hello.zip_out/blog/test.md`))
+    t.false(await pathExists(`${tmpDir}/hello.zip_out/blog/test.txt`))
+  },
+)
+
+testMany(
+  'Sets includedFiles and nodeBundler configuration from in source function config object',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const fixtureName = 'in-source-functions-config'
+    const pathUser = join(fixtureName, 'netlify', 'functions')
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      featureFlags: { zisi_detect_esm: true },
+      config: {
+        '*': {
+          includedFiles: ['blog/*.txt'],
+          nodeBundler: 'zisi',
+        },
+      },
+    })
+    const { files, tmpDir } = await zipFixture(t, pathUser, {
+      opts,
+      length: 2,
+    })
+
+    const funcEntry = files.find(({ name }) => name === 'hello')
+
+    t.deepEqual(funcEntry.config.includedFiles, ['blog/*.md'])
+    t.deepEqual(funcEntry.config.nodeBundler, 'esbuild')
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    t.true(await pathExists(`${tmpDir}/hello.zip_out/blog/test.md`))
+  },
+)
+
+testMany(
+  'Loads configuration from netlify.toml when in source function config object is absent',
+  ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+  async (options, t) => {
+    const fixtureName = 'in-source-functions-config'
+    const pathUser = join(fixtureName, 'netlify', 'functions')
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      featureFlags: { zisi_detect_esm: true },
+      config: {
+        '*': {
+          includedFiles: ['blog/*.txt'],
+          nodeBundler: 'zisi',
+        },
+      },
+    })
+    const { files, tmpDir } = await zipFixture(t, pathUser, {
+      opts,
+      length: 2,
+    })
+
+    const funcEntry = files.find(({ name }) => name === 'hello-two')
+
+    t.deepEqual(funcEntry.config.includedFiles, ['blog/*.txt'])
+    t.deepEqual(funcEntry.config.nodeBundler, 'zisi')
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    t.true(await pathExists(`${tmpDir}/hello-two.zip_out/blog/test.txt`))
+    t.false(await pathExists(`${tmpDir}/hello-two.zip_out/blog/test.md`))
+  },
+)
