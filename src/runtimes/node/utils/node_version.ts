@@ -7,7 +7,7 @@ export interface NodeVersionSupport {
 }
 
 // Must match the default version used in Bitballoon.
-export const DEFAULT_NODE_VERSION = 14
+export const DEFAULT_NODE_VERSION = 16
 const VERSION_REGEX = /(nodejs)?(\d+)\.x/
 
 export const getNodeVersion = (configVersion?: string) => parseVersion(configVersion) ?? DEFAULT_NODE_VERSION
