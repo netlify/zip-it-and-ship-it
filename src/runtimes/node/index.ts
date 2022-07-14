@@ -88,7 +88,7 @@ const zipFunction: ZipFunction = async function ({
     stat,
   })
 
-  const inSourceConfig = await findISCDeclarationsInPath(mainFile)
+  const inSourceConfig = await findISCDeclarationsInPath(mainFile, name)
 
   createPluginsModulesPathAliases(srcFiles, pluginsModulesPath, aliases, finalBasePath)
 
