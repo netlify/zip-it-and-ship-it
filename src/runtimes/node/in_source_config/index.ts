@@ -1,5 +1,6 @@
 import { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
+import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { createBindingsMethod } from '../parser/bindings.js'
 import { getMainExport } from '../parser/exports.js'
@@ -12,10 +13,26 @@ export const IN_SOURCE_CONFIG_MODULE = '@netlify/functions'
 
 export type ISCValues = Partial<ReturnType<typeof parseSchedule>>
 
+const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean, functionName: string): void => {
+  if (!functionFound) {
+    throw new FunctionBundlingUserError(
+      "The `schedule` helper was imported but we couldn't find any usages. If you meant to schedule a function, please check that `schedule` is invoked and `handler` correctly exported.",
+      { functionName, runtime: 'js' },
+    )
+  }
+
+  if (!scheduleFound) {
+    throw new FunctionBundlingUserError(
+      'Unable to find cron expression for scheduled function. The cron expression (first argument) for the `schedule` helper needs to be accessible inside the file and cannot be imported.',
+      { functionName, runtime: 'js' },
+    )
+  }
+}
+
 // Parses a JS/TS file and looks for in-source config declarations. It returns
 // an array of all declarations found, with `property` indicating the name of
 // the property and `data` its value.
-export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISCValues> => {
+export const findISCDeclarationsInPath = async (sourcePath: string, functionName: string): Promise<ISCValues> => {
   const ast = await safelyParseFile(sourcePath)
 
   if (ast === null) {
@@ -24,8 +41,9 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
 
   const imports = ast.body.flatMap((node) => getImports(node, IN_SOURCE_CONFIG_MODULE))
 
-  const scheduledFuncsExpected = imports.filter(({ imported }) => imported === 'schedule').length
-  let scheduledFuncsFound = 0
+  const scheduledFunctionExpected = imports.some(({ imported }) => imported === 'schedule')
+  let scheduledFunctionFound = false
+  let scheduleFound = false
 
   const getAllBindings = createBindingsMethod(ast.body)
   const mainExports = getMainExport(ast.body, getAllBindings)
@@ -41,8 +59,9 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
         case 'schedule': {
           const parsed = parseSchedule({ args }, getAllBindings)
 
+          scheduledFunctionFound = true
           if (parsed.schedule) {
-            scheduledFuncsFound += 1
+            scheduleFound = true
           }
 
           return parsed
@@ -55,10 +74,8 @@ export const findISCDeclarationsInPath = async (sourcePath: string): Promise<ISC
     })
     .filter(nonNullable)
 
-  if (scheduledFuncsFound < scheduledFuncsExpected) {
-    throw new Error(
-      'Warning: unable to find cron expression for scheduled function. `schedule` imported but not called or exported. If you meant to schedule a function, please check that `schedule` is invoked with an appropriate cron expression.',
-    )
+  if (scheduledFunctionExpected) {
+    validateScheduleFunction(scheduledFunctionFound, scheduleFound, functionName)
   }
 
   const mergedExports: ISCValues = iscExports.reduce((acc, obj) => ({ ...acc, ...obj }), {})

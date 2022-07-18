@@ -1,8 +1,8 @@
 import { promises as fs } from 'fs'
 import { basename } from 'path'
 
+import { FunctionBundlingUserError } from '../../utils/error.js'
 import { shellUtils } from '../../utils/shell.js'
-import type { RuntimeName } from '../runtime.js'
 
 export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
   const functionName = basename(srcDir)
@@ -17,13 +17,9 @@ export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; 
       },
     })
   } catch (error) {
-    const runtime: RuntimeName = 'go'
-
-    error.customErrorInfo = { type: 'functionsBundling', location: { functionName, runtime } }
-
     console.error(`Could not compile Go function ${functionName}:\n`)
 
-    throw error
+    throw new FunctionBundlingUserError(error, { functionName, runtime: 'go' })
   }
 
   const stat = await fs.lstat(destPath)

@@ -4,7 +4,7 @@ import { FeatureFlags } from '../feature_flags.js'
 import { FunctionSource, SourceFile } from '../function.js'
 import { FsCache } from '../utils/fs.js'
 
-import type { NodeBundlerName } from './node/bundlers/index.js'
+import type { NodeBundlerName } from './node/bundlers/types.js'
 import type { ISCValues } from './node/in_source_config/index.js'
 
 export type RuntimeName = 'go' | 'js' | 'rs'

@@ -5,9 +5,8 @@ import { tmpName } from 'tmp-promise'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
+import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
-import type { RuntimeName } from '../../../runtime.js'
-import type { NodeBundlerName } from '../index.js'
 
 import { getBundlerTarget, getModuleFormat } from './bundler_target.js'
 import { getDynamicImportsPlugin } from './plugin_dynamic_imports.js'
@@ -134,15 +133,7 @@ export const bundleJsFile = async function ({
       warnings,
     }
   } catch (error) {
-    const bundler: NodeBundlerName = 'esbuild'
-    const runtime: RuntimeName = 'js'
-
-    error.customErrorInfo = {
-      type: 'functionsBundling',
-      location: { bundler, functionName: name, runtime },
-    }
-
-    throw error
+    throw new FunctionBundlingUserError(error, { functionName: name, runtime: 'js', bundler: 'esbuild' })
   }
 }
 

@@ -1,7 +1,7 @@
 import { dirname, normalize } from 'path'
 
 import { getBasePath } from '../../utils/base_path.js'
-import type { BundleFunction } from '../index.js'
+import type { BundleFunction } from '../types.js'
 
 import { getSrcFiles } from './src_files.js'
 

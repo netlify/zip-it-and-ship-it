@@ -5,7 +5,7 @@ import readPackageJson from 'read-package-json-fast'
 
 import { isNativeModule } from '../../utils/detect_native_module.js'
 import { PackageJson } from '../../utils/package_json.js'
-import type { NativeNodeModules } from '../index.js'
+import type { NativeNodeModules } from '../types.js'
 
 type NativeModuleCacheEntry = [boolean | undefined, PackageJson]
 type NativeModuleCache = Record<string, Promise<NativeModuleCacheEntry>>

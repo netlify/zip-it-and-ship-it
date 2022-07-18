@@ -39,7 +39,7 @@ const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSo
     return func
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile)
+  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, func.name)
 
   return { ...func, inSourceConfig }
 }
