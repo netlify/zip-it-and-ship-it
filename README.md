@@ -129,7 +129,7 @@ The following properties are accepted:
 - `nodeVersion`
 
   - _Type_: `string`\
-  - _Default value_: `12.x`
+  - _Default value_: `16.x`
 
   The version of Node.js to use as the compilation target. Possible values:
 
@@ -137,6 +137,7 @@ The following properties are accepted:
   - `10.x` (or `nodejs10.x`)
   - `12.x` (or `nodejs12.x`)
   - `14.x` (or `nodejs14.x`)
+  - `16.x` (or `nodejs16.x`)
 
 - `rustTargetDirectory`
 
