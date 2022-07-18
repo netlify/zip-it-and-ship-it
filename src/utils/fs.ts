@@ -48,11 +48,14 @@ export const listFunctionsDirectories = async function (srcFolders: string[]) {
   const validDirectories = filenamesByDirectory
     .map((result) => {
       if (result.status === 'rejected') {
-        if (result.reason instanceof Error && (result.reason as NodeJS.ErrnoException).code !== 'ENOENT') {
-          throw result.reason
+        // If the error is about `ENOENT` (FileNotFound) then we only throw later if this happens
+        // for all directories.
+        if (result.reason instanceof Error && (result.reason as NodeJS.ErrnoException).code === 'ENOENT') {
+          return null
         }
 
-        return null
+        // In any other error case besides `ENOENT` throw immediately
+        throw result.reason
       }
 
       return result.value
