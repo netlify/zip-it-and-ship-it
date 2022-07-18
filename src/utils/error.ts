@@ -1,25 +1,21 @@
 import type { NodeBundlerName } from '../runtimes/node/bundlers/types.js'
 import type { RuntimeName } from '../runtimes/runtime'
 
-interface CustomErrorInfo {
-  type: 'functionsBundling'
-  location: {
-    functionName: string
-    runtime: RuntimeName
-    bundler?: NodeBundlerName
-  }
-}
-
-interface CustomErrorInput {
+interface CustomErrorLocation {
   functionName: string
   runtime: RuntimeName
   bundler?: NodeBundlerName
 }
 
+interface CustomErrorInfo {
+  type: 'functionsBundling'
+  location: CustomErrorLocation
+}
+
 export class FunctionBundlingUserError extends Error {
   customErrorInfo: CustomErrorInfo
 
-  constructor(messageOrError: string | Error, customErrorInfo: CustomErrorInput) {
+  constructor(messageOrError: string | Error, customErrorInfo: CustomErrorLocation) {
     const isError = messageOrError instanceof Error
 
     super(isError ? messageOrError.message : messageOrError)
@@ -33,9 +29,5 @@ export class FunctionBundlingUserError extends Error {
     }
 
     this.customErrorInfo = { type: 'functionsBundling', location: customErrorInfo }
-  }
-
-  static fromError(error: Error, customErrorInfo: CustomErrorInput) {
-    return new FunctionBundlingUserError(error.message, customErrorInfo)
   }
 }
