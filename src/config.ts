@@ -1,7 +1,7 @@
 import mergeOptions from 'merge-options'
 
 import { FunctionSource } from './function.js'
-import type { NodeBundlerName } from './runtimes/node/bundlers/index.js'
+import type { NodeBundlerName } from './runtimes/node/bundlers/types.js'
 import type { NodeVersionString } from './runtimes/node/index.js'
 import { minimatch } from './utils/matching.js'
 

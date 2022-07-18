@@ -1,5 +1,5 @@
-import { NodeBundlerName } from '../runtimes/node/bundlers'
-import { RuntimeName } from '../runtimes/runtime'
+import type { NodeBundlerName } from '../runtimes/node/bundlers/types.js'
+import type { RuntimeName } from '../runtimes/runtime'
 
 interface CustomErrorInfo {
   type: 'functionsBundling'
@@ -10,22 +10,32 @@ interface CustomErrorInfo {
   }
 }
 
+interface CustomErrorInput {
+  functionName: string
+  runtime: RuntimeName
+  bundler?: NodeBundlerName
+}
+
 export class FunctionBundlingUserError extends Error {
   customErrorInfo: CustomErrorInfo
 
-  constructor(
-    message: string,
-    customErrorInfo: {
-      functionName: string
-      runtime: RuntimeName
-      bundler?: NodeBundlerName
-    },
-  ) {
-    super(message)
+  constructor(messageOrError: string | Error, customErrorInfo: CustomErrorInput) {
+    const isError = messageOrError instanceof Error
+
+    super(isError ? messageOrError.message : messageOrError)
 
     Object.setPrototypeOf(this, new.target.prototype)
     this.name = 'FunctionBundlingUserError'
+    if (isError) {
+      this.stack = messageOrError.stack
+    } else {
+      Error.captureStackTrace(this, FunctionBundlingUserError)
+    }
 
     this.customErrorInfo = { type: 'functionsBundling', location: customErrorInfo }
+  }
+
+  static fromError(error: Error, customErrorInfo: CustomErrorInput) {
+    return new FunctionBundlingUserError(error.message, customErrorInfo)
   }
 }

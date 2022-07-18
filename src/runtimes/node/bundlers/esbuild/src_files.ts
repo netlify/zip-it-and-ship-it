@@ -1,7 +1,7 @@
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
 import { getPackageJson, PackageJson } from '../../utils/package_json.js'
 import { getNewCache, TraversalCache } from '../../utils/traversal_cache.js'
-import type { GetSrcFilesFunction } from '../index.js'
+import type { GetSrcFilesFunction } from '../types.js'
 import { getDependencyPathsForDependency } from '../zisi/traverse.js'
 
 export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {

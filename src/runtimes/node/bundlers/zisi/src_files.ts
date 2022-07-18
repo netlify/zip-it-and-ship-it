@@ -9,7 +9,7 @@ import { nonNullable } from '../../../../utils/non_nullable.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
 import { getPackageJson, PackageJson } from '../../utils/package_json.js'
 import { getNewCache, TraversalCache } from '../../utils/traversal_cache.js'
-import type { GetSrcFilesFunction } from '../index.js'
+import type { GetSrcFilesFunction } from '../types.js'
 
 import { listImports } from './list_imports.js'
 import { resolvePathPreserveSymlinks } from './resolve.js'

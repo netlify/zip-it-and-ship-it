@@ -1,9 +1,8 @@
 import { build } from '@netlify/esbuild'
 
 import type { FunctionConfig } from '../../../../config.js'
-import type { RuntimeName } from '../../../runtime.js'
+import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getBundlerTarget } from '../esbuild/bundler_target.js'
-import type { NodeBundlerName } from '../index.js'
 
 export const transpile = async (path: string, config: FunctionConfig, functionName: string) => {
   // The version of ECMAScript to use as the build target. This will determine
@@ -24,14 +23,6 @@ export const transpile = async (path: string, config: FunctionConfig, functionNa
 
     return transpiled.outputFiles[0].text
   } catch (error) {
-    const bundler: NodeBundlerName = 'nft'
-    const runtime: RuntimeName = 'js'
-
-    error.customErrorInfo = {
-      type: 'functionsBundling',
-      location: { bundler, functionName, runtime },
-    }
-
-    throw error
+    throw new FunctionBundlingUserError(error, { functionName, runtime: 'js', bundler: 'nft' })
   }
 }

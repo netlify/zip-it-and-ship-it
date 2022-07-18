@@ -2,9 +2,8 @@ import * as esbuild from '@netlify/esbuild'
 import isBuiltinModule from 'is-builtin-module'
 import { tmpName } from 'tmp-promise'
 
+import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { safeUnlink } from '../../../../utils/fs.js'
-import type { RuntimeName } from '../../../runtime.js'
-import type { NodeBundlerName } from '../index.js'
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being
@@ -58,15 +57,7 @@ export const listImports = async ({
       target: 'esnext',
     })
   } catch (error) {
-    const bundler: NodeBundlerName = 'zisi'
-    const runtime: RuntimeName = 'js'
-
-    error.customErrorInfo = {
-      type: 'functionsBundling',
-      location: { bundler, functionName, runtime },
-    }
-
-    throw error
+    throw new FunctionBundlingUserError(error, { functionName, runtime: 'js', bundler: 'zisi' })
   } finally {
     await safeUnlink(targetPath)
   }

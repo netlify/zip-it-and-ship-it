@@ -4,7 +4,7 @@ import type { FunctionConfig } from '../../../../config.js'
 import { getPathWithExtension } from '../../../../utils/fs.js'
 import { nonNullable } from '../../../../utils/non_nullable.js'
 import { getBasePath } from '../../utils/base_path.js'
-import type { BundleFunction } from '../index.js'
+import type { BundleFunction } from '../types.js'
 
 import { bundleJsFile } from './bundler.js'
 import { getExternalAndIgnoredModulesFromSpecialCases } from './special_cases.js'
