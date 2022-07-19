@@ -8,7 +8,6 @@ import {
   V8IntrinsicIdentifier,
 } from '@babel/types'
 
-// eslint-disable-next-line complexity
 const isDotExpression = (node: Expression, expression: string[]): boolean => {
   if (node.type !== 'MemberExpression') {
     return false

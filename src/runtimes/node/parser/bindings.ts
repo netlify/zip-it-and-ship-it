@@ -10,7 +10,6 @@ const getBindingFromVariableDeclaration = function (node: VariableDeclaration, b
   })
 }
 
-// eslint-disable-next-line complexity
 const getBindingsFromNode = function (node: Statement, bindings: Bindings): void {
   if (node.type === 'VariableDeclaration') {
     // A variable was created, so create it and store the potential value

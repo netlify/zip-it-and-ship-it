@@ -67,7 +67,6 @@ const getWildcardFromASTNode = (node: Expression | PrivateName | TSType) => {
 // Tries to parse an expression, returning an object with:
 // - `includedPathsGlob`: A glob with the files to be included in the bundle
 // - `type`: The expression type (e.g. "require", "import")
-// eslint-disable-next-line complexity
 export const parseExpression = ({
   basePath,
   expression: rawExpression,
