@@ -17,7 +17,7 @@ export const build = async ({ config, name, srcDir }: { config: FunctionConfig; 
   try {
     await installToolchainOnce()
   } catch (error) {
-    throw new FunctionBundlingUserError(error, { functionName, runtime: 'rs' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: 'rs' })
   }
 
   const targetDirectory = await getTargetDirectory({ config, name })
@@ -67,7 +67,7 @@ const cargoBuild = async ({
         'There is no Rust toolchain installed. Visit https://ntl.fyi/missing-rust-toolchain for more information.'
     }
 
-    throw new FunctionBundlingUserError(error, { functionName, runtime: 'rs' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: 'rs' })
   }
 }
 

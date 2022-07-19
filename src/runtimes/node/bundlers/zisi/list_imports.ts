@@ -57,7 +57,7 @@ export const listImports = async ({
       target: 'esnext',
     })
   } catch (error) {
-    throw new FunctionBundlingUserError(error, { functionName, runtime: 'js', bundler: 'zisi' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: 'js', bundler: 'zisi' })
   } finally {
     await safeUnlink(targetPath)
   }

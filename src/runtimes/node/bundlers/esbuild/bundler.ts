@@ -133,7 +133,7 @@ export const bundleJsFile = async function ({
       warnings,
     }
   } catch (error) {
-    throw new FunctionBundlingUserError(error, { functionName: name, runtime: 'js', bundler: 'esbuild' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName: name, runtime: 'js', bundler: 'esbuild' })
   }
 }
 
