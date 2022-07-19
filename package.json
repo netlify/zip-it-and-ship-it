@@ -86,7 +86,7 @@
   },
   "devDependencies": {
     "@babel/types": "^7.15.6",
-    "@netlify/eslint-config-node": "^6.0.0",
+    "@netlify/eslint-config-node": "^7.0.0",
     "@types/archiver": "^5.1.1",
     "@types/end-of-stream": "^1.4.1",
     "@types/normalize-path": "^3.0.0",
