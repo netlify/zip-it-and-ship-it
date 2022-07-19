@@ -22,7 +22,6 @@ const makeTestMany = (test, matrix) => {
   const filteredVariations = env.ZISI_FILTER_VARIATIONS ? env.ZISI_FILTER_VARIATIONS.split(',') : []
 
   const testBundlers = (title, variationNames, assertions, testFn = test) => {
-    // eslint-disable-next-line complexity
     variationNames.forEach((name) => {
       if (filteredVariations.length !== 0 && !filteredVariations.includes(name)) {
         return

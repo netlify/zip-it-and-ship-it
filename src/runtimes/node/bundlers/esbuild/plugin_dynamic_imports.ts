@@ -33,7 +33,6 @@ export const getDynamicImportsPlugin = ({
   setup(build) {
     const cache: PackageCache = new Map()
 
-    // eslint-disable-next-line complexity
     build.onDynamicImport({ filter: /.*/ }, async (args) => {
       const { expression, resolveDir } = args
 
