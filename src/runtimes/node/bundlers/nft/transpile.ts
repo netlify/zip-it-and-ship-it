@@ -23,6 +23,6 @@ export const transpile = async (path: string, config: FunctionConfig, functionNa
 
     return transpiled.outputFiles[0].text
   } catch (error) {
-    throw new FunctionBundlingUserError(error, { functionName, runtime: 'js', bundler: 'nft' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: 'js', bundler: 'nft' })
   }
 }
