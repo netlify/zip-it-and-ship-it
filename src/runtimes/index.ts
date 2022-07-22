@@ -106,7 +106,7 @@ export const getFunctionsFromPaths = async (
     }
   }, Promise.resolve({ functions: [], remainingPaths: paths } as { functions: FunctionTupleWithoutConfig[]; remainingPaths: string[] }))
   const functionConfigs = await Promise.all(
-    functions.map(([, func]) => getConfigForFunction({ config, configFileDirectories, func })),
+    functions.map(([, func]) => getConfigForFunction({ config, configFileDirectories, func, featureFlags })),
   )
   const functionsWithConfig: FunctionTuple[] = functions.map(([name, func], index) => [
     name,
@@ -129,7 +129,7 @@ export const getFunctionFromPath = async (
     const func = await runtime.findFunctionInPath({ path, fsCache, featureFlags })
 
     if (func) {
-      const functionConfig = await getConfigForFunction({ config, func: { ...func, runtime } })
+      const functionConfig = await getConfigForFunction({ config, func: { ...func, runtime }, featureFlags })
 
       return {
         ...func,

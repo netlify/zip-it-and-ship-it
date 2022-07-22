@@ -5,6 +5,7 @@ export const defaultFlags: Record<string, boolean> = {
   parseWithEsbuild: false,
   traceWithNft: false,
   zisi_pure_esm: false,
+  project_deploy_configuration_api_use_per_function_configuration_files: false,
 }
 
 export type FeatureFlag = keyof typeof defaultFlags

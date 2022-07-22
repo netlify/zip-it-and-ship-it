@@ -2791,7 +2791,7 @@ testMany(
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
       configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
-      featureFlags: { zisi_detect_esm: true },
+      featureFlags: { project_deploy_configuration_api_use_per_function_configuration_files: true },
     })
     const { files, tmpDir } = await zipFixture(t, [pathInternal, pathUser], {
       length: 2,

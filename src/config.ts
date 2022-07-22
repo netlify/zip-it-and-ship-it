@@ -3,6 +3,7 @@ import { basename, extname, dirname, join } from 'path'
 
 import mergeOptions from 'merge-options'
 
+import type { FeatureFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import type { NodeBundlerName } from './runtimes/node/bundlers/types.js'
 import type { NodeVersionString } from './runtimes/node/index.js'
@@ -36,16 +37,20 @@ const getConfigForFunction = async ({
   config,
   configFileDirectories,
   func,
+  featureFlags,
 }: {
   config?: Config
   configFileDirectories?: string[]
   func: FunctionWithoutConfig
+  featureFlags: FeatureFlags
 }): Promise<FunctionConfig> => {
   const fromConfig = getFromMainConfig({ config, func })
 
   // We try to read from a function config file if the function directory is
   // inside one of `configFileDirectories`.
-  const shouldReadConfigFile = configFileDirectories?.some((directory) => func.srcDir.startsWith(directory))
+  const shouldReadConfigFile =
+    featureFlags.project_deploy_configuration_api_use_per_function_configuration_files &&
+    configFileDirectories?.some((directory) => func.srcDir.startsWith(directory))
 
   if (!shouldReadConfigFile) {
     return fromConfig
