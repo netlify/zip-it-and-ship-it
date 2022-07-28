@@ -1,6 +1,11 @@
 import { FeatureFlags } from '../../../../feature_flags'
 import { ModuleFormat } from '../../utils/module_format'
-import { DEFAULT_NODE_VERSION, getNodeSupportMatrix } from '../../utils/node_version'
+import {
+  DEFAULT_NODE_VERSION,
+  getNodeSupportMatrix,
+  NodeVersionString,
+  ShortNodeVersionString,
+} from '../../utils/node_version'
 import { getClosestPackageJson } from '../../utils/package_json'
 
 const versionMap = {
@@ -11,14 +16,13 @@ const versionMap = {
   '16.x': 'node16',
 } as const
 
-type VersionKeys = keyof typeof versionMap
-type VersionValues = typeof versionMap[VersionKeys]
+type VersionValues = typeof versionMap[keyof typeof versionMap]
 
-const getBundlerTarget = (suppliedVersion?: string): VersionValues => {
+const getBundlerTarget = (suppliedVersion?: NodeVersionString): VersionValues => {
   const version = normalizeVersion(suppliedVersion)
 
   if (version && version in versionMap) {
-    return versionMap[version as VersionKeys]
+    return versionMap[version]
   }
 
   return versionMap[`${DEFAULT_NODE_VERSION}.x`]
@@ -45,10 +49,10 @@ const getModuleFormat = async (
   }
 }
 
-const normalizeVersion = (version?: string) => {
-  const match = version && version.match(/^nodejs(.*)$/)
+const normalizeVersion = (version?: NodeVersionString): ShortNodeVersionString | undefined => {
+  const match = version && (version.match(/^nodejs(.*)$/) as [string, ShortNodeVersionString])
 
-  return match ? match[1] : version
+  return match ? match[1] : (version as ShortNodeVersionString)
 }
 
 export { getBundlerTarget, getModuleFormat }
