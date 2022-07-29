@@ -2835,7 +2835,7 @@ testMany(
 )
 
 testMany(
-  'Keeps config for functions passed to zisi, but overwrites with config from json config',
+  'Keeps config for functions passed to ZISI, but overwrites with config from JSON config',
   ['bundler_nft', 'bundler_esbuild', 'bundler_default'],
   async (options, t) => {
     const fixtureName = 'config-files-select-directories'
