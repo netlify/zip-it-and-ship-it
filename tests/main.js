@@ -2835,6 +2835,38 @@ testMany(
 )
 
 testMany(
+  'Keeps config for functions passed to zisi, but overwrites with config from json config',
+  ['bundler_nft', 'bundler_esbuild', 'bundler_default'],
+  async (options, t) => {
+    const fixtureName = 'config-files-select-directories'
+    const pathInternal = join(fixtureName, '.netlify', 'functions-internal')
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
+      featureFlags: { project_deploy_configuration_api_use_per_function_configuration_files: true },
+      config: {
+        'internal-function': {
+          schedule: '@hourly',
+        },
+        'root-function': {
+          schedule: '@hourly',
+        },
+      },
+    })
+    const { files } = await zipFixture(t, [pathInternal], {
+      length: 2,
+      opts,
+    })
+
+    const func1Entry = files.find(({ name }) => name === 'internal-function')
+    const func2Entry = files.find(({ name }) => name === 'root-function')
+
+    t.deepEqual(func1Entry.config.schedule, '@hourly')
+    t.deepEqual(func2Entry.config.schedule, '@daily')
+  },
+)
+
+testMany(
   'Ignores function configuration files with a missing or invalid `version` property',
   ['bundler_nft', 'bundler_esbuild', 'bundler_default'],
   async (options, t) => {
