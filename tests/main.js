@@ -2787,37 +2787,50 @@ testMany(
   async (options, t) => {
     const fixtureName = 'config-files-select-directories'
     const pathInternal = join(fixtureName, '.netlify', 'functions-internal')
+    const pathNotInternal = join(fixtureName, '.netlify', 'functions-internal-not')
     const pathUser = join(fixtureName, 'netlify', 'functions')
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
       configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
       featureFlags: { project_deploy_configuration_api_use_per_function_configuration_files: true },
     })
-    const { files, tmpDir } = await zipFixture(t, [pathInternal, pathUser], {
-      length: 2,
+    const { files, tmpDir } = await zipFixture(t, [pathInternal, pathNotInternal, pathUser], {
+      length: 4,
       opts,
     })
 
     const func1Entry = files.find(({ name }) => name === 'internal-function')
-    const func2Entry = files.find(({ name }) => name === 'user-function')
+    const func2Entry = files.find(({ name }) => name === 'root-function')
+    const func3Entry = files.find(({ name }) => name === 'user-function')
+    const func4Entry = files.find(({ name }) => name === 'not-internal')
 
     t.deepEqual(func1Entry.config.includedFiles, ['blog/*.md'])
-    t.is(func2Entry.config.includedFiles, undefined)
+    t.deepEqual(func2Entry.config.includedFiles, ['blog/*.md'])
+    t.is(func3Entry.config.includedFiles, undefined)
+    t.is(func4Entry.config.includedFiles, undefined)
 
     await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
 
     const functionPaths = [
       join(tmpDir, 'internal-function.zip_out', 'internal-function.js'),
+      join(tmpDir, 'root-function.zip_out', 'root-function.js'),
       join(tmpDir, 'user-function.zip_out', 'user-function.js'),
+      join(tmpDir, 'not-internal.zip_out', 'not-internal.js'),
     ]
     const func1 = await importFunctionFile(functionPaths[0])
     const func2 = await importFunctionFile(functionPaths[1])
+    const func3 = await importFunctionFile(functionPaths[2])
+    const func4 = await importFunctionFile(functionPaths[3])
 
     t.true(func1.handler())
     t.true(func2.handler())
+    t.true(func3.handler())
+    t.true(func4.handler())
 
     t.true(await pathExists(`${tmpDir}/internal-function.zip_out/blog/one.md`))
+    t.true(await pathExists(`${tmpDir}/root-function.zip_out/blog/one.md`))
     t.false(await pathExists(`${tmpDir}/user-function.zip_out/blog/one.md`))
+    t.false(await pathExists(`${tmpDir}/not-internal.zip_out/blog/one.md`))
   },
 )
 

@@ -67,6 +67,7 @@
     "find-up": "^5.0.0",
     "glob": "^8.0.3",
     "is-builtin-module": "^3.1.0",
+    "is-path-inside": "^3.0.3",
     "junk": "^3.1.0",
     "locate-path": "^6.0.0",
     "merge-options": "^3.0.4",

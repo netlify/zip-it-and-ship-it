@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import { basename, extname, dirname, join } from 'path'
 
+import isPathInside from 'is-path-inside'
 import mergeOptions from 'merge-options'
 
 import type { FeatureFlags } from './feature_flags.js'
@@ -50,7 +51,7 @@ const getConfigForFunction = async ({
   // inside one of `configFileDirectories`.
   const shouldReadConfigFile =
     featureFlags.project_deploy_configuration_api_use_per_function_configuration_files &&
-    configFileDirectories?.some((directory) => func.srcDir.startsWith(directory))
+    configFileDirectories?.some((directory) => isPathInside(func.mainFile, directory))
 
   if (!shouldReadConfigFile) {
     return fromConfig
