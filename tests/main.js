@@ -9,7 +9,6 @@ const merge = require('deepmerge')
 const del = require('del')
 const execa = require('execa')
 const pEvery = require('p-every')
-const pathExists = require('path-exists')
 const semver = require('semver')
 const sinon = require('sinon')
 const sortOn = require('sort-on')
@@ -30,6 +29,7 @@ const { zipFunction, listFunctions, listFunctionsFiles, listFunction } = require
 
 const { ESBUILD_LOG_LIMIT } = require('../dist/runtimes/node/bundlers/esbuild/bundler.js')
 const { detectEsModule } = require('../dist/runtimes/node/utils/detect_es_module.js')
+const pathExists = require('../src/utils/path_exists.js')
 
 const {
   getRequires,

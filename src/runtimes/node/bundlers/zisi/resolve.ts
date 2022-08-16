@@ -2,9 +2,10 @@ import { createRequire } from 'module'
 import { version as nodeVersion } from 'process'
 
 import findUp from 'find-up'
-import pathExists from 'path-exists'
 import resolveLib from 'resolve'
 import semver from 'semver'
+
+import pathExists from '../../../../utils/path_exists'
 
 const requireLib = createRequire(__filename)
 
