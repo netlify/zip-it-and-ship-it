@@ -1,10 +1,10 @@
 import { FunctionArchive } from '../function.js'
-import { RuntimeName } from '../runtimes/runtime.js'
+import { RuntimeType } from '../runtimes/runtime.js'
 
 import { removeUndefined } from './remove_undefined.js'
 
 export type FunctionResult = Omit<FunctionArchive, 'runtime'> & {
-  runtime: RuntimeName
+  runtime: RuntimeType
   schedule?: string
 }
 

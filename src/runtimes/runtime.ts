@@ -4,10 +4,14 @@ import { FeatureFlags } from '../feature_flags.js'
 import { FunctionSource, SourceFile } from '../function.js'
 import { FsCache } from '../utils/fs.js'
 
-import type { NodeBundlerName } from './node/bundlers/types.js'
+import type { NodeBundlerType } from './node/bundlers/types.js'
 import type { ISCValues } from './node/in_source_config/index.js'
 
-export type RuntimeName = 'go' | 'js' | 'rs'
+export const enum RuntimeType {
+  GO = 'go',
+  JAVASCRIPT = 'js',
+  RUST = 'rs',
+}
 
 export type FindFunctionsInPathsFunction = (args: {
   featureFlags: FeatureFlags
@@ -31,7 +35,7 @@ export type GetSrcFilesFunction = (
 ) => Promise<string[]>
 
 export interface ZipFunctionResult {
-  bundler?: NodeBundlerName
+  bundler?: NodeBundlerType
   bundlerErrors?: object[]
   bundlerWarnings?: object[]
   config: FunctionConfig
@@ -58,6 +62,6 @@ export interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction
   findFunctionInPath: FindFunctionInPathFunction
   getSrcFiles?: GetSrcFilesFunction
-  name: RuntimeName
+  name: RuntimeType
   zipFunction: ZipFunction
 }

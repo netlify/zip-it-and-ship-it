@@ -3,19 +3,19 @@ import { detectEsModule } from '../utils/detect_es_module.js'
 
 import esbuildBundler from './esbuild/index.js'
 import nftBundler from './nft/index.js'
-import type { NodeBundler, NodeBundlerName } from './types.js'
+import { NodeBundler, NodeBundlerType } from './types.js'
 import zisiBundler from './zisi/index.js'
 
-export const getBundler = (name: NodeBundlerName): NodeBundler => {
+export const getBundler = (name: NodeBundlerType): NodeBundler => {
   switch (name) {
-    case 'esbuild':
-    case 'esbuild_zisi':
+    case NodeBundlerType.ESBUILD:
+    case NodeBundlerType.ESBUILD_ZISI:
       return esbuildBundler
 
-    case 'nft':
+    case NodeBundlerType.NFT:
       return nftBundler
 
-    case 'zisi':
+    case NodeBundlerType.ZISI:
       return zisiBundler
 
     default:
@@ -33,16 +33,16 @@ export const getDefaultBundler = async ({
   extension: string
   mainFile: string
   featureFlags: FeatureFlags
-}): Promise<NodeBundlerName> => {
+}): Promise<NodeBundlerType> => {
   if (['.mjs', '.ts'].includes(extension)) {
-    return 'esbuild'
+    return NodeBundlerType.ESBUILD
   }
 
   if (featureFlags.traceWithNft) {
-    return 'nft'
+    return NodeBundlerType.NFT
   }
 
   const functionIsESM = await detectEsModule({ mainFile })
 
-  return functionIsESM ? 'nft' : 'zisi'
+  return functionIsESM ? NodeBundlerType.NFT : NodeBundlerType.ZISI
 }

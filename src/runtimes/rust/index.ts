@@ -7,7 +7,13 @@ import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
-import { FindFunctionsInPathsFunction, FindFunctionInPathFunction, Runtime, ZipFunction } from '../runtime.js'
+import {
+  FindFunctionsInPathsFunction,
+  FindFunctionInPathFunction,
+  Runtime,
+  ZipFunction,
+  RuntimeType,
+} from '../runtime.js'
 
 import { build } from './builder.js'
 import { MANIFEST_NAME } from './constants.js'
@@ -58,7 +64,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({
 const findFunctionInPath: FindFunctionInPathFunction = async function ({ path, featureFlags, fsCache }) {
   const runtime = await detectBinaryRuntime({ fsCache, path })
 
-  if (runtime === 'rs') {
+  if (runtime === RuntimeType.RUST) {
     return processBinary({ fsCache, path })
   }
 
@@ -154,6 +160,6 @@ const zipFunction: ZipFunction = async function ({
   return { config, path: destPath }
 }
 
-const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: 'rs', zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RuntimeType.RUST, zipFunction }
 
 export default runtime
