@@ -4,6 +4,8 @@ import { tmpName } from 'tmp-promise'
 
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { safeUnlink } from '../../../../utils/fs.js'
+import { RuntimeType } from '../../../runtime.js'
+import { NodeBundlerType } from '../types.js'
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being
@@ -57,7 +59,11 @@ export const listImports = async ({
       target: 'esnext',
     })
   } catch (error) {
-    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: 'js', bundler: 'zisi' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, {
+      functionName,
+      runtime: RuntimeType.JAVASCRIPT,
+      bundler: NodeBundlerType.ZISI,
+    })
   } finally {
     await safeUnlink(targetPath)
   }

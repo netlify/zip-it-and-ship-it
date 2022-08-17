@@ -2,9 +2,10 @@ import { join } from 'path'
 
 import cpFile from 'cp-file'
 
-import { GetSrcFilesFunction, Runtime, ZipFunction } from '../runtime.js'
+import { GetSrcFilesFunction, Runtime, RuntimeType, ZipFunction } from '../runtime.js'
 
 import { getBundler, getDefaultBundler } from './bundlers/index.js'
+import { NodeBundlerType } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
@@ -129,10 +130,10 @@ const zipWithFunctionWithFallback: ZipFunction = async ({ config = {}, ...parame
   // Otherwise, we'll try to bundle with esbuild and, if that fails, fallback
   // to zisi.
   try {
-    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: 'esbuild' } })
+    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: NodeBundlerType.ESBUILD } })
   } catch (esbuildError) {
     try {
-      const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: 'zisi' } })
+      const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: NodeBundlerType.ZISI } })
 
       return { ...data, bundlerErrors: esbuildError.errors }
     } catch {
@@ -145,7 +146,7 @@ const runtime: Runtime = {
   findFunctionsInPaths,
   findFunctionInPath,
   getSrcFiles: getSrcFilesWithBundler,
-  name: 'js',
+  name: RuntimeType.JAVASCRIPT,
   zipFunction: zipWithFunctionWithFallback,
 }
 

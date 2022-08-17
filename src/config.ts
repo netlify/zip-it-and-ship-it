@@ -6,7 +6,7 @@ import mergeOptions from 'merge-options'
 
 import type { FeatureFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
-import type { NodeBundlerName } from './runtimes/node/bundlers/types.js'
+import type { NodeBundlerType } from './runtimes/node/bundlers/types.js'
 import type { NodeVersionString } from './runtimes/node/index.js'
 import { minimatch } from './utils/matching.js'
 
@@ -15,7 +15,7 @@ interface FunctionConfig {
   includedFiles?: string[]
   includedFilesBasePath?: string
   ignoredNodeModules?: string[]
-  nodeBundler?: NodeBundlerName
+  nodeBundler?: NodeBundlerType
   nodeSourcemap?: boolean
   nodeVersion?: NodeVersionString
   processDynamicNodeImports?: boolean

@@ -30,6 +30,9 @@ module.exports = {
         // in imports
         'import/extensions': 'off',
         'import/no-namespace': 'off',
+        // https://github.com/typescript-eslint/typescript-eslint/issues/2483
+        'no-shadow': 'off',
+        '@typescript-eslint/no-shadow': 'error',
       },
     },
     {

@@ -7,6 +7,8 @@ import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
+import { RuntimeType } from '../../../runtime.js'
+import { NodeBundlerType } from '../types.js'
 
 import { getBundlerTarget, getModuleFormat } from './bundler_target.js'
 import { getDynamicImportsPlugin } from './plugin_dynamic_imports.js'
@@ -133,7 +135,11 @@ export const bundleJsFile = async function ({
       warnings,
     }
   } catch (error) {
-    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName: name, runtime: 'js', bundler: 'esbuild' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, {
+      functionName: name,
+      runtime: RuntimeType.JAVASCRIPT,
+      bundler: NodeBundlerType.ESBUILD,
+    })
   }
 }
 

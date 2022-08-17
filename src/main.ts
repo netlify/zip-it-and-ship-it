@@ -5,15 +5,19 @@ import { FeatureFlags, getFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import { getFunctionFromPath, getFunctionsFromPaths } from './runtimes/index.js'
 import { findISCDeclarationsInPath, ISCValues } from './runtimes/node/in_source_config/index.js'
-import { GetSrcFilesFunction, RuntimeName } from './runtimes/runtime.js'
+import { GetSrcFilesFunction, RuntimeType } from './runtimes/runtime.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 
 export { zipFunction, zipFunctions } from './zip.js'
 
+export { NodeBundlerType } from './runtimes/node/bundlers/types.js'
+export { RuntimeType } from './runtimes/runtime.js'
+export { ModuleFormat } from './runtimes/node/utils/module_format.js'
+
 interface ListedFunction {
   name: string
   mainFile: string
-  runtime: RuntimeName
+  runtime: RuntimeType
   extension: string
   schedule?: string
 }
@@ -35,7 +39,7 @@ interface AugmentedFunctionSource extends FunctionSource {
 
 const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSource> => {
   // ISC is currently only supported in JavaScript and TypeScript functions.
-  if (func.runtime.name !== 'js') {
+  if (func.runtime.name !== RuntimeType.JAVASCRIPT) {
     return func
   }
 

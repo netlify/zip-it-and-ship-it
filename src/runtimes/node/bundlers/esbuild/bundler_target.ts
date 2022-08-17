@@ -39,13 +39,13 @@ const getModuleFormat = async (
   if (featureFlags.zisi_pure_esm && packageJsonFile?.contents.type === 'module' && nodeSupport.esm) {
     return {
       includedFiles: [packageJsonFile.path],
-      moduleFormat: 'esm',
+      moduleFormat: ModuleFormat.ESM,
     }
   }
 
   return {
     includedFiles: [],
-    moduleFormat: 'cjs',
+    moduleFormat: ModuleFormat.COMMONJS,
   }
 }
 
