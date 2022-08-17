@@ -4,7 +4,7 @@ import cpFile from 'cp-file'
 
 import { GetSrcFilesFunction, Runtime, RuntimeType, ZipFunction } from '../runtime.js'
 
-import { getBundler, getDefaultBundler } from './bundlers/index.js'
+import { getBundler, getBundlerName } from './bundlers/index.js'
 import { NodeBundlerType } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
@@ -13,17 +13,16 @@ import { zipNodeJs } from './utils/zip.js'
 
 export { NodeVersionString } from './utils/node_version.js'
 
-// A proxy for the `getSrcFiles` function which adds a default `bundler` using
-// the `getDefaultBundler` function.
+// A proxy for the `getSrcFiles` that calls `getSrcFiles` on the bundler
 const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
-  const pluginsModulesPath = await getPluginsModulesPath(parameters.srcDir)
-  const bundlerName =
-    parameters.config.nodeBundler ||
-    (await getDefaultBundler({
-      extension: parameters.extension,
-      featureFlags: parameters.featureFlags,
-      mainFile: parameters.mainFile,
-    }))
+  const { config, extension, featureFlags, mainFile, srcDir } = parameters
+  const pluginsModulesPath = await getPluginsModulesPath(srcDir)
+  const bundlerName = await getBundlerName({
+    config,
+    extension,
+    featureFlags,
+    mainFile,
+  })
   const bundler = getBundler(bundlerName)
   const result = await bundler.getSrcFiles({ ...parameters, pluginsModulesPath })
 
@@ -47,7 +46,12 @@ const zipFunction: ZipFunction = async function ({
   stat,
 }) {
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
-  const bundlerName = config.nodeBundler || (await getDefaultBundler({ extension, mainFile, featureFlags }))
+  const bundlerName = await getBundlerName({
+    config,
+    extension,
+    featureFlags,
+    mainFile,
+  })
   const bundler = getBundler(bundlerName)
 
   // If the file is a zip, we assume the function is bundled and ready to go.
@@ -123,7 +127,7 @@ const zipFunction: ZipFunction = async function ({
 
 const zipWithFunctionWithFallback: ZipFunction = async ({ config = {}, ...parameters }) => {
   // If a specific JS bundler version is specified, we'll use it.
-  if (config.nodeBundler !== 'esbuild_zisi') {
+  if (config.nodeBundler !== NodeBundlerType.ESBUILD_ZISI) {
     return zipFunction({ ...parameters, config })
   }
 

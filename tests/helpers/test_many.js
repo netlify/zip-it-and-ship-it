@@ -18,7 +18,7 @@ const getRateLimitedTestFunction = (originalTestFunction) => {
  * @param {Record<M, { config: import("../../src/config").Config }>} matrix
  * @returns {(name: string, matrix: M[], runner: (opts: { config: import("../../src/config").Config }, t: import("ava").ExecutionContext) => any) => void}
  */
-const makeTestMany = (test, matrix) => {
+const makeTestMany = (test, matrix, getCurrentBundlerName) => {
   const filteredVariations = env.ZISI_FILTER_VARIATIONS ? env.ZISI_FILTER_VARIATIONS.split(',') : []
 
   const testBundlers = (title, variationNames, assertions, testFn = test) => {
@@ -38,6 +38,8 @@ const makeTestMany = (test, matrix) => {
       }
 
       const variation = matrix[name]
+
+      variation.getCurrentBundlerName = getCurrentBundlerName.bind(null, variation.config)
 
       if (name === undefined || variation === undefined) {
         throw new Error(`Unknown variation in test: ${name}`)
