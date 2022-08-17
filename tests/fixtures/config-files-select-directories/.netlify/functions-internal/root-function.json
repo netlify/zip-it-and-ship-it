@@ -1,0 +1,7 @@
+{
+  "config": {
+    "includedFiles": ["blog/*.md"],
+    "schedule": "@daily"
+  },
+  "version": 1
+}

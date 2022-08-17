@@ -14,7 +14,7 @@ export interface PackageJson {
   files?: string[]
   gypfile?: boolean
   binary?: boolean
-  type?: string
+  type?: 'module' | 'commonjs'
 }
 
 export interface PackageJsonFile {

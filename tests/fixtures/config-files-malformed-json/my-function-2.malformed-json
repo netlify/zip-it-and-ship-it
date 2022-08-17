@@ -1,0 +1,6 @@
+{
+  "config": {
+    "includedFiles": ["blog/*.md"]
+  }
+  "version": 3
+}

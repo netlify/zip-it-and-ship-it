@@ -10,7 +10,7 @@ export const enum NodeBundlerType {
   ESBUILD_ZISI = 'esbuild_zisi',
   NFT = 'nft',
   ZISI = 'zisi',
-  SKIP = 'skip',
+  NONE = 'none',
 }
 
 // TODO: Create a generic warning type

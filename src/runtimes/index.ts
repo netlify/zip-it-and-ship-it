@@ -1,6 +1,6 @@
 import { extname, basename } from 'path'
 
-import { Config, getConfigForFunction } from '../config.js'
+import { Config, getConfigForFunction, FunctionWithoutConfig } from '../config.js'
 import { defaultFlags, FeatureFlags } from '../feature_flags.js'
 import { FunctionSource } from '../function.js'
 import { FsCache } from '../utils/fs.js'
@@ -18,7 +18,7 @@ type FunctionMap = Map<string, FunctionSource>
 type FunctionTuple = [string, FunctionSource]
 
 // The same as `FunctionTuple` but functions don't have a `config` object yet.
-type FunctionTupleWithoutConfig = [string, Omit<FunctionSource, 'config'>]
+type FunctionTupleWithoutConfig = [string, FunctionWithoutConfig]
 
 /**
  * Finds functions for a list of paths using a specific runtime. The return
@@ -79,9 +79,10 @@ export const getFunctionsFromPaths = async (
   paths: string[],
   {
     config,
+    configFileDirectories = [],
     dedupe = false,
     featureFlags = defaultFlags,
-  }: { config?: Config; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
+  }: { config?: Config; configFileDirectories?: string[]; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
 ): Promise<FunctionMap> => {
   const fsCache = makeFsCache()
 
@@ -104,9 +105,12 @@ export const getFunctionsFromPaths = async (
       remainingPaths: runtimePaths,
     }
   }, Promise.resolve({ functions: [], remainingPaths: paths } as { functions: FunctionTupleWithoutConfig[]; remainingPaths: string[] }))
-  const functionsWithConfig: FunctionTuple[] = functions.map(([name, func]) => [
+  const functionConfigs = await Promise.all(
+    functions.map(([, func]) => getConfigForFunction({ config, configFileDirectories, func, featureFlags })),
+  )
+  const functionsWithConfig: FunctionTuple[] = functions.map(([name, func], index) => [
     name,
-    { ...func, config: getConfigForFunction({ config, func }) },
+    { ...func, config: functionConfigs[index] },
   ])
 
   return new Map(functionsWithConfig)
@@ -125,10 +129,12 @@ export const getFunctionFromPath = async (
     const func = await runtime.findFunctionInPath({ path, fsCache, featureFlags })
 
     if (func) {
+      const functionConfig = await getConfigForFunction({ config, func: { ...func, runtime }, featureFlags })
+
       return {
         ...func,
         runtime,
-        config: getConfigForFunction({ config, func: { ...func, runtime } }),
+        config: functionConfig,
       }
     }
   }
