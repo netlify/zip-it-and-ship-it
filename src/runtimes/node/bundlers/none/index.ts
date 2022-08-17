@@ -85,7 +85,7 @@ const bundle: BundleFunction = async ({
 
   if (moduleFormat === ModuleFormat.ESM && !nodeSupport.esm) {
     throw new FunctionBundlingUserError(
-      `Entrypoint file is an ESM module, but the Node.js version in the config (${config.nodeVersion}) does not support ESM. ESM is supported as of version 14 of Node.js.`,
+      `Function file is an ES module, which the Node.js version specified in the config (${config.nodeVersion}) does not support. ES modules are supported as of version 14 of Node.js.`,
       {
         functionName: name,
         runtime: RuntimeType.JAVASCRIPT,
