@@ -7,6 +7,7 @@ import toml from 'toml'
 import { FunctionConfig } from '../../config.js'
 import { FunctionBundlingUserError } from '../../utils/error.js'
 import { shellUtils } from '../../utils/shell.js'
+import { RuntimeType } from '../runtime.js'
 
 import { CargoManifest } from './cargo_manifest.js'
 import { BUILD_TARGET, MANIFEST_NAME } from './constants.js'
@@ -17,7 +18,7 @@ export const build = async ({ config, name, srcDir }: { config: FunctionConfig; 
   try {
     await installToolchainOnce()
   } catch (error) {
-    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: 'rs' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: RuntimeType.RUST })
   }
 
   const targetDirectory = await getTargetDirectory({ config, name })
@@ -67,7 +68,7 @@ const cargoBuild = async ({
         'There is no Rust toolchain installed. Visit https://ntl.fyi/missing-rust-toolchain for more information.'
     }
 
-    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: 'rs' })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: RuntimeType.RUST })
   }
 }
 

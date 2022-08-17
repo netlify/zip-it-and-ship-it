@@ -1,10 +1,10 @@
 import type { Buffer } from 'buffer'
 
-import { detect, Runtime, Arch, Platform, BinaryInfo } from '@netlify/binary-info'
+import { detect, Runtime as BinaryRuntime, Arch, Platform, BinaryInfo } from '@netlify/binary-info'
 
 import { cachedReadFile, FsCache } from '../utils/fs.js'
 
-import type { RuntimeName } from './runtime.js'
+import { RuntimeType } from './runtime.js'
 
 const isValidFunctionBinary = (info: BinaryInfo) => info.arch === Arch.Amd64 && info.platform === Platform.Linux
 
@@ -27,7 +27,7 @@ export const detectBinaryRuntime = async function ({
 }: {
   fsCache: FsCache
   path: string
-}): Promise<RuntimeName | undefined> {
+}): Promise<RuntimeType | undefined> {
   try {
     const buffer = await cachedReadFile(fsCache, path)
 
@@ -41,10 +41,10 @@ export const detectBinaryRuntime = async function ({
     }
 
     switch (binaryInfo.runtime) {
-      case Runtime.Go:
-        return 'go'
-      case Runtime.Rust:
-        return 'rs'
+      case BinaryRuntime.Go:
+        return RuntimeType.GO
+      case BinaryRuntime.Rust:
+        return RuntimeType.RUST
       default:
         return undefined
     }

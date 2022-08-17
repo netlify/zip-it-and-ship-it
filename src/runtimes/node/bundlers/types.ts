@@ -5,7 +5,13 @@ import type { FeatureFlag, FeatureFlags } from '../../../feature_flags.js'
 import type { FunctionSource } from '../../../function.js'
 import type { ModuleFormat } from '../utils/module_format.js'
 
-export type NodeBundlerName = 'esbuild' | 'esbuild_zisi' | 'nft' | 'zisi'
+export const enum NodeBundlerType {
+  ESBUILD = 'esbuild',
+  ESBUILD_ZISI = 'esbuild_zisi',
+  NFT = 'nft',
+  ZISI = 'zisi',
+  SKIP = 'skip',
+}
 
 // TODO: Create a generic warning type
 type BundlerWarning = Message

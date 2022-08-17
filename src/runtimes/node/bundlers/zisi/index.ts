@@ -1,6 +1,7 @@
 import { dirname, normalize } from 'path'
 
 import { getBasePath } from '../../utils/base_path.js'
+import { ModuleFormat } from '../../utils/module_format.js'
 import type { BundleFunction } from '../types.js'
 
 import { getSrcFiles } from './src_files.js'
@@ -43,7 +44,7 @@ const bundle: BundleFunction = async ({
     includedFiles,
     inputs: srcFiles,
     mainFile,
-    moduleFormat: 'cjs',
+    moduleFormat: ModuleFormat.COMMONJS,
     srcFiles,
   }
 }

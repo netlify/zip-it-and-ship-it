@@ -1,1 +1,4 @@
-export type ModuleFormat = 'cjs' | 'esm'
+export const enum ModuleFormat {
+  COMMONJS = 'cjs',
+  ESM = 'esm',
+}

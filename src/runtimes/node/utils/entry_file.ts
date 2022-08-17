@@ -1,6 +1,6 @@
 import { basename, extname } from 'path'
 
-import type { ModuleFormat } from './module_format.js'
+import { ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
 export interface EntryFile {
@@ -11,7 +11,7 @@ export interface EntryFile {
 const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
   const importPath = `.${mainPath.startsWith('/') ? mainPath : `/${mainPath}`}`
 
-  if (moduleFormat === 'cjs') {
+  if (moduleFormat === ModuleFormat.COMMONJS) {
     return `module.exports = require('${importPath}')`
   }
 

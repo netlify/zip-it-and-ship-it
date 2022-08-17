@@ -71,7 +71,7 @@ export const processESM = async ({
 
   if (!entrypointIsESM) {
     return {
-      moduleFormat: 'cjs',
+      moduleFormat: ModuleFormat.COMMONJS,
     }
   }
 
@@ -80,14 +80,14 @@ export const processESM = async ({
 
   if (featureFlags.zisi_pure_esm && packageJson.type === 'module' && nodeSupport.esm) {
     return {
-      moduleFormat: 'esm',
+      moduleFormat: ModuleFormat.ESM,
     }
   }
 
   const rewrites = await transpileESM({ basePath, config, esmPaths, fsCache, reasons, name })
 
   return {
-    moduleFormat: 'cjs',
+    moduleFormat: ModuleFormat.COMMONJS,
     rewrites,
   }
 }
