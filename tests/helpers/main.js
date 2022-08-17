@@ -27,9 +27,10 @@ const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
   return { files, tmpDir }
 }
 
+const getBundlerNameFromConfig = (config) => config['*'] && config['*'].nodeBundler
 const zipFixture = async function (t, fixture, { length, fixtureDir, opts = {} } = {}) {
   const { config = {} } = opts
-  const bundlerString = (config['*'] && config['*'].nodeBundler) || 'default'
+  const bundlerString = getBundlerNameFromConfig(config) || 'default'
   const { path: tmpDir } = await getTmpDir({
     prefix: `zip-it-test-bundler-${bundlerString}`,
   })
@@ -117,6 +118,7 @@ const importFunctionFile = async function (functionPath) {
 }
 
 module.exports = {
+  getBundlerNameFromConfig,
   getRequires,
   zipNode,
   zipFixture,
