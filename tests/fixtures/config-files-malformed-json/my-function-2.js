@@ -1,1 +1,1 @@
-module.exports.handler = () => true
+export const handler = () => true
