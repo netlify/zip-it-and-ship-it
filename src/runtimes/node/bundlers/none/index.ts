@@ -14,9 +14,9 @@ import { BundleFunction, GetSrcFilesFunction, NodeBundlerType } from '../types.j
  * It returns the detected moduleFormat and the mainFile + includedFiles from the config.
  */
 
-/**
- * Mimics the logic from Node.js, as functions with this bundler will be executed as is in Node.js.
- */
+// Uses the same algorithm as the ESM_FILE_FORMAT resolver from Node.js to get
+// the right module format for a function based on its main file.
+// See https://nodejs.org/api/esm.html#resolver-algorithm-specification.
 const getModuleFormat = async function (mainFile: string): Promise<ModuleFormat> {
   const extension = extname(mainFile)
 
