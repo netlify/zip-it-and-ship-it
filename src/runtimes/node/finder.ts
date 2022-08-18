@@ -8,7 +8,7 @@ import { nonNullable } from '../../utils/non_nullable.js'
 import { FindFunctionsInPathsFunction, FindFunctionInPathFunction } from '../runtime.js'
 
 // List of extensions that this runtime will look for, in order of precedence.
-const allowedExtensions = ['.js', '.zip', '.cjs', '.mjs', '.ts']
+const allowedExtensions = ['.js', '.zip', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts']
 
 // Sorting function, compatible with the callback of Array.sort, which sorts
 // entries by extension according to their position in `allowedExtensions`.
@@ -77,8 +77,16 @@ const getMainFile = async function (srcPath: string, filename: string, stat: Sta
         join(srcPath, 'index.js'),
         join(srcPath, `${filename}.mjs`),
         join(srcPath, 'index.mjs'),
+        join(srcPath, `${filename}.cjs`),
+        join(srcPath, 'index.cjs'),
         join(srcPath, `${filename}.ts`),
         join(srcPath, 'index.ts'),
+        join(srcPath, `${filename}.tsx`),
+        join(srcPath, 'index.tsx'),
+        join(srcPath, `${filename}.mts`),
+        join(srcPath, 'index.mts'),
+        join(srcPath, `${filename}.cts`),
+        join(srcPath, 'index.cts'),
       ],
       { type: 'file' },
     )

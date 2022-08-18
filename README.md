@@ -51,9 +51,8 @@ In Netlify, this directory is the
 
 A source folder can contain:
 
-- Sub-directories with a main file called `index.js`, `index.ts`, `{dir}.js` or `{dir}.ts` where `{dir}` is the
-  sub-directory name.
-- `.js` or `.ts` files (Node.js)
+- Sub-directories with a main file called `index.js` or `{dir}.js` where `{dir}` is the sub-directory name.
+- `.js`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts` or `.cts` files (Node.js)
 - `.zip` archives with Node.js already ready to upload to AWS Lambda.
 - Go programs already compiled. Those are copied as is.
 - Rust programs already compiled. Those are zipped.
