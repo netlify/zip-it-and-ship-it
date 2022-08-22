@@ -2816,7 +2816,7 @@ testMany('None bundler emits esm with default nodeVersion', ['bundler_none'], as
   t.is(originalFile, bundledFile)
 })
 
-testMany.only(
+testMany(
   'Augments the function handler with each layer supplied in the `layers` configuration property',
   allBundleConfigs,
   async (options, t) => {
