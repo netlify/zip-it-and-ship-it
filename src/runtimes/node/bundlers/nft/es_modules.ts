@@ -106,6 +106,7 @@ export const processESM = async ({
 const resolvePath = (relativePath: string, basePath?: string) =>
   basePath ? resolve(basePath, relativePath) : resolve(relativePath)
 
+// eslint-disable-next-line max-statements
 const shouldTranspile = (
   path: string,
   cache: Map<string, boolean>,
@@ -137,6 +138,11 @@ const shouldTranspile = (
 
     return isESM
   }
+
+  // Because this method is recursive we have to assume here that we probably want to transpile this file
+  // This is done so that endless recursion can never happen in the case that a parent has this file again as parent
+  // We will override this later anyway.
+  cache.set(path, true)
 
   // The path should be transpiled if every parent will also be transpiled, or
   // if there is no parent.
