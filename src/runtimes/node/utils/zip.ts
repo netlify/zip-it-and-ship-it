@@ -29,6 +29,7 @@ interface ZipNodeParameters {
   destFolder: string
   extension: string
   filename: string
+  layers: string[]
   mainFile: string
   moduleFormat: ModuleFormat
   rewrites?: Map<string, string>
@@ -41,6 +42,7 @@ const createDirectory = async function ({
   destFolder,
   extension,
   filename,
+  layers,
   mainFile,
   moduleFormat,
   rewrites = new Map(),
@@ -49,6 +51,7 @@ const createDirectory = async function ({
   const { contents: entryContents, filename: entryFilename } = getEntryFile({
     commonPrefix: basePath,
     filename,
+    layers,
     mainFile,
     moduleFormat,
     userNamespace: DEFAULT_USER_SUBDIRECTORY,
@@ -92,6 +95,7 @@ const createZipArchive = async function ({
   destFolder,
   extension,
   filename,
+  layers,
   mainFile,
   moduleFormat,
   rewrites,
@@ -116,7 +120,7 @@ const createZipArchive = async function ({
   const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
   if (needsEntryFile) {
-    const entryFile = getEntryFile({ commonPrefix: basePath, filename, mainFile, moduleFormat, userNamespace })
+    const entryFile = getEntryFile({ commonPrefix: basePath, filename, layers, mainFile, moduleFormat, userNamespace })
 
     addEntryFileToZip(archive, entryFile)
   }

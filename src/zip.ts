@@ -9,6 +9,7 @@ import { FeatureFlags, getFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import { createManifest } from './manifest.js'
 import { getFunctionsFromPaths } from './runtimes/index.js'
+import { getLayerPaths } from './runtimes/node/utils/layers.js'
 import { addArchiveSize } from './utils/archive_size.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
@@ -19,6 +20,7 @@ interface ZipFunctionOptions {
   basePath?: string
   config?: Config
   featureFlags?: FeatureFlags
+  layersBasePath?: string
   repositoryRoot?: string
   zipGo?: boolean
 }
@@ -49,6 +51,7 @@ export const zipFunctions = async function (
     config = {},
     configFileDirectories,
     featureFlags: inputFeatureFlags,
+    layersBasePath,
     manifest,
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
     repositoryRoot = basePath,
@@ -63,6 +66,7 @@ export const zipFunctions = async function (
   const results = await pMap(
     functions.values(),
     async (func) => {
+      const layers = getLayerPaths(layersBasePath, func.config.layers)
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
         basePath,
@@ -71,6 +75,7 @@ export const zipFunctions = async function (
         extension: func.extension,
         featureFlags,
         filename: func.filename,
+        layers,
         mainFile: func.mainFile,
         name: func.name,
         repositoryRoot,
@@ -109,6 +114,7 @@ export const zipFunction = async function (
     basePath,
     config: inputConfig = {},
     featureFlags: inputFeatureFlags,
+    layersBasePath,
     repositoryRoot = basePath,
   }: ZipFunctionOptions = {},
 ) {
@@ -132,6 +138,7 @@ export const zipFunction = async function (
     srcDir,
     stat: stats,
   }: FunctionSource = functions.values().next().value
+  const layers = getLayerPaths(layersBasePath, config.layers)
 
   await fs.mkdir(destFolder, { recursive: true })
 
@@ -143,6 +150,7 @@ export const zipFunction = async function (
     extension,
     featureFlags,
     filename,
+    layers,
     mainFile,
     name,
     repositoryRoot,

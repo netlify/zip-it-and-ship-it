@@ -15,6 +15,7 @@ interface FunctionConfig {
   includedFiles?: string[]
   includedFilesBasePath?: string
   ignoredNodeModules?: string[]
+  layers?: string[]
   nodeBundler?: NodeBundlerType
   nodeSourcemap?: boolean
   nodeVersion?: NodeVersionString

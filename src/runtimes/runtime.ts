@@ -54,6 +54,7 @@ export type ZipFunction = (
     config: FunctionConfig
     destFolder: string
     featureFlags: FeatureFlags
+    layers: string[]
     repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<ZipFunctionResult>

@@ -2815,3 +2815,58 @@ testMany('None bundler emits esm with default nodeVersion', ['bundler_none'], as
 
   t.is(originalFile, bundledFile)
 })
+
+testMany.only(
+  'Augments the function handler with each layer supplied in the `layers` configuration property',
+  allBundleConfigs,
+  async (options, t) => {
+    const fixtureName = 'node-with-layers'
+    const { path: layersBasePath } = await getTmpDir()
+
+    // Layer 1
+    const layer1Source = `module.exports.getHandler = ({ handler }) => async (event, context) => {
+    const { body, ...params } = await handler(event, context)
+
+    return {
+      ...params,
+      body: body + '<Hello from layer 1>'
+    }
+  }`
+    const layer1Path = join(layersBasePath, 'layer_1')
+    await mkdir(layer1Path, { recursive: true })
+    await writeFile(join(layer1Path, 'index.cjs'), layer1Source)
+
+    // Layer 2
+    const layer2Source = `module.exports.getHandler = ({ handler }) => async (event, context) => {
+    const { body, ...params } = await handler(event, context)
+
+    return {
+      ...params,
+      body: body + '<Hello from layer 2>'
+    }
+  }`
+    const layer2Path = join(layersBasePath, 'layer_2')
+    await mkdir(layer2Path, { recursive: true })
+    await writeFile(join(layer2Path, 'index.cjs'), layer2Source)
+
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          layers: ['layer_1', 'layer_2'],
+        },
+      },
+      layersBasePath,
+    })
+    const { tmpDir } = await zipNode(t, `${fixtureName}/netlify/functions`, {
+      opts,
+    })
+
+    await del(`${layersBasePath}`, { force: true })
+
+    const func1 = await importFunctionFile(`${tmpDir}/func1.js`)
+    const res = await func1.handler()
+
+    t.is(res.body, 'Hello from user code<Hello from layer 1><Hello from layer 2>')
+  },
+)
