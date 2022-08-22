@@ -2825,26 +2825,26 @@ testMany(
 
     // Layer 1
     const layer1Source = `module.exports.getHandler = ({ handler }) => async (event, context) => {
-    const { body, ...params } = await handler(event, context)
+      const { body, ...params } = await handler(event, context)
 
-    return {
-      ...params,
-      body: body + '<Hello from layer 1>'
-    }
-  }`
+      return {
+        ...params,
+        body: body + '<Hello from layer 1>'
+      }
+    }`
     const layer1Path = join(layersBasePath, 'layer_1')
     await mkdir(layer1Path, { recursive: true })
     await writeFile(join(layer1Path, 'index.cjs'), layer1Source)
 
     // Layer 2
     const layer2Source = `module.exports.getHandler = ({ handler }) => async (event, context) => {
-    const { body, ...params } = await handler(event, context)
+      const { body, ...params } = await handler(event, context)
 
-    return {
-      ...params,
-      body: body + '<Hello from layer 2>'
-    }
-  }`
+      return {
+        ...params,
+        body: body + '<Hello from layer 2>'
+      }
+    }`
     const layer2Path = join(layersBasePath, 'layer_2')
     await mkdir(layer2Path, { recursive: true })
     await writeFile(join(layer2Path, 'index.cjs'), layer2Source)
@@ -2856,7 +2856,7 @@ testMany(
           layers: ['layer_1', 'layer_2'],
         },
       },
-      layersBasePath,
+      layersBasePath: unixify(layersBasePath),
     })
     const { tmpDir } = await zipNode(t, `${fixtureName}/netlify/functions`, {
       opts,
