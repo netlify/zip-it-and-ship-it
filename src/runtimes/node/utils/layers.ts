@@ -1,8 +1,10 @@
+import { join } from 'path'
+
 // This is the path where layers will be present in the Lambda at runtime.
 export const DEFAULT_LAYERS_BASE_PATH = '/opt/netlify/layers'
 
 export const getLayerPaths = (basePath = DEFAULT_LAYERS_BASE_PATH, layers: string[] = []) =>
-  layers.map((name) => `${basePath}/${name}`)
+  layers.map((name) => join(basePath, name))
 
 // Generates the bootstrap code for one or more layers. It assumes that every
 // layer exports a `getHandler` function that receives a function and returns
