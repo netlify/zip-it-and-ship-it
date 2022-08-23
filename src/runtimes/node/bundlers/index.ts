@@ -1,3 +1,5 @@
+import { extname } from 'path'
+
 import { FunctionConfig } from '../../../config.js'
 import { FeatureFlags } from '../../../feature_flags.js'
 import { detectEsModule } from '../utils/detect_es_module.js'
@@ -46,6 +48,8 @@ export const getBundlerName = async ({
   return await getDefaultBundler({ extension, featureFlags, mainFile })
 }
 
+const ESBUILD_EXTENSIONS = new Set(['.mjs', '.ts', '.tsx', '.cts', '.mts'])
+
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
 const getDefaultBundler = async ({
@@ -57,7 +61,7 @@ const getDefaultBundler = async ({
   mainFile: string
   featureFlags: FeatureFlags
 }): Promise<NodeBundlerType> => {
-  if (['.mjs', '.ts'].includes(extension)) {
+  if (ESBUILD_EXTENSIONS.has(extension)) {
     return NodeBundlerType.ESBUILD
   }
 
@@ -65,7 +69,7 @@ const getDefaultBundler = async ({
     return NodeBundlerType.NFT
   }
 
-  const functionIsESM = await detectEsModule({ mainFile })
+  const functionIsESM = extname(mainFile) !== '.cjs' && (await detectEsModule({ mainFile }))
 
   return functionIsESM ? NodeBundlerType.NFT : NodeBundlerType.ZISI
 }

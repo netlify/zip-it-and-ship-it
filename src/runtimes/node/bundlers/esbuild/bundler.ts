@@ -22,7 +22,7 @@ export const ESBUILD_LOG_LIMIT = 10
 
 // When resolving imports with no extension (e.g. require('./foo')), these are
 // the extensions that esbuild will look for, in this order.
-const RESOLVE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.json']
+const RESOLVE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts', '.json']
 
 // eslint-disable-next-line max-statements
 export const bundleJsFile = async function ({

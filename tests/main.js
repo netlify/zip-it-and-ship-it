@@ -513,7 +513,7 @@ testMany(
   'Can bundle CJS functions that import ESM files with an `import()` expression',
   ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
   async (opts, t) => {
-    const fixtureName = 'node-cjs-importing-mjs'
+    const fixtureName = 'node-cjs-importing-mjs-extension'
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       opts,
     })
@@ -1353,7 +1353,7 @@ testMany(
   'Handles a JavaScript function ({name}.mjs, {name}/{name}.mjs, {name}/index.mjs)',
   ['bundler_esbuild', 'bundler_default'],
   async (options, t) => {
-    const { files, tmpDir } = await zipFixture(t, 'node-mjs', {
+    const { files, tmpDir } = await zipFixture(t, 'node-mjs-extension', {
       length: 3,
       opts: options,
     })
@@ -1363,6 +1363,81 @@ testMany(
     t.is(files.length, 3)
     files.forEach((file) => {
       t.is(file.bundler, 'esbuild')
+    })
+
+    const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
+    t.true(handler1())
+    const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
+    t.true(handler2())
+    const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+    t.true(handler3())
+  },
+)
+
+testMany(
+  'Handles a JavaScript function ({name}.mts, {name}/{name}.mts, {name}/index.mts)',
+  ['bundler_esbuild', 'bundler_default'],
+  async (options, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-mts-extension', {
+      length: 3,
+      opts: options,
+    })
+
+    await unzipFiles(files)
+
+    t.is(files.length, 3)
+    files.forEach((file) => {
+      t.is(file.bundler, 'esbuild')
+    })
+
+    const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
+    t.true(handler1())
+    const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
+    t.true(handler2())
+    const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+    t.true(handler3())
+  },
+)
+
+testMany(
+  'Handles a JavaScript function ({name}.cts, {name}/{name}.cts, {name}/index.cts)',
+  ['bundler_esbuild', 'bundler_default'],
+  async (options, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-cts-extension', {
+      length: 3,
+      opts: options,
+    })
+
+    await unzipFiles(files)
+
+    t.is(files.length, 3)
+    files.forEach((file) => {
+      t.is(file.bundler, 'esbuild')
+    })
+
+    const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
+    t.true(handler1())
+    const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
+    t.true(handler2())
+    const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+    t.true(handler3())
+  },
+)
+
+testMany(
+  'Handles a JavaScript function ({name}.cjs, {name}/{name}.cjs, {name}/index.cjs)',
+  ['bundler_esbuild', 'bundler_default'],
+  async (options, t) => {
+    const { files, tmpDir } = await zipFixture(t, 'node-cjs-extension', {
+      length: 3,
+      opts: options,
+    })
+
+    await unzipFiles(files)
+
+    t.is(files.length, 3)
+    files.forEach((file) => {
+      t.is(file.bundler, options.getCurrentBundlerName())
     })
 
     const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
