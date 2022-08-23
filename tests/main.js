@@ -1,6 +1,6 @@
 const { mkdir, readFile, chmod, symlink, unlink, rename, stat, writeFile } = require('fs').promises
 const { tmpdir } = require('os')
-const { basename, dirname, isAbsolute, join, normalize, resolve, sep } = require('path')
+const { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } = require('path')
 const { arch, env, platform, version: nodeVersion } = require('process')
 
 const test = require('ava')
@@ -2821,7 +2821,9 @@ testMany(
   allBundleConfigs,
   async (options, t) => {
     const fixtureName = 'node-with-layers'
-    const { path: layersBasePath } = await getTmpDir()
+    const { path: layersDir } = await getTmpDir()
+    const { path: outDir } = await getTmpDir()
+    const layersBasePath = platform === 'win32' ? unixify(relative(outDir, layersDir)) : layersDir
 
     // Layer 1
     const layer1Source = `module.exports.getHandler = ({ handler }) => async (event, context) => {
@@ -2832,7 +2834,7 @@ testMany(
         body: body + '<Hello from layer 1>'
       }
     }`
-    const layer1Path = join(layersBasePath, 'layer_1')
+    const layer1Path = join(layersDir, 'layer_1')
     await mkdir(layer1Path, { recursive: true })
     await writeFile(join(layer1Path, 'index.cjs'), layer1Source)
 
@@ -2845,7 +2847,7 @@ testMany(
         body: body + '<Hello from layer 2>'
       }
     }`
-    const layer2Path = join(layersBasePath, 'layer_2')
+    const layer2Path = join(layersDir, 'layer_2')
     await mkdir(layer2Path, { recursive: true })
     await writeFile(join(layer2Path, 'index.cjs'), layer2Source)
 
@@ -2858,14 +2860,17 @@ testMany(
       },
       layersBasePath,
     })
-    const { tmpDir } = await zipNode(t, `${fixtureName}/netlify/functions`, {
+
+    await zipNode(t, `${fixtureName}/netlify/functions`, {
       opts,
+      outDir,
     })
 
-    await del(`${layersBasePath}`, { force: true })
-
-    const func1 = await importFunctionFile(`${tmpDir}/func1.js`)
+    const func1 = await importFunctionFile(`${outDir}/func1.js`)
     const res = await func1.handler()
+
+    await del(`${layersDir}`, { force: true })
+    await del(`${outDir}`, { force: true })
 
     t.is(res.body, 'Hello from user code<Hello from layer 1><Hello from layer 2>')
   },

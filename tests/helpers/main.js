@@ -12,11 +12,12 @@ const { listImports } = require('../../dist/runtimes/node/bundlers/zisi/list_imp
 const FIXTURES_DIR = join(__dirname, '..', 'fixtures')
 const BINARY_PATH = join(__dirname, '..', '..', 'dist', 'bin.js')
 
-const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
+const zipNode = async function (t, fixture, { length, fixtureDir, outDir, opts } = {}) {
   const { files, tmpDir } = await zipFixture(t, fixture, {
     length,
     fixtureDir,
     opts,
+    outDir,
   })
   const { archiveFormat } = opts || {}
 
@@ -28,19 +29,27 @@ const zipNode = async function (t, fixture, { length, fixtureDir, opts } = {}) {
 }
 
 const getBundlerNameFromConfig = (config) => config['*'] && config['*'].nodeBundler
-const zipFixture = async function (t, fixture, { length, fixtureDir, opts = {} } = {}) {
+
+const zipFixture = async function (t, fixture, { length, fixtureDir, opts = {}, outDir: customOutDir } = {}) {
   const { config = {} } = opts
   const bundlerString = getBundlerNameFromConfig(config) || 'default'
-  const { path: tmpDir } = await getTmpDir({
-    prefix: `zip-it-test-bundler-${bundlerString}`,
-  })
 
-  if (env.ZISI_KEEP_TEMP_DIRS !== undefined) {
-    console.log(tmpDir)
+  let outDir = customOutDir
+
+  if (outDir === undefined) {
+    const { path: tmpDir } = await getTmpDir({
+      prefix: `zip-it-test-bundler-${bundlerString}`,
+    })
+
+    outDir = tmpDir
   }
 
-  const { files } = await zipCheckFunctions(t, fixture, { length, fixtureDir, tmpDir, opts })
-  return { files, tmpDir }
+  if (env.ZISI_KEEP_TEMP_DIRS !== undefined) {
+    console.log(outDir)
+  }
+
+  const { files } = await zipCheckFunctions(t, fixture, { length, fixtureDir, tmpDir: outDir, opts })
+  return { files, tmpDir: outDir }
 }
 
 const zipCheckFunctions = async function (t, fixture, { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts } = {}) {
