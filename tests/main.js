@@ -2823,6 +2823,13 @@ testMany(
     const fixtureName = 'node-with-layers'
     const { path: layersDir } = await getTmpDir()
     const { path: outDir } = await getTmpDir()
+
+    // We don't use `path.join` to generate the paths to the layers, because
+    // even when we create function bundles on Windows we'll want them to run
+    // on Linux. To get around that, we use a relative path (with Unix path
+    // separators) as the layers base path when we're running tests on Windows,
+    // because `require("../path/file.js")` is still valid. When running on a
+    // Unix platform, we can use the full path.
     const layersBasePath = platform === 'win32' ? unixify(relative(outDir, layersDir)) : layersDir
 
     // Layer 1
