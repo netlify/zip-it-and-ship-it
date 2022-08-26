@@ -68,11 +68,11 @@ const bundle: BundleFunction = async ({
     additionalPaths,
     bundlePaths,
     cleanTempFiles,
-    extension: outputExtension,
     inputs,
     moduleFormat,
     nativeNodeModules = {},
     nodeModulesWithDynamicImports,
+    outputExtension,
     warnings,
   } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],

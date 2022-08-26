@@ -8,7 +8,7 @@ import { FeatureFlags } from '../../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
 import { RuntimeType } from '../../../runtime.js'
-import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
+import { getFileExtensionForFormat, ModuleFormat } from '../../utils/module_format.js'
 import { NodeBundlerType } from '../types.js'
 
 import { getBundlerTarget, getModuleFormat } from './bundler_target.js'
@@ -102,11 +102,7 @@ export const bundleJsFile = async function ({
   )
 
   // The extension of the output file.
-  const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
-
-  // When outputting an ESM file, configure esbuild to produce a `.mjs` file.
-  const outExtension =
-    moduleFormat === ModuleFormat.ESM ? { [ModuleFileExtension.JS]: ModuleFileExtension.MJS } : undefined
+  const outputExtension = getFileExtensionForFormat(moduleFormat, featureFlags)
 
   // We add this banner so that calls to require() still work in ESM modules, especially when importing node built-ins
   // We have to do this until this is fixed in esbuild: https://github.com/evanw/esbuild/pull/2067
@@ -130,8 +126,8 @@ export const bundleJsFile = async function ({
       logLimit: ESBUILD_LOG_LIMIT,
       metafile: true,
       nodePaths: additionalModulePaths,
-      outExtension,
       outdir: targetDirectory,
+      outExtension: { '.js': outputExtension },
       platform: 'node',
       plugins,
       resolveExtensions: RESOLVE_EXTENSIONS,
@@ -141,9 +137,9 @@ export const bundleJsFile = async function ({
     })
     const bundlePaths = getBundlePaths({
       destFolder: targetDirectory,
-      extension,
       outputs: metafile.outputs,
       srcFile,
+      outputExtension,
     })
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
@@ -153,11 +149,11 @@ export const bundleJsFile = async function ({
       additionalPaths,
       bundlePaths,
       cleanTempFiles,
-      extension,
       inputs,
       moduleFormat,
       nativeNodeModules,
       nodeModulesWithDynamicImports: [...nodeModulesWithDynamicImports],
+      outputExtension,
       warnings,
     }
   } catch (error) {
@@ -175,14 +171,14 @@ export const bundleJsFile = async function ({
 // with the `aliases` format used upstream.
 const getBundlePaths = ({
   destFolder,
-  extension: outputExtension,
+  outputExtension,
   outputs,
   srcFile,
 }: {
   destFolder: string
-  extension: string
   outputs: Metafile['outputs']
   srcFile: string
+  outputExtension: string
 }) => {
   const bundleFilename = basename(srcFile, extname(srcFile)) + outputExtension
   const mainFileDirectory = dirname(srcFile)

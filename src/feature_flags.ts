@@ -20,6 +20,9 @@ export const defaultFlags: Record<string, boolean> = {
 
   // Load configuration from per-function JSON files.
   project_deploy_configuration_api_use_per_function_configuration_files: false,
+
+  // Output CJS file extension
+  zisi_output_cjs_extension: false,
 }
 
 export type FeatureFlag = keyof typeof defaultFlags
