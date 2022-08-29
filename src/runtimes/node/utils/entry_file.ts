@@ -2,7 +2,7 @@ import { basename, extname, resolve } from 'path'
 
 import type { FeatureFlags } from '../../../feature_flags.js'
 
-import { getFileExtensionForFormat, ModuleFormat } from './module_format.js'
+import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
 export interface EntryFile {
@@ -20,11 +20,12 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
   return `export { handler } from '${importPath}'`
 }
 
-// They are also in the order that AWS Lambda will try to find the entry point
-const POSSIBLE_LAMBDA_ENTRY_EXTENSIONS = ['.js', '.mjs', '.cjs']
+// They are in the order that AWS Lambda will try to find the entry point
+const POSSIBLE_LAMBDA_ENTRY_EXTENSIONS = [ModuleFileExtension.JS, ModuleFileExtension.MJS, ModuleFileExtension.CJS]
 
+// checks if the file is considered a entry-file in AWS Lambda
 export const isEntryFile = (
-  mainFile: string,
+  file: string,
   {
     basePath,
     filename,
@@ -37,9 +38,10 @@ export const isEntryFile = (
     const entryFilename = getEntryFileName({ extension, filename })
     const entryFilePath = resolve(basePath, entryFilename)
 
-    return entryFilePath === mainFile
+    return entryFilePath === file
   })
 
+// Check if any src file (except the mainFile) is considered an entry file for AWS Lambda
 export const conflictsWithEntryFile = (
   srcFiles: string[],
   {
@@ -51,15 +53,12 @@ export const conflictsWithEntryFile = (
     filename: string
     mainFile: string
   },
-) =>
-  POSSIBLE_LAMBDA_ENTRY_EXTENSIONS.some((extension) => {
-    const entryFilename = getEntryFileName({ extension, filename })
-    const entryFilePath = resolve(basePath, entryFilename)
+) => srcFiles.some((srcFile) => isEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile)
 
-    return srcFiles.some((srcFile) => srcFile === entryFilePath && srcFile !== mainFile)
-  })
-
-const getEntryFileName = ({ extension, filename }: { extension: string; filename: string }) =>
+// Returns the name for the AWS Lambda entry file
+// We do set the handler in AWS Lambda to `<func-name>.handler` and because of
+// this it considers `<func-name>.(c|m)?js` as possible entry-points
+const getEntryFileName = ({ extension, filename }: { extension: ModuleFileExtension; filename: string }) =>
   `${basename(filename, extname(filename))}${extension}`
 
 export const getEntryFile = ({
