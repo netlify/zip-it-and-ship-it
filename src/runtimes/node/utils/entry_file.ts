@@ -20,7 +20,7 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
   return `export { handler } from '${importPath}'`
 }
 
-// They are also in the order that lambda will try to find the entry point
+// They are also in the order that AWS Lambda will try to find the entry point
 const POSSIBLE_LAMBDA_ENTRY_EXTENSIONS = ['.js', '.mjs', '.cjs']
 
 export const isEntryFile = (
