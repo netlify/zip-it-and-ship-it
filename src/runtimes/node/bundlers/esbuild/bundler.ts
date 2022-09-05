@@ -104,12 +104,9 @@ export const bundleJsFile = async function ({
   // The extension of the output file.
   const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
 
-  const outExtension: BuildOptions['outExtension'] = {}
-
   // When outputting an ESM file, configure esbuild to produce a `.mjs` file.
-  if (moduleFormat === ModuleFormat.ESM) {
-    outExtension[ModuleFileExtension.JS] = ModuleFileExtension.MJS
-  }
+  const outExtension =
+    moduleFormat === ModuleFormat.ESM ? { [ModuleFileExtension.JS]: ModuleFileExtension.MJS } : undefined
 
   try {
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
