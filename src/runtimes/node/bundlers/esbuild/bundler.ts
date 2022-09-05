@@ -1,6 +1,6 @@
 import { basename, dirname, extname, resolve, join } from 'path'
 
-import { build, BuildOptions, Metafile } from '@netlify/esbuild'
+import { build, Metafile } from '@netlify/esbuild'
 import { tmpName } from 'tmp-promise'
 
 import type { FunctionConfig } from '../../../../config.js'
