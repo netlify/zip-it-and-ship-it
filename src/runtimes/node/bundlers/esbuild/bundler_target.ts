@@ -1,5 +1,5 @@
 import { FeatureFlags } from '../../../../feature_flags'
-import { ModuleFormat } from '../../utils/module_format'
+import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format'
 import {
   DEFAULT_NODE_VERSION,
   getNodeSupportMatrix,
@@ -31,8 +31,16 @@ const getBundlerTarget = (suppliedVersion?: NodeVersionString): VersionValues =>
 const getModuleFormat = async (
   srcDir: string,
   featureFlags: FeatureFlags,
+  extension: string,
   configVersion?: string,
 ): Promise<{ includedFiles: string[]; moduleFormat: ModuleFormat }> => {
+  if (extension === ModuleFileExtension.MJS && featureFlags.zisi_pure_esm_mjs) {
+    return {
+      includedFiles: [],
+      moduleFormat: ModuleFormat.ESM,
+    }
+  }
+
   const packageJsonFile = await getClosestPackageJson(srcDir)
   const nodeSupport = getNodeSupportMatrix(configVersion)
 

@@ -3,6 +3,7 @@ import { extname } from 'path'
 import { FunctionConfig } from '../../../config.js'
 import { FeatureFlags } from '../../../feature_flags.js'
 import { detectEsModule } from '../utils/detect_es_module.js'
+import { ModuleFileExtension } from '../utils/module_format.js'
 
 import esbuildBundler from './esbuild/index.js'
 import nftBundler from './nft/index.js'
@@ -61,6 +62,10 @@ const getDefaultBundler = async ({
   mainFile: string
   featureFlags: FeatureFlags
 }): Promise<NodeBundlerType> => {
+  if (extension === ModuleFileExtension.MJS && featureFlags.zisi_pure_esm_mjs) {
+    return NodeBundlerType.NFT
+  }
+
   if (ESBUILD_EXTENSIONS.has(extension)) {
     return NodeBundlerType.ESBUILD
   }
@@ -69,7 +74,7 @@ const getDefaultBundler = async ({
     return NodeBundlerType.NFT
   }
 
-  const functionIsESM = extname(mainFile) !== '.cjs' && (await detectEsModule({ mainFile }))
+  const functionIsESM = extname(mainFile) !== ModuleFileExtension.CJS && (await detectEsModule({ mainFile }))
 
   return functionIsESM ? NodeBundlerType.NFT : NodeBundlerType.ZISI
 }
