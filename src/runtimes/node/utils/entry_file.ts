@@ -1,14 +1,18 @@
-import { basename, extname } from 'path'
-
 import { ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
-export interface EntryFile {
-  contents: string
-  filename: string
-}
-
-const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
+export const getEntryFile = ({
+  commonPrefix,
+  mainFile,
+  moduleFormat,
+  userNamespace,
+}: {
+  commonPrefix: string
+  mainFile: string
+  moduleFormat: ModuleFormat
+  userNamespace: string
+}) => {
+  const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
   const importPath = `.${mainPath.startsWith('/') ? mainPath : `/${mainPath}`}`
 
   if (moduleFormat === ModuleFormat.COMMONJS) {
@@ -16,28 +20,4 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
   }
 
   return `export { handler } from '${importPath}'`
-}
-
-export const getEntryFile = ({
-  commonPrefix,
-  filename,
-  mainFile,
-  moduleFormat,
-  userNamespace,
-}: {
-  commonPrefix: string
-  filename: string
-  mainFile: string
-  moduleFormat: ModuleFormat
-  userNamespace: string
-}): EntryFile => {
-  const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
-  const extension = extname(filename)
-  const entryFilename = `${basename(filename, extension)}.js`
-  const contents = getEntryFileContents(mainPath, moduleFormat)
-
-  return {
-    contents,
-    filename: entryFilename,
-  }
 }

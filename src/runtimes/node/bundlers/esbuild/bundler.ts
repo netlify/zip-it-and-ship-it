@@ -8,6 +8,7 @@ import { FeatureFlags } from '../../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
 import { RuntimeType } from '../../../runtime.js'
+import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
 import { NodeBundlerType } from '../types.js'
 
 import { getBundlerTarget, getModuleFormat } from './bundler_target.js'
@@ -32,6 +33,7 @@ export const bundleJsFile = async function ({
   externalModules = [],
   featureFlags,
   ignoredModules = [],
+  mainFile,
   name,
   srcDir,
   srcFile,
@@ -42,6 +44,7 @@ export const bundleJsFile = async function ({
   externalModules: string[]
   featureFlags: FeatureFlags
   ignoredModules: string[]
+  mainFile: string
   name: string
   srcDir: string
   srcFile: string
@@ -94,8 +97,16 @@ export const bundleJsFile = async function ({
   const { includedFiles: includedFilesFromModuleDetection, moduleFormat } = await getModuleFormat(
     srcDir,
     featureFlags,
+    extname(mainFile),
     config.nodeVersion,
   )
+
+  // The extension of the output file.
+  const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
+
+  // When outputting an ESM file, configure esbuild to produce a `.mjs` file.
+  const outExtension =
+    moduleFormat === ModuleFormat.ESM ? { [ModuleFileExtension.JS]: ModuleFileExtension.MJS } : undefined
 
   try {
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
@@ -107,6 +118,7 @@ export const bundleJsFile = async function ({
       logLimit: ESBUILD_LOG_LIMIT,
       metafile: true,
       nodePaths: additionalModulePaths,
+      outExtension,
       outdir: targetDirectory,
       platform: 'node',
       plugins,
@@ -117,6 +129,7 @@ export const bundleJsFile = async function ({
     })
     const bundlePaths = getBundlePaths({
       destFolder: targetDirectory,
+      extension,
       outputs: metafile.outputs,
       srcFile,
     })
@@ -128,6 +141,7 @@ export const bundleJsFile = async function ({
       additionalPaths,
       bundlePaths,
       cleanTempFiles,
+      extension,
       inputs,
       moduleFormat,
       nativeNodeModules,
@@ -149,14 +163,16 @@ export const bundleJsFile = async function ({
 // with the `aliases` format used upstream.
 const getBundlePaths = ({
   destFolder,
+  extension: outputExtension,
   outputs,
   srcFile,
 }: {
   destFolder: string
+  extension: string
   outputs: Metafile['outputs']
   srcFile: string
 }) => {
-  const bundleFilename = `${basename(srcFile, extname(srcFile))}.js`
+  const bundleFilename = basename(srcFile, extname(srcFile)) + outputExtension
   const mainFileDirectory = dirname(srcFile)
   const bundlePaths: Map<string, string> = new Map()
 
@@ -171,11 +187,11 @@ const getBundlePaths = ({
     const absolutePath = join(destFolder, filename)
 
     if (output.entryPoint && basename(output.entryPoint) === basename(srcFile)) {
-      // Ensuring the main file has a `.js` extension.
-      const normalizedSrcFile = getPathWithExtension(srcFile, '.js')
+      // Ensuring the main file has the right extension.
+      const normalizedSrcFile = getPathWithExtension(srcFile, outputExtension)
 
       bundlePaths.set(absolutePath, normalizedSrcFile)
-    } else if (extension === '.js' || filename === `${bundleFilename}.map`) {
+    } else if (extension === outputExtension || filename === `${bundleFilename}.map`) {
       bundlePaths.set(absolutePath, join(mainFileDirectory, filename))
     }
   })

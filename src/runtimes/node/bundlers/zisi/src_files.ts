@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { dirname, basename, normalize } from 'path'
 
 import { not as notJunk } from 'junk'
@@ -208,4 +207,3 @@ const getTreeShakedDependencies = async function ({
 
   return [path, ...depsPath]
 }
-/* eslint-enable max-lines */

@@ -8,10 +8,11 @@ import deleteFiles from 'del'
 import pMap from 'p-map'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive.js'
+import type { FeatureFlags } from '../../../feature_flags.js'
 import { mkdirAndWriteFile } from '../../../utils/fs.js'
 
-import { EntryFile, getEntryFile } from './entry_file.js'
-import type { ModuleFormat } from './module_format.js'
+import { getEntryFile } from './entry_file.js'
+import { getFileExtensionForFormat, ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
 // Taken from https://www.npmjs.com/package/cpy.
@@ -28,6 +29,7 @@ interface ZipNodeParameters {
   basePath: string
   destFolder: string
   extension: string
+  featureFlags: FeatureFlags
   filename: string
   mainFile: string
   moduleFormat: ModuleFormat
@@ -40,27 +42,30 @@ const createDirectory = async function ({
   basePath,
   destFolder,
   extension,
+  featureFlags,
   filename,
   mainFile,
   moduleFormat,
   rewrites = new Map(),
   srcFiles,
 }: ZipNodeParameters) {
-  const { contents: entryContents, filename: entryFilename } = getEntryFile({
+  const entryFile = getEntryFile({
     commonPrefix: basePath,
-    filename,
     mainFile,
     moduleFormat,
     userNamespace: DEFAULT_USER_SUBDIRECTORY,
   })
+  const entryFileExtension = getFileExtensionForFormat(moduleFormat, featureFlags)
+  const entryFilename = basename(filename, extension) + entryFileExtension
   const functionFolder = join(destFolder, basename(filename, extension))
+  const entryFilePath = resolve(functionFolder, entryFilename)
 
   // Deleting the functions directory in case it exists before creating it.
   await deleteFiles(functionFolder, { force: true })
   await fs.mkdir(functionFolder, { recursive: true })
 
   // Writing entry file.
-  await fs.writeFile(join(functionFolder, entryFilename), entryContents)
+  await fs.writeFile(entryFilePath, entryFile)
 
   // Copying source files.
   await pMap(
@@ -91,6 +96,7 @@ const createZipArchive = async function ({
   basePath,
   destFolder,
   extension,
+  featureFlags,
   filename,
   mainFile,
   moduleFormat,
@@ -99,7 +105,8 @@ const createZipArchive = async function ({
 }: ZipNodeParameters) {
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
   const { archive, output } = startZip(destPath)
-  const entryFilename = `${basename(filename, extension)}.js`
+  const entryFileExtension = getFileExtensionForFormat(moduleFormat, featureFlags)
+  const entryFilename = basename(filename, extension) + entryFileExtension
   const entryFilePath = resolve(basePath, entryFilename)
 
   // We don't need an entry file if it would end up with the same path as the
@@ -116,9 +123,9 @@ const createZipArchive = async function ({
   const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
   if (needsEntryFile) {
-    const entryFile = getEntryFile({ commonPrefix: basePath, filename, mainFile, moduleFormat, userNamespace })
+    const entryFile = getEntryFile({ commonPrefix: basePath, mainFile, moduleFormat, userNamespace })
 
-    addEntryFileToZip(archive, entryFile)
+    addEntryFileToZip(archive, entryFile, basename(entryFilePath))
   }
 
   const srcFilesInfos = await Promise.all(srcFiles.map(addStat))
@@ -153,7 +160,7 @@ export const zipNodeJs = function ({
   return createDirectory(options)
 }
 
-const addEntryFileToZip = function (archive: ZipArchive, { contents, filename }: EntryFile) {
+const addEntryFileToZip = function (archive: ZipArchive, contents: string, filename: string) {
   const contentBuffer = Buffer.from(contents)
 
   addZipContent(archive, contentBuffer, filename)

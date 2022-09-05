@@ -2890,3 +2890,36 @@ testMany('None bundler emits esm with default nodeVersion', ['bundler_none'], as
 
   t.is(originalFile, bundledFile)
 })
+
+testMany(
+  'Can bundle native ESM functions when the extension is `.mjs` and the `zisi_pure_esm_mjs` feature flag is on',
+  allBundleConfigs,
+  async (options, t) => {
+    const length = 3
+    const fixtureName = 'node-mjs-extension'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      featureFlags: { zisi_pure_esm_mjs: true },
+    })
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
+      length,
+      opts,
+    })
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    for (let index = 1; index <= length; index++) {
+      const funcDir = join(tmpDir, `func${index}.zip_out`)
+
+      // Writing a basic package.json with `type: "module"` just so that we can
+      // import the functions from the test.
+      await writeFile(join(funcDir, 'package.json'), JSON.stringify({ type: 'module' }))
+
+      const funcFile = join(funcDir, `func${index}.mjs`)
+      const func = await importFunctionFile(funcFile)
+
+      t.true(func.handler())
+      t.true(await detectEsModule({ mainFile: funcFile }))
+    }
+  },
+)

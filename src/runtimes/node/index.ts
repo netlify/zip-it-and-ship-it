@@ -103,6 +103,7 @@ const zipFunction: ZipFunction = async function ({
     basePath: finalBasePath,
     destFolder,
     extension,
+    featureFlags,
     filename,
     mainFile: finalMainFile,
     moduleFormat,

@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { promises as fs } from 'fs'
 import { join, relative, resolve } from 'path'
 
@@ -225,4 +224,3 @@ const validateGlobNodes = (globNodes: string[]) => {
 
   return hasStrings && hasStaticHead
 }
-/* eslint-enable max-lines */

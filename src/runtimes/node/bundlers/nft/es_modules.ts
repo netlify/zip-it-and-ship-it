@@ -1,11 +1,11 @@
-import { basename, dirname, resolve } from 'path'
+import { basename, dirname, extname, resolve } from 'path'
 
 import { NodeFileTraceReasons } from '@vercel/nft'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
-import { ModuleFormat } from '../../utils/module_format.js'
+import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
 
@@ -67,6 +67,16 @@ export const processESM = async ({
   reasons: NodeFileTraceReasons
   name: string
 }): Promise<{ rewrites?: Map<string, string>; moduleFormat: ModuleFormat }> => {
+  const extension = extname(mainFile)
+
+  // If this is a .mjs file and we want to output pure ESM files, we don't need
+  // to transpile anything.
+  if (extension === ModuleFileExtension.MJS && featureFlags.zisi_pure_esm_mjs) {
+    return {
+      moduleFormat: ModuleFormat.ESM,
+    }
+  }
+
   const entrypointIsESM = isEntrypointESM({ basePath, esmPaths, mainFile })
 
   if (!entrypointIsESM) {
