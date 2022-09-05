@@ -1,1 +1,3 @@
-export const handler = () => true
+import { format } from 'some-module'
+
+export const handler = () => format === 'esm'
