@@ -1353,24 +1353,26 @@ testMany(
   'Handles a JavaScript function ({name}.mjs, {name}/{name}.mjs, {name}/index.mjs)',
   ['bundler_esbuild', 'bundler_default'],
   async (options, t) => {
+    const expectedLength = 3
     const { files, tmpDir } = await zipFixture(t, 'node-mjs-extension', {
-      length: 3,
+      length: expectedLength,
       opts: options,
     })
 
     await unzipFiles(files)
 
-    t.is(files.length, 3)
-    files.forEach((file) => {
-      t.is(file.bundler, 'esbuild')
-    })
+    t.is(files.length, expectedLength)
 
-    const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
-    t.true(handler1())
-    const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
-    t.true(handler2())
-    const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
-    t.true(handler3())
+    for (let index = 0; index < expectedLength; index++) {
+      const funcFile = `${tmpDir}/func${index + 1}.js`
+      const { handler: handler1 } = await importFunctionFile(funcFile)
+
+      t.true(handler1())
+      t.is(files[index].bundler, 'esbuild')
+
+      // Asserting that we're transpiling these files to CJS.
+      t.false(await detectEsModule({ mainFile: funcFile }))
+    }
   },
 )
 
@@ -2892,7 +2894,7 @@ testMany('None bundler emits esm with default nodeVersion', ['bundler_none'], as
 })
 
 testMany(
-  'Can bundle native ESM functions when the extension is `.mjs` and the `zisi_pure_esm_mjs` feature flag is on',
+  'Outputs `.mjs` files as ESM if the `zisi_pure_esm_mjs` feature flag is on',
   allBundleConfigs,
   async (options, t) => {
     const length = 3
@@ -2900,6 +2902,43 @@ testMany(
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
       featureFlags: { zisi_pure_esm_mjs: true },
+    })
+    const { files, tmpDir } = await zipFixture(t, fixtureName, {
+      length,
+      opts,
+    })
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    for (let index = 1; index <= length; index++) {
+      const funcDir = join(tmpDir, `func${index}.zip_out`)
+
+      // Writing a basic package.json with `type: "module"` just so that we can
+      // import the functions from the test.
+      await writeFile(join(funcDir, 'package.json'), JSON.stringify({ type: 'module' }))
+
+      const funcFile = join(funcDir, `func${index}.mjs`)
+      const func = await importFunctionFile(funcFile)
+
+      t.true(func.handler())
+      t.true(await detectEsModule({ mainFile: funcFile }))
+    }
+  },
+)
+
+testMany(
+  'Outputs `.mjs` files as ESM if the `nodeModuleFormat` configuration property is set to `esm`',
+  allBundleConfigs,
+  async (options, t) => {
+    const length = 3
+    const fixtureName = 'node-mjs-extension'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          nodeModuleFormat: 'esm',
+        },
+      },
     })
     const { files, tmpDir } = await zipFixture(t, fixtureName, {
       length,

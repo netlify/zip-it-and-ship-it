@@ -8,6 +8,7 @@ import type { FeatureFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import type { NodeBundlerType } from './runtimes/node/bundlers/types.js'
 import type { NodeVersionString } from './runtimes/node/index.js'
+import type { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { minimatch } from './utils/matching.js'
 
 interface FunctionConfig {
@@ -22,6 +23,11 @@ interface FunctionConfig {
   rustTargetDirectory?: string
   schedule?: string
   zipGo?: boolean
+
+  // Temporary configuration property, only meant to be used by the deploy
+  // configuration API. Once we start emitting ESM files for all ESM functions,
+  // we can remove this.
+  nodeModuleFormat?: ModuleFormat
 }
 
 interface FunctionConfigFile {

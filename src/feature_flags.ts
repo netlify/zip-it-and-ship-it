@@ -27,7 +27,7 @@ export type FeatureFlags = Record<FeatureFlag, boolean>
 
 // List of supported flags and their default value.
 
-export const getFlags = (input: Record<string, boolean> = {}, flags = defaultFlags) =>
+export const getFlags = (input: Record<string, boolean> = {}, flags = defaultFlags): FeatureFlags =>
   Object.entries(flags).reduce(
     (result, [key, defaultValue]) => ({
       ...result,
