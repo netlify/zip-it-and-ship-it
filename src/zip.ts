@@ -9,6 +9,7 @@ import { FeatureFlags, getFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import { createManifest } from './manifest.js'
 import { getFunctionsFromPaths } from './runtimes/index.js'
+import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { addArchiveSize } from './utils/archive_size.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
@@ -63,13 +64,21 @@ export const zipFunctions = async function (
   const results = await pMap(
     functions.values(),
     async (func) => {
+      const functionFlags = {
+        ...featureFlags,
+
+        // If there's a `nodeModuleFormat` configuration property set to `esm`,
+        // extend the feature flags with `zisi_pure_esm_mjs` enabled.
+        ...(func.config.nodeModuleFormat === ModuleFormat.ESM ? { zisi_pure_esm_mjs: true } : {}),
+      }
+
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
         basePath,
         config: func.config,
         destFolder,
         extension: func.extension,
-        featureFlags,
+        featureFlags: functionFlags,
         filename: func.filename,
         mainFile: func.mainFile,
         name: func.name,
@@ -135,13 +144,20 @@ export const zipFunction = async function (
 
   await fs.mkdir(destFolder, { recursive: true })
 
+  const functionFlags = {
+    ...featureFlags,
+
+    // If there's a `nodeModuleFormat` configuration property set to `esm`,
+    // extend the feature flags with `zisi_pure_esm_mjs` enabled.
+    ...(config.nodeModuleFormat === ModuleFormat.ESM ? { zisi_pure_esm_mjs: true } : {}),
+  }
   const zipResult = await runtime.zipFunction({
     archiveFormat,
     basePath,
     config,
     destFolder,
     extension,
-    featureFlags,
+    featureFlags: functionFlags,
     filename,
     mainFile,
     name,
