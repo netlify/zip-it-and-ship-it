@@ -14,7 +14,7 @@ export { NodeBundlerType } from './runtimes/node/bundlers/types.js'
 export { RuntimeType } from './runtimes/runtime.js'
 export { ModuleFormat } from './runtimes/node/utils/module_format.js'
 
-interface ListedFunction {
+export interface ListedFunction {
   name: string
   mainFile: string
   runtime: RuntimeType
