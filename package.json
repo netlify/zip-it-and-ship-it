@@ -54,7 +54,7 @@
   "dependencies": {
     "@babel/parser": "7.16.8",
     "@netlify/binary-info": "^1.0.0",
-    "@netlify/esbuild": "0.14.25",
+    "@netlify/esbuild": "0.14.39",
     "@vercel/nft": "^0.22.0",
     "archiver": "^5.3.0",
     "common-path-prefix": "^3.0.0",
