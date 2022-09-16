@@ -13,6 +13,7 @@ import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { addArchiveSize } from './utils/archive_size.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
+import { getLogger, LogFunction } from './utils/logger'
 import { nonNullable } from './utils/non_nullable.js'
 
 interface ZipFunctionOptions {
@@ -28,6 +29,8 @@ type ZipFunctionsOptions = ZipFunctionOptions & {
   configFileDirectories?: string[]
   manifest?: string
   parallelLimit?: number
+  systemLog?: LogFunction
+  debug?: boolean
 }
 
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -53,9 +56,13 @@ export const zipFunctions = async function (
     manifest,
     parallelLimit = DEFAULT_PARALLEL_LIMIT,
     repositoryRoot = basePath,
+    systemLog,
+    debug,
   }: ZipFunctionsOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
+
+  const logger = getLogger(systemLog, debug)
 
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
@@ -71,6 +78,8 @@ export const zipFunctions = async function (
         // extend the feature flags with `zisi_pure_esm_mjs` enabled.
         ...(func.config.nodeModuleFormat === ModuleFormat.ESM ? { zisi_pure_esm_mjs: true } : {}),
       }
+
+      logger.system('Feature flags: ', functionFlags)
 
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
@@ -88,6 +97,8 @@ export const zipFunctions = async function (
         srcPath: func.srcPath,
         stat: func.stat,
       })
+
+      logger.system(`Function: ${func.name}, Config: ${func.config}`)
 
       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
     },
