@@ -1,3 +1,5 @@
+// adapted from https://github.com/netlify/edge-bundler/blob/main/node/logger.ts
+
 import { FunctionConfig } from '../config.js'
 import { FeatureFlags } from '../feature_flags.js'
 
