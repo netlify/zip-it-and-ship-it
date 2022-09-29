@@ -13,7 +13,7 @@ import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { addArchiveSize } from './utils/archive_size.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
-import { getLogger, LogFunction } from './utils/logger'
+import { getLogger, LogFunction, ZippedFunctionOutput } from './utils/logger'
 import { nonNullable } from './utils/non_nullable.js'
 
 interface ZipFunctionOptions {
@@ -68,6 +68,7 @@ export const zipFunctions = async function (
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
   const functions = await getFunctionsFromPaths(paths, { config, configFileDirectories, dedupe: true, featureFlags })
+  const zippedFunctionOutput: ZippedFunctionOutput[] = []
   const results = await pMap(
     functions.values(),
     async (func) => {
@@ -78,8 +79,6 @@ export const zipFunctions = async function (
         // extend the feature flags with `zisi_pure_esm_mjs` enabled.
         ...(func.config.nodeModuleFormat === ModuleFormat.ESM ? { zisi_pure_esm_mjs: true } : {}),
       }
-
-      logger.system('Feature flags: ', functionFlags)
 
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
@@ -98,7 +97,7 @@ export const zipFunctions = async function (
         stat: func.stat,
       })
 
-      logger.system(`Function: ${func.name}, Config: ${func.config}`)
+      zippedFunctionOutput.push({ name: func.name, config: func.config, featureFlags: functionFlags })
 
       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
     },
@@ -106,6 +105,9 @@ export const zipFunctions = async function (
       concurrency: parallelLimit,
     },
   )
+
+  logger.system('Zipped functions details', zippedFunctionOutput)
+
   const formattedResults = await Promise.all(
     results.filter(nonNullable).map(async (result) => {
       const resultWithSize = await addArchiveSize(result)
