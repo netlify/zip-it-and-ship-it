@@ -63,7 +63,6 @@ export const zipFunctions = async function (
   validateArchiveFormat(archiveFormat)
 
   const logger = getLogger(systemLog, debug)
-
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
@@ -105,9 +104,6 @@ export const zipFunctions = async function (
       concurrency: parallelLimit,
     },
   )
-
-  logger.system('Zipped functions details', zippedFunctionOutput)
-
   const formattedResults = await Promise.all(
     results.filter(nonNullable).map(async (result) => {
       const resultWithSize = await addArchiveSize(result)
@@ -119,6 +115,8 @@ export const zipFunctions = async function (
   if (manifest !== undefined) {
     await createManifest({ functions: formattedResults, path: resolve(manifest) })
   }
+
+  logger.system('Zipped functions details', zippedFunctionOutput)
 
   return formattedResults
 }
