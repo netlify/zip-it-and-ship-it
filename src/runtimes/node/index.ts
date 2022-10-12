@@ -2,6 +2,7 @@ import { join } from 'path'
 
 import { copyFile } from 'cp-file'
 
+import { FUNCTIONS_INTERNAL_DIR } from '../constants.js'
 import { GetSrcFilesFunction, Runtime, RuntimeType, ZipFunction } from '../runtime.js'
 
 import { getBundler, getBundlerName } from './bundlers/index.js'
@@ -126,6 +127,8 @@ const zipFunction: ZipFunction = async function ({
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath,
+    displayName: config.displayName ?? undefined,
+    isInternalFunction: srcDir.includes(FUNCTIONS_INTERNAL_DIR),
   }
 }
 

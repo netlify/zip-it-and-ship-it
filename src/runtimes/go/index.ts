@@ -8,6 +8,7 @@ import type { RuntimeCache } from '../../utils/cache.js'
 import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
+import { FUNCTIONS_INTERNAL_DIR } from '../constants'
 import { detectBinaryRuntime } from '../detect_runtime.js'
 import {
   FindFunctionInPathFunction,
@@ -151,7 +152,12 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
     await copyFile(binary.path, destPath)
   }
 
-  return { config, path: destPath }
+  return {
+    config,
+    path: destPath,
+    displayName: config.displayName ?? undefined,
+    isInternalFunction: srcDir.includes(FUNCTIONS_INTERNAL_DIR),
+  }
 }
 
 const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RuntimeType.GO, zipFunction }
