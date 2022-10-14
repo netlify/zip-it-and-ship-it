@@ -10,6 +10,9 @@ interface ManifestFunction {
   path: string
   runtime: string
   schedule?: string
+  displayName?: string
+  bundler?: string
+  isInternalFunction?: boolean
 }
 
 export interface Manifest {
@@ -36,10 +39,13 @@ export const createManifest = async ({ functions, path }: { functions: FunctionR
   await fs.writeFile(path, JSON.stringify(payload))
 }
 
-const formatFunctionForManifest = ({ mainFile, name, path, runtime, schedule }: FunctionResult): ManifestFunction => ({
+const formatFunctionForManifest = ({ mainFile, name, path, runtime, schedule, displayName, bundler, isInternalFunction }: FunctionResult): ManifestFunction => ({
   mainFile,
   name,
   path: resolve(path),
   runtime,
   schedule,
+  displayName,
+  bundler,
+  isInternalFunction,
 })
