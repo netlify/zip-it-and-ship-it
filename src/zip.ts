@@ -13,7 +13,7 @@ import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { addArchiveSize } from './utils/archive_size.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
-import { getLogger, LogFunction, ZippedFunctionOutput } from './utils/logger'
+import { getLogger, LogFunction } from './utils/logger'
 import { nonNullable } from './utils/non_nullable.js'
 
 interface ZipFunctionOptions {
@@ -67,7 +67,6 @@ export const zipFunctions = async function (
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
   const functions = await getFunctionsFromPaths(paths, { config, configFileDirectories, dedupe: true, featureFlags })
-  const zippedFunctionOutput: ZippedFunctionOutput[] = []
   const results = await pMap(
     functions.values(),
     async (func) => {
@@ -96,7 +95,9 @@ export const zipFunctions = async function (
         stat: func.stat,
       })
 
-      zippedFunctionOutput.push({ name: func.name, config: func.config, featureFlags: functionFlags })
+      const logObject = { name: func.name, config: func.config, featureFlags: functionFlags }
+
+      logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
 
       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
     },
@@ -115,8 +116,6 @@ export const zipFunctions = async function (
   if (manifest !== undefined) {
     await createManifest({ functions: formattedResults, path: resolve(manifest) })
   }
-
-  logger.system('Zipped functions details', zippedFunctionOutput)
 
   return formattedResults
 }

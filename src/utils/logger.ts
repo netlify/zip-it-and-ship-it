@@ -1,8 +1,4 @@
 // adapted from https://github.com/netlify/edge-bundler/blob/main/node/logger.ts
-
-import { FunctionConfig } from '../config.js'
-import { FeatureFlags } from '../feature_flags.js'
-
 type LogFunction = (...args: unknown[]) => void
 
 const noopLogger: LogFunction = () => {
@@ -12,12 +8,6 @@ const noopLogger: LogFunction = () => {
 interface Logger {
   system: LogFunction
   user: LogFunction
-}
-
-interface ZippedFunctionOutput {
-  name: string
-  config: FunctionConfig
-  featureFlags: FeatureFlags
 }
 
 const getLogger = (systemLogger?: LogFunction, debug = false): Logger => {
@@ -33,4 +23,4 @@ const getLogger = (systemLogger?: LogFunction, debug = false): Logger => {
 }
 
 export { getLogger }
-export type { LogFunction, Logger, ZippedFunctionOutput }
+export type { LogFunction, Logger }
