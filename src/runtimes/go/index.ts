@@ -155,7 +155,7 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
   return {
     config,
     path: destPath,
-    displayName: config.displayName ?? undefined,
+    displayName: config?.displayName,
     isInternalFunction: srcDir.includes(FUNCTIONS_INTERNAL_DIR),
   }
 }
