@@ -39,7 +39,16 @@ export const createManifest = async ({ functions, path }: { functions: FunctionR
   await fs.writeFile(path, JSON.stringify(payload))
 }
 
-const formatFunctionForManifest = ({ mainFile, name, path, runtime, schedule, displayName, bundler, isInternalFunction }: FunctionResult): ManifestFunction => ({
+const formatFunctionForManifest = ({
+  mainFile,
+  name,
+  path,
+  runtime,
+  schedule,
+  displayName,
+  bundler,
+  isInternalFunction,
+}: FunctionResult): ManifestFunction => ({
   mainFile,
   name,
   path: resolve(path),
