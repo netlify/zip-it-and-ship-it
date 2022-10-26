@@ -2,6 +2,7 @@ import { promises as fs } from 'fs'
 import { resolve } from 'path'
 
 import pMap from 'p-map'
+import prettyMs from 'pretty-ms'
 
 import { ArchiveFormat } from './archive.js'
 import { Config } from './config.js'
@@ -15,6 +16,7 @@ import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 import { getLogger, LogFunction } from './utils/logger'
 import { nonNullable } from './utils/non_nullable.js'
+import { endTimer, roundTimerToMillisecs, startTimer } from './utils/timer.js'
 
 interface ZipFunctionOptions {
   archiveFormat?: ArchiveFormat
@@ -23,14 +25,14 @@ interface ZipFunctionOptions {
   featureFlags?: FeatureFlags
   repositoryRoot?: string
   zipGo?: boolean
+  systemLog?: LogFunction
+  debug?: boolean
 }
 
 type ZipFunctionsOptions = ZipFunctionOptions & {
   configFileDirectories?: string[]
   manifest?: string
   parallelLimit?: number
-  systemLog?: LogFunction
-  debug?: boolean
 }
 
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -78,6 +80,7 @@ export const zipFunctions = async function (
         ...(func.config.nodeModuleFormat === ModuleFormat.ESM ? { zisi_pure_esm_mjs: true } : {}),
       }
 
+      const startIntervalTime = startTimer()
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
         basePath,
@@ -94,8 +97,15 @@ export const zipFunctions = async function (
         srcPath: func.srcPath,
         stat: func.stat,
       })
-
-      const logObject = { name: func.name, config: func.config, featureFlags: functionFlags }
+      const durationNs = endTimer(startIntervalTime)
+      const durationMs = roundTimerToMillisecs(durationNs)
+      const logObject = {
+        name: func.name,
+        config: func.config,
+        featureFlags: functionFlags,
+        // e.g 45m 38.4s (2738475 ms)
+        duration: `${prettyMs(durationMs)} (${durationMs} ms)`,
+      }
 
       logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
 
@@ -120,6 +130,7 @@ export const zipFunctions = async function (
   return formattedResults
 }
 
+// eslint-disable-next-line max-statements
 export const zipFunction = async function (
   relativeSrcPath: string,
   destFolder: string,
@@ -129,10 +140,13 @@ export const zipFunction = async function (
     config: inputConfig = {},
     featureFlags: inputFeatureFlags,
     repositoryRoot = basePath,
+    systemLog,
+    debug,
   }: ZipFunctionOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
 
+  const logger = getLogger(systemLog, debug)
   const featureFlags = getFlags(inputFeatureFlags)
   const srcPath = resolve(relativeSrcPath)
   const functions = await getFunctionsFromPaths([srcPath], { config: inputConfig, dedupe: true, featureFlags })
@@ -161,6 +175,7 @@ export const zipFunction = async function (
     // extend the feature flags with `zisi_pure_esm_mjs` enabled.
     ...(config.nodeModuleFormat === ModuleFormat.ESM ? { zisi_pure_esm_mjs: true } : {}),
   }
+  const startIntervalTime = startTimer()
   const zipResult = await runtime.zipFunction({
     archiveFormat,
     basePath,
@@ -177,6 +192,17 @@ export const zipFunction = async function (
     srcPath,
     stat: stats,
   })
+  const durationNs = endTimer(startIntervalTime)
+  const durationMs = roundTimerToMillisecs(durationNs)
+  const logObject = {
+    name,
+    config,
+    featureFlags: functionFlags,
+    // e.g 45m 38.4s (2738475 ms)
+    duration: `${prettyMs(durationMs)} (${durationMs} ms)`,
+  }
+
+  logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })
 }
