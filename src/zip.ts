@@ -104,7 +104,7 @@ export const zipFunctions = async function (
         config: func.config,
         featureFlags: functionFlags,
         // e.g 45m 48s 373ms
-        duration: prettyMilliseconds(durationMs, {formatSubMilliseconds: true}),
+        duration: prettyMilliseconds(durationMs, { formatSubMilliseconds: true }),
       }
 
       logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
@@ -199,7 +199,7 @@ export const zipFunction = async function (
     config,
     featureFlags: functionFlags,
     // e.g 45m 48s 373ms
-    duration: prettyMilliseconds(durationMs, {formatSubMilliseconds: true}),
+    duration: prettyMilliseconds(durationMs, { formatSubMilliseconds: true }),
   }
 
   logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
