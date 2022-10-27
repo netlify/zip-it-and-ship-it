@@ -1,4 +1,4 @@
-import { glob } from '../../../../utils/matching'
+import { glob } from '../../../../utils/matching.js'
 
 // We use all the files published by the Node.js except some that are not needed
 export const getPublishedFiles = async function (modulePath: string): Promise<string[]> {

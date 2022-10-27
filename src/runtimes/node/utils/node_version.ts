@@ -1,4 +1,3 @@
-/* eslint-disable no-magic-numbers */
 type SupportedVersionNumbers = 8 | 10 | 12 | 14 | 16
 export type ShortNodeVersionString = `${SupportedVersionNumbers}.x`
 export type NodeVersionString = ShortNodeVersionString | `nodejs${SupportedVersionNumbers}.x`
@@ -42,4 +41,3 @@ export const parseVersion = (input: string | undefined) => {
 
   return version
 }
-/* eslint-enable no-magic-numbers */

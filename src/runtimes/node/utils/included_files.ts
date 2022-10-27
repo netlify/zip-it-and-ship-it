@@ -1,6 +1,6 @@
 import { normalize, resolve } from 'path'
 
-import { minimatch, glob } from '../../../utils/matching'
+import { minimatch, glob } from '../../../utils/matching.js'
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.

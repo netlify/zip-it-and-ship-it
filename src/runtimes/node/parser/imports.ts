@@ -1,4 +1,4 @@
-import { Statement } from '@babel/types'
+import type { Statement } from '@babel/types'
 
 import { nonNullable } from '../../../utils/non_nullable.js'
 
