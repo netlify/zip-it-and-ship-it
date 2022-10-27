@@ -3,30 +3,29 @@ import { fileURLToPath } from 'url'
 
 export const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url))
 
-export const timeFunction = (func, runs = 1) =>
-  new Promise((resolve) => {
-    const finishedRuns = new Map()
+export const timeFunction = async (func, runs = 1) => {
+  const finishedRuns = new Map()
 
-    const observer = new PerformanceObserver((list) => {
-      const [entry] = list.getEntries()
+  const observer = new PerformanceObserver((list) => {
+    const [entry] = list.getEntries()
 
-      finishedRuns.set(entry.name, entry.duration)
+    finishedRuns.set(entry.name, entry.duration)
+  })
 
-      if (finishedRuns.size === runs) {
-        const durations = [...finishedRuns.values()]
-        const average = durations.reduce((acc, duration) => duration + acc, 0) / runs
+  observer.observe({ entryTypes: ['measure'] })
 
-        resolve(average)
-      }
-    })
-
-    observer.observe({ entryTypes: ['measure'] })
-
-    Array.from({ length: runs }).forEach(async (_, index) => {
+  await Promise.all(
+    Array.from({ length: runs }).map(async (_, index) => {
       performance.mark(`run-${index}-start`)
 
       await func(index)
 
       performance.measure(`run-${index}`, `run-${index}-start`)
-    })
-  })
+    }),
+  )
+
+  const durations = [...finishedRuns.values()]
+  const average = durations.reduce((acc, duration) => duration + acc, 0) / runs
+
+  return average
+}
