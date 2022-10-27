@@ -27,7 +27,7 @@
     "format:fix:prettier": "cross-env-shell prettier --write $npm_package_config_prettier",
     "test": "run-s build format && vitest run",
     "test:dev": "vitest",
-    "test:ci": "npm run build && vitest run --coverage"
+    "test:ci": "npm run build && vitest run"
   },
   "config": {
     "eslint": "--report-unused-disable-directives --ignore-path .gitignore --cache --format=codeframe --max-warnings=0 \"{src,tests,.github}/**/*.{mjs,cjs,js,mts,cts,ts,md,html}\" \"*.{cjs,mjs,js,cts,mts,ts,md,html}\" \".*.{cjs,mjs,js,cts,mts,ts,md,html}\"",
