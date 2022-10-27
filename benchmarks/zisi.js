@@ -17,4 +17,4 @@ const runBenchmarks = async function () {
   console.log(`${largeDepsZisi}ms`)
 }
 
-runBenchmarks()
+await runBenchmarks()

@@ -19,4 +19,4 @@ const runBenchmarks = async function () {
   console.log(`${largeDepsEsbuild}ms`)
 }
 
-runBenchmarks()
+await runBenchmarks()

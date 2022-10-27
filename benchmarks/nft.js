@@ -17,4 +17,4 @@ const runBenchmarks = async function () {
   console.log(`${largeDepsNft}ms`)
 }
 
-runBenchmarks()
+await runBenchmarks()
