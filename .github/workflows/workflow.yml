@@ -57,7 +57,7 @@ jobs:
           os=${{ matrix.os }}
           node=${{ matrix.node-version }}
           echo "os=${os/-latest/}" >> $GITHUB_OUTPUT
-          echo "node=${node//[.*]/}" >> $GITHUB_OUTPUT
+          echo "node=node_${node//[.*]/}" >> $GITHUB_OUTPUT
         shell: bash
       - uses: codecov/codecov-action@v3
         if: "${{ matrix.node-version == '*' }}"
