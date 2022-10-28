@@ -1,0 +1,9 @@
+{
+  "name": "many-dependencies",
+  "private":true,
+  "version": "0.0.0",
+  "dependencies": {
+    "execa": "4.0.0",
+    "del": "5.0.0"
+  }
+}

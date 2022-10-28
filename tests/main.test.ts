@@ -567,7 +567,16 @@ describe('zip-it-and-ship-it', () => {
   )
 
   testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
-    await zipNode('many-dependencies', { opts: options })
+    const fixtureTmpDir = await tmpName({ prefix: 'zip-it-test' })
+    const basePath = `${fixtureTmpDir}/many-dependencies`
+    const opts = merge(options, {
+      basePath,
+    })
+
+    await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
+    await execa('npm', ['install', '--no-package-lock'], { cwd: basePath })
+
+    await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
   })
 
   testMany('Works with many function files', [...allBundleConfigs, 'bundler_none'], async (options) => {
