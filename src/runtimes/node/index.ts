@@ -1,6 +1,6 @@
 import { join } from 'path'
 
-import cpFile from 'cp-file'
+import { copyFile } from 'cp-file'
 
 import { GetSrcFilesFunction, Runtime, RuntimeType, ZipFunction } from '../runtime.js'
 
@@ -59,7 +59,7 @@ const zipFunction: ZipFunction = async function ({
   if (extension === '.zip') {
     const destPath = join(destFolder, filename)
 
-    await cpFile(srcPath, destPath)
+    await copyFile(srcPath, destPath)
 
     return { config, path: destPath }
   }
