@@ -1,16 +1,15 @@
-const { createHash } = require('crypto')
-const { createReadStream } = require('fs')
+import { createHash } from 'crypto'
+import { createReadStream } from 'fs'
 
-const getStream = require('get-stream')
+import getStream from 'get-stream'
 
 // Retrieve the SHA1 checksum of a file.
 // Does it in streaming mode, for best performance.
-const computeSha1 = async function (filePath) {
+export const computeSha1 = async function (filePath: string): Promise<string> {
   const fileStream = createReadStream(filePath)
   const hashStream = createHash('sha1')
   hashStream.setEncoding('hex')
   const sha1Checksum = await getStream(fileStream.pipe(hashStream))
+
   return sha1Checksum
 }
-
-module.exports = { computeSha1 }

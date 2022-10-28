@@ -1,4 +1,5 @@
 import { join } from 'path'
+import process from 'process'
 
 import { zipFunctions } from '../dist/main.js'
 
@@ -19,4 +20,9 @@ const runBenchmarks = async function () {
   console.log(`${largeDepsEsbuild}ms`)
 }
 
-runBenchmarks()
+try {
+  await runBenchmarks()
+  process.stderr.write('ESBuild benchmark finished\n')
+} catch (error) {
+  console.error(error)
+}

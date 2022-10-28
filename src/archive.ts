@@ -8,6 +8,7 @@ import endOfStream from 'end-of-stream'
 
 export { Archiver as ZipArchive } from 'archiver'
 
+// TODO make enum
 export type ArchiveFormat = 'none' | 'zip'
 
 const pEndOfStream = promisify(endOfStream)

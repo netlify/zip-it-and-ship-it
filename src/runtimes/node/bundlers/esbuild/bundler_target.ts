@@ -1,12 +1,12 @@
-import { FeatureFlags } from '../../../../feature_flags'
-import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format'
+import { FeatureFlags } from '../../../../feature_flags.js'
+import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
 import {
   DEFAULT_NODE_VERSION,
   getNodeSupportMatrix,
   NodeVersionString,
   ShortNodeVersionString,
-} from '../../utils/node_version'
-import { getClosestPackageJson } from '../../utils/package_json'
+} from '../../utils/node_version.js'
+import { getClosestPackageJson } from '../../utils/package_json.js'
 
 const versionMap = {
   '8.x': 'node8',

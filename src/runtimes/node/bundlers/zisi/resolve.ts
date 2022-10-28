@@ -1,9 +1,16 @@
+import { createRequire } from 'module'
 import { version as nodeVersion } from 'process'
 
 import findUp from 'find-up'
 import pathExists from 'path-exists'
-import resolveLib from 'resolve'
+// @ts-expect-error types are wrong
+import { async as asyncResolve } from 'resolve'
 import semver from 'semver'
+
+// The types do not include the mjs api of resolve
+const resolveLib = asyncResolve as typeof import('resolve')
+
+const require = createRequire(import.meta.url)
 
 const BACKSLASH_REGEXP = /\\/g
 

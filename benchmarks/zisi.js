@@ -1,3 +1,5 @@
+import process from 'process'
+
 import { zipFunctions } from '../dist/main.js'
 
 import { timeFunction, FIXTURES_DIR } from './helpers/main.js'
@@ -17,4 +19,9 @@ const runBenchmarks = async function () {
   console.log(`${largeDepsZisi}ms`)
 }
 
-runBenchmarks()
+try {
+  await runBenchmarks()
+  process.stderr.write('ZISI benchmark finished\n')
+} catch (error) {
+  console.error(error)
+}
