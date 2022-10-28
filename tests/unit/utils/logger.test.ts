@@ -40,7 +40,7 @@ test('Prints system logs to the system logger provided', () => {
   logger2.system('Hello with `debug: false`')
 
   expect(mockConsoleLog).toHaveBeenCalledTimes(0)
-  expect(mockSystemLog).toHaveBeenCalledTimes(0)
+  expect(mockSystemLog).toHaveBeenCalledTimes(2)
   expect(mockSystemLog).toHaveBeenNthCalledWith(1, 'Hello with `debug: true`')
   expect(mockSystemLog).toHaveBeenNthCalledWith(2, 'Hello with `debug: false`')
 })
