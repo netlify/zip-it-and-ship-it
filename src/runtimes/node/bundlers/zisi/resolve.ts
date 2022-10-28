@@ -2,7 +2,7 @@ import { createRequire } from 'module'
 import { version as nodeVersion } from 'process'
 
 import findUp from 'find-up'
-import pathExists from 'path-exists'
+import { pathExists } from 'path-exists'
 // @ts-expect-error types are wrong
 import { async as asyncResolve } from 'resolve'
 import semver from 'semver'
