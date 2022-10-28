@@ -98,7 +98,7 @@
     "@types/unixify": "^1.0.0",
     "@types/yargs": "^17.0.4",
     "@vitest/coverage-c8": "^0.24.3",
-    "cpy": "^8.0.0",
+    "cpy": "^9.0.0",
     "deepmerge": "^4.2.2",
     "get-stream": "^6.0.0",
     "husky": "^8.0.0",
