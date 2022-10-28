@@ -5,7 +5,7 @@ import { arch, env, platform, version as nodeVersion } from 'process'
 
 import cpy from 'cpy'
 import merge from 'deepmerge'
-import del from 'del'
+import { deleteAsync } from 'del'
 import execa from 'execa'
 import { pathExists } from 'path-exists'
 import semver from 'semver'
@@ -51,7 +51,7 @@ const getZipChecksum = async function (config: Config) {
 describe('zip-it-and-ship-it', () => {
   afterAll(async () => {
     if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
-      await del(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
+      await deleteAsync(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
     }
   })
 
