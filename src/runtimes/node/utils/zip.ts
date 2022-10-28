@@ -3,7 +3,7 @@ import { Stats, promises as fs } from 'fs'
 import os from 'os'
 import { basename, join, resolve } from 'path'
 
-import copyFile from 'cp-file'
+import { copyFile } from 'cp-file'
 import deleteFiles from 'del'
 import pMap from 'p-map'
 

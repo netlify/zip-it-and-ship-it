@@ -1,7 +1,7 @@
 import type { Stats } from 'fs'
 import { basename, dirname, extname, join } from 'path'
 
-import cpFile from 'cp-file'
+import { copyFile } from 'cp-file'
 
 import { SourceFile } from '../../function.js'
 import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs.js'
@@ -149,7 +149,7 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
   // We do this only if we're not building from source, as otherwise the build
   // step already handled that.
   if (!isSource) {
-    await cpFile(binary.path, destPath)
+    await copyFile(binary.path, destPath)
   }
 
   return { config, path: destPath }
