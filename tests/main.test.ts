@@ -256,7 +256,6 @@ describe('zip-it-and-ship-it', () => {
       const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
       await cpy('**', `${fixtureDir}/invalid-package-json`, {
         cwd: `${FIXTURES_DIR}/invalid-package-json`,
-        parents: true,
       })
 
       const invalidPackageJsonDir = `${fixtureDir}/invalid-package-json`
@@ -522,7 +521,6 @@ describe('zip-it-and-ship-it', () => {
       })
       await cpy('**', `${fixtureDir}/symlinks`, {
         cwd: `${FIXTURES_DIR}/symlinks`,
-        parents: true,
       })
 
       const symlinkDir = `${fixtureDir}/symlinks/function`
@@ -646,7 +644,7 @@ describe('zip-it-and-ship-it', () => {
     const opts = merge(options, {
       basePath: fixtureDir,
     })
-    await cpy('**', `${fixtureDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
+    await cpy('**', `${fixtureDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json` })
     await zipNode('no-package-json', { opts, length: 1, fixtureDir })
   })
 
