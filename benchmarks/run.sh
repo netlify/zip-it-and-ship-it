@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -exo pipefail
+
 npm ci --prefix benchmarks/fixtures
 npm run build
 node benchmarks/nft.js > .delta.largeDepsNft

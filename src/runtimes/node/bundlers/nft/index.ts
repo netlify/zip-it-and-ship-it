@@ -1,7 +1,7 @@
 import { basename, dirname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
-import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
+import nftResolveDependency from '@vercel/nft/out/resolve-dependency.js'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
@@ -12,6 +12,11 @@ import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/includ
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
+
+// @ts-expect-error vitest with esbuild already resolves the default export, whereas Node.js does not
+const resolveDependency: typeof nftResolveDependency.default = nftResolveDependency.default
+  ? nftResolveDependency.default
+  : nftResolveDependency
 
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']

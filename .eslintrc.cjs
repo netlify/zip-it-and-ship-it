@@ -2,13 +2,13 @@ const { overrides } = require('@netlify/eslint-config-node')
 
 module.exports = {
   extends: '@netlify/eslint-config-node',
+  parserOptions: {
+    sourceType: 'module',
+  },
   rules: {
     'import/extensions': ['error', 'ignorePackages'],
     'n/no-missing-import': 'off',
-    // This is disabled because TypeScript transpiles some features currently
-    // unsupported by Node 12, i.e. optional chaining
-    // TODO: re-enable after dropping support for Node 12
-    'n/no-unsupported-features/es-syntax': 'off',
+    'no-magic-numbers': 'off',
     // This rule enforces using Buffers with `JSON.parse()`. However, TypeScript
     // does not recognize yet that `JSON.parse()` accepts Buffers as argument.
     'unicorn/prefer-json-parse-buffer': 'off',
@@ -37,19 +37,15 @@ module.exports = {
       },
     },
     {
-      files: 'tests/**/*.js',
+      files: 'tests/**/*.ts',
       rules: {
         'import/max-dependencies': 'off',
         'max-lines-per-function': 'off',
+        'max-nested-callbacks': 'off',
         'max-statements': 'off',
-        'no-magic-numbers': 'off',
         'padding-line-between-statements': 'off',
-      },
-    },
-    {
-      files: '*.md/*.js',
-      parserOptions: {
-        sourceType: 'module',
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
       },
     },
   ],

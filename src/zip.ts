@@ -24,7 +24,7 @@ interface ZipFunctionOptions {
   zipGo?: boolean
 }
 
-type ZipFunctionsOptions = ZipFunctionOptions & {
+export type ZipFunctionsOptions = ZipFunctionOptions & {
   configFileDirectories?: string[]
   manifest?: string
   parallelLimit?: number

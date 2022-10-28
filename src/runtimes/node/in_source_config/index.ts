@@ -1,4 +1,4 @@
-import { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
+import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'

@@ -2,6 +2,7 @@ import { promises as fs } from 'fs'
 import { basename, extname, dirname, join } from 'path'
 
 import isPathInside from 'is-path-inside'
+// @ts-expect-error Typescript cannot find definition
 import mergeOptions from 'merge-options'
 
 import type { FeatureFlags } from './feature_flags.js'

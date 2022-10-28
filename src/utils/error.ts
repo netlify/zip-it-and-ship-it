@@ -1,5 +1,5 @@
 import type { NodeBundlerType } from '../runtimes/node/bundlers/types.js'
-import type { RuntimeType } from '../runtimes/runtime'
+import type { RuntimeType } from '../runtimes/runtime.js'
 
 interface CustomErrorLocation {
   functionName: string
