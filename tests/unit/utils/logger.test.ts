@@ -23,7 +23,7 @@ test('Prints user logs to stdout', () => {
   logger1.user('Hello with `debug: true`')
   logger2.user('Hello with `debug: false`')
 
-  expect(mockConsoleLog.callCount).toBe(2)
+  expect(mockConsoleLog).toHaveBeenCalledTimes(2)
   expect(mockConsoleLog.firstCall.firstArg).toBe('Hello with `debug: true`')
   expect(mockConsoleLog.secondCall.firstArg).toBe('Hello with `debug: false`')
 })
