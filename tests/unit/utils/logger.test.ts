@@ -29,8 +29,8 @@ test('Prints user logs to stdout', () => {
 })
 
 test('Prints system logs to the system logger provided', () => {
-  const mockSystemLog = stub()
-  const mockConsoleLog = stub()
+  const mockSystemLog = vi.fn()
+  const mockConsoleLog = vi.fn()
   console.log = mockSystemLog
 
   const logger1 = getLogger(mockSystemLog, true)
@@ -39,14 +39,14 @@ test('Prints system logs to the system logger provided', () => {
   logger1.system('Hello with `debug: true`')
   logger2.system('Hello with `debug: false`')
 
-  expect(mockConsoleLog.callCount).toBe(0)
-  expect(mockSystemLog.callCount).toBe(2)
-  expect(mockSystemLog.firstCall.firstArg).toBe('Hello with `debug: true`')
-  expect(mockSystemLog.secondCall.firstArg).toBe('Hello with `debug: false`')
+  expect(mockConsoleLog).toHaveBeenCalledTimes(0)
+  expect(mockSystemLog).toHaveBeenCalledTimes(0)
+  expect(mockSystemLog).toHaveBeenNthCalledWith(1, 'Hello with `debug: true`')
+  expect(mockSystemLog).toHaveBeenNthCalledWith(2, 'Hello with `debug: false`')
 })
 
 test('Prints system logs to stdout if there is no system logger provided and `debug` is enabled', () => {
-  const mockConsoleLog = stub()
+  const mockConsoleLog = vi.fn()
   console.log = mockConsoleLog
 
   const logger1 = getLogger(undefined, true)
@@ -55,6 +55,6 @@ test('Prints system logs to stdout if there is no system logger provided and `de
   logger1.system('Hello with `debug: true`')
   logger2.system('Hello with `debug: false`')
 
-  expect(mockConsoleLog.callCount).toBe(1)
-  expect(mockConsoleLog.firstCall.firstArg).toBe('Hello with `debug: true`')
+  expect(mockConsoleLog).toHaveBeenCalledTimes(1)
+  expect(mockConsoleLog).toHaveBeenNthCalledWith(1, 'Hello with `debug: true`')
 })
