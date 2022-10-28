@@ -59,7 +59,7 @@
     "@vercel/nft": "^0.22.0",
     "archiver": "^5.3.0",
     "common-path-prefix": "^3.0.0",
-    "cp-file": "^9.0.0",
+    "cp-file": "^10.0.0",
     "del": "^6.0.0",
     "end-of-stream": "^1.4.4",
     "es-module-lexer": "^1.0.0",
