@@ -568,11 +568,11 @@ describe('zip-it-and-ship-it', () => {
 
   testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
     const fixtureTmpDir = await tmpName({ prefix: 'zip-it-test' })
-    const basePath = `${fixtureTmpDir}/many-dependencies`
     const opts = merge(options, {
-      basePath,
+      basePath: fixtureTmpDir,
     })
 
+    const basePath = `${fixtureTmpDir}/many-dependencies`
     await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
     await execa('npm', ['install', '--no-package-lock'], { cwd: basePath })
 
