@@ -1,5 +1,4 @@
-import { stub } from 'sinon'
-import { afterEach, test, expect } from 'vitest'
+import { afterEach, test, expect, vi } from 'vitest'
 
 import { getLogger } from '../../../src/utils/logger.js'
 
