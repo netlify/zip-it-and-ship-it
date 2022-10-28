@@ -56,8 +56,8 @@ jobs:
         working-directory: zip-it-and-ship-it
       - name: Building and deploying site
         run:
-          $GITHUB_WORKSPACE/netlify-cli/bin/run deploy --build --json --site ${{ secrets.NETLIFY_SITE_ID }} --auth ${{
-          secrets.NETLIFY_TOKEN }} --functions .netlify/functions > .netlify-deploy-log.json
+          $GITHUB_WORKSPACE/netlify-cli/bin/run.mjs deploy --build --json --site ${{ secrets.NETLIFY_SITE_ID }} --auth
+          ${{ secrets.NETLIFY_TOKEN }} --functions .netlify/functions > .netlify-deploy-log.json
         working-directory: test-site/demos/default
       - name: Parsing deploy result
         run: |
