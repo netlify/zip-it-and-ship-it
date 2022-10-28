@@ -4,7 +4,7 @@ import os from 'os'
 import { basename, join, resolve } from 'path'
 
 import { copyFile } from 'cp-file'
-import deleteFiles from 'del'
+import { deleteAsync as deleteFiles } from 'del'
 import pMap from 'p-map'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive.js'

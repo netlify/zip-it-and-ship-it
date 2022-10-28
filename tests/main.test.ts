@@ -1,11 +1,11 @@
-import { mkdir, readFile, chmod, symlink, unlink, rename, writeFile } from 'fs/promises'
+import { mkdir, readFile, chmod, symlink, unlink, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { basename, dirname, isAbsolute, join, resolve } from 'path'
 import { arch, env, platform, version as nodeVersion } from 'process'
 
 import cpy from 'cpy'
 import merge from 'deepmerge'
-import del from 'del'
+import { deleteAsync } from 'del'
 import execa from 'execa'
 import { pathExists } from 'path-exists'
 import semver from 'semver'
@@ -51,7 +51,7 @@ const getZipChecksum = async function (config: Config) {
 describe('zip-it-and-ship-it', () => {
   afterAll(async () => {
     if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
-      await del(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
+      await deleteAsync(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
     }
   })
 
@@ -253,24 +253,9 @@ describe('zip-it-and-ship-it', () => {
     'Throws on invalid package.json',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi'],
     async (options) => {
-      const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
-      await cpy('**', `${fixtureDir}/invalid-package-json`, {
-        cwd: `${FIXTURES_DIR}/invalid-package-json`,
-        parents: true,
-      })
-
-      const invalidPackageJsonDir = `${fixtureDir}/invalid-package-json`
-      const srcPackageJson = `${invalidPackageJsonDir}/package.json.txt`
-      const distPackageJson = `${invalidPackageJsonDir}/package.json`
-
-      await rename(srcPackageJson, distPackageJson)
-      try {
-        await expect(() => zipNode('invalid-package-json', { opts: options, fixtureDir })).rejects.toThrow(
-          /(invalid JSON|package.json:1:1: error: Expected string but found "{")/,
-        )
-      } finally {
-        await rename(distPackageJson, srcPackageJson)
-      }
+      await expect(() => zipNode('invalid-package-json', { opts: options })).rejects.toThrow(
+        /(invalid JSON|package.json:1:1: error: Expected string but found "{")/,
+      )
     },
   )
 
@@ -516,16 +501,15 @@ describe('zip-it-and-ship-it', () => {
   // committed on Windows
   if (platform !== 'win32') {
     testMany('Can require symlinks', [...allBundleConfigs], async (options) => {
-      const fixtureDir = await tmpName({ prefix: 'zip-it-test' })
+      const fixtureTmpDir = await tmpName({ prefix: 'zip-it-test' })
       const opts = merge(options, {
-        basePath: `${fixtureDir}/symlinks`,
+        basePath: `${fixtureTmpDir}/symlinks`,
       })
-      await cpy('**', `${fixtureDir}/symlinks`, {
-        cwd: `${FIXTURES_DIR}/symlinks`,
-        parents: true,
+      await cpy('symlinks/**', `${fixtureTmpDir}/symlinks`, {
+        cwd: FIXTURES_DIR,
       })
 
-      const symlinkDir = `${fixtureDir}/symlinks/function`
+      const symlinkDir = `${fixtureTmpDir}/symlinks/function`
       const symlinkFile = `${symlinkDir}/file.js`
       const targetFile = `${symlinkDir}/target.js`
 
@@ -534,7 +518,7 @@ describe('zip-it-and-ship-it', () => {
       }
 
       try {
-        await zipNode('symlinks', { opts, fixtureDir })
+        await zipNode('symlinks', { opts, fixtureDir: fixtureTmpDir })
       } finally {
         await unlink(symlinkFile)
       }
@@ -583,7 +567,16 @@ describe('zip-it-and-ship-it', () => {
   )
 
   testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
-    await zipNode('many-dependencies', { opts: options })
+    const fixtureTmpDir = await tmpName({ prefix: 'zip-it-test' })
+    const opts = merge(options, {
+      basePath: fixtureTmpDir,
+    })
+
+    const basePath = `${fixtureTmpDir}/many-dependencies`
+    await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
+    await execa('npm', ['install', '--no-package-lock'], { cwd: basePath })
+
+    await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
   })
 
   testMany('Works with many function files', [...allBundleConfigs, 'bundler_none'], async (options) => {
@@ -646,7 +639,9 @@ describe('zip-it-and-ship-it', () => {
     const opts = merge(options, {
       basePath: fixtureDir,
     })
-    await cpy('**', `${fixtureDir}/no-package-json`, { cwd: `${FIXTURES_DIR}/no-package-json`, parents: true })
+    await cpy('no-package-json/**', `${fixtureDir}/no-package-json`, {
+      cwd: FIXTURES_DIR,
+    })
     await zipNode('no-package-json', { opts, length: 1, fixtureDir })
   })
 
