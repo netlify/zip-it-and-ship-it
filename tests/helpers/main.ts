@@ -1,6 +1,7 @@
 import { mkdir } from 'fs/promises'
-import { dirname, join, resolve, normalize } from 'path'
+import { dirname, resolve, normalize } from 'path'
 import { env, platform } from 'process'
+import { fileURLToPath } from 'url'
 
 import execa from 'execa'
 import { dir as getTmpDir } from 'tmp-promise'
@@ -12,8 +13,8 @@ import { listImports } from '../../src/runtimes/node/bundlers/zisi/list_imports.
 import type { FunctionResult } from '../../src/utils/format_result.js'
 import { ZipFunctionsOptions } from '../../src/zip.js'
 
-export const FIXTURES_DIR = join(__dirname, '../fixtures')
-export const BINARY_PATH = join(__dirname, '../../dist/bin.js')
+export const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url))
+export const BINARY_PATH = fileURLToPath(new URL('../../dist/bin.js', import.meta.url))
 
 interface ZipOptions {
   length?: number
