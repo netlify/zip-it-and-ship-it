@@ -15,7 +15,7 @@ afterEach(() => {
 })
 
 test('Prints user logs to stdout', () => {
-  const mockConsoleLog = stub()
+  const mockConsoleLog = vi.fn()
   console.log = mockConsoleLog
 
   const logger1 = getLogger(noopLogger, true)
