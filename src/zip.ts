@@ -14,7 +14,7 @@ import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { addArchiveSize } from './utils/archive_size.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
-import { getLogger, LogFunction } from './utils/logger'
+import { getLogger, LogFunction } from './utils/logger.js'
 import { nonNullable } from './utils/non_nullable.js'
 import { endTimer, roundTimerToMillisecs, startTimer } from './utils/timer.js'
 
