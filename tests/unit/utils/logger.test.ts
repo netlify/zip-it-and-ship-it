@@ -24,8 +24,8 @@ test('Prints user logs to stdout', () => {
   logger2.user('Hello with `debug: false`')
 
   expect(mockConsoleLog).toHaveBeenCalledTimes(2)
-  expect(mockConsoleLog.firstCall.firstArg).toBe('Hello with `debug: true`')
-  expect(mockConsoleLog.secondCall.firstArg).toBe('Hello with `debug: false`')
+  expect(mockConsoleLog).toHaveBeenNthCalledWith(1, 'Hello with `debug: true`')
+  expect(mockConsoleLog).toHaveBeenNthCalledWith(2, 'Hello with `debug: false`')
 })
 
 test('Prints system logs to the system logger provided', () => {
