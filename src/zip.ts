@@ -102,7 +102,7 @@ export const zipFunctions = async function (
         name: func.name,
         config: func.config,
         featureFlags: functionFlags,
-        durationMs
+        durationMs,
       }
 
       logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
