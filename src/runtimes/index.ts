@@ -3,7 +3,7 @@ import { extname, basename } from 'path'
 import { Config, getConfigForFunction, FunctionWithoutConfig } from '../config.js'
 import { defaultFlags, FeatureFlags } from '../feature_flags.js'
 import { FunctionSource } from '../function.js'
-import { FsCache } from '../utils/fs.js'
+import type { RuntimeCache } from '../utils/cache.js'
 
 import goRuntime from './go/index.js'
 import jsRuntime from './node/index.js'
@@ -27,19 +27,19 @@ type FunctionTupleWithoutConfig = [string, FunctionWithoutConfig]
  * (`remainingPaths`).
  */
 const findFunctionsInRuntime = async function ({
+  cache,
   dedupe = false,
   featureFlags,
-  fsCache,
   paths,
   runtime,
 }: {
+  cache: RuntimeCache
   dedupe: boolean
   featureFlags: FeatureFlags
-  fsCache: FsCache
   paths: string[]
   runtime: Runtime
 }) {
-  const functions = await runtime.findFunctionsInPaths({ featureFlags, fsCache, paths })
+  const functions = await runtime.findFunctionsInPaths({ cache, featureFlags, paths })
 
   // If `dedupe` is true, we use the function name (`filename`) as the map key,
   // so that `function-1.js` will overwrite `function-1.go`. Otherwise, we use
@@ -62,11 +62,6 @@ const findFunctionsInRuntime = async function ({
   return { functions: augmentedFunctions, remainingPaths }
 }
 
-// An object to cache filesystem operations. This allows different functions
-// to perform IO operations on the same file (i.e. getting its stats or its
-// contents) without duplicating work.
-const makeFsCache = (): FsCache => ({})
-
 // The order of this array determines the priority of the runtimes. If a path
 // is used by the first time, it won't be made available to the subsequent
 // runtimes.
@@ -78,14 +73,19 @@ const RUNTIMES = [jsRuntime, goRuntime, rustRuntime]
 export const getFunctionsFromPaths = async (
   paths: string[],
   {
+    cache,
     config,
     configFileDirectories = [],
     dedupe = false,
     featureFlags = defaultFlags,
-  }: { config?: Config; configFileDirectories?: string[]; dedupe?: boolean; featureFlags?: FeatureFlags } = {},
+  }: {
+    cache: RuntimeCache
+    config?: Config
+    configFileDirectories?: string[]
+    dedupe?: boolean
+    featureFlags?: FeatureFlags
+  },
 ): Promise<FunctionMap> => {
-  const fsCache = makeFsCache()
-
   // We cycle through the ordered array of runtimes, passing each one of them
   // through `findFunctionsInRuntime`. For each iteration, we collect all the
   // functions found plus the list of paths that still need to be evaluated,
@@ -93,9 +93,9 @@ export const getFunctionsFromPaths = async (
   const { functions } = await RUNTIMES.reduce(async (aggregate, runtime) => {
     const { functions: aggregateFunctions, remainingPaths: aggregatePaths } = await aggregate
     const { functions: runtimeFunctions, remainingPaths: runtimePaths } = await findFunctionsInRuntime({
+      cache,
       dedupe,
       featureFlags,
-      fsCache,
       paths: aggregatePaths,
       runtime,
     })
@@ -121,12 +121,10 @@ export const getFunctionsFromPaths = async (
  */
 export const getFunctionFromPath = async (
   path: string,
-  { config, featureFlags = defaultFlags }: { config?: Config; featureFlags?: FeatureFlags } = {},
+  { cache, config, featureFlags = defaultFlags }: { cache: RuntimeCache; config?: Config; featureFlags?: FeatureFlags },
 ): Promise<FunctionSource | undefined> => {
-  const fsCache = makeFsCache()
-
   for (const runtime of RUNTIMES) {
-    const func = await runtime.findFunctionInPath({ path, fsCache, featureFlags })
+    const func = await runtime.findFunctionInPath({ path, cache, featureFlags })
 
     if (func) {
       const functionConfig = await getConfigForFunction({ config, func: { ...func, runtime }, featureFlags })

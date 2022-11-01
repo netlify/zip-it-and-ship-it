@@ -1,8 +1,8 @@
-import { ArchiveFormat } from '../archive.js'
-import { FunctionConfig } from '../config.js'
-import { FeatureFlags } from '../feature_flags.js'
-import { FunctionSource, SourceFile } from '../function.js'
-import { FsCache } from '../utils/fs.js'
+import type { ArchiveFormat } from '../archive.js'
+import type { FunctionConfig } from '../config.js'
+import type { FeatureFlags } from '../feature_flags.js'
+import type { FunctionSource, SourceFile } from '../function.js'
+import type { RuntimeCache } from '../utils/cache.js'
 
 import type { NodeBundlerType } from './node/bundlers/types.js'
 import type { ISCValues } from './node/in_source_config/index.js'
@@ -14,14 +14,14 @@ export const enum RuntimeType {
 }
 
 export type FindFunctionsInPathsFunction = (args: {
+  cache: RuntimeCache
   featureFlags: FeatureFlags
-  fsCache: FsCache
   paths: string[]
 }) => Promise<SourceFile[]>
 
 export type FindFunctionInPathFunction = (args: {
+  cache: RuntimeCache
   featureFlags: FeatureFlags
-  fsCache: FsCache
   path: string
 }) => Promise<SourceFile | undefined>
 
@@ -51,6 +51,7 @@ export type ZipFunction = (
   args: {
     archiveFormat: ArchiveFormat
     basePath?: string
+    cache: RuntimeCache
     config: FunctionConfig
     destFolder: string
     featureFlags: FeatureFlags

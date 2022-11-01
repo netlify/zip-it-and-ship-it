@@ -11,8 +11,8 @@ export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, plugi
     includedFilesBasePath,
   )
   const dependencyPaths = await getSrcFilesForDependencies({
-    dependencies: externalNodeModules,
     basedir: srcDir,
+    dependencies: externalNodeModules,
     pluginsModulesPath,
   })
   const srcFiles = filterExcludedPaths(dependencyPaths, excludePatterns)
@@ -25,13 +25,13 @@ export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, plugi
 }
 
 const getSrcFilesForDependencies = async function ({
-  dependencies: dependencyNames,
   basedir,
+  dependencies: dependencyNames,
   state = getNewCache(),
   pluginsModulesPath,
 }: {
-  dependencies: string[]
   basedir: string
+  dependencies: string[]
   state?: TraversalCache
   pluginsModulesPath?: string
 }) {
