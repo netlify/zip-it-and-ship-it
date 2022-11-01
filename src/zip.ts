@@ -2,7 +2,6 @@ import { promises as fs } from 'fs'
 import { resolve } from 'path'
 
 import pMap from 'p-map'
-import prettyMilliseconds from 'pretty-ms'
 
 import { ArchiveFormat } from './archive.js'
 import { Config } from './config.js'
@@ -103,8 +102,7 @@ export const zipFunctions = async function (
         name: func.name,
         config: func.config,
         featureFlags: functionFlags,
-        // e.g 45m 48s 373ms
-        duration: prettyMilliseconds(durationMs, { formatSubMilliseconds: true }),
+        durationMs
       }
 
       logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
@@ -198,8 +196,7 @@ export const zipFunction = async function (
     name,
     config,
     featureFlags: functionFlags,
-    // e.g 45m 48s 373ms
-    duration: prettyMilliseconds(durationMs, { formatSubMilliseconds: true }),
+    durationMs,
   }
 
   logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
