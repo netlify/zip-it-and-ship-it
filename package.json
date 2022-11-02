@@ -91,7 +91,7 @@
     "@netlify/eslint-config-node": "^7.0.0",
     "@types/archiver": "^5.1.1",
     "@types/end-of-stream": "^1.4.1",
-    "@types/node": "^14.18.32",
+    "@types/node": "^18.0.0",
     "@types/normalize-path": "^3.0.0",
     "@types/resolve": "^1.20.2",
     "@types/semver": "^7.3.8",
