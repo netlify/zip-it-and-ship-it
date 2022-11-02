@@ -1,6 +1,6 @@
 import { join, relative } from 'path'
 
-import findUp from 'find-up'
+import { findUp } from 'find-up'
 
 const AUTO_PLUGINS_DIR = '.netlify/plugins/'
 
