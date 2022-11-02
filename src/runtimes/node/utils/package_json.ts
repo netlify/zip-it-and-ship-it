@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
 import { basename, join } from 'path'
 
-import findUp from 'find-up'
+import { findUp, findUpStop, pathExists } from 'find-up'
 
 export interface PackageJson {
   name?: string
@@ -28,11 +28,11 @@ export const getClosestPackageJson = async (resolveDir: string): Promise<Package
       // We stop traversing if we're about to leave the boundaries of any
       // node_modules directory.
       if (basename(directory) === 'node_modules') {
-        return findUp.stop
+        return findUpStop
       }
 
       const path = join(directory, 'package.json')
-      const hasPackageJson = await findUp.exists(path)
+      const hasPackageJson = await pathExists(path)
 
       return hasPackageJson ? path : undefined
     },

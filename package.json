@@ -65,7 +65,7 @@
     "es-module-lexer": "^1.0.0",
     "execa": "^5.0.0",
     "filter-obj": "^2.0.1",
-    "find-up": "^5.0.0",
+    "find-up": "^6.0.0",
     "glob": "^8.0.3",
     "is-builtin-module": "^3.1.0",
     "is-path-inside": "^3.0.3",
