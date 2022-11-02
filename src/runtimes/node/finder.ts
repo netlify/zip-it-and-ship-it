@@ -1,7 +1,7 @@
 import { Stats, promises as fs } from 'fs'
 import { join, dirname, basename, extname } from 'path'
 
-import locatePath from 'locate-path'
+import { locatePath } from 'locate-path'
 
 import { SourceFile } from '../../function.js'
 import { nonNullable } from '../../utils/non_nullable.js'
@@ -75,12 +75,12 @@ const getMainFile = async function (srcPath: string, filename: string, stat: Sta
       [
         join(srcPath, `${filename}.js`),
         join(srcPath, 'index.js'),
+        join(srcPath, `${filename}.ts`),
+        join(srcPath, 'index.ts'),
         join(srcPath, `${filename}.mjs`),
         join(srcPath, 'index.mjs'),
         join(srcPath, `${filename}.cjs`),
         join(srcPath, 'index.cjs'),
-        join(srcPath, `${filename}.ts`),
-        join(srcPath, 'index.ts'),
         join(srcPath, `${filename}.tsx`),
         join(srcPath, 'index.tsx'),
         join(srcPath, `${filename}.mts`),
@@ -88,7 +88,7 @@ const getMainFile = async function (srcPath: string, filename: string, stat: Sta
         join(srcPath, `${filename}.cts`),
         join(srcPath, 'index.cts'),
       ],
-      { type: 'file' },
+      { type: 'file', preserveOrder: false },
     )
   }
 
