@@ -14,9 +14,10 @@ import unixify from 'unixify'
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { Config } from '../src/config.js'
-import { NodeBundlerType } from '../src/main.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
+import { NodeBundlerType } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
+import { ModuleFormat } from '../src/runtimes/node/utils/module_format.js'
 import { shellUtils } from '../src/utils/shell.js'
 
 import {
@@ -2419,19 +2420,18 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
-  testMany('Provides require to esbuild if output format is ESM', ['bundler_esbuild'], async (options) => {
-    const length = 1
+  test('Provides require to esbuild if output format is ESM', async () => {
     const fixtureName = 'node-require-in-esm'
-    const opts = merge(options, {
+    const opts = {
       basePath: join(FIXTURES_DIR, fixtureName),
       config: {
         '*': {
-          nodeModuleFormat: 'esm',
+          nodeBundler: NodeBundlerType.ESBUILD,
+          nodeModuleFormat: ModuleFormat.ESM,
         },
       },
-    })
+    }
     const { files, tmpDir } = await zipFixture([join(fixtureName, 'functions')], {
-      length,
       opts,
     })
 
