@@ -2430,6 +2430,9 @@ describe('zip-it-and-ship-it', () => {
           nodeModuleFormat: ModuleFormat.ESM,
         },
       },
+      featureFlags: {
+        zisi_esbuild_require_banner: true,
+      },
     }
     const { files, tmpDir } = await zipFixture([join(fixtureName, 'functions')], {
       opts,

@@ -121,7 +121,8 @@ export const bundleJsFile = async function ({
 
   try {
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
-      banner: moduleFormat === ModuleFormat.ESM ? { js: esmJSBanner } : undefined,
+      banner:
+        moduleFormat === ModuleFormat.ESM && featureFlags.zisi_esbuild_require_banner ? { js: esmJSBanner } : undefined,
       bundle: true,
       entryPoints: [srcFile],
       external,
