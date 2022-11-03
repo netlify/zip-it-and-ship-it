@@ -20,6 +20,12 @@ export const defaultFlags: Record<string, boolean> = {
 
   // Load configuration from per-function JSON files.
   project_deploy_configuration_api_use_per_function_configuration_files: false,
+
+  // Enable runtime cache for NFT
+  zisi_nft_use_cache: false,
+
+  // Raise file IO limit for NFT
+  zisi_nft_higher_fileio_limit: false,
 }
 
 export type FeatureFlag = keyof typeof defaultFlags

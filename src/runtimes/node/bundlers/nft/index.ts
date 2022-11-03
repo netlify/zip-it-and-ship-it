@@ -99,9 +99,9 @@ const traceFilesAndTranspile = async function ({
     reasons,
   } = await nodeFileTrace([mainFile], {
     // Default is 1024. Allowing double the fileIO in parallel makes nft faster, but uses a little more memory.
-    fileIOConcurrency: 2048,
+    fileIOConcurrency: featureFlags.zisi_nft_higher_fileio_limit ? 2048 : 1024,
     base: basePath,
-    cache: cache.nftCache,
+    cache: featureFlags.zisi_nft_use_cache ? cache.nftCache : undefined,
     ignore: ignoreFunction,
     readFile: async (path: string) => {
       try {
