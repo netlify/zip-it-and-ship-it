@@ -1,7 +1,7 @@
 import { basename, dirname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
-import nftResolveDependency from '@vercel/nft/out/resolve-dependency.js'
+import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
@@ -12,11 +12,6 @@ import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/includ
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
-
-// @ts-expect-error vitest with esbuild already resolves the default export, whereas Node.js does not
-const resolveDependency: typeof nftResolveDependency.default = nftResolveDependency.default
-  ? nftResolveDependency.default
-  : nftResolveDependency
 
 // Paths that will be excluded from the tracing process.
 const ignore = ['node_modules/aws-sdk/**']
@@ -111,7 +106,7 @@ const traceFilesAndTranspile = async function ({
     },
     resolve: async (specifier, parent, ...args) => {
       try {
-        return await resolveDependency(specifier, parent, ...args)
+        return await resolveDependency.default(specifier, parent, ...args)
       } catch (error) {
         // If we get a `MODULE_NOT_FOUND` error for what appears to be a module
         // name, we try to resolve it a second time using `pluginsModulesPath`
@@ -119,7 +114,7 @@ const traceFilesAndTranspile = async function ({
         if (error.code === 'MODULE_NOT_FOUND' && pluginsModulesPath && appearsToBeModuleName(specifier)) {
           const newParent = join(pluginsModulesPath, basename(parent))
 
-          return await resolveDependency(specifier, newParent, ...args)
+          return await resolveDependency.default(specifier, newParent, ...args)
         }
 
         throw error
