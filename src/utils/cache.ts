@@ -7,7 +7,7 @@ export type ReaddirCache = Map<string, Promise<string[]>>
 interface NFTCache {
   fileCache: FileCache
   // nft actually sets even more properties on this object, but
-  // they do not have any relevance for use here
+  // they do not have any relevance for us here
 }
 
 export class RuntimeCache {
