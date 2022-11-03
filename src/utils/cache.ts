@@ -15,7 +15,7 @@ export class RuntimeCache {
   fileCache: FileCache
   // Cache for fs.lstat() calls
   lstatCache: LstatCache
-  // Cache fs.readdir calls
+  // Cache fs.readdir() calls
   readdirCache: ReaddirCache
   // NFT cache, which should not be used in zisi and only supplied to NFT
   // this cache shares the file cache with zisi
