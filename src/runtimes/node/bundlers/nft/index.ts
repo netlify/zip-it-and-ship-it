@@ -98,6 +98,7 @@ const traceFilesAndTranspile = async function ({
     esmFileList,
     reasons,
   } = await nodeFileTrace([mainFile], {
+    // Default is 1024. Allowing double the fileIO in parallel makes nft faster, but uses a little more memory.
     fileIOConcurrency: 2048,
     base: basePath,
     cache: cache.nftCache,
