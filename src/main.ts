@@ -6,7 +6,7 @@ import { FunctionSource } from './function.js'
 import { getFunctionFromPath, getFunctionsFromPaths } from './runtimes/index.js'
 import { findISCDeclarationsInPath, ISCValues } from './runtimes/node/in_source_config/index.js'
 import { GetSrcFilesFunction, RuntimeType } from './runtimes/runtime.js'
-import { createNewCache } from './utils/cache.js'
+import { RuntimeCache } from './utils/cache.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 
 export { zipFunction, zipFunctions } from './zip.js'
@@ -61,7 +61,7 @@ export const listFunctions = async function (
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
-  const cache = createNewCache()
+  const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, featureFlags })
   const functions = [...functionsMap.values()]
   const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions
@@ -79,7 +79,7 @@ export const listFunction = async function (
   }: { featureFlags?: FeatureFlags; config?: Config; parseISC?: boolean } = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
-  const cache = createNewCache()
+  const cache = new RuntimeCache()
   const func = await getFunctionFromPath(path, { cache, config, featureFlags })
 
   if (!func) {
@@ -99,7 +99,7 @@ export const listFunctionsFiles = async function (
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
-  const cache = createNewCache()
+  const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, featureFlags })
   const functions = [...functionsMap.values()]
   const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions

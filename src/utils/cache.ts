@@ -6,30 +6,27 @@ export type ReaddirCache = Map<string, Promise<string[]>>
 
 interface NFTCache {
   fileCache: FileCache
-  statCache: Map<string, unknown>
-  symlinkCache: Map<string, unknown>
-  analysisCache: Map<string, unknown>
+  // nft actually sets even more properties on this object, but
+  // they do not have any relevance for use here
 }
 
-export interface RuntimeCache {
-  // file content
+export class RuntimeCache {
+  // Cache for fs.readFile() calls
   fileCache: FileCache
+  // Cache for fs.lstat() calls
   lstatCache: LstatCache
-  readDirCache: ReaddirCache
+  // Cache fs.readdir calls
+  readdirCache: ReaddirCache
   // NFT cache, which should not be used in zisi and only supplied to NFT
   // this cache shares the file cache with zisi
-  nftCache: Partial<NFTCache>
-}
+  nftCache: NFTCache
 
-export const createNewCache = (): RuntimeCache => {
-  const cache: RuntimeCache = Object.create(null)
+  constructor() {
+    this.fileCache = new Map()
+    this.lstatCache = new Map()
+    this.readdirCache = new Map()
 
-  cache.fileCache = new Map()
-  cache.lstatCache = new Map()
-  cache.readDirCache = new Map()
-
-  cache.nftCache = Object.create(null)
-  cache.nftCache.fileCache = cache.fileCache
-
-  return cache
+    this.nftCache = Object.create(null)
+    this.nftCache.fileCache = this.fileCache
+  }
 }

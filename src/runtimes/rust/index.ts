@@ -26,7 +26,7 @@ const detectRustFunction = async ({ cache, path }: { cache: RuntimeCache; path: 
     return
   }
 
-  const files = await cachedReaddir(cache.readDirCache, path)
+  const files = await cachedReaddir(cache.readdirCache, path)
   const hasCargoManifest = files.includes(MANIFEST_NAME)
 
   if (!hasCargoManifest) {

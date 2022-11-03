@@ -11,7 +11,7 @@ import { createManifest } from './manifest.js'
 import { getFunctionsFromPaths } from './runtimes/index.js'
 import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { addArchiveSize } from './utils/archive_size.js'
-import { createNewCache } from './utils/cache.js'
+import { RuntimeCache } from './utils/cache.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 import { nonNullable } from './utils/non_nullable.js'
@@ -58,7 +58,7 @@ export const zipFunctions = async function (
 ) {
   validateArchiveFormat(archiveFormat)
 
-  const cache = createNewCache()
+  const cache = new RuntimeCache()
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
@@ -134,7 +134,7 @@ export const zipFunction = async function (
 
   const featureFlags = getFlags(inputFeatureFlags)
   const srcPath = resolve(relativeSrcPath)
-  const cache = createNewCache()
+  const cache = new RuntimeCache()
   const functions = await getFunctionsFromPaths([srcPath], { cache, config: inputConfig, dedupe: true, featureFlags })
 
   if (functions.size === 0) {

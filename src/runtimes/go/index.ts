@@ -33,7 +33,7 @@ const detectGoFunction = async ({ cache, path }: { cache: RuntimeCache; path: st
 
   const directoryName = basename(path)
 
-  const files = await cachedReaddir(cache.readDirCache, path)
+  const files = await cachedReaddir(cache.readdirCache, path)
   const mainFileName = [`${directoryName}.go`, 'main.go'].find((name) => files.includes(name))
 
   if (mainFileName === undefined) {
