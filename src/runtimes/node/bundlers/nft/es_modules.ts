@@ -162,6 +162,7 @@ const transpileESM = async ({
   reasons: NodeFileTraceReasons
   name: string
 }) => {
+  // Used for memoizing the check for whether a path should be transpiled.
   const shouldCompileCache: Map<string, boolean> = new Map()
   const pathsToTranspile = [...esmPaths].filter((path) => shouldTranspile(path, shouldCompileCache, esmPaths, reasons))
   const pathsToTranspileSet = new Set(pathsToTranspile)
