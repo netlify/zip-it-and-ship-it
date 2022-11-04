@@ -77,7 +77,6 @@
     "p-map": "^4.0.0",
     "path-exists": "^5.0.0",
     "precinct": "^9.0.1",
-    "read-package-json-fast": "^2.0.2",
     "require-package-name": "^2.0.1",
     "resolve": "^2.0.0-next.1",
     "semver": "^7.0.0",

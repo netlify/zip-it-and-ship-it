@@ -3,6 +3,7 @@ import type { Message } from '@netlify/esbuild'
 import type { FunctionConfig } from '../../../config.js'
 import type { FeatureFlag, FeatureFlags } from '../../../feature_flags.js'
 import type { FunctionSource } from '../../../function.js'
+import type { RuntimeCache } from '../../../utils/cache.js'
 import type { ModuleFormat } from '../utils/module_format.js'
 
 export const enum NodeBundlerType {
@@ -23,6 +24,7 @@ export type NativeNodeModules = Record<string, Record<string, string | undefined
 export type BundleFunction = (
   args: {
     basePath?: string
+    cache: RuntimeCache
     config: FunctionConfig
     featureFlags: Record<FeatureFlag, boolean>
     pluginsModulesPath?: string

@@ -5,7 +5,8 @@ import nftResolveDependency from '@vercel/nft/out/resolve-dependency.js'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
-import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
+import type { RuntimeCache } from '../../../../utils/cache.js'
+import { cachedReadFile } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
@@ -25,6 +26,7 @@ const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
 const bundle: BundleFunction = async ({
   basePath,
+  cache,
   config,
   featureFlags,
   mainFile,
@@ -43,6 +45,7 @@ const bundle: BundleFunction = async ({
     rewrites,
   } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
+    cache,
     config,
     featureFlags,
     mainFile,
@@ -75,6 +78,7 @@ const ignoreFunction = (path: string) => {
 
 const traceFilesAndTranspile = async function ({
   basePath,
+  cache,
   config,
   featureFlags,
   mainFile,
@@ -82,23 +86,26 @@ const traceFilesAndTranspile = async function ({
   name,
 }: {
   basePath?: string
+  cache: RuntimeCache
   config: FunctionConfig
   featureFlags: FeatureFlags
   mainFile: string
   pluginsModulesPath?: string
   name: string
 }) {
-  const fsCache: FsCache = {}
   const {
     fileList: dependencyPaths,
     esmFileList,
     reasons,
   } = await nodeFileTrace([mainFile], {
+    // Default is 1024. Allowing double the fileIO in parallel makes nft faster, but uses a little more memory.
+    fileIOConcurrency: featureFlags.zisi_nft_higher_fileio_limit ? 2048 : 1024,
     base: basePath,
+    cache: featureFlags.zisi_nft_use_cache ? cache.nftCache : undefined,
     ignore: ignoreFunction,
     readFile: async (path: string) => {
       try {
-        const source = (await cachedReadFile(fsCache, path, 'utf8')) as string
+        const source = await cachedReadFile(cache.fileCache, path)
 
         return source
       } catch (error) {
@@ -131,10 +138,10 @@ const traceFilesAndTranspile = async function ({
   )
   const { moduleFormat, rewrites } = await processESM({
     basePath,
+    cache,
     config,
     esmPaths: esmFileList,
     featureFlags,
-    fsCache,
     mainFile,
     reasons,
     name,

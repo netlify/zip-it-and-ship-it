@@ -9,7 +9,8 @@ import pMap from 'p-map'
 
 import { startZip, addZipFile, addZipContent, endZip, ZipArchive } from '../../../archive.js'
 import type { FeatureFlags } from '../../../feature_flags.js'
-import { mkdirAndWriteFile } from '../../../utils/fs.js'
+import type { RuntimeCache } from '../../../utils/cache.js'
+import { cachedLstat, mkdirAndWriteFile } from '../../../utils/fs.js'
 
 import { getEntryFile } from './entry_file.js'
 import { getFileExtensionForFormat, ModuleFormat } from './module_format.js'
@@ -27,6 +28,7 @@ export type ArchiveFormat = 'none' | 'zip'
 interface ZipNodeParameters {
   aliases?: Map<string, string>
   basePath: string
+  cache: RuntimeCache
   destFolder: string
   extension: string
   featureFlags: FeatureFlags
@@ -94,6 +96,7 @@ const createDirectory = async function ({
 const createZipArchive = async function ({
   aliases,
   basePath,
+  cache,
   destFolder,
   extension,
   featureFlags,
@@ -128,7 +131,7 @@ const createZipArchive = async function ({
     addEntryFileToZip(archive, entryFile, basename(entryFilePath))
   }
 
-  const srcFilesInfos = await Promise.all(srcFiles.map(addStat))
+  const srcFilesInfos = await Promise.all(srcFiles.map((file) => addStat(cache, file)))
 
   // We ensure this is not async, so that the archive's checksum is
   // deterministic. Otherwise it depends on the order the files were added.
@@ -166,8 +169,8 @@ const addEntryFileToZip = function (archive: ZipArchive, contents: string, filen
   addZipContent(archive, contentBuffer, filename)
 }
 
-const addStat = async function (srcFile: string) {
-  const stat = await fs.lstat(srcFile)
+const addStat = async function (cache: RuntimeCache, srcFile: string) {
+  const stat = await cachedLstat(cache.lstatCache, srcFile)
 
   return { srcFile, stat }
 }

@@ -4,15 +4,16 @@ import { NodeFileTraceReasons } from '@vercel/nft'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
-import { cachedReadFile, FsCache } from '../../../../utils/fs.js'
+import type { RuntimeCache } from '../../../../utils/cache.js'
+import { cachedReadFile } from '../../../../utils/fs.js'
 import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
 
 import { transpile } from './transpile.js'
 
-const getPatchedESMPackages = async (packages: string[], fsCache: FsCache) => {
-  const patchedPackages = await Promise.all(packages.map((path) => patchESMPackage(path, fsCache)))
+const getPatchedESMPackages = async (packages: string[], cache: RuntimeCache) => {
+  const patchedPackages = await Promise.all(packages.map((path) => patchESMPackage(path, cache)))
   const patchedPackagesMap = new Map<string, string>()
 
   packages.forEach((packagePath, index) => {
@@ -37,8 +38,8 @@ const isEntrypointESM = ({
   return entrypointIsESM
 }
 
-const patchESMPackage = async (path: string, fsCache: FsCache) => {
-  const file = (await cachedReadFile(fsCache, path, 'utf8')) as string
+const patchESMPackage = async (path: string, cache: RuntimeCache) => {
+  const file = await cachedReadFile(cache.fileCache, path)
   const packageJson: PackageJson = JSON.parse(file)
   const patchedPackageJson = {
     ...packageJson,
@@ -50,19 +51,19 @@ const patchESMPackage = async (path: string, fsCache: FsCache) => {
 
 export const processESM = async ({
   basePath,
+  cache,
   config,
   esmPaths,
   featureFlags,
-  fsCache,
   mainFile,
   reasons,
   name,
 }: {
   basePath: string | undefined
+  cache: RuntimeCache
   config: FunctionConfig
   esmPaths: Set<string>
   featureFlags: FeatureFlags
-  fsCache: FsCache
   mainFile: string
   reasons: NodeFileTraceReasons
   name: string
@@ -94,7 +95,7 @@ export const processESM = async ({
     }
   }
 
-  const rewrites = await transpileESM({ basePath, config, esmPaths, fsCache, reasons, name })
+  const rewrites = await transpileESM({ basePath, cache, config, esmPaths, reasons, name })
 
   return {
     moduleFormat: ModuleFormat.COMMONJS,
@@ -148,21 +149,22 @@ const shouldTranspile = (
 
 const transpileESM = async ({
   basePath,
+  cache,
   config,
   esmPaths,
-  fsCache,
   reasons,
   name,
 }: {
   basePath: string | undefined
+  cache: RuntimeCache
   config: FunctionConfig
   esmPaths: Set<string>
-  fsCache: FsCache
   reasons: NodeFileTraceReasons
   name: string
 }) => {
-  const cache: Map<string, boolean> = new Map()
-  const pathsToTranspile = [...esmPaths].filter((path) => shouldTranspile(path, cache, esmPaths, reasons))
+  // Used for memoizing the check for whether a path should be transpiled.
+  const shouldCompileCache: Map<string, boolean> = new Map()
+  const pathsToTranspile = [...esmPaths].filter((path) => shouldTranspile(path, shouldCompileCache, esmPaths, reasons))
   const pathsToTranspileSet = new Set(pathsToTranspile)
   const packageJsonPaths: string[] = [...reasons.entries()]
     .filter(([path, reason]) => {
@@ -175,7 +177,7 @@ const transpileESM = async ({
       return needsPatch
     })
     .map(([path]) => (basePath ? resolve(basePath, path) : resolve(path)))
-  const rewrites = await getPatchedESMPackages(packageJsonPaths, fsCache)
+  const rewrites = await getPatchedESMPackages(packageJsonPaths, cache)
 
   await Promise.all(
     pathsToTranspile.map(async (path) => {

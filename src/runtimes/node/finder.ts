@@ -1,9 +1,10 @@
-import { Stats, promises as fs } from 'fs'
+import type { Stats } from 'fs'
 import { join, dirname, basename, extname } from 'path'
 
 import { locatePath } from 'locate-path'
 
 import { SourceFile } from '../../function.js'
+import { cachedLstat } from '../../utils/fs.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { FindFunctionsInPathsFunction, FindFunctionInPathFunction } from '../runtime.js'
 
@@ -21,8 +22,8 @@ const sortByExtension = (fA: SourceFile, fB: SourceFile) => {
   return indexB - indexA
 }
 
-export const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ paths, fsCache, featureFlags }) {
-  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ path, fsCache, featureFlags })))
+export const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ cache, featureFlags, paths }) {
+  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ cache, featureFlags, path })))
 
   // It's fine to mutate the array since its scope is local to this function.
   const sortedFunctions = functions.filter(nonNullable).sort((fA, fB) => {
@@ -46,14 +47,14 @@ export const findFunctionsInPaths: FindFunctionsInPathsFunction = async function
   return sortedFunctions
 }
 
-export const findFunctionInPath: FindFunctionInPathFunction = async function ({ path: srcPath }) {
+export const findFunctionInPath: FindFunctionInPathFunction = async function ({ cache, path: srcPath }) {
   const filename = basename(srcPath)
 
   if (filename === 'node_modules') {
     return
   }
 
-  const stat = await fs.lstat(srcPath)
+  const stat = await cachedLstat(cache.lstatCache, srcPath)
   const mainFile = await getMainFile(srcPath, filename, stat)
 
   if (mainFile === undefined) {

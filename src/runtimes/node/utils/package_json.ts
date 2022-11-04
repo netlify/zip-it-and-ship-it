@@ -68,18 +68,18 @@ export const getPackageJsonIfAvailable = async (srcDir: string): Promise<Package
   }
 }
 
-const readPackageJson = async (path: string) => {
+export const readPackageJson = async (path: string) => {
   try {
     // The path depends on the user's build, i.e. must be dynamic
     const packageJson = JSON.parse(await fs.readFile(path, 'utf8'))
 
-    return sanitisePackageJson(packageJson)
+    return sanitizePackageJson(packageJson)
   } catch (error) {
     throw new Error(`${path} is invalid JSON: ${error.message}`)
   }
 }
 
-const sanitiseFiles = (files: unknown): string[] | undefined => {
+const sanitizeFiles = (files: unknown): string[] | undefined => {
   if (!Array.isArray(files)) {
     return undefined
   }
@@ -87,7 +87,7 @@ const sanitiseFiles = (files: unknown): string[] | undefined => {
   return files.filter((file) => typeof file === 'string')
 }
 
-export const sanitisePackageJson = (packageJson: Record<string, unknown>): PackageJson => ({
+export const sanitizePackageJson = (packageJson: Record<string, unknown>): PackageJson => ({
   ...packageJson,
-  files: sanitiseFiles(packageJson.files),
+  files: sanitizeFiles(packageJson.files),
 })

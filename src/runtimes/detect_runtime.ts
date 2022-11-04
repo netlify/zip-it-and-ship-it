@@ -1,8 +1,6 @@
-import type { Buffer } from 'buffer'
+import { readFile } from 'fs/promises'
 
 import { detect, Runtime as BinaryRuntime, Arch, Platform, BinaryInfo } from '@netlify/binary-info'
-
-import { cachedReadFile, FsCache } from '../utils/fs.js'
 
 import { RuntimeType } from './runtime.js'
 
@@ -21,20 +19,10 @@ The binary needs to be built for Linux/Amd64, but it was built for ${Platform[bi
 }
 
 // Try to guess the runtime by inspecting the binary file.
-export const detectBinaryRuntime = async function ({
-  fsCache,
-  path,
-}: {
-  fsCache: FsCache
-  path: string
-}): Promise<RuntimeType | undefined> {
+export const detectBinaryRuntime = async function ({ path }: { path: string }): Promise<RuntimeType | undefined> {
   try {
-    const buffer = await cachedReadFile(fsCache, path)
-
-    // We're using the Type Assertion because the `cachedReadFile` abstraction
-    // loses part of the return type information. We can safely say it's a
-    // Buffer in this case because we're not specifying an encoding.
-    const binaryInfo = detect(buffer as Buffer)
+    const fileContents = await readFile(path)
+    const binaryInfo = detect(fileContents)
 
     if (!isValidFunctionBinary(binaryInfo)) {
       return warnIncompatibleBinary(path, binaryInfo)

@@ -4,7 +4,8 @@ import { basename, dirname, extname, join } from 'path'
 import { copyFile } from 'cp-file'
 
 import { SourceFile } from '../../function.js'
-import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs.js'
+import type { RuntimeCache } from '../../utils/cache.js'
+import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
@@ -23,8 +24,8 @@ interface GoBinary {
   stat: Stats
 }
 
-const detectGoFunction = async ({ fsCache, path }: { fsCache: FsCache; path: string }) => {
-  const stat = await cachedLstat(fsCache, path)
+const detectGoFunction = async ({ cache, path }: { cache: RuntimeCache; path: string }) => {
+  const stat = await cachedLstat(cache.lstatCache, path)
 
   if (!stat.isDirectory()) {
     return
@@ -32,9 +33,7 @@ const detectGoFunction = async ({ fsCache, path }: { fsCache: FsCache; path: str
 
   const directoryName = basename(path)
 
-  // @ts-expect-error TODO: The `makeCachedFunction` abstraction is causing the
-  // return value of `readdir` to be incorrectly typed.
-  const files = (await cachedReaddir(fsCache, path)) as string[]
+  const files = await cachedReaddir(cache.readdirCache, path)
   const mainFileName = [`${directoryName}.go`, 'main.go'].find((name) => files.includes(name))
 
   if (mainFileName === undefined) {
@@ -44,28 +43,28 @@ const detectGoFunction = async ({ fsCache, path }: { fsCache: FsCache; path: str
   return mainFileName
 }
 
-const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ featureFlags, fsCache, paths }) {
-  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ featureFlags, fsCache, path })))
+const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ cache, featureFlags, paths }) {
+  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ cache, featureFlags, path })))
 
   return functions.filter(nonNullable)
 }
 
-const findFunctionInPath: FindFunctionInPathFunction = async function ({ fsCache, path }) {
-  const runtime = await detectBinaryRuntime({ fsCache, path })
+const findFunctionInPath: FindFunctionInPathFunction = async function ({ cache, path }) {
+  const runtime = await detectBinaryRuntime({ path })
 
   if (runtime === RuntimeType.GO) {
-    return processBinary({ fsCache, path })
+    return processBinary({ cache, path })
   }
 
-  const goSourceFile = await detectGoFunction({ fsCache, path })
+  const goSourceFile = await detectGoFunction({ cache, path })
 
   if (goSourceFile) {
-    return processSource({ fsCache, mainFile: goSourceFile, path })
+    return processSource({ cache, mainFile: goSourceFile, path })
   }
 }
 
-const processBinary = async ({ fsCache, path }: { fsCache: FsCache; path: string }): Promise<SourceFile> => {
-  const stat = (await cachedLstat(fsCache, path)) as Stats
+const processBinary = async ({ cache, path }: { cache: RuntimeCache; path: string }): Promise<SourceFile> => {
+  const stat = await cachedLstat(cache.lstatCache, path)
   const extension = extname(path)
   const filename = basename(path)
   const name = basename(path, extname(path))
@@ -82,11 +81,11 @@ const processBinary = async ({ fsCache, path }: { fsCache: FsCache; path: string
 }
 
 const processSource = async ({
-  fsCache,
+  cache,
   mainFile,
   path,
 }: {
-  fsCache: FsCache
+  cache: RuntimeCache
   mainFile: string
   path: string
 }): Promise<SourceFile> => {
@@ -94,7 +93,7 @@ const processSource = async ({
   // the `FunctionSource` interface. We should revisit whether `stat` should be
   // part of that interface in the first place, or whether we could compute it
   // downstream when needed (maybe using the FS cache as an optimisation).
-  const stat = (await cachedLstat(fsCache, path)) as Stats
+  const stat = (await cachedLstat(cache.lstatCache, path)) as Stats
   const filename = basename(path)
   const extension = extname(mainFile)
   const name = basename(path, extname(path))

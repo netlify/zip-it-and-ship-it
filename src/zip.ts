@@ -11,6 +11,7 @@ import { createManifest } from './manifest.js'
 import { getFunctionsFromPaths } from './runtimes/index.js'
 import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { addArchiveSize } from './utils/archive_size.js'
+import { RuntimeCache } from './utils/cache.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 import { nonNullable } from './utils/non_nullable.js'
@@ -57,10 +58,17 @@ export const zipFunctions = async function (
 ) {
   validateArchiveFormat(archiveFormat)
 
+  const cache = new RuntimeCache()
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
-  const functions = await getFunctionsFromPaths(paths, { config, configFileDirectories, dedupe: true, featureFlags })
+  const functions = await getFunctionsFromPaths(paths, {
+    cache,
+    config,
+    configFileDirectories,
+    dedupe: true,
+    featureFlags,
+  })
   const results = await pMap(
     functions.values(),
     async (func) => {
@@ -75,6 +83,7 @@ export const zipFunctions = async function (
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
         basePath,
+        cache,
         config: func.config,
         destFolder,
         extension: func.extension,
@@ -125,7 +134,8 @@ export const zipFunction = async function (
 
   const featureFlags = getFlags(inputFeatureFlags)
   const srcPath = resolve(relativeSrcPath)
-  const functions = await getFunctionsFromPaths([srcPath], { config: inputConfig, dedupe: true, featureFlags })
+  const cache = new RuntimeCache()
+  const functions = await getFunctionsFromPaths([srcPath], { cache, config: inputConfig, dedupe: true, featureFlags })
 
   if (functions.size === 0) {
     return
@@ -154,6 +164,7 @@ export const zipFunction = async function (
   const zipResult = await runtime.zipFunction({
     archiveFormat,
     basePath,
+    cache,
     config,
     destFolder,
     extension,
