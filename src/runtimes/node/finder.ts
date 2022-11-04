@@ -74,6 +74,8 @@ const getMainFile = async function (srcPath: string, filename: string, stat: Sta
   if (stat.isDirectory()) {
     return await locatePath(
       [
+        // The order of these declarations is important, so that we always bundle the same way
+        // even if multiple files are found
         join(srcPath, `${filename}.js`),
         join(srcPath, 'index.js'),
         join(srcPath, `${filename}.ts`),
@@ -89,7 +91,7 @@ const getMainFile = async function (srcPath: string, filename: string, stat: Sta
         join(srcPath, `${filename}.cts`),
         join(srcPath, 'index.cts'),
       ],
-      { type: 'file', preserveOrder: false },
+      { type: 'file' },
     )
   }
 

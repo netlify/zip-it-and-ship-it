@@ -73,7 +73,7 @@ export const makeTestMany = <M extends string>(
   const testFns = ['fails', 'only', 'concurrent', 'skip', 'todo']
 
   testFns.forEach((fn) => {
-    testBundlers[fn] = ((...args) => testBundlers(...args, test[fn])) as TestMany<M>
+    testBundlers[fn] = ((...args) => testBundlers(...args, testAPI[fn])) as TestMany<M>
   })
 
   return testBundlers as TestManyAPI<M | `todo:${M}`>
