@@ -32,6 +32,7 @@ const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
 const zipFunction: ZipFunction = async function ({
   archiveFormat,
   basePath,
+  cache,
   config = {},
   destFolder,
   extension,
@@ -79,6 +80,7 @@ const zipFunction: ZipFunction = async function ({
     srcFiles,
   } = await bundler.bundle({
     basePath,
+    cache,
     config,
     extension,
     featureFlags,
@@ -101,6 +103,7 @@ const zipFunction: ZipFunction = async function ({
     aliases,
     archiveFormat,
     basePath: finalBasePath,
+    cache,
     destFolder,
     extension,
     featureFlags,

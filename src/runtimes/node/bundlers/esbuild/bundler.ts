@@ -108,8 +108,21 @@ export const bundleJsFile = async function ({
   const outExtension =
     moduleFormat === ModuleFormat.ESM ? { [ModuleFileExtension.JS]: ModuleFileExtension.MJS } : undefined
 
+  // We add this banner so that calls to require() still work in ESM modules, especially when importing node built-ins
+  // We have to do this until this is fixed in esbuild: https://github.com/evanw/esbuild/pull/2067
+  const esmJSBanner = `
+    import {createRequire as ___nfyCreateRequire} from "module";
+    import {fileURLToPath as ___nfyFileURLToPath} from "url";
+    import {dirname as ___nfyPathDirname} from "path";
+    let __filename=___nfyFileURLToPath(import.meta.url);
+    let __dirname=___nfyPathDirname(___nfyFileURLToPath(import.meta.url));
+    let require=___nfyCreateRequire(import.meta.url);
+  `
+
   try {
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
+      banner:
+        moduleFormat === ModuleFormat.ESM && featureFlags.zisi_esbuild_require_banner ? { js: esmJSBanner } : undefined,
       bundle: true,
       entryPoints: [srcFile],
       external,

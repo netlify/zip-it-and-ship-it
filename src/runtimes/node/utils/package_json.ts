@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
 import { basename, join } from 'path'
 
-import findUp from 'find-up'
+import { findUp, findUpStop, pathExists } from 'find-up'
 
 export interface PackageJson {
   name?: string
@@ -28,11 +28,11 @@ export const getClosestPackageJson = async (resolveDir: string): Promise<Package
       // We stop traversing if we're about to leave the boundaries of any
       // node_modules directory.
       if (basename(directory) === 'node_modules') {
-        return findUp.stop
+        return findUpStop
       }
 
       const path = join(directory, 'package.json')
-      const hasPackageJson = await findUp.exists(path)
+      const hasPackageJson = await pathExists(path)
 
       return hasPackageJson ? path : undefined
     },
@@ -68,18 +68,18 @@ export const getPackageJsonIfAvailable = async (srcDir: string): Promise<Package
   }
 }
 
-const readPackageJson = async (path: string) => {
+export const readPackageJson = async (path: string) => {
   try {
     // The path depends on the user's build, i.e. must be dynamic
     const packageJson = JSON.parse(await fs.readFile(path, 'utf8'))
 
-    return sanitisePackageJson(packageJson)
+    return sanitizePackageJson(packageJson)
   } catch (error) {
     throw new Error(`${path} is invalid JSON: ${error.message}`)
   }
 }
 
-const sanitiseFiles = (files: unknown): string[] | undefined => {
+const sanitizeFiles = (files: unknown): string[] | undefined => {
   if (!Array.isArray(files)) {
     return undefined
   }
@@ -87,7 +87,7 @@ const sanitiseFiles = (files: unknown): string[] | undefined => {
   return files.filter((file) => typeof file === 'string')
 }
 
-export const sanitisePackageJson = (packageJson: Record<string, unknown>): PackageJson => ({
+export const sanitizePackageJson = (packageJson: Record<string, unknown>): PackageJson => ({
   ...packageJson,
-  files: sanitiseFiles(packageJson.files),
+  files: sanitizeFiles(packageJson.files),
 })

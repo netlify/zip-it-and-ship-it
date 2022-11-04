@@ -1,11 +1,11 @@
 import { basename, join, relative } from 'path'
 
 import type { Plugin } from '@netlify/esbuild'
-import findUp from 'find-up'
+import { findUp, findUpStop, pathExists } from 'find-up'
 import normalizePath from 'normalize-path'
-import readPackageJson from 'read-package-json-fast'
 
 import { parseExpression } from '../../parser/index.js'
+import { readPackageJson } from '../../utils/package_json.js'
 
 type PackageCache = Map<string, Promise<string | undefined>>
 
@@ -75,11 +75,11 @@ const getPackageName = async ({ resolveDir, srcDir }: { resolveDir: string; srcD
       // We stop traversing if we're about to leave the boundaries of the
       // function directory or any node_modules directory.
       if (directory === srcDir || basename(directory) === 'node_modules') {
-        return findUp.stop
+        return findUpStop
       }
 
       const path = join(directory, 'package.json')
-      const hasPackageJson = await findUp.exists(path)
+      const hasPackageJson = await pathExists(path)
 
       return hasPackageJson ? path : undefined
     },
@@ -102,11 +102,14 @@ const getPackageNameCached = ({
   resolveDir: string
   srcDir: string
 }) => {
-  if (!cache.has(resolveDir)) {
-    cache.set(resolveDir, getPackageName({ resolveDir, srcDir }))
+  let result = cache.get(resolveDir)
+
+  if (result === undefined) {
+    result = getPackageName({ resolveDir, srcDir })
+    cache.set(resolveDir, result)
   }
 
-  return cache.get(resolveDir)
+  return result
 }
 
 const getShimContents = ({

@@ -14,9 +14,10 @@ import unixify from 'unixify'
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { Config } from '../src/config.js'
-import { NodeBundlerType } from '../src/main.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
+import { NodeBundlerType } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
+import { ModuleFormat } from '../src/runtimes/node/utils/module_format.js'
 import { shellUtils } from '../src/utils/shell.js'
 
 import {
@@ -2418,4 +2419,34 @@ describe('zip-it-and-ship-it', () => {
       }
     },
   )
+
+  test('Provides require to esbuild if output format is ESM', async () => {
+    const fixtureName = 'node-require-in-esm'
+    const opts = {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          nodeBundler: NodeBundlerType.ESBUILD,
+          nodeModuleFormat: ModuleFormat.ESM,
+        },
+      },
+      featureFlags: {
+        zisi_esbuild_require_banner: true,
+      },
+    }
+    const { files, tmpDir } = await zipFixture([join(fixtureName, 'functions')], {
+      opts,
+    })
+
+    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+    const funcFile = join(tmpDir, `func1.zip_out/func1.mjs`)
+
+    // We have to use execa because when we simply import the file here vitest does provide a `require` function
+    // and therefore we do not trigger the problem
+    const result = await execa.node(funcFile, [], { extendEnv: false, reject: false })
+
+    expect(result.stderr).not.toContain('Dynamic require of "path" is not supported')
+    expect(result).not.toBeInstanceOf(Error)
+  })
 })

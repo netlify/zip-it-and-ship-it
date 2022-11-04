@@ -110,6 +110,10 @@ const parseFile = async (path: string) => {
   const ast = parse(code, {
     plugins: ['typescript'],
     sourceType: 'module',
+    // disable tokens, ranges and comments for performance and we do not use them
+    tokens: false,
+    ranges: false,
+    attachComment: false,
   })
 
   return ast.program

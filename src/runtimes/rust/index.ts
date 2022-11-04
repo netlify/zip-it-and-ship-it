@@ -3,7 +3,8 @@ import { join, extname, dirname, basename } from 'path'
 
 import { FeatureFlags } from '../../feature_flags.js'
 import { SourceFile } from '../../function.js'
-import { cachedLstat, cachedReaddir, FsCache } from '../../utils/fs.js'
+import type { RuntimeCache } from '../../utils/cache.js'
+import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
@@ -18,16 +19,14 @@ import {
 import { build } from './builder.js'
 import { MANIFEST_NAME } from './constants.js'
 
-const detectRustFunction = async ({ fsCache, path }: { fsCache: FsCache; path: string }) => {
-  const stat = await cachedLstat(fsCache, path)
+const detectRustFunction = async ({ cache, path }: { cache: RuntimeCache; path: string }) => {
+  const stat = await cachedLstat(cache.lstatCache, path)
 
   if (!stat.isDirectory()) {
     return
   }
 
-  // @ts-expect-error TODO: The `makeCachedFunction` abstraction is causing the
-  // return value of `readdir` to be incorrectly typed.
-  const files = (await cachedReaddir(fsCache, path)) as string[]
+  const files = await cachedReaddir(cache.readdirCache, path)
   const hasCargoManifest = files.includes(MANIFEST_NAME)
 
   if (!hasCargoManifest) {
@@ -37,7 +36,7 @@ const detectRustFunction = async ({ fsCache, path }: { fsCache: FsCache; path: s
   const mainFilePath = join(path, 'src', 'main.rs')
 
   try {
-    const mainFile = await cachedLstat(fsCache, mainFilePath)
+    const mainFile = await cachedLstat(cache.lstatCache, mainFilePath)
 
     if (mainFile.isFile()) {
       return mainFilePath
@@ -48,39 +47,39 @@ const detectRustFunction = async ({ fsCache, path }: { fsCache: FsCache; path: s
 }
 
 const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({
+  cache,
   featureFlags,
-  fsCache,
   paths,
 }: {
+  cache: RuntimeCache
   featureFlags: FeatureFlags
-  fsCache: FsCache
   paths: string[]
 }) {
-  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ path, featureFlags, fsCache })))
+  const functions = await Promise.all(paths.map((path) => findFunctionInPath({ cache, featureFlags, path })))
 
   return functions.filter(nonNullable)
 }
 
-const findFunctionInPath: FindFunctionInPathFunction = async function ({ path, featureFlags, fsCache }) {
-  const runtime = await detectBinaryRuntime({ fsCache, path })
+const findFunctionInPath: FindFunctionInPathFunction = async function ({ cache, featureFlags, path }) {
+  const runtime = await detectBinaryRuntime({ path })
 
   if (runtime === RuntimeType.RUST) {
-    return processBinary({ fsCache, path })
+    return processBinary({ cache, path })
   }
 
   if (featureFlags.buildRustSource !== true) {
     return
   }
 
-  const rustSourceFile = await detectRustFunction({ fsCache, path })
+  const rustSourceFile = await detectRustFunction({ cache, path })
 
   if (rustSourceFile) {
-    return processSource({ fsCache, mainFile: rustSourceFile, path })
+    return processSource({ cache, mainFile: rustSourceFile, path })
   }
 }
 
-const processBinary = async ({ fsCache, path }: { fsCache: FsCache; path: string }): Promise<SourceFile> => {
-  const stat = (await cachedLstat(fsCache, path)) as Stats
+const processBinary = async ({ cache, path }: { cache: RuntimeCache; path: string }): Promise<SourceFile> => {
+  const stat = (await cachedLstat(cache.lstatCache, path)) as Stats
   const filename = basename(path)
   const extension = extname(path)
   const name = basename(path, extension)
@@ -97,11 +96,11 @@ const processBinary = async ({ fsCache, path }: { fsCache: FsCache; path: string
 }
 
 const processSource = async ({
-  fsCache,
+  cache,
   mainFile,
   path,
 }: {
-  fsCache: FsCache
+  cache: RuntimeCache
   mainFile: string
   path: string
 }): Promise<SourceFile> => {
@@ -109,7 +108,7 @@ const processSource = async ({
   // the `FunctionSource` interface. We should revisit whether `stat` should be
   // part of that interface in the first place, or whether we could compute it
   // downstream when needed (maybe using the FS cache as an optimisation).
-  const stat = (await cachedLstat(fsCache, path)) as Stats
+  const stat = (await cachedLstat(cache.lstatCache, path)) as Stats
   const filename = basename(path)
   const extension = extname(path)
   const name = basename(path, extension)
@@ -129,6 +128,7 @@ const processSource = async ({
 // because they include the Lambda runtime, and that's the name that AWS
 // expects for those kind of functions.
 const zipFunction: ZipFunction = async function ({
+  cache,
   config,
   destFolder,
   filename,
@@ -150,7 +150,7 @@ const zipFunction: ZipFunction = async function ({
   // the resulting binary. Otherwise, we're dealing with a binary so we zip it
   // directly.
   if (isSource) {
-    const { path: binaryPath, stat: binaryStat } = await build({ config, name: filename, srcDir })
+    const { path: binaryPath, stat: binaryStat } = await build({ cache, config, name: filename, srcDir })
 
     await zipBinary({ ...zipOptions, srcPath: binaryPath, stat: binaryStat })
   } else {

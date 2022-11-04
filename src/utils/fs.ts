@@ -1,32 +1,45 @@
-import { promises as fs } from 'fs'
+import { promises as fs, Stats } from 'fs'
 import { dirname, format, join, parse, resolve } from 'path'
 
+import { FileCache, LstatCache, ReaddirCache } from './cache.js'
 import { nonNullable } from './non_nullable.js'
 
-export type FsCache = Record<string, unknown>
+export const cachedLstat = (cache: LstatCache, path: string): Promise<Stats> => {
+  let result = cache.get(path)
 
-// This caches multiple FS calls to the same path. It creates a cache key with
-// the name of the function and the path (e.g. "readdir:/some/directory").
-//
-// TODO: This abstraction is stripping out some type data. For example, when
-// calling `readFile` without an encoding, the return type should be narrowed
-// down from `string | Buffer` to `Buffer`, but that's not happening.
-const makeCachedFunction =
-  <Args extends unknown[], ReturnType>(func: (path: string, ...args: Args) => ReturnType) =>
-  (cache: FsCache, path: string, ...args: Args): ReturnType => {
-    const key = `${func.name}:${path}`
-
-    if (cache[key] === undefined) {
-      // eslint-disable-next-line no-param-reassign
-      cache[key] = func(path, ...args)
-    }
-
-    return cache[key] as ReturnType
+  if (result === undefined) {
+    // no await as we want to populate the cache instantly with the promise
+    result = fs.lstat(path)
+    cache.set(path, result)
   }
 
-export const cachedLstat = makeCachedFunction(fs.lstat)
-export const cachedReaddir = makeCachedFunction(fs.readdir)
-export const cachedReadFile = makeCachedFunction(fs.readFile)
+  return result
+}
+
+export const cachedReaddir = (cache: ReaddirCache, path: string): Promise<string[]> => {
+  let result = cache.get(path)
+
+  if (result === undefined) {
+    // no await as we want to populate the cache instantly with the promise
+    result = fs.readdir(path, 'utf-8')
+    cache.set(path, result)
+  }
+
+  return result
+}
+
+export const cachedReadFile = (cache: FileCache, path: string): Promise<string> => {
+  let result = cache.get(path)
+
+  // Check for null here, as we use the same cache in NFT which sets null on a not found file
+  if (result === undefined || result === null) {
+    // no await as we want to populate the cache instantly with the promise
+    result = fs.readFile(path, 'utf-8')
+    cache.set(path, result)
+  }
+
+  return result
+}
 
 export const getPathWithExtension = (path: string, extension: string) =>
   format({ ...parse(path), base: undefined, ext: extension })

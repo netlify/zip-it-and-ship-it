@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest'
 
-import { sanitisePackageJson } from '../../../../../src/runtimes/node/utils/package_json.js'
+import { sanitizePackageJson } from '../../../../../src/runtimes/node/utils/package_json.js'
 
-describe('sanitisePackageJson', () => {
+describe('sanitizePackageJson', () => {
   test('removes nulls from files', () => {
-    const result = sanitisePackageJson({
+    const result = sanitizePackageJson({
       files: ['a.js', null, 'b.js'],
     })
 
@@ -14,7 +14,7 @@ describe('sanitisePackageJson', () => {
   })
 
   test('does not crash on invalid files entries', () => {
-    const result = sanitisePackageJson({
+    const result = sanitizePackageJson({
       files: { 'a.js': true, 'b.js': false },
     })
 

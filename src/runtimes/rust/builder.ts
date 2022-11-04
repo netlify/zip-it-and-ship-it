@@ -1,18 +1,30 @@
-import { promises as fs } from 'fs'
+import { mkdir } from 'fs/promises'
 import { basename, join } from 'path'
 
 import tmp from 'tmp-promise'
 import toml from 'toml'
 
-import { FunctionConfig } from '../../config.js'
+import type { FunctionConfig } from '../../config.js'
+import type { RuntimeCache } from '../../utils/cache.js'
 import { FunctionBundlingUserError } from '../../utils/error.js'
+import { cachedLstat, cachedReadFile } from '../../utils/fs.js'
 import { shellUtils } from '../../utils/shell.js'
 import { RuntimeType } from '../runtime.js'
 
 import { CargoManifest } from './cargo_manifest.js'
 import { BUILD_TARGET, MANIFEST_NAME } from './constants.js'
 
-export const build = async ({ config, name, srcDir }: { config: FunctionConfig; name: string; srcDir: string }) => {
+export const build = async ({
+  cache,
+  config,
+  name,
+  srcDir,
+}: {
+  cache: RuntimeCache
+  config: FunctionConfig
+  name: string
+  srcDir: string
+}) => {
   const functionName = basename(srcDir)
 
   try {
@@ -29,12 +41,12 @@ export const build = async ({ config, name, srcDir }: { config: FunctionConfig; 
   // way to override it (https://github.com/rust-lang/cargo/issues/1706). We
   // must extract the crate name from the manifest and use it to form the path
   // to the binary.
-  const manifest = await fs.readFile(join(srcDir, MANIFEST_NAME), 'utf8')
+  const manifest = await cachedReadFile(cache.fileCache, join(srcDir, MANIFEST_NAME))
   const {
     package: { name: packageName },
   }: CargoManifest = toml.parse(manifest)
   const binaryPath = join(targetDirectory, BUILD_TARGET, 'release', packageName)
-  const stat = await fs.lstat(binaryPath)
+  const stat = await cachedLstat(cache.lstatCache, binaryPath)
 
   return {
     path: binaryPath,
@@ -91,7 +103,7 @@ const getTargetDirectory = async ({ config, name }: { config: FunctionConfig; na
     // We replace the [name] placeholder with the name of the function.
     const path = rustTargetDirectory.replace(/\[name]/g, name)
 
-    await fs.mkdir(path, { recursive: true })
+    await mkdir(path, { recursive: true })
 
     return path
   }
