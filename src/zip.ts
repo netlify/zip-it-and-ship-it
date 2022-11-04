@@ -16,7 +16,7 @@ import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 import { getLogger, LogFunction } from './utils/logger.js'
 import { nonNullable } from './utils/non_nullable.js'
-import { endTimer, roundTimerToMillisecs, startTimer } from './utils/timer.js'
+import { endTimer, startTimer } from './utils/timer.js'
 
 interface ZipFunctionOptions {
   archiveFormat?: ArchiveFormat
@@ -106,12 +106,11 @@ export const zipFunctions = async function (
         stat: func.stat,
       })
       const durationNs = endTimer(startIntervalTime)
-      const durationMs = roundTimerToMillisecs(durationNs)
       const logObject = {
         name: func.name,
         config: func.config,
         featureFlags: functionFlags,
-        durationMs,
+        durationNs,
       }
 
       logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
@@ -202,12 +201,11 @@ export const zipFunction = async function (
     stat: stats,
   })
   const durationNs = endTimer(startIntervalTime)
-  const durationMs = roundTimerToMillisecs(durationNs)
   const logObject = {
     name,
     config,
     featureFlags: functionFlags,
-    durationMs,
+    durationNs,
   }
 
   logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
