@@ -9,6 +9,7 @@ module.exports = {
     'import/extensions': ['error', 'ignorePackages'],
     'n/no-missing-import': 'off',
     'no-magic-numbers': 'off',
+    'max-lines-per-function': 'off',
     // This rule enforces using Buffers with `JSON.parse()`. However, TypeScript
     // does not recognize yet that `JSON.parse()` accepts Buffers as argument.
     'unicorn/prefer-json-parse-buffer': 'off',

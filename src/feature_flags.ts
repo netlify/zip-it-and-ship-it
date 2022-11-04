@@ -26,6 +26,9 @@ export const defaultFlags: Record<string, boolean> = {
 
   // Raise file IO limit for NFT
   zisi_nft_higher_fileio_limit: false,
+
+  // Provide banner to esbuild which allows requires in ESM output
+  zisi_esbuild_require_banner: false,
 }
 
 export type FeatureFlag = keyof typeof defaultFlags
