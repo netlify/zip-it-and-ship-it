@@ -6,7 +6,7 @@ import { arch, env, platform, version as nodeVersion } from 'process'
 import cpy from 'cpy'
 import merge from 'deepmerge'
 import { deleteAsync } from 'del'
-import execa from 'execa'
+import { execa, execaNode } from 'execa'
 import { pathExists } from 'path-exists'
 import semver from 'semver'
 import { dir as getTmpDir, tmpName } from 'tmp-promise'
@@ -2444,7 +2444,7 @@ describe('zip-it-and-ship-it', () => {
 
     // We have to use execa because when we simply import the file here vitest does provide a `require` function
     // and therefore we do not trigger the problem
-    const result = await execa.node(funcFile, [], { extendEnv: false, reject: false })
+    const result = await execaNode(funcFile, [], { extendEnv: false, reject: false })
 
     expect(result.stderr).not.toContain('Dynamic require of "path" is not supported')
     expect(result).not.toBeInstanceOf(Error)
