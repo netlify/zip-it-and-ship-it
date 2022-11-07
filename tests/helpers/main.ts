@@ -47,6 +47,8 @@ export const zipFixture = async function (
   const bundlerString = getBundlerNameFromConfig(config) || 'default'
   const { path: tmpDir } = await getTmpDir({
     prefix: `zip-it-test-bundler-${bundlerString}`,
+    // Cleanup the folder on process exit even if there are still files in them
+    unsafeCleanup: true,
   })
 
   if (env.ZISI_KEEP_TEMP_DIRS !== undefined) {
