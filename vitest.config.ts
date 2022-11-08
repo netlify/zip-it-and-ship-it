@@ -8,6 +8,7 @@ export default defineConfig({
     testTimeout: 30_000,
     deps: {
       external: ['**/fixtures/**', '**/node_modules/**', '**/dist/**'],
+      interopDefault: false,
     },
     coverage: {
       provider: 'c8',
