@@ -1763,6 +1763,7 @@ describe('zip-it-and-ship-it', () => {
         name: 'go-func-1',
         path: expect.anything(),
         runtime: 'go',
+        isInternalFunction: false,
       },
       {
         config: expect.anything(),
@@ -1770,6 +1771,7 @@ describe('zip-it-and-ship-it', () => {
         name: 'go-func-2',
         path: expect.anything(),
         runtime: 'go',
+        isInternalFunction: false,
       },
     ])
 
@@ -1870,6 +1872,7 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         runtime: 'rs',
         size: 278,
+        isInternalFunction: false,
       },
       {
         config: expect.anything(),
@@ -1878,6 +1881,7 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         runtime: 'rs',
         size: 278,
+        isInternalFunction: false,
       },
     ])
 
