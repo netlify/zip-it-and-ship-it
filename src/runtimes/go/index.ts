@@ -8,7 +8,7 @@ import type { RuntimeCache } from '../../utils/cache.js'
 import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
-import { FUNCTIONS_INTERNAL_DIR } from '../constants'
+import { FUNCTIONS_INTERNAL_DIR } from '../constants.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
 import {
   FindFunctionInPathFunction,
