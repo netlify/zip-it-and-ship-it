@@ -83,7 +83,11 @@ const requireExtractedFiles = async function (files: FunctionResult[]): Promise<
 }
 
 export const unzipFiles = async function (files: FunctionResult[], targetPathGenerator?: (path: string) => string) {
-  await Promise.all(files.map(({ path }) => unzipFile({ path, targetPathGenerator })))
+  // unzip functions in series, as on windows it sometimes fails with permission
+  // errors if two unzip calls try to create the same file
+  for (const { path } of files) {
+    await unzipFile({ path, targetPathGenerator })
+  }
 }
 
 const unzipFile = async function ({
