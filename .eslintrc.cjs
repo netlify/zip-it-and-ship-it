@@ -9,6 +9,7 @@ module.exports = {
     // unsupported by Node 12, i.e. optional chaining
     // TODO: re-enable after dropping support for Node 12
     'n/no-unsupported-features/es-syntax': 'off',
+    'max-lines-per-function': 'off',
     // This rule enforces using Buffers with `JSON.parse()`. However, TypeScript
     // does not recognize yet that `JSON.parse()` accepts Buffers as argument.
     'unicorn/prefer-json-parse-buffer': 'off',

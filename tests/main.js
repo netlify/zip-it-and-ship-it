@@ -2962,3 +2962,33 @@ testMany(
     }
   },
 )
+
+test('Provides require to esbuild if output format is ESM', async (t) => {
+  const fixtureName = 'node-require-in-esm'
+  const opts = {
+    basePath: join(FIXTURES_DIR, fixtureName),
+    config: {
+      '*': {
+        nodeBundler: 'esbuild',
+        nodeModuleFormat: 'esm',
+      },
+    },
+    featureFlags: {
+      zisi_esbuild_require_banner: true,
+    },
+  }
+  const { files, tmpDir } = await zipFixture(t, [join(fixtureName, 'functions')], {
+    opts,
+  })
+
+  await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+
+  const funcFile = join(tmpDir, `func1.zip_out/func1.mjs`)
+
+  // We have to use execa because when we simply import the file here vitest does provide a `require` function
+  // and therefore we do not trigger the problem
+  const result = await execa.node(funcFile, [], { extendEnv: false, reject: false })
+
+  t.false(result.stderr.includes('Dynamic require of "path" is not supported'))
+  t.false(result instanceof Error)
+})
