@@ -148,9 +148,8 @@ export const getRequires = async function (
 // Import a file exporting a function.
 // Returns `default` exports as is.
 export const importFunctionFile = async function <T = any>(functionPath: string): Promise<T> {
-  // We use relative paths here, because vitest cannot handle absolute paths or urls :(
   // eslint-disable-next-line import/no-dynamic-require
-  const result = await import(`/@fs/${functionPath}`)
+  const result = await import(functionPath)
   return result.default === undefined ? result : result.default
 }
 
