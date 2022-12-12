@@ -13,7 +13,7 @@ describe('getNodeVersion', () => {
     ['nodejs8.x', 8],
     ['12.x', 12],
     ['8.x', 8],
-    ['node18', DEFAULT_NODE_VERSION],
+    ['node16', DEFAULT_NODE_VERSION],
     [':shrug:', DEFAULT_NODE_VERSION],
   ])('handles `%s`', (input, expected) => {
     expect(getNodeVersion(input)).toBe(expected)
@@ -27,7 +27,7 @@ describe('parseVersion', () => {
     ['nodejs8.x', 8],
     ['12.x', 12],
     ['8.x', 8],
-    ['node18', undefined],
+    ['node16', undefined],
     [':shrug:', undefined],
   ])('handles `%s`', (input, expected) => {
     expect(parseVersion(input)).toBe(expected)
