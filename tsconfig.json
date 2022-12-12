@@ -3,7 +3,7 @@
     "incremental": true,
     "lib": ["es2020"],
     "target": "es2020",
-    "module": "node16",
+    "module": "node18",
     "declaration": true,
     "declarationMap": false,
     "sourceMap": true,

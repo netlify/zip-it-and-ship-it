@@ -1,4 +1,4 @@
-type SupportedVersionNumbers = 8 | 10 | 12 | 14 | 16
+type SupportedVersionNumbers = 8 | 10 | 12 | 14 | 16 | 18
 export type ShortNodeVersionString = `${SupportedVersionNumbers}.x`
 export type NodeVersionString = ShortNodeVersionString | `nodejs${SupportedVersionNumbers}.x`
 
@@ -7,7 +7,7 @@ export interface NodeVersionSupport {
 }
 
 // Must match the default version used in Bitballoon.
-export const DEFAULT_NODE_VERSION = 16
+export const DEFAULT_NODE_VERSION = 18
 const VERSION_REGEX = /(nodejs)?(\d+)\.x/
 
 export const getNodeVersion = (configVersion?: string) => parseVersion(configVersion) ?? DEFAULT_NODE_VERSION
