@@ -1384,13 +1384,14 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
-    'Adds `type: "functionsBundling"` to user errors when parsing with esbuild',
-    ['bundler_esbuild'],
+    'Adds `type: "functionsBundling"` to user errors when parsing with esbuild or zisi',
+    ['bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default'],
     async (options) => {
       const bundler = options.getCurrentBundlerName()
 
       try {
-        await zipNode('node-syntax-error', {
+        // using zipFixture, because we only want to assert errors from bundling and not when importing the bundled functions
+        await zipFixture('node-syntax-error-cjs', {
           opts: options,
         })
 
@@ -1399,7 +1400,7 @@ describe('zip-it-and-ship-it', () => {
         const { customErrorInfo } = error
 
         expect(customErrorInfo.type).toBe('functionsBundling')
-        expect(customErrorInfo.location.bundler).toBe(bundler === 'esbuild' ? 'esbuild' : 'zisi')
+        expect(customErrorInfo.location.bundler).toBe(bundler?.startsWith('esbuild') ? 'esbuild' : 'zisi')
         expect(customErrorInfo.location.functionName).toBe('function')
         expect(customErrorInfo.location.runtime).toBe('js')
       }

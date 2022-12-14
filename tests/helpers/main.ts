@@ -123,7 +123,11 @@ export const getRequires = async function (
   { depth = Number.POSITIVE_INFINITY, filePath }: { depth?: number; filePath: string },
   currentDepth = 1,
 ): Promise<string[]> {
-  const requires = await listImports({ functionName: 'test-function', path: filePath })
+  const requires = await listImports({
+    featureFlags: { parseWithEsbuild: true },
+    functionName: 'test-function',
+    path: filePath,
+  })
 
   if (currentDepth >= depth) {
     return requires
