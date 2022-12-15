@@ -14,6 +14,7 @@ const versionMap = {
   '12.x': 'node12',
   '14.x': 'node14',
   '16.x': 'node16',
+  '18.x': 'node18',
 } as const
 
 type VersionValues = typeof versionMap[keyof typeof versionMap]

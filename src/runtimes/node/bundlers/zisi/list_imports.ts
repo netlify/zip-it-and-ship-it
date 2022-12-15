@@ -1,7 +1,9 @@
 import * as esbuild from '@netlify/esbuild'
 import isBuiltinModule from 'is-builtin-module'
+import precinct from 'precinct'
 import { tmpName } from 'tmp-promise'
 
+import { FeatureFlags } from '../../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { safeUnlink } from '../../../../utils/fs.js'
 import { RuntimeType } from '../../../runtime.js'
@@ -31,7 +33,7 @@ const getListImportsPlugin = ({ imports, path }: { imports: Set<string>; path: s
   },
 })
 
-export const listImports = async ({
+const listImportsWithESBuild = async ({
   functionName,
   path,
 }: {
@@ -70,3 +72,29 @@ export const listImports = async ({
 
   return [...imports]
 }
+
+const listImportsWithPrecinct = async ({ functionName, path }: { functionName: string; path: string }) => {
+  try {
+    return await precinct.paperwork(path, { includeCore: false })
+  } catch (error) {
+    // Syntax errors from babel are user errors
+    if (error.code === 'BABEL_PARSER_SYNTAX_ERROR') {
+      throw FunctionBundlingUserError.addCustomErrorInfo(error, {
+        functionName,
+        runtime: RuntimeType.JAVASCRIPT,
+        bundler: NodeBundlerType.ZISI,
+      })
+    }
+
+    throw error
+  }
+}
+
+export const listImports = async ({
+  featureFlags,
+  ...args
+}: {
+  featureFlags: FeatureFlags
+  functionName: string
+  path: string
+}) => (featureFlags.parseWithEsbuild ? await listImportsWithESBuild(args) : await listImportsWithPrecinct(args))

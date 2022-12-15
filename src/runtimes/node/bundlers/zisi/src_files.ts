@@ -1,7 +1,6 @@
 import { dirname, basename, normalize } from 'path'
 
 import { not as notJunk } from 'junk'
-import precinct from 'precinct'
 
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { nonNullable } from '../../../../utils/non_nullable.js'
@@ -111,9 +110,7 @@ const getFileDependencies = async function ({
   state.localFiles.add(path)
 
   const basedir = dirname(path)
-  const dependencies = featureFlags.parseWithEsbuild
-    ? await listImports({ functionName, path })
-    : await precinct.paperwork(path, { includeCore: false })
+  const dependencies = await listImports({ featureFlags, functionName, path })
 
   const depsPaths = await Promise.all(
     dependencies.filter(nonNullable).map((dependency) =>
