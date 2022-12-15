@@ -137,6 +137,7 @@ The following properties are accepted:
   - `12.x` (or `nodejs12.x`)
   - `14.x` (or `nodejs14.x`)
   - `16.x` (or `nodejs16.x`)
+  - `18.x` (or `nodejs18.x`)
 
 - `rustTargetDirectory`
 
