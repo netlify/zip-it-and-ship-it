@@ -1,6 +1,6 @@
 import { dirname, basename, normalize } from 'path'
 
-import { not as notJunk } from 'junk'
+import { isNotJunk as notJunk } from 'junk'
 
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { nonNullable } from '../../../../utils/non_nullable.js'
