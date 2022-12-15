@@ -3,7 +3,7 @@ import { dirname, resolve, normalize } from 'path'
 import { env, platform } from 'process'
 import { fileURLToPath } from 'url'
 
-import execa from 'execa'
+import { execa } from 'execa'
 import { dir as getTmpDir } from 'tmp-promise'
 import { expect } from 'vitest'
 

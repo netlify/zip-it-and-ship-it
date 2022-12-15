@@ -1,4 +1,4 @@
-type SupportedVersionNumbers = 8 | 10 | 12 | 14 | 16
+type SupportedVersionNumbers = 8 | 10 | 12 | 14 | 16 | 18
 export type ShortNodeVersionString = `${SupportedVersionNumbers}.x`
 export type NodeVersionString = ShortNodeVersionString | `nodejs${SupportedVersionNumbers}.x`
 
