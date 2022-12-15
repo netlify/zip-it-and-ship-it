@@ -34,7 +34,7 @@ describe('zipFunction', () => {
     'Includes includedFiles in the response of zipFunction',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test2' })
+      const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
       const mainFile = join(FIXTURES_DIR, 'node-module-next-image', 'function', 'function.js')
       const result = (await zipFunction(mainFile, tmpDir, {
         ...options,

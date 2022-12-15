@@ -196,23 +196,23 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('Throws on runtime errors', [...allBundleConfigs], async (options) => {
-    await expect(() => zipNode('node-module-error', { opts: options })).rejects.toThrow()
+    await expect(zipNode('node-module-error', { opts: options })).rejects.toThrowError()
   })
 
   testMany('Throws on missing dependencies', [...allBundleConfigs], async (options) => {
-    await expect(() => zipNode('node-module-missing', { opts: options })).rejects.toThrow()
+    await expect(zipNode('node-module-missing', { opts: options })).rejects.toThrowError()
   })
 
   testMany('Throws on missing dependencies with no optionalDependencies', [...allBundleConfigs], async (options) => {
-    await expect(() => zipNode('node-module-missing-package', { opts: options })).rejects.toThrow()
+    await expect(zipNode('node-module-missing-package', { opts: options })).rejects.toThrowError()
   })
 
   testMany('Throws on missing conditional dependencies', [...allBundleConfigs], async (options) => {
-    await expect(() => zipNode('node-module-missing-conditional', { opts: options })).rejects.toThrow()
+    await expect(zipNode('node-module-missing-conditional', { opts: options })).rejects.toThrowError()
   })
 
   testMany("Throws on missing dependencies' dependencies", [...allBundleConfigs], async (options) => {
-    await expect(() => zipNode('node-module-missing-deep', { opts: options })).rejects.toThrow()
+    await expect(zipNode('node-module-missing-deep', { opts: options })).rejects.toThrowError()
   })
 
   testMany('Ignore missing optional dependencies', [...allBundleConfigs], async (options) => {
@@ -231,12 +231,12 @@ describe('zip-it-and-ship-it', () => {
     'Throws on missing optional peer dependencies with no peer dependencies',
     [...allBundleConfigs],
     async (options) => {
-      await expect(() => zipNode('node-module-peer-optional-none', { opts: options })).rejects.toThrow()
+      await expect(zipNode('node-module-peer-optional-none', { opts: options })).rejects.toThrowError()
     },
   )
 
   testMany('Throws on missing non-optional peer dependencies', [...allBundleConfigs], async (options) => {
-    await expect(() => zipNode('node-module-peer-not-optional', { opts: options })).rejects.toThrow()
+    await expect(zipNode('node-module-peer-not-optional', { opts: options })).rejects.toThrowError()
   })
 
   testMany(
@@ -254,7 +254,7 @@ describe('zip-it-and-ship-it', () => {
     'Throws on invalid package.json',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi'],
     async (options) => {
-      await expect(() => zipNode('invalid-package-json', { opts: options })).rejects.toThrow(
+      await expect(zipNode('invalid-package-json', { opts: options })).rejects.toThrowError(
         /(invalid JSON|package.json:1:1: error: Expected string but found "{")/,
       )
     },
@@ -603,7 +603,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('Throws when the source folder does not exist', [...allBundleConfigs, 'bundler_none'], async (options) => {
-    await expect(() => zipNode('does-not-exist', { opts: options })).rejects.toThrow(/Functions folders do not exist/)
+    await expect(zipNode('does-not-exist', { opts: options })).rejects.toThrowError(/Functions folders do not exist/)
   })
 
   testMany(
@@ -683,7 +683,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('Throws on missing critters dependency for Next.js 9', ['bundler_default'], async (options) => {
-    await expect(() => zipNode('node-module-next9-critters', { opts: options })).rejects.toThrow()
+    await expect(zipNode('node-module-next9-critters', { opts: options })).rejects.toThrowError()
   })
 
   testMany(
@@ -1375,12 +1375,12 @@ describe('zip-it-and-ship-it', () => {
   )
 
   test('Throws an error if the `archiveFormat` property contains an invalid value`', async () => {
-    await expect(() =>
+    await expect(
       zipNode('node-module-included', {
         // @ts-expect-error test
         opts: { archiveFormat: 'gzip' },
       }),
-    ).rejects.toThrow('Invalid archive format: gzip')
+    ).rejects.toThrowError('Invalid archive format: gzip')
   })
 
   testMany(
@@ -1476,7 +1476,7 @@ describe('zip-it-and-ship-it', () => {
 
     // eslint-disable-next-line unicorn/new-for-builtins
     expect(values).toEqual(Array(expectedLength).fill(true))
-    expect(() => func('two')).toThrow()
+    expect(() => func('two')).toThrowError()
     expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
   })
 
@@ -1511,7 +1511,7 @@ describe('zip-it-and-ship-it', () => {
     expect(func('en')[1]).toEqual(['yes', 'no'])
     expect(func('pt')[0]).toEqual(['sim', 'não'])
     expect(func('pt')[1]).toEqual(['sim', 'não'])
-    expect(() => func('fr')).toThrow()
+    expect(() => func('fr')).toThrowError()
   })
 
   test('The dynamic import runtime shim handles files in nested directories', async () => {
@@ -1531,7 +1531,7 @@ describe('zip-it-and-ship-it', () => {
     expect(func('pt')[1]).toEqual(['sim', 'não'])
     expect(func('nested/es')[0]).toEqual(['sí', 'no'])
     expect(func('nested/es')[1]).toEqual(['sí', 'no'])
-    expect(() => func('fr')).toThrow()
+    expect(() => func('fr')).toThrowError()
   })
 
   test('The dynamic import runtime shim handles files in nested directories when using `archiveFormat: "none"`', async () => {
@@ -1552,7 +1552,7 @@ describe('zip-it-and-ship-it', () => {
     expect(func('pt')[1]).toEqual(['sim', 'não'])
     expect(func('nested/es')[0]).toEqual(['sí', 'no'])
     expect(func('nested/es')[1]).toEqual(['sí', 'no'])
-    expect(() => func('fr')).toThrow()
+    expect(() => func('fr')).toThrowError()
   })
 
   test('Negated files in `included_files` are excluded from the bundle even if they match a dynamic import expression', async () => {
@@ -1568,7 +1568,7 @@ describe('zip-it-and-ship-it', () => {
 
     expect(func('pt')[0]).toEqual(['sim', 'não'])
     expect(func('pt')[1]).toEqual(['sim', 'não'])
-    expect(() => func('en')).toThrow()
+    expect(() => func('en')).toThrowError()
   })
 
   testMany(
@@ -1611,7 +1611,7 @@ describe('zip-it-and-ship-it', () => {
       expect(func('en')[1]).toEqual(['yes', 'no'])
       expect(func('pt')[0]).toEqual(['sim', 'não'])
       expect(func('pt')[1]).toEqual(['sim', 'não'])
-      expect(() => func('fr')).toThrow()
+      expect(() => func('fr')).toThrowError()
     }
   })
 
@@ -1793,7 +1793,7 @@ describe('zip-it-and-ship-it', () => {
 
   test('Builds Rust functions from source if the `buildRustSource` feature flag is enabled', async () => {
     const targetDirectory = await tmpName({ prefix: `zip-it-test-rust-function-[name]` })
-    const tmpDirectory = await tmpName({ prefix: `zip-it-test-` })
+    const tmpDirectory = await tmpName({ prefix: `zip-it-test` })
 
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
       // eslint-disable-next-line unicorn/no-useless-undefined
@@ -2320,7 +2320,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('None bundler throws when using ESM on node < 14', ['bundler_none'], async (options) => {
-    await expect(() =>
+    await expect(
       zipFixture('node-esm', {
         length: 2,
         opts: {
