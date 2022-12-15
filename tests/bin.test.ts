@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 
-import { node as execaNode, NodeOptions } from 'execa'
+import { execaNode, NodeOptions } from 'execa'
 import { tmpName } from 'tmp-promise'
 import { describe, expect, test } from 'vitest'
 

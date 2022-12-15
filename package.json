@@ -63,7 +63,7 @@
     "del": "^7.0.0",
     "end-of-stream": "^1.4.4",
     "es-module-lexer": "^1.0.0",
-    "execa": "^5.0.0",
+    "execa": "^6.0.0",
     "filter-obj": "^5.0.0",
     "find-up": "^6.0.0",
     "glob": "^8.0.3",
