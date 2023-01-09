@@ -17,7 +17,7 @@ const versionMap = {
   '18.x': 'node18',
 } as const
 
-type VersionValues = typeof versionMap[keyof typeof versionMap]
+type VersionValues = (typeof versionMap)[keyof typeof versionMap]
 
 const getBundlerTarget = (suppliedVersion?: NodeVersionString): VersionValues => {
   const version = normalizeVersion(suppliedVersion)
