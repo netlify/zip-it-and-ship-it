@@ -14,6 +14,7 @@ import unixify from 'unixify'
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { Config } from '../src/config.js'
+import { FUNCTIONS_INTERNAL_DIR } from '../src/runtimes/constants.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
 import { NodeBundlerType } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
@@ -1745,7 +1746,7 @@ describe('zip-it-and-ship-it', () => {
     expect(mockSource).toBe(unzippedBinaryContents)
   })
 
-  test.only('Builds Go functions from an internal-functions dir with a configured displayName', async () => {
+  test('Builds Go functions from an internal-functions dir with a configured displayName', async () => {
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
       await writeFile(args[1][2], '')
 
@@ -1755,7 +1756,7 @@ describe('zip-it-and-ship-it', () => {
     const fixtureName = 'go-source-internal'
     const { files } = await zipFixture(fixtureName, {
       length: 2,
-      fixtureDir: join(FIXTURES_DIR, '.netlify/internal-functions'),
+      fixtureDir: join(FIXTURES_DIR, FUNCTIONS_INTERNAL_DIR),
       opts: {
         config: {
           'go-func-1': {
@@ -1928,6 +1929,44 @@ describe('zip-it-and-ship-it', () => {
       ['build', '--target', 'x86_64-unknown-linux-musl', '--release'],
       expect.anything(),
     )
+  })
+
+  test('Builds Rust functions from an internal-functions dir with a configured displayName ', async () => {
+    vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
+      // eslint-disable-next-line unicorn/no-useless-undefined
+      const [rootCommand, , { env: environment = undefined } = {}] = args
+
+      if (rootCommand === 'cargo') {
+        const directory = join(environment.CARGO_TARGET_DIR, args[1][2], 'release')
+        const binaryPath = join(directory, 'hello')
+
+        await mkdir(directory, { recursive: true })
+        await writeFile(binaryPath, '')
+
+        return {} as any
+      }
+    })
+
+    const fixtureName = 'rust-source-internal'
+    const { files } = await zipFixture(fixtureName, {
+      length: 2,
+      fixtureDir: join(FIXTURES_DIR, FUNCTIONS_INTERNAL_DIR),
+      opts: {
+        config: {
+          'rust-func-1': {
+            displayName: 'Rust Function Two',
+          },
+        },
+        featureFlags: {
+          buildRustSource: true,
+        },
+      },
+    })
+
+    expect(files).toHaveLength(2)
+    expect(files[0].isInternalFunction).toBeTruthy()
+    expect(files[0].displayName).toBe('Rust Function Two')
+    expect(files[1].displayName).toBeUndefined()
   })
 
   test('Adds `type: "functionsBundling"` to errors resulting from compiling Rust binaries', async () => {
