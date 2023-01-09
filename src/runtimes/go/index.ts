@@ -5,10 +5,10 @@ import { copyFile } from 'cp-file'
 
 import { SourceFile } from '../../function.js'
 import type { RuntimeCache } from '../../utils/cache.js'
+import { checkIsInternalFunction } from '../../utils/check_is_internal_function.js'
 import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
-import { FUNCTIONS_INTERNAL_DIR } from '../constants.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
 import {
   FindFunctionInPathFunction,
@@ -156,7 +156,7 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
     config,
     path: destPath,
     displayName: config?.displayName,
-    isInternalFunction: srcDir.includes(FUNCTIONS_INTERNAL_DIR),
+    isInternalFunction: checkIsInternalFunction(srcDir),
   }
 }
 

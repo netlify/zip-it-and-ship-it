@@ -81,7 +81,6 @@ describe('zip-it-and-ship-it', () => {
         fixtureDir: join(FIXTURES_DIR, FUNCTIONS_INTERNAL_DIR),
         opts: { ...options, config: { 'function-1': { displayName: 'Function One' } } },
       })
-      console.log({ files })
       expect(files).toHaveLength(2)
       expect(files[0].isInternalFunction).toBeTruthy()
       expect(files[0].displayName).toBe('Function One')
