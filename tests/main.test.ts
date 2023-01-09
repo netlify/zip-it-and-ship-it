@@ -72,7 +72,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
-    'Zips Node.js function filesfrom an internal-functions dir with a configured displayName',
+    'Zips Node.js function files from an internal-functions dir with a configured displayName',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
       const fixtureName = 'node-internal'
@@ -81,7 +81,7 @@ describe('zip-it-and-ship-it', () => {
         fixtureDir: join(FIXTURES_DIR, FUNCTIONS_INTERNAL_DIR),
         opts: { ...options, config: { 'function-1': { displayName: 'Function One' } } },
       })
-
+      console.log({ files })
       expect(files).toHaveLength(2)
       expect(files[0].isInternalFunction).toBeTruthy()
       expect(files[0].displayName).toBe('Function One')
