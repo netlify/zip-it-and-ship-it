@@ -67,6 +67,7 @@ describe('zip-it-and-ship-it', () => {
     expect(files).toHaveLength(1)
     expect(files[0].runtime).toBe('js')
     expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function.js'))
+    expect(files[0].isInternalFunction).toBeFalsy()
   })
 
   testMany(
@@ -1742,6 +1743,32 @@ describe('zip-it-and-ship-it', () => {
     const unzippedBinaryContents = await readFile(unzippedBinaryPath, 'utf8')
 
     expect(mockSource).toBe(unzippedBinaryContents)
+  })
+
+  test.only('Builds Go functions from an internal-functions dir with a configured displayName', async () => {
+    vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
+      await writeFile(args[1][2], '')
+
+      return {} as any
+    })
+
+    const fixtureName = 'go-source-internal'
+    const { files } = await zipFixture(fixtureName, {
+      length: 2,
+      fixtureDir: join(FIXTURES_DIR, '.netlify/internal-functions'),
+      opts: {
+        config: {
+          'go-func-1': {
+            displayName: 'Go Function One',
+          },
+        },
+      },
+    })
+
+    expect(files).toHaveLength(2)
+    expect(files[0].isInternalFunction).toBeTruthy()
+    expect(files[0].displayName).toBe('Go Function One')
+    expect(files[1].displayName).toBeUndefined()
   })
 
   test('Builds Go functions from source', async () => {
