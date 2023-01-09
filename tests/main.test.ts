@@ -72,6 +72,24 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
+    'Zips Node.js function filesfrom an internal-functions dir with a configured displayName',
+    [...allBundleConfigs, 'bundler_none'],
+    async (options) => {
+      const fixtureName = 'node-internal'
+      const { files } = await zipNode(fixtureName, {
+        length: 2,
+        fixtureDir: join(FIXTURES_DIR, FUNCTIONS_INTERNAL_DIR),
+        opts: { ...options, config: { 'function-1': { displayName: 'Function One' } } },
+      })
+
+      expect(files).toHaveLength(2)
+      expect(files[0].isInternalFunction).toBeTruthy()
+      expect(files[0].displayName).toBe('Function One')
+      expect(files[1].displayName).toBeUndefined()
+    },
+  )
+
+  testMany(
     'Handles Node module with native bindings (buildtime marker module)',
     [...allBundleConfigs],
     async (options) => {
@@ -1931,7 +1949,7 @@ describe('zip-it-and-ship-it', () => {
     )
   })
 
-  test('Builds Rust functions from an internal-functions dir with a configured displayName ', async () => {
+  test('Builds Rust functions from an internal-functions dir with a configured displayName', async () => {
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
       // eslint-disable-next-line unicorn/no-useless-undefined
       const [rootCommand, , { env: environment = undefined } = {}] = args
