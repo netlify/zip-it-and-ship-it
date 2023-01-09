@@ -1,1 +1,1 @@
-export const FUNCTIONS_INTERNAL_DIR = '.netlify/functions-internal'
+export const FUNCTIONS_INTERNAL_DIR = '.netlify/internal-functions'
