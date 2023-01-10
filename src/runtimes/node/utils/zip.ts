@@ -170,10 +170,10 @@ export const zipNodeJs = function ({
   return createDirectory(options)
 }
 
-const addEntryFileToZip = function (archive: ZipArchive, entryFile: EntryFile) {
-  const contentBuffer = Buffer.from(entryFile.contents)
+const addEntryFileToZip = function (archive: ZipArchive, { contents, filename }: EntryFile) {
+  const contentBuffer = Buffer.from(contents)
 
-  addZipContent(archive, contentBuffer, entryFile.filename)
+  addZipContent(archive, contentBuffer, filename)
 }
 
 const addStat = async function (cache: RuntimeCache, srcFile: string) {
