@@ -2253,7 +2253,6 @@ describe('zip-it-and-ship-it', () => {
       const opts = merge(options, {
         basePath: fixtureDir,
         configFileDirectories: [fixtureDir],
-        featureFlags: { zisi_detect_esm: true },
       })
       const { files, tmpDir } = await zipFixture(fixtureName, {
         length: 2,
@@ -2283,7 +2282,6 @@ describe('zip-it-and-ship-it', () => {
     const opts = merge(options, {
       basePath: fixtureDir,
       configFileDirectories: [fixtureDir],
-      featureFlags: { zisi_detect_esm: true },
     })
     const { files, tmpDir } = await zipFixture(fixtureName, {
       length: 2,
@@ -2430,9 +2428,6 @@ describe('zip-it-and-ship-it', () => {
           nodeBundler: NodeBundlerType.ESBUILD,
           nodeModuleFormat: ModuleFormat.ESM,
         },
-      },
-      featureFlags: {
-        zisi_esbuild_require_banner: true,
       },
     }
     const { files, tmpDir } = await zipFixture([join(fixtureName, 'functions')], {
