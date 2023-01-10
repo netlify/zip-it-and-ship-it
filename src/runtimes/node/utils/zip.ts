@@ -12,7 +12,7 @@ import type { FeatureFlags } from '../../../feature_flags.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
 import { cachedLstat, mkdirAndWriteFile } from '../../../utils/fs.js'
 
-import { conflictsWithEntryFile, EntryFile, getEntryFile, isEntryFile } from './entry_file.js'
+import { conflictsWithEntryFile, EntryFile, getEntryFile, isNamedLikeEntryFile } from './entry_file.js'
 import { ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
@@ -110,7 +110,7 @@ const createZipArchive = async function ({
 
   // We don't need an entry file if it would end up with the same path as the
   // function's main file.
-  const needsEntryFile = !isEntryFile(mainFile, { basePath, filename })
+  const needsEntryFile = !isNamedLikeEntryFile(mainFile, { basePath, filename })
 
   // There is a naming conflict with the entry file if one of the supporting
   // files (i.e. not the main file) has the path that the entry file needs to

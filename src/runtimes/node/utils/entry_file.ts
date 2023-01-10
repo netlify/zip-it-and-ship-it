@@ -24,7 +24,7 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
 const POSSIBLE_LAMBDA_ENTRY_EXTENSIONS = [ModuleFileExtension.JS, ModuleFileExtension.MJS, ModuleFileExtension.CJS]
 
 // checks if the file is considered a entry-file in AWS Lambda
-export const isEntryFile = (
+export const isNamedLikeEntryFile = (
   file: string,
   {
     basePath,
@@ -53,7 +53,7 @@ export const conflictsWithEntryFile = (
     filename: string
     mainFile: string
   },
-) => srcFiles.some((srcFile) => isEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile)
+) => srcFiles.some((srcFile) => isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile)
 
 // Returns the name for the AWS Lambda entry file
 // We do set the handler in AWS Lambda to `<func-name>.handler` and because of
