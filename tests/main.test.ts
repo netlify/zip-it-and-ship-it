@@ -75,10 +75,9 @@ describe('zip-it-and-ship-it', () => {
     'Zips Node.js function files from an internal-functions dir with a configured displayName',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const fixtureName = 'node-internal'
+      const fixtureName = join('node-internal', FUNCTIONS_INTERNAL_DIR)
       const { files } = await zipNode(fixtureName, {
         length: 2,
-        fixtureDir: join(FIXTURES_DIR, FUNCTIONS_INTERNAL_DIR),
         opts: { ...options, config: { 'function-1': { displayName: 'Function One' } } },
       })
       expect(files).toHaveLength(2)
@@ -1770,10 +1769,9 @@ describe('zip-it-and-ship-it', () => {
       return {} as any
     })
 
-    const fixtureName = 'go-source-internal'
+    const fixtureName = join('go-internal', FUNCTIONS_INTERNAL_DIR)
     const { files } = await zipFixture(fixtureName, {
       length: 2,
-      fixtureDir: join(FIXTURES_DIR, FUNCTIONS_INTERNAL_DIR),
       opts: {
         config: {
           'go-func-1': {
@@ -1964,10 +1962,9 @@ describe('zip-it-and-ship-it', () => {
       }
     })
 
-    const fixtureName = 'rust-source-internal'
+    const fixtureName = join('rust-internal', FUNCTIONS_INTERNAL_DIR)
     const { files } = await zipFixture(fixtureName, {
       length: 2,
-      fixtureDir: join(FIXTURES_DIR, FUNCTIONS_INTERNAL_DIR),
       opts: {
         config: {
           'rust-func-1': {
