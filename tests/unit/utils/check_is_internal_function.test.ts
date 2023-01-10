@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { FUNCTIONS_INTERNAL_DIR } from '../../../src/runtimes/constants'
 
+import { FUNCTIONS_INTERNAL_DIR } from '../../../src/runtimes/constants'
 import { checkIsInternalFunction } from '../../../src/utils/check_is_internal_function'
 
 describe('checkIsInternalFunction checks a srcDir string to see if the path contains the internal functions folder', () => {

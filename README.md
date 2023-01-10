@@ -150,6 +150,10 @@ The following properties are accepted:
   The `[name]` placeholder will be replaced by the name of the function, allowing you to use it to construct the path to
   the target directory.
 
+- `displayName`
+
+  A display name for the function.
+
 #### `featureFlags`
 
 See [feature flags](#feature-flags).
@@ -201,6 +205,14 @@ properties.
 - `size`: `number`
 
   The size of the generated archive, in bytes.
+
+- `isInternalFunction` `boolean`
+
+  If the function is an internal Netlify function, for example created using a Netlify Integration, this boolean will be true. The default is false.
+
+- `displayName` `string`
+
+  If there was a user-defined configuration object applied to the function, and it had a `displayName` defined. This will be returned here.
 
 Additionally, the following properties also exist for Node.js functions:
 
@@ -257,7 +269,7 @@ Additionally, the following properties also exist for Node.js functions:
 ```js
 import { zipFunction } from '@netlify/zip-it-and-ship-it'
 
-const archive = await zipFunctions('functions/function.js', 'functions-dist')
+const archive = await zipFunction('functions/function.js', 'functions-dist')
 ```
 
 This is like [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options) except it bundles a single Function.
