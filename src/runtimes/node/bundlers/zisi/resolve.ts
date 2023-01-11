@@ -6,13 +6,12 @@ import { pathExists } from 'path-exists'
 // @ts-expect-error types are wrong
 import { async as asyncResolve } from 'resolve'
 import semver from 'semver'
+import unixify from 'unixify'
 
 // The types do not include the mjs api of resolve
 const resolveLib = asyncResolve as typeof import('resolve')
 
 const require = createRequire(import.meta.url)
-
-const BACKSLASH_REGEXP = /\\/g
 
 // Find the path to a module's `package.json`
 // We need to use `resolve` instead of `require.resolve()` because:
@@ -107,7 +106,7 @@ const resolvePackageFallback = async function (moduleName: string, baseDirs: str
 const isPackageDir = async function (moduleName: string, dir: string) {
   // Need to use `endsWith()` to take into account `@scope/package`.
   // Backslashes need to be converted for Windows.
-  if (!dir.replace(BACKSLASH_REGEXP, '/').endsWith(moduleName) || !(await pathExists(`${dir}/package.json`))) {
+  if (!unixify(dir).endsWith(moduleName) || !(await pathExists(`${dir}/package.json`))) {
     return
   }
 
