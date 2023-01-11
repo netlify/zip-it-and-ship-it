@@ -127,7 +127,7 @@ const zipFunction: ZipFunction = async function ({
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath,
-    displayName: config?.displayName,
+    displayName: config?.name,
     internalFunction,
   }
 }

@@ -161,7 +161,7 @@ describe('zipFunction', () => {
       const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
       const basePath = join(FIXTURES_DIR, 'node-display-name')
       const opts = merge(options, {
-        config: { 'function-1': { displayName: 'Function One' } },
+        config: { 'function-1': { name: 'Function One' } },
       })
       const result = (await zipFunction(`${basePath}/function-1.js`, tmpDir, opts))!
 

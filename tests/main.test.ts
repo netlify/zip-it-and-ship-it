@@ -71,7 +71,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
-    'Zips Node.js function files from an internal-functions dir with a configured displayName',
+    'Zips Node.js function files from an internal-functions dir with a configured name',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
       const fixtureName = join('node-internal', '.netlify/internal-functions')
@@ -80,7 +80,7 @@ describe('zip-it-and-ship-it', () => {
         opts: {
           internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
           ...options,
-          config: { 'function-1': { displayName: 'Function One' } },
+          config: { 'function-1': { name: 'Function One' } },
         },
       })
       expect(files).toHaveLength(2)
@@ -1765,7 +1765,7 @@ describe('zip-it-and-ship-it', () => {
     expect(mockSource).toBe(unzippedBinaryContents)
   })
 
-  test('Builds Go functions from an internal-functions dir with a configured displayName', async () => {
+  test('Builds Go functions from an internal-functions dir with a configured name', async () => {
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
       await writeFile(args[1][2], '')
 
@@ -1779,7 +1779,7 @@ describe('zip-it-and-ship-it', () => {
         internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'go-func-1': {
-            displayName: 'Go Function One',
+            name: 'Go Function One',
           },
         },
       },
@@ -1950,7 +1950,7 @@ describe('zip-it-and-ship-it', () => {
     )
   })
 
-  test('Builds Rust functions from an internal-functions dir with a configured displayName', async () => {
+  test('Builds Rust functions from an internal-functions dir with a configured name', async () => {
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
       // eslint-disable-next-line unicorn/no-useless-undefined
       const [rootCommand, , { env: environment = undefined } = {}] = args
@@ -1973,7 +1973,7 @@ describe('zip-it-and-ship-it', () => {
         internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'rust-func-1': {
-            displayName: 'Rust Function Two',
+            name: 'Rust Function Two',
           },
         },
         featureFlags: {

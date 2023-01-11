@@ -161,7 +161,7 @@ const zipFunction: ZipFunction = async function ({
   return {
     config,
     path: destPath,
-    displayName: config?.displayName,
+    displayName: config?.name,
     internalFunction,
   }
 }

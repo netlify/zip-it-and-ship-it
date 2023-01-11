@@ -150,9 +150,9 @@ The following properties are accepted:
   The `[name]` placeholder will be replaced by the name of the function, allowing you to use it to construct the path to
   the target directory.
 
-- `displayName`
+- `name`
 
-  A display name for the function.
+  A name to use when displaying the function in the Netlify UI. Populates the `displayName` property in the functions manifest for the specified function.
 
 #### `featureFlags`
 
@@ -219,7 +219,7 @@ properties.
 
 - `displayName` `string`
 
-  If there was a user-defined configuration object applied to the function, and it had a `displayName` defined. This will be returned here.
+  If there was a user-defined configuration object applied to the function, and it had a `name` defined. This will be returned here.
 
 Additionally, the following properties also exist for Node.js functions:
 
