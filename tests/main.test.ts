@@ -2473,7 +2473,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
-    'bundlers emit entry file with cjs extension when FF on',
+    'Emits entry file with .cjs extension when `zisi_output_cjs_extension` flag is on',
     ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
     async (options) => {
       const fixtureName = 'node-esm'
@@ -2499,7 +2499,7 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
-  testMany('bundlers keep cjs file extension', ['bundler_default', 'bundler_nft'], async (options) => {
+  testMany('Keeps .cjs extension', ['bundler_default', 'bundler_nft'], async (options) => {
     const fixtureName = 'node-cjs-extension'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
@@ -2521,7 +2521,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
-    'bundlers do not create cjs entry file if entry with js extension is already present',
+    'Does not create .cjs entry file if entry with .js extension is already present',
     ['bundler_default', 'bundler_nft'],
     async (options) => {
       const fixtureName = 'node-js-extension'
