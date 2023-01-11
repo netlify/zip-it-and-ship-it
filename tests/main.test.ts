@@ -14,7 +14,6 @@ import unixify from 'unixify'
 import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { Config } from '../src/config.js'
-import { FUNCTIONS_INTERNAL_DIR } from '../src/runtimes/constants.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
 import { NodeBundlerType } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
@@ -75,10 +74,14 @@ describe('zip-it-and-ship-it', () => {
     'Zips Node.js function files from an internal-functions dir with a configured displayName',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const fixtureName = join('node-internal', FUNCTIONS_INTERNAL_DIR)
-      const { files } = await zipNode(fixtureName, {
+      const fixtureName = join('node-internal', '.netlify/internal-functions')
+      const { files } = await zipFixture(fixtureName, {
         length: 2,
-        opts: { ...options, config: { 'function-1': { displayName: 'Function One' } } },
+        opts: {
+          internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
+          ...options,
+          config: { 'function-1': { displayName: 'Function One' } },
+        },
       })
       expect(files).toHaveLength(2)
       expect(files[0].isInternalFunction).toBeTruthy()
@@ -1769,10 +1772,11 @@ describe('zip-it-and-ship-it', () => {
       return {} as any
     })
 
-    const fixtureName = join('go-internal', FUNCTIONS_INTERNAL_DIR)
+    const fixtureName = join('go-internal', '.netlify/internal-functions')
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
+        internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'go-func-1': {
             displayName: 'Go Function One',
@@ -1962,10 +1966,11 @@ describe('zip-it-and-ship-it', () => {
       }
     })
 
-    const fixtureName = join('rust-internal', FUNCTIONS_INTERNAL_DIR)
+    const fixtureName = join('rust-internal', '.netlify/internal-functions')
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
+        internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'rust-func-1': {
             displayName: 'Rust Function Two',

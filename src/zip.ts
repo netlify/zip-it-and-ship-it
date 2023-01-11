@@ -70,9 +70,11 @@ export const zipFunctions = async function (
   const logger = getLogger(systemLog, debug)
   const cache = new RuntimeCache()
   const featureFlags = getFlags(inputFeatureFlags)
-  const srcFolders = resolveFunctionsDirectories(
-    [...relativeSrcFolders, internalFunctionsFolder].filter(Boolean) as string[],
-  )
+  const functionsDirectories = [
+    ...(Array.isArray(relativeSrcFolders) ? relativeSrcFolders : [relativeSrcFolders]),
+    internalFunctionsFolder,
+  ].filter(Boolean) as string[]
+  const srcFolders = resolveFunctionsDirectories(functionsDirectories)
   const internalFunctionsPath = internalFunctionsFolder && resolve(internalFunctionsFolder)
 
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
