@@ -12,7 +12,7 @@ interface ManifestFunction {
   schedule?: string
   displayName?: string
   bundler?: string
-  isInternalFunction?: boolean
+  internalFunction?: boolean
 }
 
 export interface Manifest {
@@ -47,7 +47,7 @@ const formatFunctionForManifest = ({
   schedule,
   displayName,
   bundler,
-  isInternalFunction,
+  internalFunction,
 }: FunctionResult): ManifestFunction => ({
   mainFile,
   name,
@@ -56,5 +56,5 @@ const formatFunctionForManifest = ({
   schedule,
   displayName,
   bundler,
-  isInternalFunction,
+  internalFunction,
 })

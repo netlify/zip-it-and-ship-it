@@ -140,7 +140,7 @@ describe('zipFunction', () => {
   )
 
   testMany(
-    'Can populate the isInternalFunction property for functions',
+    'Can populate the internalFunction property for functions',
     ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
     async (options) => {
       const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
@@ -150,7 +150,7 @@ describe('zipFunction', () => {
       })
       const result = (await zipFunction(`${basePath}/function-1.js`, tmpDir, opts))!
 
-      expect(result.isInternalFunction).toBeTruthy()
+      expect(result.internalFunction).toBe(true)
     },
   )
 

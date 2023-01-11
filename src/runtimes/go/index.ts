@@ -117,7 +117,7 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
-  isInternalFunction,
+  internalFunction,
 }) {
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
@@ -164,7 +164,7 @@ const zipFunction: ZipFunction = async function ({
     config,
     path: destPath,
     displayName: config?.displayName,
-    isInternalFunction,
+    internalFunction,
   }
 }
 
