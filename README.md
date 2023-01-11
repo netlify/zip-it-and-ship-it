@@ -186,7 +186,7 @@ Maximum number of functions to bundle at the same time.
 - _Type_: `string`
 - _Default value_: `undefined`
 
-Defines the path to the folder with internal functions. Used to populate a function's `internalFunction` property, if its path is within this specified internal functions folder.
+Defines the path to the folder with internal functions. Used to populate a function's `isInternal` property, if its path is within this specified internal functions folder.
 
 ### Return value
 
@@ -213,7 +213,7 @@ properties.
 
   The size of the generated archive, in bytes.
 
-- `internalFunction` `boolean`
+- `isInternal` `boolean`
 
   If the function path has a match with the `internalFunctionsFolder` property, this boolean will be true.
 

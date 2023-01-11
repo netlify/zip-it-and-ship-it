@@ -137,7 +137,7 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
-  internalFunction,
+  isInternal,
 }) {
   const destPath = join(destFolder, `${filename}.zip`)
   const isSource = extname(mainFile) === '.rs'
@@ -162,7 +162,7 @@ const zipFunction: ZipFunction = async function ({
     config,
     path: destPath,
     displayName: config?.name,
-    internalFunction,
+    isInternal,
   }
 }
 

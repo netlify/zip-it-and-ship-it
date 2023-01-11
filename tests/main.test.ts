@@ -67,7 +67,7 @@ describe('zip-it-and-ship-it', () => {
     expect(files).toHaveLength(1)
     expect(files[0].runtime).toBe('js')
     expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function.js'))
-    expect(files[0].internalFunction).toBeFalsy()
+    expect(files[0].isInternal).toBeFalsy()
   })
 
   testMany(
@@ -84,7 +84,7 @@ describe('zip-it-and-ship-it', () => {
         },
       })
       expect(files).toHaveLength(2)
-      expect(files[0].internalFunction).toBe(true)
+      expect(files[0].isInternal).toBe(true)
       expect(files[0].displayName).toBe('Function One')
       expect(files[1].displayName).toBeUndefined()
     },
@@ -1786,7 +1786,7 @@ describe('zip-it-and-ship-it', () => {
     })
 
     expect(files).toHaveLength(2)
-    expect(files[0].internalFunction).toBe(true)
+    expect(files[0].isInternal).toBe(true)
     expect(files[0].displayName).toBe('Go Function One')
     expect(files[1].displayName).toBeUndefined()
   })
@@ -1810,7 +1810,7 @@ describe('zip-it-and-ship-it', () => {
         name: 'go-func-1',
         path: expect.anything(),
         runtime: 'go',
-        internalFunction: false,
+        isInternal: false,
       },
       {
         config: expect.anything(),
@@ -1818,7 +1818,7 @@ describe('zip-it-and-ship-it', () => {
         name: 'go-func-2',
         path: expect.anything(),
         runtime: 'go',
-        internalFunction: false,
+        isInternal: false,
       },
     ])
 
@@ -1919,7 +1919,7 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         runtime: 'rs',
         size: 278,
-        internalFunction: false,
+        isInternal: false,
       },
       {
         config: expect.anything(),
@@ -1928,7 +1928,7 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         runtime: 'rs',
         size: 278,
-        internalFunction: false,
+        isInternal: false,
       },
     ])
 
@@ -1983,7 +1983,7 @@ describe('zip-it-and-ship-it', () => {
     })
 
     expect(files).toHaveLength(2)
-    expect(files[0].internalFunction).toBe(true)
+    expect(files[0].isInternal).toBe(true)
     expect(files[0].displayName).toBe('Rust Function Two')
     expect(files[1].displayName).toBeUndefined()
   })

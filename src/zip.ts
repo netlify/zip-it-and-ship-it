@@ -110,7 +110,7 @@ export const zipFunctions = async function (
         srcDir: func.srcDir,
         srcPath: func.srcPath,
         stat: func.stat,
-        internalFunction: Boolean(internalFunctionsPath && isPathInside(func.srcPath, internalFunctionsPath)),
+        isInternal: Boolean(internalFunctionsPath && isPathInside(func.srcPath, internalFunctionsPath)),
       })
       const durationNs = endTimer(startIntervalTime)
       const logObject = {
@@ -208,7 +208,7 @@ export const zipFunction = async function (
     srcDir,
     srcPath,
     stat: stats,
-    internalFunction: Boolean(internalFunctionsPath && isPathInside(srcPath, internalFunctionsPath)),
+    isInternal: Boolean(internalFunctionsPath && isPathInside(srcPath, internalFunctionsPath)),
   })
   const durationNs = endTimer(startIntervalTime)
   const logObject = {
