@@ -28,6 +28,7 @@ interface ZipFunctionOptions {
   zipGo?: boolean
   systemLog?: LogFunction
   debug?: boolean
+  internalFunctionsFolder?: string
 }
 
 export type ZipFunctionsOptions = ZipFunctionOptions & {
@@ -70,11 +71,7 @@ export const zipFunctions = async function (
   const logger = getLogger(systemLog, debug)
   const cache = new RuntimeCache()
   const featureFlags = getFlags(inputFeatureFlags)
-  const functionsDirectories = [
-    ...(Array.isArray(relativeSrcFolders) ? relativeSrcFolders : [relativeSrcFolders]),
-    internalFunctionsFolder,
-  ].filter(Boolean) as string[]
-  const srcFolders = resolveFunctionsDirectories(functionsDirectories)
+  const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const internalFunctionsPath = internalFunctionsFolder && resolve(internalFunctionsFolder)
 
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
@@ -158,6 +155,7 @@ export const zipFunction = async function (
     repositoryRoot = basePath,
     systemLog,
     debug,
+    internalFunctionsFolder,
   }: ZipFunctionOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
@@ -167,6 +165,7 @@ export const zipFunction = async function (
   const srcPath = resolve(relativeSrcPath)
   const cache = new RuntimeCache()
   const functions = await getFunctionsFromPaths([srcPath], { cache, config: inputConfig, dedupe: true, featureFlags })
+  const internalFunctionsPath = internalFunctionsFolder && resolve(internalFunctionsFolder)
 
   if (functions.size === 0) {
     return
@@ -209,6 +208,7 @@ export const zipFunction = async function (
     srcDir,
     srcPath,
     stat: stats,
+    isInternalFunction: Boolean(internalFunctionsPath && isPathInside(srcPath, internalFunctionsPath)),
   })
   const durationNs = endTimer(startIntervalTime)
   const logObject = {

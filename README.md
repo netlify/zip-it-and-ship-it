@@ -163,7 +163,7 @@ See [feature flags](#feature-flags).
 - _Type_: `string`
 - _Default value_: `undefined`
 
-Defines the path for a manifest file to be created with the results of the functions bundling. This file is a
+Defines the full path, including the file name, to use for the manifest file that will be created with the functions bundling results. For example, `path/to/manifest.json`. This file is a
 JSON-formatted string with the following properties:
 
 - `functions`: An array with the functions created, in the same format as returned by `zipFunctions`
@@ -176,10 +176,17 @@ JSON-formatted string with the following properties:
 
 #### `parallelLimit`
 
-- _Type_: `number`\
+- _Type_: `number`
 - _Default value_: `5`
 
 Maximum number of functions to bundle at the same time.
+
+#### `internalFunctionsFolder`
+
+- _Type_: `string`
+- _Default value_: `undefined`
+
+Defines the path to the folder with internal functions. Used to populate a function's `isInternalFunction` property, if its path is within this specified internal functions folder.
 
 ### Return value
 
@@ -208,7 +215,7 @@ properties.
 
 - `isInternalFunction` `boolean`
 
-  If the function is an internal Netlify function, for example created using a Netlify Integration, this boolean will be true. The default is false.
+  If the function path has a match with the `internalFunctionsFolder` property, this boolean will be true.
 
 - `displayName` `string`
 
