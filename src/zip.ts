@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import { resolve } from 'path'
 
+import isPathInside from 'is-path-inside'
 import pMap from 'p-map'
 
 import { ArchiveFormat } from './archive.js'
@@ -33,6 +34,7 @@ export type ZipFunctionsOptions = ZipFunctionOptions & {
   configFileDirectories?: string[]
   manifest?: string
   parallelLimit?: number
+  internalFunctionsFolder?: string
 }
 
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -60,6 +62,7 @@ export const zipFunctions = async function (
     repositoryRoot = basePath,
     systemLog,
     debug,
+    internalFunctionsFolder,
   }: ZipFunctionsOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
@@ -67,7 +70,11 @@ export const zipFunctions = async function (
   const logger = getLogger(systemLog, debug)
   const cache = new RuntimeCache()
   const featureFlags = getFlags(inputFeatureFlags)
-  const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
+  const srcFolders = resolveFunctionsDirectories(
+    [...relativeSrcFolders, internalFunctionsFolder].filter(Boolean) as string[],
+  )
+  const internalFunctionsPath = internalFunctionsFolder && resolve(internalFunctionsFolder)
+
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
   const functions = await getFunctionsFromPaths(paths, {
     cache,
@@ -104,6 +111,7 @@ export const zipFunctions = async function (
         srcDir: func.srcDir,
         srcPath: func.srcPath,
         stat: func.stat,
+        isInternalFunction: Boolean(internalFunctionsPath && isPathInside(func.srcPath, internalFunctionsPath)),
       })
       const durationNs = endTimer(startIntervalTime)
       const logObject = {

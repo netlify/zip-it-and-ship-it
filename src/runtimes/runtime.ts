@@ -58,6 +58,7 @@ export type ZipFunction = (
     destFolder: string
     featureFlags: FeatureFlags
     repositoryRoot?: string
+    isInternalFunction?: boolean
   } & FunctionSource,
 ) => Promise<ZipFunctionResult>
 

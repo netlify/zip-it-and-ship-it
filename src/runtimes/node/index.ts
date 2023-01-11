@@ -2,7 +2,6 @@ import { join } from 'path'
 
 import { copyFile } from 'cp-file'
 
-import { checkIsInternalFunction } from '../../utils/check_is_internal_function.js'
 import { GetSrcFilesFunction, Runtime, RuntimeType, ZipFunction } from '../runtime.js'
 
 import { getBundler, getBundlerName } from './bundlers/index.js'
@@ -46,6 +45,7 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
+  isInternalFunction,
 }) {
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
@@ -128,7 +128,7 @@ const zipFunction: ZipFunction = async function ({
     nodeModulesWithDynamicImports,
     path: zipPath,
     displayName: config?.displayName,
-    isInternalFunction: checkIsInternalFunction(srcDir),
+    isInternalFunction,
   }
 }
 
