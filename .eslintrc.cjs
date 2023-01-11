@@ -7,6 +7,7 @@ module.exports = {
   },
   rules: {
     'import/extensions': ['error', 'ignorePackages'],
+    'max-lines': 'off',
     'n/no-missing-import': 'off',
     'no-magic-numbers': 'off',
     'max-lines-per-function': 'off',

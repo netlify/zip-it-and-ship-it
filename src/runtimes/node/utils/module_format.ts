@@ -19,5 +19,9 @@ export const getFileExtensionForFormat = (
     return ModuleFileExtension.MJS
   }
 
+  if (featureFlags.zisi_output_cjs_extension && moduleFormat === ModuleFormat.COMMONJS) {
+    return ModuleFileExtension.CJS
+  }
+
   return ModuleFileExtension.JS
 }

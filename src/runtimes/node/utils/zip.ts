@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer'
 import { Stats, promises as fs } from 'fs'
 import os from 'os'
-import { basename, join, resolve } from 'path'
+import { basename, join } from 'path'
 
 import { copyFile } from 'cp-file'
 import { deleteAsync as deleteFiles } from 'del'
@@ -12,8 +12,8 @@ import type { FeatureFlags } from '../../../feature_flags.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
 import { cachedLstat, mkdirAndWriteFile } from '../../../utils/fs.js'
 
-import { getEntryFile } from './entry_file.js'
-import { getFileExtensionForFormat, ModuleFormat } from './module_format.js'
+import { conflictsWithEntryFile, EntryFile, getEntryFile, isNamedLikeEntryFile } from './entry_file.js'
+import { ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
 // Taken from https://www.npmjs.com/package/cpy.
@@ -51,23 +51,22 @@ const createDirectory = async function ({
   rewrites = new Map(),
   srcFiles,
 }: ZipNodeParameters) {
-  const entryFile = getEntryFile({
+  const { contents: entryContents, filename: entryFilename } = getEntryFile({
     commonPrefix: basePath,
+    featureFlags,
+    filename,
     mainFile,
     moduleFormat,
     userNamespace: DEFAULT_USER_SUBDIRECTORY,
   })
-  const entryFileExtension = getFileExtensionForFormat(moduleFormat, featureFlags)
-  const entryFilename = basename(filename, extension) + entryFileExtension
   const functionFolder = join(destFolder, basename(filename, extension))
-  const entryFilePath = resolve(functionFolder, entryFilename)
 
   // Deleting the functions directory in case it exists before creating it.
   await deleteFiles(functionFolder, { force: true })
   await fs.mkdir(functionFolder, { recursive: true })
 
   // Writing entry file.
-  await fs.writeFile(entryFilePath, entryFile)
+  await fs.writeFile(join(functionFolder, entryFilename), entryContents)
 
   // Copying source files.
   await pMap(
@@ -108,27 +107,35 @@ const createZipArchive = async function ({
 }: ZipNodeParameters) {
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
   const { archive, output } = startZip(destPath)
-  const entryFileExtension = getFileExtensionForFormat(moduleFormat, featureFlags)
-  const entryFilename = basename(filename, extension) + entryFileExtension
-  const entryFilePath = resolve(basePath, entryFilename)
 
   // We don't need an entry file if it would end up with the same path as the
   // function's main file.
-  const needsEntryFile = entryFilePath !== mainFile
+  const needsEntryFile = !isNamedLikeEntryFile(mainFile, { basePath, filename })
 
   // There is a naming conflict with the entry file if one of the supporting
   // files (i.e. not the main file) has the path that the entry file needs to
   // take.
-  const hasEntryFileConflict = srcFiles.some((srcFile) => srcFile === entryFilePath && srcFile !== mainFile)
+  const hasEntryFileConflict = conflictsWithEntryFile(srcFiles, {
+    basePath,
+    filename,
+    mainFile,
+  })
 
   // If there is a naming conflict, we move all user files (everything other
   // than the entry file) to its own sub-directory.
   const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
   if (needsEntryFile) {
-    const entryFile = getEntryFile({ commonPrefix: basePath, mainFile, moduleFormat, userNamespace })
+    const entryFile = getEntryFile({
+      commonPrefix: basePath,
+      filename,
+      mainFile,
+      moduleFormat,
+      userNamespace,
+      featureFlags,
+    })
 
-    addEntryFileToZip(archive, entryFile, basename(entryFilePath))
+    addEntryFileToZip(archive, entryFile)
   }
 
   const srcFilesInfos = await Promise.all(srcFiles.map((file) => addStat(cache, file)))
@@ -163,7 +170,7 @@ export const zipNodeJs = function ({
   return createDirectory(options)
 }
 
-const addEntryFileToZip = function (archive: ZipArchive, contents: string, filename: string) {
+const addEntryFileToZip = function (archive: ZipArchive, { contents, filename }: EntryFile) {
   const contentBuffer = Buffer.from(contents)
 
   addZipContent(archive, contentBuffer, filename)

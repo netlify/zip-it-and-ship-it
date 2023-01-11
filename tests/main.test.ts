@@ -1000,7 +1000,7 @@ describe('zip-it-and-ship-it', () => {
 
   testMany(
     'Handles a JavaScript function ({name}.cjs, {name}/{name}.cjs, {name}/index.cjs)',
-    ['bundler_esbuild', 'bundler_default'],
+    ['bundler_esbuild'],
     async (options) => {
       const { files, tmpDir } = await zipFixture('node-cjs-extension', {
         length: 3,
@@ -1017,6 +1017,32 @@ describe('zip-it-and-ship-it', () => {
       const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
       expect(handler1()).toBe(true)
       const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
+      expect(handler2()).toBe(true)
+      const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+      expect(handler3()).toBe(true)
+    },
+  )
+
+  // TODO can be merged with the above once the FF is on `zisi_output_cjs_extension`
+  testMany(
+    'Handles a JavaScript function ({name}.cjs, {name}/{name}.cjs, {name}/index.cjs)',
+    ['bundler_default'],
+    async (options) => {
+      const { files, tmpDir } = await zipFixture('node-cjs-extension', {
+        length: 3,
+        opts: options,
+      })
+
+      await unzipFiles(files)
+
+      expect(files).toHaveLength(3)
+      files.forEach((file) => {
+        expect(file.bundler).toBe(options.getCurrentBundlerName() ?? 'zisi')
+      })
+
+      const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.cjs`)
+      expect(handler1()).toBe(true)
+      const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.cjs`)
       expect(handler2()).toBe(true)
       const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
       expect(handler3()).toBe(true)
@@ -2445,4 +2471,81 @@ describe('zip-it-and-ship-it', () => {
     expect(result.stderr).not.toContain('Dynamic require of "path" is not supported')
     expect(result).not.toBeInstanceOf(Error)
   })
+
+  testMany(
+    'Emits entry file with .cjs extension when `zisi_output_cjs_extension` flag is on',
+    ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
+    async (options) => {
+      const fixtureName = 'node-esm'
+      const opts = merge(options, {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        featureFlags: { zisi_output_cjs_extension: true },
+      })
+      const { files, tmpDir } = await zipFixture(fixtureName, {
+        length: 2,
+        opts,
+      })
+
+      await unzipFiles(files)
+
+      const bundledFile2 = await importFunctionFile(join(tmpDir, 'func2.cjs'))
+      expect(bundledFile2.handler()).toBe(true)
+
+      if (options.getCurrentBundlerName() === 'esbuild') {
+        // nft does not create an entry here because the main file is already an entrypoint
+        const bundledFile1 = await importFunctionFile(join(tmpDir, 'func1.cjs'))
+        expect(bundledFile1.handler()).toBe(true)
+      }
+    },
+  )
+
+  testMany('Keeps .cjs extension', ['bundler_default', 'bundler_nft'], async (options) => {
+    const fixtureName = 'node-cjs-extension'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    const { files, tmpDir } = await zipFixture(fixtureName, {
+      length: 3,
+      opts,
+    })
+
+    await unzipFiles(files)
+
+    const bundledFile1 = await importFunctionFile(join(tmpDir, 'func1.cjs'))
+    const bundledFile2 = await importFunctionFile(join(tmpDir, 'func2.cjs'))
+    const bundledFile3 = await importFunctionFile(join(tmpDir, 'index.cjs'))
+
+    expect(bundledFile1.handler()).toBe(true)
+    expect(bundledFile2.handler()).toBe(true)
+    expect(bundledFile3.handler()).toBe(true)
+  })
+
+  testMany(
+    'Does not create .cjs entry file if entry with .js extension is already present',
+    ['bundler_default', 'bundler_nft'],
+    async (options) => {
+      const fixtureName = 'node-js-extension'
+      const opts = merge(options, {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        featureFlags: { zisi_output_cjs_extension: true },
+      })
+      const { files, tmpDir } = await zipFixture(fixtureName, {
+        length: 3,
+        opts,
+      })
+
+      await unzipFiles(files)
+
+      const bundledFile1 = await importFunctionFile(join(tmpDir, 'func1.js'))
+      const bundledFile2 = await importFunctionFile(join(tmpDir, 'func2.js'))
+
+      expect(bundledFile1.handler()).toBe(true)
+      expect(bundledFile2.handler()).toBe(true)
+
+      expect(`${tmpDir}/func1.cjs`).not.toPathExist()
+      expect(`${tmpDir}/func1.mjs`).not.toPathExist()
+      expect(`${tmpDir}/func2.cjs`).not.toPathExist()
+      expect(`${tmpDir}/func2.mjs`).not.toPathExist()
+    },
+  )
 })
