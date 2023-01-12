@@ -108,10 +108,6 @@ const createZipArchive = async function ({
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
   const { archive, output } = startZip(destPath)
 
-  // We don't need an entry file if it would end up with the same path as the
-  // function's main file.
-  const needsEntryFile = !isNamedLikeEntryFile(mainFile, { basePath, filename })
-
   // There is a naming conflict with the entry file if one of the supporting
   // files (i.e. not the main file) has the path that the entry file needs to
   // take.
@@ -120,6 +116,10 @@ const createZipArchive = async function ({
     filename,
     mainFile,
   })
+
+  // We don't need an entry file if it would end up with the same path as the
+  // function's main file. Unless we have a file conflict and need to move everything into a subfolder
+  const needsEntryFile = hasEntryFileConflict || !isNamedLikeEntryFile(mainFile, { basePath, filename })
 
   // If there is a naming conflict, we move all user files (everything other
   // than the entry file) to its own sub-directory.
