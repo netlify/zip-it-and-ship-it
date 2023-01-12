@@ -181,7 +181,7 @@ JSON-formatted string with the following properties:
 
 Maximum number of functions to bundle at the same time.
 
-#### `internalFunctionsFolder`
+#### `internalSrcFolder`
 
 - _Type_: `string`
 - _Default value_: `undefined`
@@ -215,7 +215,7 @@ properties.
 
 - `isInternal` `boolean`
 
-  If the function path has a match with the `internalFunctionsFolder` property, this boolean will be true.
+  If the function path has a match with the `internalSrcFolder` property, this boolean will be true.
 
 - `displayName` `string`
 

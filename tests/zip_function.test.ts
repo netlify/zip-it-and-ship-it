@@ -146,7 +146,7 @@ describe('zipFunction', () => {
       const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
       const basePath = join(FIXTURES_DIR, 'node-internal', '.netlify/internal-functions')
       const opts = merge(options, {
-        internalFunctionsFolder: basePath,
+        internalSrcFolder: basePath,
       })
       const result = (await zipFunction(`${basePath}/function-1.js`, tmpDir, opts))!
 

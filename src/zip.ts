@@ -28,14 +28,14 @@ interface ZipFunctionOptions {
   zipGo?: boolean
   systemLog?: LogFunction
   debug?: boolean
-  internalFunctionsFolder?: string
+  internalSrcFolder?: string
 }
 
 export type ZipFunctionsOptions = ZipFunctionOptions & {
   configFileDirectories?: string[]
   manifest?: string
   parallelLimit?: number
-  internalFunctionsFolder?: string
+  internalSrcFolder?: string
 }
 
 const DEFAULT_PARALLEL_LIMIT = 5
@@ -63,7 +63,7 @@ export const zipFunctions = async function (
     repositoryRoot = basePath,
     systemLog,
     debug,
-    internalFunctionsFolder,
+    internalSrcFolder,
   }: ZipFunctionsOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
@@ -72,7 +72,7 @@ export const zipFunctions = async function (
   const cache = new RuntimeCache()
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
-  const internalFunctionsPath = internalFunctionsFolder && resolve(internalFunctionsFolder)
+  const internalFunctionsPath = internalSrcFolder && resolve(internalSrcFolder)
 
   const [paths] = await Promise.all([listFunctionsDirectories(srcFolders), fs.mkdir(destFolder, { recursive: true })])
   const functions = await getFunctionsFromPaths(paths, {
@@ -155,7 +155,7 @@ export const zipFunction = async function (
     repositoryRoot = basePath,
     systemLog,
     debug,
-    internalFunctionsFolder,
+    internalSrcFolder,
   }: ZipFunctionOptions = {},
 ) {
   validateArchiveFormat(archiveFormat)
@@ -165,7 +165,7 @@ export const zipFunction = async function (
   const srcPath = resolve(relativeSrcPath)
   const cache = new RuntimeCache()
   const functions = await getFunctionsFromPaths([srcPath], { cache, config: inputConfig, dedupe: true, featureFlags })
-  const internalFunctionsPath = internalFunctionsFolder && resolve(internalFunctionsFolder)
+  const internalFunctionsPath = internalSrcFolder && resolve(internalSrcFolder)
 
   if (functions.size === 0) {
     return

@@ -71,14 +71,14 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
-    'Zips Node.js function files from an internal-functions dir with a configured name',
+    'Zips Node.js function files from an internal functions dir with a configured name',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
       const fixtureName = join('node-internal', '.netlify/internal-functions')
       const { files } = await zipFixture(fixtureName, {
         length: 2,
         opts: {
-          internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
+          internalSrcFolder: join(FIXTURES_DIR, fixtureName),
           ...options,
           config: { 'function-1': { name: 'Function One' } },
         },
@@ -1765,7 +1765,7 @@ describe('zip-it-and-ship-it', () => {
     expect(mockSource).toBe(unzippedBinaryContents)
   })
 
-  test('Builds Go functions from an internal-functions dir with a configured name', async () => {
+  test('Builds Go functions from an internal functions dir with a configured name', async () => {
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
       await writeFile(args[1][2], '')
 
@@ -1776,7 +1776,7 @@ describe('zip-it-and-ship-it', () => {
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
-        internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
+        internalSrcFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'go-func-1': {
             name: 'Go Function One',
@@ -1950,10 +1950,9 @@ describe('zip-it-and-ship-it', () => {
     )
   })
 
-  test('Builds Rust functions from an internal-functions dir with a configured name', async () => {
+  test('Builds Rust functions from an internal functions dir with a configured name', async () => {
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
-      // eslint-disable-next-line unicorn/no-useless-undefined
-      const [rootCommand, , { env: environment = undefined } = {}] = args
+      const [rootCommand, , { env: environment }] = args
 
       if (rootCommand === 'cargo') {
         const directory = join(environment.CARGO_TARGET_DIR, args[1][2], 'release')
@@ -1970,7 +1969,7 @@ describe('zip-it-and-ship-it', () => {
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
-        internalFunctionsFolder: join(FIXTURES_DIR, fixtureName),
+        internalSrcFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'rust-func-1': {
             name: 'Rust Function Two',
