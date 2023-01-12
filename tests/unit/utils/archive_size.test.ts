@@ -9,7 +9,7 @@ import { FIXTURES_DIR } from '../../helpers/main.js'
 describe('addArchiveSize', () => {
   test('adds the archive size of the file at `path` if it is a ZIP archive', async () => {
     const functionArchive = {
-      path: resolve(join(FIXTURES_DIR, 'archive-size', 'normal.zip')),
+      path: resolve(FIXTURES_DIR, 'archive-size', 'normal.zip'),
     } as FunctionArchive
 
     const result = await addArchiveSize(functionArchive)
@@ -19,7 +19,7 @@ describe('addArchiveSize', () => {
 
   test('does not add the archive size of the file at `path` if it is not a ZIP archive', async () => {
     const functionArchive = {
-      path: resolve(join(FIXTURES_DIR, 'archive-size', 'normal.js')),
+      path: resolve(FIXTURES_DIR, 'archive-size', 'normal.js'),
     } as FunctionArchive
 
     const result = await addArchiveSize(functionArchive)
