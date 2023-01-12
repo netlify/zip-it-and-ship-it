@@ -45,6 +45,8 @@ export interface ZipFunctionResult {
   nativeNodeModules?: object
   nodeModulesWithDynamicImports?: string[]
   path: string
+  isInternal?: boolean
+  displayName?: string
 }
 
 export type ZipFunction = (
@@ -56,6 +58,7 @@ export type ZipFunction = (
     destFolder: string
     featureFlags: FeatureFlags
     repositoryRoot?: string
+    isInternal?: boolean
   } & FunctionSource,
 ) => Promise<ZipFunctionResult>
 

@@ -24,6 +24,7 @@ interface FunctionConfig {
   rustTargetDirectory?: string
   schedule?: string
   zipGo?: boolean
+  name?: string
 
   // Temporary configuration property, only meant to be used by the deploy
   // configuration API. Once we start emitting ESM files for all ESM functions,
