@@ -1384,6 +1384,28 @@ describe('zip-it-and-ship-it', () => {
   )
 
   testMany(
+    'Generates a entry file if no entry file needed but naming conflict occurs',
+    ['bundler_default', 'bundler_nft'],
+    async (options) => {
+      const fixtureName = 'naming_conflict'
+      const opts = merge(options, {
+        basePath: join(FIXTURES_DIR, fixtureName),
+      })
+      const { tmpDir } = await zipNode(fixtureName, {
+        opts,
+        length: 1,
+      })
+
+      const function2Entry = await importFunctionFile(`${tmpDir}/func1.js`)
+
+      expect(await function2Entry.handler()).toBe(true)
+
+      await expect(`${tmpDir}/src/func1.js`).toPathExist()
+      await expect(`${tmpDir}/src/func1.mjs`).toPathExist()
+    },
+  )
+
+  testMany(
     'Bundles functions from multiple directories when the first argument of `zipFunctions()` is an array',
     ['bundler_esbuild', 'bundler_default', 'bundler_nft'],
     async (options) => {
