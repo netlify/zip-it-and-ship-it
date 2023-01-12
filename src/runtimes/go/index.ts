@@ -109,7 +109,16 @@ const processSource = async ({
   }
 }
 
-const zipFunction: ZipFunction = async function ({ config, destFolder, filename, mainFile, srcDir, srcPath, stat }) {
+const zipFunction: ZipFunction = async function ({
+  config,
+  destFolder,
+  filename,
+  mainFile,
+  srcDir,
+  srcPath,
+  stat,
+  isInternal,
+}) {
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
 
@@ -151,7 +160,12 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
     await copyFile(binary.path, destPath)
   }
 
-  return { config, path: destPath }
+  return {
+    config,
+    path: destPath,
+    displayName: config?.name,
+    isInternal,
+  }
 }
 
 const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RuntimeType.GO, zipFunction }

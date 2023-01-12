@@ -137,6 +137,7 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
+  isInternal,
 }) {
   const destPath = join(destFolder, `${filename}.zip`)
   const isSource = extname(mainFile) === '.rs'
@@ -157,7 +158,12 @@ const zipFunction: ZipFunction = async function ({
     await zipBinary({ ...zipOptions, srcPath, stat })
   }
 
-  return { config, path: destPath }
+  return {
+    config,
+    path: destPath,
+    displayName: config?.name,
+    isInternal,
+  }
 }
 
 const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RuntimeType.RUST, zipFunction }
