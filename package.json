@@ -16,7 +16,7 @@
     "prepublishOnly": "npm ci && npm test",
     "prepack": "npm run build",
     "build": "tsc",
-    "build-watch": "tsc -w",
+    "build:dev": "tsc -w",
     "benchmark": "./benchmarks/run.sh",
     "format": "run-s build format:check-fix:*",
     "format:ci": "run-s build format:check:*",
