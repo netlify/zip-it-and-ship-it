@@ -1,7 +1,7 @@
 import { promisify } from 'util'
 
 import globFunction from 'glob'
-import minimatchFunction from 'minimatch'
+import { minimatch as minimatchFunction, MinimatchOptions } from 'minimatch'
 import normalizePath from 'normalize-path'
 
 const pGlob = promisify(globFunction)
@@ -25,6 +25,6 @@ export const glob = function (pattern: string, options: globFunction.IOptions): 
   return pGlob(normalizePath(pattern), { ...options, ignore: normalizedIgnore })
 }
 
-export const minimatch = function (target: string, pattern: string, options?: minimatchFunction.IOptions): boolean {
+export const minimatch = function (target: string, pattern: string, options?: MinimatchOptions): boolean {
   return minimatchFunction(target, normalizePath(pattern), options)
 }
