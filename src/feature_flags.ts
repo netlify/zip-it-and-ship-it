@@ -23,6 +23,9 @@ export const defaultFlags: Record<string, boolean> = {
 
   // Output CJS file extension
   zisi_output_cjs_extension: false,
+
+  // Output CJS file extension
+  zisi_disallow_new_entry_name: false,
 }
 
 export type FeatureFlag = keyof typeof defaultFlags

@@ -1,9 +1,13 @@
 import { basename, extname, resolve } from 'path'
 
 import type { FeatureFlags } from '../../../feature_flags.js'
+import { FunctionBundlingUserError } from '../../../utils/error.js'
+import { RuntimeType } from '../../runtime.js'
 
 import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
+
+export const UNIQUE_ENTRY_FILE_NAME = '___netlify-lambda-entry'
 
 export interface EntryFile {
   contents: string
@@ -46,14 +50,32 @@ export const conflictsWithEntryFile = (
   srcFiles: string[],
   {
     basePath,
-    mainFile,
+    extension,
+    featureFlags,
     filename,
+    mainFile,
   }: {
     basePath: string
+    extension: string
+    featureFlags: FeatureFlags
     filename: string
     mainFile: string
   },
-) => srcFiles.some((srcFile) => isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile)
+) => {
+  srcFiles.forEach((srcFile) => {
+    if (featureFlags.zisi_disallow_new_entry_name && srcFile.includes(UNIQUE_ENTRY_FILE_NAME)) {
+      throw new FunctionBundlingUserError(
+        `The name '${UNIQUE_ENTRY_FILE_NAME}' is a reserved name and it is not allowed to be used as a file or directory name.`,
+        {
+          functionName: basename(filename, extension),
+          runtime: RuntimeType.JAVASCRIPT,
+        },
+      )
+    }
+  })
+
+  return srcFiles.some((srcFile) => isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile)
+}
 
 // Returns the name for the AWS Lambda entry file
 // We do set the handler in AWS Lambda to `<func-name>.handler` and because of
