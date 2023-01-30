@@ -62,21 +62,25 @@ export const conflictsWithEntryFile = (
     mainFile: string
   },
 ) => {
-  if (featureFlags.zisi_disallow_new_entry_name) {
-    srcFiles.forEach((srcFile) => {
-      if (srcFile.includes(ENTRY_FILE_NAME)) {
-        throw new FunctionBundlingUserError(
-          `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a file or directory name.`,
-          {
-            functionName: basename(filename, extension),
-            runtime: RuntimeType.JAVASCRIPT,
-          },
-        )
-      }
-    })
-  }
+  let hasConflict = false
 
-  return srcFiles.some((srcFile) => isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile)
+  srcFiles.forEach((srcFile) => {
+    if (featureFlags.zisi_disallow_new_entry_name && srcFile.includes(ENTRY_FILE_NAME)) {
+      throw new FunctionBundlingUserError(
+        `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a file or directory name.`,
+        {
+          functionName: basename(filename, extension),
+          runtime: RuntimeType.JAVASCRIPT,
+        },
+      )
+    }
+
+    if (!hasConflict && isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile) {
+      hasConflict = true
+    }
+  })
+
+  return hasConflict
 }
 
 // Returns the name for the AWS Lambda entry file
