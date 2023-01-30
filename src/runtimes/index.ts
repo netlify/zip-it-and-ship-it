@@ -52,7 +52,7 @@ const findFunctionsInRuntime = async function ({
   const augmentedFunctions: FunctionTupleWithoutConfig[] = functions.map((func) => {
     if (featureFlags.zisi_disallow_new_entry_name && func.name === UNIQUE_ENTRY_FILE_NAME) {
       throw new FunctionBundlingUserError(
-        `The name '${UNIQUE_ENTRY_FILE_NAME}' is a reserved name and it is not allowed to be used as a function name.`,
+        `'${UNIQUE_ENTRY_FILE_NAME}' is a reserved name and cannot be used as a function name.`,
         {
           functionName: func.name,
           runtime: runtime.name,
