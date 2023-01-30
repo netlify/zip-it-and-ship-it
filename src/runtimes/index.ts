@@ -8,7 +8,7 @@ import { FunctionBundlingUserError } from '../utils/error.js'
 
 import goRuntime from './go/index.js'
 import jsRuntime from './node/index.js'
-import { UNIQUE_ENTRY_FILE_NAME } from './node/utils/entry_file.js'
+import { ENTRY_FILE_NAME } from './node/utils/entry_file.js'
 import type { Runtime } from './runtime.js'
 import rustRuntime from './rust/index.js'
 
@@ -50,9 +50,9 @@ const findFunctionsInRuntime = async function ({
 
   // Augmenting the function objects with additional information.
   const augmentedFunctions: FunctionTupleWithoutConfig[] = functions.map((func) => {
-    if (featureFlags.zisi_disallow_new_entry_name && func.name === UNIQUE_ENTRY_FILE_NAME) {
+    if (featureFlags.zisi_disallow_new_entry_name && func.name === ENTRY_FILE_NAME) {
       throw new FunctionBundlingUserError(
-        `'${UNIQUE_ENTRY_FILE_NAME}' is a reserved name and cannot be used as a function name.`,
+        `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a function name.`,
         {
           functionName: func.name,
           runtime: runtime.name,

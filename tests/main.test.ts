@@ -2670,7 +2670,7 @@ describe('zip-it-and-ship-it', () => {
         length: 1,
         opts,
       }),
-    ).rejects.toThrowError(/is a reserved name and it is not allowed to be used as a function name\.$/)
+    ).rejects.toThrowError(/is a reserved word and cannot be used as a function name\.$/)
   })
 
   // esbuild does bundle everything into one file, so it does not have any other files in the bundle
@@ -2688,7 +2688,7 @@ describe('zip-it-and-ship-it', () => {
           length: 1,
           opts,
         }),
-      ).rejects.toThrowError(/is a reserved name and it is not allowed to be used as a file or directory name\.$/)
+      ).rejects.toThrowError(/is a reserved word and cannot be used as a file or directory name\.$/)
     },
   )
 })

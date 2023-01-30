@@ -7,7 +7,7 @@ import { RuntimeType } from '../../runtime.js'
 import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
-export const UNIQUE_ENTRY_FILE_NAME = '___netlify-lambda-entry'
+export const ENTRY_FILE_NAME = '___netlify-lambda-entry'
 
 export interface EntryFile {
   contents: string
@@ -62,17 +62,19 @@ export const conflictsWithEntryFile = (
     mainFile: string
   },
 ) => {
-  srcFiles.forEach((srcFile) => {
-    if (featureFlags.zisi_disallow_new_entry_name && srcFile.includes(UNIQUE_ENTRY_FILE_NAME)) {
-      throw new FunctionBundlingUserError(
-        `The name '${UNIQUE_ENTRY_FILE_NAME}' is a reserved name and it is not allowed to be used as a file or directory name.`,
-        {
-          functionName: basename(filename, extension),
-          runtime: RuntimeType.JAVASCRIPT,
-        },
-      )
-    }
-  })
+  if (featureFlags.zisi_disallow_new_entry_name) {
+    srcFiles.forEach((srcFile) => {
+      if (srcFile.includes(ENTRY_FILE_NAME)) {
+        throw new FunctionBundlingUserError(
+          `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a file or directory name.`,
+          {
+            functionName: basename(filename, extension),
+            runtime: RuntimeType.JAVASCRIPT,
+          },
+        )
+      }
+    })
+  }
 
   return srcFiles.some((srcFile) => isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile)
 }
