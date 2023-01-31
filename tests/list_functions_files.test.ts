@@ -251,4 +251,16 @@ describe('listFunctionsFiles', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('Darwin/Arm64'))
     warn.mockRestore()
   })
+
+  test('listFunctionsFiles includes json configured functions with a name and returns it as a displayName', async () => {
+    const dir = join(FIXTURES_DIR, 'json-config/.netlify/functions-internal/')
+    const [func] = await listFunctionsFiles([dir], {
+      configFileDirectories: [dir],
+      featureFlags: {
+        project_deploy_configuration_api_use_per_function_configuration_files: true,
+      },
+    })
+
+    expect(func.displayName).toBe('A Display Name')
+  })
 })

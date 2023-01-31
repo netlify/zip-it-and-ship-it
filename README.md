@@ -47,7 +47,7 @@ A directory or a list of directories containing the source files. If a string is
 must exist. If an array of strings is provided, at least one directory must exist.
 
 In Netlify, this directory is the
-["Functions folder"](https://docs.netlify.com/functions/configure-and-deploy/#configure-the-functions-folder).
+["Functions folder"](https://docs.netlify.com/functions/optional-configuration/?fn-language=ts#directory).
 
 A source folder can contain:
 
@@ -279,7 +279,7 @@ import { zipFunction } from '@netlify/zip-it-and-ship-it'
 const archive = await zipFunction('functions/function.js', 'functions-dist')
 ```
 
-This is like [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options) except it bundles a single Function.
+This is like [`zipFunctions()`](#zipfunctionssrcfolders-destfolder-options) except it bundles a single Function.
 
 The return value is `undefined` if the function is invalid.
 
@@ -315,6 +315,10 @@ Each object has the following properties:
   Function's name. This is the one used in the Function URL. For example, if a Function is a `myFunc.js` regular file,
   the `name` is `myFunc` and the URL is `https://{hostname}/.netlify/functions/myFunc`.
 
+- `displayName` `string`
+
+  If there was a user-defined configuration object applied to the function, and it had a `name` defined. This will be returned here.
+
 - `mainFile`: `string`
 
   Absolute path to the Function's main file. If the Function is a Node.js directory, this is its `index.js` or
@@ -330,7 +334,7 @@ Each object has the following properties:
 
 ## listFunctionsFiles(srcFolders)
 
-Like [`listFunctions()`](#listfunctionssrcfolder), except it returns not only the Functions main files, but also all
+Like [`listFunctions()`](#listfunctionssrcfolders-options), except it returns not only the Functions main files, but also all
 their required files. This is much slower.
 
 ```js
@@ -354,7 +358,7 @@ See [feature flags](#feature-flags).
 
 ### Return value
 
-The return value is the same as [`listFunctions()`](#listfunctionssrcfolder) but with the following additional
+The return value is the same as [`listFunctions()`](#listfunctionssrcfolders-options) but with the following additional
 properties.
 
 - `srcFile`: `string`
@@ -367,7 +371,7 @@ properties.
 $ zip-it-and-ship-it srcFolder destFolder
 ```
 
-The CLI performs the same logic as [`zipFunctions()`](#zipfunctionssrcfolder-destfolder-options). The archives are
+The CLI performs the same logic as [`zipFunctions()`](#zipfunctionssrcfolders-destfolder-options). The archives are
 printed on `stdout` as a JSON array.
 
 # Bundling Node.js functions
@@ -425,7 +429,7 @@ These are supplied to each of the entrypoint functions (`zipFunction`, `zipFunct
 `listFunctionsFiles`) as a named parameter called `featureFlags`. It consists of an object where each key is the name of
 a feature flag and the values are Booleans indicating whether each feature flag is enabled or disabled.
 
-The list of all feature flags currently being used can be found [here](src/feature_flags.js).
+The list of all feature flags currently being used can be found [here](src/feature_flags.ts).
 
 # Troubleshooting
 
@@ -464,7 +468,7 @@ In Netlify, this is done by ensuring that the following Node.js versions are the
 - Build-time Node.js version: this defaults to Node `16`, but can be
   [overridden with a `.nvmrc` or `NODE_VERSION` environment variable](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript).
 - Function runtime Node.js version: this defaults to `nodejs16.x` but can be
-  [overridden with a `AWS_LAMBDA_JS_RUNTIME` environment variable](https://docs.netlify.com/functions/build-with-javascript/#runtime-settings).
+  [overridden with a `AWS_LAMBDA_JS_RUNTIME` environment variable](https://docs.netlify.com/functions/optional-configuration/?fn-language=js#node-js-version-for-runtime-2).
 
 Note that this problem might not apply for Node.js native modules using the [N-API](https://nodejs.org/api/n-api.html).
 
