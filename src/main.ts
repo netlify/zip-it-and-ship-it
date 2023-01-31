@@ -21,6 +21,7 @@ export interface ListedFunction {
   runtime: RuntimeType
   extension: string
   schedule?: string
+  displayName?: string
 }
 
 type ListedFunctionFile = ListedFunction & {
@@ -30,6 +31,7 @@ type ListedFunctionFile = ListedFunction & {
 interface ListFunctionsOptions {
   basePath?: string
   config?: Config
+  configFileDirectories?: string[]
   featureFlags?: FeatureFlags
   parseISC?: boolean
 }
@@ -39,7 +41,8 @@ interface AugmentedFunctionSource extends FunctionSource {
 }
 
 const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSource> => {
-  // ISC is currently only supported in JavaScript and TypeScript functions.
+  // ISC is currently only supported in JavaScript and TypeScript functions
+  // and only supports scheduled functions.
   if (func.runtime.name !== RuntimeType.JAVASCRIPT) {
     return func
   }
@@ -55,14 +58,15 @@ export const listFunctions = async function (
   {
     featureFlags: inputFeatureFlags,
     config,
+    configFileDirectories,
     parseISC = false,
-  }: { featureFlags?: FeatureFlags; config?: Config; parseISC?: boolean } = {},
+  }: { featureFlags?: FeatureFlags; config?: Config; configFileDirectories?: string[]; parseISC?: boolean } = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
   const cache = new RuntimeCache()
-  const functionsMap = await getFunctionsFromPaths(paths, { cache, config, featureFlags })
+  const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
   const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions
 
@@ -75,12 +79,13 @@ export const listFunction = async function (
   {
     featureFlags: inputFeatureFlags,
     config,
+    configFileDirectories,
     parseISC = false,
-  }: { featureFlags?: FeatureFlags; config?: Config; parseISC?: boolean } = {},
+  }: { featureFlags?: FeatureFlags; config?: Config; configFileDirectories?: string[]; parseISC?: boolean } = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
   const cache = new RuntimeCache()
-  const func = await getFunctionFromPath(path, { cache, config, featureFlags })
+  const func = await getFunctionFromPath(path, { cache, config, configFileDirectories, featureFlags })
 
   if (!func) {
     return
@@ -94,13 +99,19 @@ export const listFunction = async function (
 // List all Netlify Functions files for a specific directory
 export const listFunctionsFiles = async function (
   relativeSrcFolders: string | string[],
-  { basePath, config, featureFlags: inputFeatureFlags, parseISC = false }: ListFunctionsOptions = {},
+  {
+    basePath,
+    config,
+    configFileDirectories,
+    featureFlags: inputFeatureFlags,
+    parseISC = false,
+  }: ListFunctionsOptions = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
   const cache = new RuntimeCache()
-  const functionsMap = await getFunctionsFromPaths(paths, { cache, config, featureFlags })
+  const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
   const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions
   const listedFunctionsFiles = await Promise.all(
@@ -118,7 +129,14 @@ const getListedFunction = function ({
   config,
   inSourceConfig,
 }: AugmentedFunctionSource): ListedFunction {
-  return { name, mainFile, runtime: runtime.name, extension, schedule: inSourceConfig?.schedule ?? config.schedule }
+  return {
+    name,
+    displayName: config.name,
+    mainFile,
+    runtime: runtime.name,
+    extension,
+    schedule: inSourceConfig?.schedule ?? config.schedule,
+  }
 }
 
 const getListedFunctionFiles = async function (
