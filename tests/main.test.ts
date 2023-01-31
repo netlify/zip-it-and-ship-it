@@ -2658,4 +2658,37 @@ describe('zip-it-and-ship-it', () => {
       expect(`${tmpDir}/func2.mjs`).not.toPathExist()
     },
   )
+
+  testMany('Does throw on a function which is named like the entry file', [...allBundleConfigs], async (options) => {
+    const fixtureName = 'entry-file-func-name'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      featureFlags: { zisi_disallow_new_entry_name: true },
+    })
+    await expect(
+      zipFixture(fixtureName, {
+        length: 1,
+        opts,
+      }),
+    ).rejects.toThrowError(/is a reserved word and cannot be used as a function name\.$/)
+  })
+
+  // esbuild does bundle everything into one file, so it does not have any other files in the bundle
+  testMany(
+    'Does throw on a function which has files named like the entry file',
+    ['bundler_default', 'bundler_nft'],
+    async (options) => {
+      const fixtureName = 'entry-file-file-name'
+      const opts = merge(options, {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        featureFlags: { zisi_disallow_new_entry_name: true },
+      })
+      await expect(
+        zipFixture(fixtureName, {
+          length: 1,
+          opts,
+        }),
+      ).rejects.toThrowError(/is a reserved word and cannot be used as a file or directory name\.$/)
+    },
+  )
 })

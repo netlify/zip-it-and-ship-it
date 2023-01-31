@@ -4,9 +4,11 @@ import { Config, getConfigForFunction, FunctionWithoutConfig } from '../config.j
 import { defaultFlags, FeatureFlags } from '../feature_flags.js'
 import { FunctionSource } from '../function.js'
 import type { RuntimeCache } from '../utils/cache.js'
+import { FunctionBundlingUserError } from '../utils/error.js'
 
 import goRuntime from './go/index.js'
 import jsRuntime from './node/index.js'
+import { ENTRY_FILE_NAME } from './node/utils/entry_file.js'
 import type { Runtime } from './runtime.js'
 import rustRuntime from './rust/index.js'
 
@@ -47,15 +49,27 @@ const findFunctionsInRuntime = async function ({
   const key = dedupe ? 'name' : 'srcPath'
 
   // Augmenting the function objects with additional information.
-  const augmentedFunctions: FunctionTupleWithoutConfig[] = functions.map((func) => [
-    func[key],
-    {
-      ...func,
-      extension: extname(func.mainFile),
-      filename: basename(func.srcPath),
-      runtime,
-    },
-  ])
+  const augmentedFunctions: FunctionTupleWithoutConfig[] = functions.map((func) => {
+    if (featureFlags.zisi_disallow_new_entry_name && func.name === ENTRY_FILE_NAME) {
+      throw new FunctionBundlingUserError(
+        `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a function name.`,
+        {
+          functionName: func.name,
+          runtime: runtime.name,
+        },
+      )
+    }
+
+    return [
+      func[key],
+      {
+        ...func,
+        extension: extname(func.mainFile),
+        filename: basename(func.srcPath),
+        runtime,
+      },
+    ]
+  })
   const usedPaths = new Set(augmentedFunctions.map(([path]) => path))
   const remainingPaths = paths.filter((path) => !usedPaths.has(path))
 

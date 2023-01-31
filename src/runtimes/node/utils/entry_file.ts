@@ -1,9 +1,13 @@
 import { basename, extname, resolve } from 'path'
 
 import type { FeatureFlags } from '../../../feature_flags.js'
+import { FunctionBundlingUserError } from '../../../utils/error.js'
+import { RuntimeType } from '../../runtime.js'
 
 import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
+
+export const ENTRY_FILE_NAME = '___netlify-entry-point'
 
 export interface EntryFile {
   contents: string
@@ -46,14 +50,38 @@ export const conflictsWithEntryFile = (
   srcFiles: string[],
   {
     basePath,
-    mainFile,
+    extension,
+    featureFlags,
     filename,
+    mainFile,
   }: {
     basePath: string
+    extension: string
+    featureFlags: FeatureFlags
     filename: string
     mainFile: string
   },
-) => srcFiles.some((srcFile) => isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile)
+) => {
+  let hasConflict = false
+
+  srcFiles.forEach((srcFile) => {
+    if (featureFlags.zisi_disallow_new_entry_name && srcFile.includes(ENTRY_FILE_NAME)) {
+      throw new FunctionBundlingUserError(
+        `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a file or directory name.`,
+        {
+          functionName: basename(filename, extension),
+          runtime: RuntimeType.JAVASCRIPT,
+        },
+      )
+    }
+
+    if (!hasConflict && isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile) {
+      hasConflict = true
+    }
+  })
+
+  return hasConflict
+}
 
 // Returns the name for the AWS Lambda entry file
 // We do set the handler in AWS Lambda to `<func-name>.handler` and because of
