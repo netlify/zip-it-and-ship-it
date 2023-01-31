@@ -315,6 +315,10 @@ Each object has the following properties:
   Function's name. This is the one used in the Function URL. For example, if a Function is a `myFunc.js` regular file,
   the `name` is `myFunc` and the URL is `https://{hostname}/.netlify/functions/myFunc`.
 
+- `displayName` `string`
+
+  If there was a user-defined configuration object applied to the function, and it had a `name` defined. This will be returned here.
+
 - `mainFile`: `string`
 
   Absolute path to the Function's main file. If the Function is a Node.js directory, this is its `index.js` or

@@ -121,13 +121,23 @@ export const getFunctionsFromPaths = async (
  */
 export const getFunctionFromPath = async (
   path: string,
-  { cache, config, featureFlags = defaultFlags }: { cache: RuntimeCache; config?: Config; featureFlags?: FeatureFlags },
+  {
+    cache,
+    config,
+    configFileDirectories,
+    featureFlags = defaultFlags,
+  }: { cache: RuntimeCache; config?: Config; configFileDirectories?: string[]; featureFlags?: FeatureFlags },
 ): Promise<FunctionSource | undefined> => {
   for (const runtime of RUNTIMES) {
     const func = await runtime.findFunctionInPath({ path, cache, featureFlags })
 
     if (func) {
-      const functionConfig = await getConfigForFunction({ config, func: { ...func, runtime }, featureFlags })
+      const functionConfig = await getConfigForFunction({
+        config,
+        configFileDirectories,
+        func: { ...func, runtime },
+        featureFlags,
+      })
 
       return {
         ...func,
