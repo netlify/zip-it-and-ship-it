@@ -7,7 +7,7 @@ import { RuntimeType } from '../../runtime.js'
 import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
-export const ENTRY_FILE_NAME = '___netlify-lambda-entry'
+export const ENTRY_FILE_NAME = '___netlify-entry-point'
 
 export interface EntryFile {
   contents: string
