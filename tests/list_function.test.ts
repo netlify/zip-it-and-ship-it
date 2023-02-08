@@ -30,7 +30,7 @@ describe('listFunction', () => {
         project_deploy_configuration_api_use_per_function_configuration_files: true,
       },
     })
-    console.log({ func })
+
     expect(func).toEqual({
       displayName: 'A Display Name',
       extension: '.js',

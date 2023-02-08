@@ -27,14 +27,12 @@ interface ZipFunctionOptions {
   zipGo?: boolean
   systemLog?: LogFunction
   debug?: boolean
-  internalSrcFolder?: string
 }
 
 export type ZipFunctionsOptions = ZipFunctionOptions & {
   configFileDirectories?: string[]
   manifest?: string
   parallelLimit?: number
-  internalSrcFolder?: string
 }
 
 const DEFAULT_PARALLEL_LIMIT = 5

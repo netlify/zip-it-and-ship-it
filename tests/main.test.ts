@@ -77,7 +77,6 @@ describe('zip-it-and-ship-it', () => {
       const { files } = await zipFixture(fixtureName, {
         length: 2,
         opts: {
-          internalSrcFolder: join(FIXTURES_DIR, fixtureName),
           ...options,
           config: { 'function-1': { name: 'Function One', generator: '@netlify/mock-plugin@1.0.0' } },
         },
@@ -1797,7 +1796,6 @@ describe('zip-it-and-ship-it', () => {
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
-        internalSrcFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'go-func-1': {
             name: 'Go Function One',
@@ -1987,7 +1985,6 @@ describe('zip-it-and-ship-it', () => {
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
-        internalSrcFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'rust-func-1': {
             name: 'Rust Function Two',
