@@ -252,7 +252,7 @@ describe('listFunctionsFiles', () => {
     warn.mockRestore()
   })
 
-  test('listFunctionsFiles includes json configured functions with a name and returns it as a displayName', async () => {
+  test('listFunctionsFiles includes json configured functions with configured properties', async () => {
     const dir = join(FIXTURES_DIR, 'json-config/.netlify/functions-internal/')
     const [func] = await listFunctionsFiles([dir], {
       configFileDirectories: [dir],
@@ -262,5 +262,6 @@ describe('listFunctionsFiles', () => {
     })
 
     expect(func.displayName).toBe('A Display Name')
+    expect(func.generator).toBe('@netlify/mock-plugin@1.0.0')
   })
 })

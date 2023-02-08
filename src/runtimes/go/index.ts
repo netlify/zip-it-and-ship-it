@@ -109,16 +109,7 @@ const processSource = async ({
   }
 }
 
-const zipFunction: ZipFunction = async function ({
-  config,
-  destFolder,
-  filename,
-  mainFile,
-  srcDir,
-  srcPath,
-  stat,
-  isInternal,
-}) {
+const zipFunction: ZipFunction = async function ({ config, destFolder, filename, mainFile, srcDir, srcPath, stat }) {
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
 
@@ -164,7 +155,7 @@ const zipFunction: ZipFunction = async function ({
     config,
     path: destPath,
     displayName: config?.name,
-    isInternal,
+    generator: config?.generator,
   }
 }
 

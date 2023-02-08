@@ -25,6 +25,7 @@ interface FunctionConfig {
   schedule?: string
   zipGo?: boolean
   name?: string
+  generator?: string
 
   // Temporary configuration property, only meant to be used by the deploy
   // configuration API. Once we start emitting ESM files for all ESM functions,

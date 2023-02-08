@@ -87,7 +87,7 @@ describe('listFunctions', () => {
     })
   })
 
-  test('listFunctions includes json configured functions with a name and returns it as a displayName', async () => {
+  test('listFunctions includes json configured functions with configured properties', async () => {
     const dir = join(FIXTURES_DIR, 'json-config/.netlify/functions-internal/')
     const [func] = await listFunctions([dir], {
       configFileDirectories: [dir],
@@ -97,5 +97,6 @@ describe('listFunctions', () => {
     })
 
     expect(func.displayName).toBe('A Display Name')
+    expect(func.generator).toBe('@netlify/mock-plugin@1.0.0')
   })
 })
