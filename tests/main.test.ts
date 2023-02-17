@@ -67,25 +67,23 @@ describe('zip-it-and-ship-it', () => {
     expect(files).toHaveLength(1)
     expect(files[0].runtime).toBe('js')
     expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function.js'))
-    expect(files[0].isInternal).toBeFalsy()
   })
 
   testMany(
-    'Zips Node.js function files from an internal functions dir with a configured name',
+    'Zips Node.js function files from an internal functions dir with a configured fields',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
       const fixtureName = join('node-internal', '.netlify/internal-functions')
       const { files } = await zipFixture(fixtureName, {
         length: 2,
         opts: {
-          internalSrcFolder: join(FIXTURES_DIR, fixtureName),
           ...options,
-          config: { 'function-1': { name: 'Function One' } },
+          config: { 'function-1': { name: 'Function One', generator: '@netlify/mock-plugin@1.0.0' } },
         },
       })
       expect(files).toHaveLength(2)
-      expect(files[0].isInternal).toBe(true)
       expect(files[0].displayName).toBe('Function One')
+      expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
       expect(files[1].displayName).toBeUndefined()
     },
   )
@@ -1787,7 +1785,7 @@ describe('zip-it-and-ship-it', () => {
     expect(mockSource).toBe(unzippedBinaryContents)
   })
 
-  test('Builds Go functions from an internal functions dir with a configured name', async () => {
+  test('Builds Go functions from an internal functions dir with a configured fields', async () => {
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
       await writeFile(args[1][2], '')
 
@@ -1798,18 +1796,18 @@ describe('zip-it-and-ship-it', () => {
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
-        internalSrcFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'go-func-1': {
             name: 'Go Function One',
+            generator: '@netlify/mock-plugin@1.0.0',
           },
         },
       },
     })
 
     expect(files).toHaveLength(2)
-    expect(files[0].isInternal).toBe(true)
     expect(files[0].displayName).toBe('Go Function One')
+    expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
     expect(files[1].displayName).toBeUndefined()
   })
 
@@ -1832,7 +1830,6 @@ describe('zip-it-and-ship-it', () => {
         name: 'go-func-1',
         path: expect.anything(),
         runtime: 'go',
-        isInternal: false,
       },
       {
         config: expect.anything(),
@@ -1840,7 +1837,6 @@ describe('zip-it-and-ship-it', () => {
         name: 'go-func-2',
         path: expect.anything(),
         runtime: 'go',
-        isInternal: false,
       },
     ])
 
@@ -1941,7 +1937,6 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         runtime: 'rs',
         size: 278,
-        isInternal: false,
       },
       {
         config: expect.anything(),
@@ -1950,7 +1945,6 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         runtime: 'rs',
         size: 278,
-        isInternal: false,
       },
     ])
 
@@ -1991,10 +1985,10 @@ describe('zip-it-and-ship-it', () => {
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
-        internalSrcFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'rust-func-1': {
             name: 'Rust Function Two',
+            generator: '@netlify/mock-plugin@1.0.0',
           },
         },
         featureFlags: {
@@ -2004,8 +1998,8 @@ describe('zip-it-and-ship-it', () => {
     })
 
     expect(files).toHaveLength(2)
-    expect(files[0].isInternal).toBe(true)
     expect(files[0].displayName).toBe('Rust Function Two')
+    expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
     expect(files[1].displayName).toBeUndefined()
   })
 
@@ -2088,6 +2082,7 @@ describe('zip-it-and-ship-it', () => {
     )
   })
 
+  // manifest stuff
   test('Creates a manifest file with the list of created functions if the `manifest` property is supplied', async () => {
     const FUNCTIONS_COUNT = 6
     const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
@@ -2318,6 +2313,8 @@ describe('zip-it-and-ship-it', () => {
       const func3Entry = files.find(({ name }) => name === 'user-function')
       const func4Entry = files.find(({ name }) => name === 'not-internal')
 
+      expect(func1Entry?.displayName).toBe('Internal Function')
+      expect(func1Entry?.generator).toBe('@netlify/mock-plugin@1.0.0')
       expect(func1Entry?.config.includedFiles).toEqual(['blog/*.md'])
       expect(func2Entry?.config.includedFiles).toEqual(['blog/*.md'])
       expect(func3Entry?.config.includedFiles).toBe(undefined)
@@ -2345,6 +2342,35 @@ describe('zip-it-and-ship-it', () => {
       await expect(`${tmpDir}/root-function.zip_out/blog/one.md`).toPathExist()
       await expect(`${tmpDir}/user-function.zip_out/blog/one.md`).not.toPathExist()
       await expect(`${tmpDir}/not-internal.zip_out/blog/one.md`).not.toPathExist()
+    },
+  )
+
+  testMany(
+    'Loads function configuration properties from a JSON file if the function is inside one of `configFileDirectories` and writes to manifest file',
+    [...allBundleConfigs],
+    async (options) => {
+      const { path: tmpManifestDir } = await getTmpDir({ prefix: 'zip-it-test' })
+      const manifestPath = join(tmpManifestDir, 'manifest.json')
+      const fixtureName = 'config-files-select-directories'
+      const pathInternal = join(fixtureName, '.netlify', 'functions-internal')
+      const pathNotInternal = join(fixtureName, '.netlify', 'functions-internal-not')
+      const pathUser = join(fixtureName, 'netlify', 'functions')
+      const opts = merge(options, {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        manifest: manifestPath,
+        configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
+        featureFlags: { project_deploy_configuration_api_use_per_function_configuration_files: true },
+      })
+      await zipFixture([pathInternal, pathNotInternal, pathUser], {
+        length: 4,
+        opts,
+      })
+
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+      const func1Entry = manifest.functions.find(({ name }) => name === 'internal-function')
+
+      expect(func1Entry?.displayName).toBe('Internal Function')
+      expect(func1Entry?.generator).toBe('@netlify/mock-plugin@1.0.0')
     },
   )
 

@@ -22,6 +22,7 @@ export interface ListedFunction {
   extension: string
   schedule?: string
   displayName?: string
+  generator?: string
 }
 
 type ListedFunctionFile = ListedFunction & {
@@ -136,6 +137,7 @@ const getListedFunction = function ({
     runtime: runtime.name,
     extension,
     schedule: inSourceConfig?.schedule ?? config.schedule,
+    generator: config.generator,
   }
 }
 

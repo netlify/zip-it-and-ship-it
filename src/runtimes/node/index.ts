@@ -45,7 +45,6 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
-  isInternal,
 }) {
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
@@ -128,7 +127,7 @@ const zipFunction: ZipFunction = async function ({
     nodeModulesWithDynamicImports,
     path: zipPath,
     displayName: config?.name,
-    isInternal,
+    generator: config?.generator,
   }
 }
 

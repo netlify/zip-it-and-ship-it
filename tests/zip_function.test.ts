@@ -140,32 +140,18 @@ describe('zipFunction', () => {
   )
 
   testMany(
-    'Can populate the isInternal property for functions',
+    'Can populate the configured properties for functions',
     ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
     async (options) => {
       const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-      const basePath = join(FIXTURES_DIR, 'node-internal', '.netlify/internal-functions')
+      const basePath = join(FIXTURES_DIR, 'node-configs')
       const opts = merge(options, {
-        internalSrcFolder: basePath,
-      })
-      const result = (await zipFunction(`${basePath}/function-1.js`, tmpDir, opts))!
-
-      expect(result.isInternal).toBe(true)
-    },
-  )
-
-  testMany(
-    'Can populate the displayName property for functions',
-    ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
-    async (options) => {
-      const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-      const basePath = join(FIXTURES_DIR, 'node-display-name')
-      const opts = merge(options, {
-        config: { 'function-1': { name: 'Function One' } },
+        config: { 'function-1': { name: 'Function One', generator: '@netlify/mock-plugin@1.0.0' } },
       })
       const result = (await zipFunction(`${basePath}/function-1.js`, tmpDir, opts))!
 
       expect(result.displayName).toBe('Function One')
+      expect(result.generator).toBe('@netlify/mock-plugin@1.0.0')
     },
   )
 })

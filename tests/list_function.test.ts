@@ -21,7 +21,7 @@ describe('listFunction', () => {
     })
   })
 
-  test('listFunction includes json configured functions with a name and returns it as a displayName', async () => {
+  test('listFunction includes json configured functions with configured properties', async () => {
     const dir = join(FIXTURES_DIR, 'json-config/.netlify/functions-internal/')
     const mainFile = join(dir, 'simple.js')
     const func = await listFunction(mainFile, {
@@ -30,9 +30,11 @@ describe('listFunction', () => {
         project_deploy_configuration_api_use_per_function_configuration_files: true,
       },
     })
+
     expect(func).toEqual({
       displayName: 'A Display Name',
       extension: '.js',
+      generator: '@netlify/mock-plugin@1.0.0',
       mainFile,
       name: 'simple',
       runtime: 'js',
