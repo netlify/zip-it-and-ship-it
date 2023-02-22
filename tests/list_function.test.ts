@@ -26,9 +26,6 @@ describe('listFunction', () => {
     const mainFile = join(dir, 'simple.js')
     const func = await listFunction(mainFile, {
       configFileDirectories: [dir],
-      featureFlags: {
-        project_deploy_configuration_api_use_per_function_configuration_files: true,
-      },
     })
 
     expect(func).toEqual({

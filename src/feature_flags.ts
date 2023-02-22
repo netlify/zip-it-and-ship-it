@@ -18,9 +18,6 @@ export const defaultFlags: Record<string, boolean> = {
   // `.mjs` extension.
   zisi_pure_esm_mjs: false,
 
-  // Load configuration from per-function JSON files.
-  project_deploy_configuration_api_use_per_function_configuration_files: false,
-
   // Output CJS file extension
   zisi_output_cjs_extension: false,
 
