@@ -256,9 +256,6 @@ describe('listFunctionsFiles', () => {
     const dir = join(FIXTURES_DIR, 'json-config/.netlify/functions-internal/')
     const [func] = await listFunctionsFiles([dir], {
       configFileDirectories: [dir],
-      featureFlags: {
-        project_deploy_configuration_api_use_per_function_configuration_files: true,
-      },
     })
 
     expect(func.displayName).toBe('A Display Name')
