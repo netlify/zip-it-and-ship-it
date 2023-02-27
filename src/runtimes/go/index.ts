@@ -6,6 +6,7 @@ import { copyFile } from 'cp-file'
 import { SourceFile } from '../../function.js'
 import type { RuntimeCache } from '../../utils/cache.js'
 import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
+import getInternalValue from '../../utils/get_internal_value.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
@@ -109,7 +110,16 @@ const processSource = async ({
   }
 }
 
-const zipFunction: ZipFunction = async function ({ config, destFolder, filename, mainFile, srcDir, srcPath, stat }) {
+const zipFunction: ZipFunction = async function ({
+  config,
+  destFolder,
+  filename,
+  mainFile,
+  srcDir,
+  srcPath,
+  stat,
+  isInternal,
+}) {
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
 
@@ -155,7 +165,7 @@ const zipFunction: ZipFunction = async function ({ config, destFolder, filename,
     config,
     path: destPath,
     displayName: config?.name,
-    generator: config?.generator,
+    generator: config?.generator || getInternalValue(isInternal),
   }
 }
 

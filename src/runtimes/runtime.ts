@@ -59,6 +59,7 @@ export type ZipFunction = (
     featureFlags: FeatureFlags
     repositoryRoot?: string
     generator?: string
+    isInternal: boolean
   } & FunctionSource,
 ) => Promise<ZipFunctionResult>
 
