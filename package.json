@@ -73,7 +73,7 @@
     "junk": "^4.0.0",
     "locate-path": "^7.0.0",
     "merge-options": "^3.0.4",
-    "minimatch": "^6.0.0",
+    "minimatch": "^7.0.0",
     "normalize-path": "^3.0.0",
     "p-map": "^5.0.0",
     "path-exists": "^5.0.0",
