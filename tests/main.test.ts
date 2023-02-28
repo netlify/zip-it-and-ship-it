@@ -78,6 +78,7 @@ describe('zip-it-and-ship-it', () => {
         length: 2,
         opts: {
           ...options,
+          internalSrcFolder: join(FIXTURES_DIR, fixtureName),
           config: { 'function-1': { name: 'Function One', generator: '@netlify/mock-plugin@1.0.0' } },
         },
       })
@@ -85,6 +86,7 @@ describe('zip-it-and-ship-it', () => {
       expect(files[0].displayName).toBe('Function One')
       expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
       expect(files[1].displayName).toBeUndefined()
+      expect(files[1].generator).toBe('internalFunc')
     },
   )
 
@@ -1785,7 +1787,7 @@ describe('zip-it-and-ship-it', () => {
     expect(mockSource).toBe(unzippedBinaryContents)
   })
 
-  test('Builds Go functions from an internal functions dir with a configured fields', async () => {
+  test('Builds Go functions from an internal functions dir with configured fields', async () => {
     vi.mocked(shellUtils.runCommand).mockImplementation(async (...args) => {
       await writeFile(args[1][2], '')
 
@@ -1796,6 +1798,7 @@ describe('zip-it-and-ship-it', () => {
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
+        internalSrcFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'go-func-1': {
             name: 'Go Function One',
@@ -1809,6 +1812,7 @@ describe('zip-it-and-ship-it', () => {
     expect(files[0].displayName).toBe('Go Function One')
     expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
     expect(files[1].displayName).toBeUndefined()
+    expect(files[1].generator).toBe('internalFunc')
   })
 
   test('Builds Go functions from source', async () => {
@@ -1985,6 +1989,7 @@ describe('zip-it-and-ship-it', () => {
     const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts: {
+        internalSrcFolder: join(FIXTURES_DIR, fixtureName),
         config: {
           'rust-func-1': {
             name: 'Rust Function Two',
@@ -2001,6 +2006,7 @@ describe('zip-it-and-ship-it', () => {
     expect(files[0].displayName).toBe('Rust Function Two')
     expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
     expect(files[1].displayName).toBeUndefined()
+    expect(files[1].generator).toBe('internalFunc')
   })
 
   test('Adds `type: "functionsBundling"` to errors resulting from compiling Rust binaries', async () => {
@@ -2082,7 +2088,6 @@ describe('zip-it-and-ship-it', () => {
     )
   })
 
-  // manifest stuff
   test('Creates a manifest file with the list of created functions if the `manifest` property is supplied', async () => {
     const FUNCTIONS_COUNT = 6
     const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
@@ -2316,6 +2321,7 @@ describe('zip-it-and-ship-it', () => {
       expect(func1Entry?.generator).toBe('@netlify/mock-plugin@1.0.0')
       expect(func1Entry?.config.includedFiles).toEqual(['blog/*.md'])
       expect(func2Entry?.config.includedFiles).toEqual(['blog/*.md'])
+      expect(func2Entry?.generator).toBeUndefined()
       expect(func3Entry?.config.includedFiles).toBe(undefined)
       expect(func4Entry?.config.includedFiles).toBe(undefined)
 

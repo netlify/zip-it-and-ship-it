@@ -5,6 +5,7 @@ import { FeatureFlags } from '../../feature_flags.js'
 import { SourceFile } from '../../function.js'
 import type { RuntimeCache } from '../../utils/cache.js'
 import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
+import getInternalValue from '../../utils/get_internal_value.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
@@ -137,6 +138,7 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
+  isInternal,
 }) {
   const destPath = join(destFolder, `${filename}.zip`)
   const isSource = extname(mainFile) === '.rs'
@@ -161,7 +163,7 @@ const zipFunction: ZipFunction = async function ({
     config,
     path: destPath,
     displayName: config?.name,
-    generator: config?.generator,
+    generator: config?.generator || getInternalValue(isInternal),
   }
 }
 

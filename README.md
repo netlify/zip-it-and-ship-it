@@ -191,6 +191,13 @@ JSON-formatted string with the following properties:
 
 Maximum number of functions to bundle at the same time.
 
+#### `internalSrcFolder`
+
+- _Type_: `string`
+- _Default value_: `undefined`
+
+Defines the path to the folder with internal functions. Used to populate a function's `generator` property if `generator` is not configured in the function's config itself, if its path is within this specified internal functions folder.
+
 ### Return value
 
 This returns a `Promise` resolving to an array of objects describing each archive. Every object has the following
@@ -222,7 +229,7 @@ properties.
 
 - `generator`: `string`
 
-  If there was a user-defined configuration object applied to the function, and it had `generator` defined. This will be returned here.
+  If there was a user-defined configuration object applied to the function, and it had `generator` defined. This will be returned here. If there was nothing defined, but an `internalSrcFolder` was passed and the function was defined in there, it will return a string to specify it was an internal function.
 
 Additionally, the following properties also exist for Node.js functions:
 
