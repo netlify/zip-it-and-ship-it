@@ -229,7 +229,7 @@ properties.
 
 - `generator`: `string`
 
-  If there was a user-defined configuration object applied to the function, and it had `generator` defined. This will be returned here. If there was nothing defined, but an internalSrcFolder was passed and the function was defined in there, it will return a string to specify it was an internal function.
+  If there was a user-defined configuration object applied to the function, and it had `generator` defined. This will be returned here. If there was nothing defined, but an `internalSrcFolder` was passed and the function was defined in there, it will return a string to specify it was an internal function.
 
 Additionally, the following properties also exist for Node.js functions:
 
