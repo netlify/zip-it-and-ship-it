@@ -2306,7 +2306,6 @@ describe('zip-it-and-ship-it', () => {
       const opts = merge(options, {
         basePath: join(FIXTURES_DIR, fixtureName),
         configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
-        featureFlags: { project_deploy_configuration_api_use_per_function_configuration_files: true },
       })
       const { files, tmpDir } = await zipFixture([pathInternal, pathNotInternal, pathUser], {
         length: 4,
@@ -2365,7 +2364,6 @@ describe('zip-it-and-ship-it', () => {
         basePath: join(FIXTURES_DIR, fixtureName),
         manifest: manifestPath,
         configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
-        featureFlags: { project_deploy_configuration_api_use_per_function_configuration_files: true },
       })
       await zipFixture([pathInternal, pathNotInternal, pathUser], {
         length: 4,
@@ -2389,7 +2387,6 @@ describe('zip-it-and-ship-it', () => {
       const opts = merge(options, {
         basePath: join(FIXTURES_DIR, fixtureName),
         configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
-        featureFlags: { project_deploy_configuration_api_use_per_function_configuration_files: true },
         config: {
           'internal-function': {
             schedule: '@hourly',
