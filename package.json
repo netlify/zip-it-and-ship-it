@@ -67,7 +67,7 @@
     "execa": "^6.0.0",
     "filter-obj": "^5.0.0",
     "find-up": "^6.0.0",
-    "glob": "^8.0.3",
+    "glob": "^9.0.0",
     "is-builtin-module": "^3.1.0",
     "is-path-inside": "^4.0.0",
     "junk": "^4.0.0",
