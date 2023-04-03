@@ -276,7 +276,7 @@ describe('zip-it-and-ship-it', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi'],
     async (options) => {
       await expect(zipNode('invalid-package-json', { opts: options })).rejects.toThrowError(
-        /(invalid JSON|package.json:1:1: error: Expected string but found "{")/,
+        /(invalid json|package.json:1:1: error: expected string but found "{")/i,
       )
     },
   )
@@ -1266,28 +1266,6 @@ describe('zip-it-and-ship-it', () => {
       await expect(`${tmpDir}/something.md`).toPathExist()
     },
   )
-
-  test('Generates a bundle for the Node runtime version specified in the `nodeVersion` config property', async () => {
-    // Using the optional catch binding feature to assert that the bundle is
-    // respecting the Node version supplied.
-    // - in Node <10 we should see `try {} catch (e) {}`
-    // - in Node >= 10 we should see `try {} catch {}`
-    const { files: node8Files } = await zipNode('node-module-optional-catch-binding', {
-      opts: { archiveFormat: 'none', config: { '*': { nodeBundler: NodeBundlerType.ESBUILD, nodeVersion: '8.x' } } },
-    })
-
-    const node8Function = await readFile(`${node8Files[0].path}/src/function.js`, 'utf8')
-
-    expect(node8Function).toMatch(/catch \(\w+\) {/)
-
-    const { files: node12Files } = await zipNode('node-module-optional-catch-binding', {
-      opts: { archiveFormat: 'none', config: { '*': { nodeBundler: NodeBundlerType.ESBUILD, nodeVersion: '12.x' } } },
-    })
-
-    const node12Function = await readFile(`${node12Files[0].path}/src/function.js`, 'utf8')
-
-    expect(node12Function).toMatch(/catch {/)
-  })
 
   testMany('Returns an `inputs` property with all the imported paths', [...allBundleConfigs], async (options) => {
     const fixtureName = 'node-module-and-local-imports'

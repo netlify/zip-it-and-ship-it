@@ -7,7 +7,6 @@ import mergeOptions from 'merge-options'
 
 import { FunctionSource } from './function.js'
 import type { NodeBundlerType } from './runtimes/node/bundlers/types.js'
-import type { NodeVersionString } from './runtimes/node/index.js'
 import type { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { minimatch } from './utils/matching.js'
 
@@ -18,7 +17,7 @@ interface FunctionConfig {
   ignoredNodeModules?: string[]
   nodeBundler?: NodeBundlerType
   nodeSourcemap?: boolean
-  nodeVersion?: NodeVersionString
+  nodeVersion?: string
   processDynamicNodeImports?: boolean
   rustTargetDirectory?: string
   schedule?: string
