@@ -130,8 +130,8 @@ The following properties are accepted:
   - _Type_: `string`\
   - _Default value_: `16`
 
-  The version of Node.js to use as the compilation target and reported execution runtime. Any valid and supported
-  Node.js version is accepted. Examples:
+  The version of Node.js to use as the compilation target for bundlers. This is also used to determine the runtime
+  reported in the manifest. Any valid and supported Node.js version is accepted. Examples:
 
   - `14.x`
   - `16.1.0`
