@@ -47,7 +47,7 @@ export interface ZipFunctionResult {
   nativeNodeModules?: object
   nodeModulesWithDynamicImports?: string[]
   path: string
-  runtimeName?: string
+  runtimeVersion?: string
 }
 
 export type ZipFunction = (

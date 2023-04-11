@@ -127,7 +127,7 @@ const zipFunction: ZipFunction = async function ({
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath,
-    runtimeName: getNodeRuntime(config.nodeVersion),
+    runtimeVersion: getNodeRuntime(config.nodeVersion),
     displayName: config?.name,
     generator: config?.generator || getInternalValue(isInternal),
   }

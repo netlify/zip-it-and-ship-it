@@ -9,7 +9,7 @@ interface ManifestFunction {
   name: string
   path: string
   runtime: string
-  runtimeName?: string
+  runtimeVersion?: string
   schedule?: string
   displayName?: string
   bundler?: string
@@ -48,7 +48,7 @@ const formatFunctionForManifest = ({
   name,
   path,
   runtime,
-  runtimeName,
+  runtimeVersion,
   schedule,
 }: FunctionResult): ManifestFunction => ({
   bundler,
@@ -56,7 +56,7 @@ const formatFunctionForManifest = ({
   generator,
   mainFile,
   name,
-  runtimeName,
+  runtimeVersion,
   path: resolve(path),
   runtime,
   schedule,
