@@ -128,16 +128,15 @@ The following properties are accepted:
 - `nodeVersion`
 
   - _Type_: `string`\
-  - _Default value_: `16.x`
+  - _Default value_: `16`
 
-  The version of Node.js to use as the compilation target. Possible values:
+  The version of Node.js to use as the compilation target for bundlers. This is also used to determine the runtime
+  reported in the manifest. Any valid and supported Node.js version is accepted. Examples:
 
-  - `8.x` (or `nodejs8.x`)
-  - `10.x` (or `nodejs10.x`)
-  - `12.x` (or `nodejs12.x`)
-  - `14.x` (or `nodejs14.x`)
-  - `16.x` (or `nodejs16.x`)
-  - `18.x` (or `nodejs18.x`)
+  - `14.x`
+  - `16.1.0`
+  - `v18`
+  - `nodejs18.x` (for backwards compatibility)
 
 - `rustTargetDirectory`
 

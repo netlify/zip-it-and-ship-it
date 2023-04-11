@@ -39,14 +39,15 @@ export interface ZipFunctionResult {
   bundlerErrors?: object[]
   bundlerWarnings?: object[]
   config: FunctionConfig
+  displayName?: string
+  generator?: string
   inputs?: string[]
   includedFiles?: string[]
   inSourceConfig?: ISCValues
   nativeNodeModules?: object
   nodeModulesWithDynamicImports?: string[]
   path: string
-  displayName?: string
-  generator?: string
+  runtimeVersion?: string
 }
 
 export type ZipFunction = (

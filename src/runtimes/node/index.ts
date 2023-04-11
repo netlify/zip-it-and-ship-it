@@ -9,10 +9,9 @@ import { getBundler, getBundlerName } from './bundlers/index.js'
 import { NodeBundlerType } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
+import { getNodeRuntime } from './utils/node_runtime.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
 import { zipNodeJs } from './utils/zip.js'
-
-export { NodeVersionString } from './utils/node_version.js'
 
 // A proxy for the `getSrcFiles` that calls `getSrcFiles` on the bundler
 const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
@@ -128,6 +127,7 @@ const zipFunction: ZipFunction = async function ({
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath,
+    runtimeVersion: getNodeRuntime(config.nodeVersion),
     displayName: config?.name,
     generator: config?.generator || getInternalValue(isInternal),
   }

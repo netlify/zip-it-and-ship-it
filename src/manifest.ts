@@ -9,6 +9,7 @@ interface ManifestFunction {
   name: string
   path: string
   runtime: string
+  runtimeVersion?: string
   schedule?: string
   displayName?: string
   bundler?: string
@@ -40,21 +41,23 @@ export const createManifest = async ({ functions, path }: { functions: FunctionR
 }
 
 const formatFunctionForManifest = ({
+  bundler,
+  displayName,
+  generator,
   mainFile,
   name,
   path,
   runtime,
+  runtimeVersion,
   schedule,
-  displayName,
-  bundler,
-  generator,
 }: FunctionResult): ManifestFunction => ({
+  bundler,
+  displayName,
+  generator,
   mainFile,
   name,
+  runtimeVersion,
   path: resolve(path),
   runtime,
   schedule,
-  displayName,
-  bundler,
-  generator,
 })

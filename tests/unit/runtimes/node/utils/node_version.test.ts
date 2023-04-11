@@ -10,10 +10,11 @@ describe('getNodeVersion', () => {
   test.each([
     ['nodejs14.x', 14],
     ['nodejs12.x', 12],
-    ['nodejs8.x', 8],
-    ['12.x', 12],
-    ['8.x', 8],
-    ['node16', DEFAULT_NODE_VERSION],
+    ['nodejs16.x', 16],
+    ['18.x', 18],
+    ['node16', 16],
+    ['14.1.1', 14],
+    ['v14.1', 14],
     [':shrug:', DEFAULT_NODE_VERSION],
   ])('handles `%s`', (input, expected) => {
     expect(getNodeVersion(input)).toBe(expected)
@@ -24,10 +25,11 @@ describe('parseVersion', () => {
   test.each([
     ['nodejs14.x', 14],
     ['nodejs12.x', 12],
-    ['nodejs8.x', 8],
-    ['12.x', 12],
-    ['8.x', 8],
-    ['node16', undefined],
+    ['nodejs18.x', 18],
+    ['18.x', 18],
+    ['node14', 14],
+    ['14.1.1', 14],
+    ['v14.1', 14],
     [':shrug:', undefined],
   ])('handles `%s`', (input, expected) => {
     expect(parseVersion(input)).toBe(expected)
