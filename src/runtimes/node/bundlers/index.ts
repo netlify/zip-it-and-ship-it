@@ -8,10 +8,10 @@ import { ModuleFileExtension } from '../utils/module_format.js'
 import esbuildBundler from './esbuild/index.js'
 import nftBundler from './nft/index.js'
 import noBundler from './none/index.js'
-import { NodeBundler, NodeBundlerType } from './types.js'
+import { NodeBundler, NodeBundlerType, NodeBundlerTypes } from './types.js'
 import zisiBundler from './zisi/index.js'
 
-export const getBundler = (name: NodeBundlerType): NodeBundler => {
+export const getBundler = (name: NodeBundlerTypes): NodeBundler => {
   switch (name) {
     case NodeBundlerType.ESBUILD:
     case NodeBundlerType.ESBUILD_ZISI:
@@ -41,7 +41,7 @@ export const getBundlerName = async ({
   extension: string
   featureFlags: FeatureFlags
   mainFile: string
-}): Promise<NodeBundlerType> => {
+}): Promise<NodeBundlerTypes> => {
   if (nodeBundler) {
     return nodeBundler
   }
@@ -61,7 +61,7 @@ const getDefaultBundler = async ({
   extension: string
   mainFile: string
   featureFlags: FeatureFlags
-}): Promise<NodeBundlerType> => {
+}): Promise<NodeBundlerTypes> => {
   if (extension === ModuleFileExtension.MJS && featureFlags.zisi_pure_esm_mjs) {
     return NodeBundlerType.NFT
   }

@@ -11,7 +11,7 @@ import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/f
 
 export { zipFunction, zipFunctions } from './zip.js'
 
-export { NodeBundlerType } from './runtimes/node/bundlers/types.js'
+export { NodeBundlerType, NodeBundlerTypes } from './runtimes/node/bundlers/types.js'
 export { RuntimeType } from './runtimes/runtime.js'
 export { ModuleFormat } from './runtimes/node/utils/module_format.js'
 

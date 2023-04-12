@@ -4,7 +4,7 @@ import type { FeatureFlags } from '../feature_flags.js'
 import type { FunctionSource, SourceFile } from '../function.js'
 import type { RuntimeCache } from '../utils/cache.js'
 
-import type { NodeBundlerType } from './node/bundlers/types.js'
+import type { NodeBundlerTypes } from './node/bundlers/types.js'
 import type { ISCValues } from './node/in_source_config/index.js'
 
 export const enum RuntimeType {
@@ -35,7 +35,7 @@ export type GetSrcFilesFunction = (
 ) => Promise<string[]>
 
 export interface ZipFunctionResult {
-  bundler?: NodeBundlerType
+  bundler?: NodeBundlerTypes
   bundlerErrors?: object[]
   bundlerWarnings?: object[]
   config: FunctionConfig

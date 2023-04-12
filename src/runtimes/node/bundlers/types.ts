@@ -6,13 +6,17 @@ import type { FunctionSource } from '../../../function.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
 import type { ModuleFormat } from '../utils/module_format.js'
 
-export const enum NodeBundlerType {
-  ESBUILD = 'esbuild',
-  ESBUILD_ZISI = 'esbuild_zisi',
-  NFT = 'nft',
-  ZISI = 'zisi',
-  NONE = 'none',
-}
+export const NodeBundlerType = {
+  ESBUILD: 'esbuild',
+  ESBUILD_ZISI: 'esbuild_zisi',
+  NFT: 'nft',
+  ZISI: 'zisi',
+  NONE: 'none',
+} as const
+
+type EnumValues<T> = T[keyof T]
+
+export type NodeBundlerTypes = EnumValues<typeof NodeBundlerType>
 
 // TODO: Create a generic warning type
 type BundlerWarning = Message
