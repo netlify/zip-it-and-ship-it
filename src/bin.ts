@@ -4,7 +4,7 @@ import { argv, exit } from 'process'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
-import type { ArchiveFormat } from './archive.js'
+import { ARCHIVE_FORMAT } from './archive.js'
 import { zipFunctions } from './main.js'
 
 declare global {
@@ -39,8 +39,8 @@ const parseArgs = function () {
     .parse()
 }
 
-const archiveFormats: ArchiveFormat[] = ['none', 'zip']
-const defaultArchiveFormat: ArchiveFormat = 'zip'
+const archiveFormats = Object.values(ARCHIVE_FORMAT)
+const defaultArchiveFormat = ARCHIVE_FORMAT.ZIP
 
 const OPTIONS = {
   'archive-format': {

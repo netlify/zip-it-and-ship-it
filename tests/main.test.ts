@@ -15,9 +15,9 @@ import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { Config } from '../src/config.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
-import { NodeBundlerType } from '../src/runtimes/node/bundlers/types.js'
+import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
-import { ModuleFormat } from '../src/runtimes/node/utils/module_format.js'
+import { MODULE_FORMAT } from '../src/runtimes/node/utils/module_format.js'
 import { shellUtils } from '../src/utils/shell.js'
 
 import {
@@ -121,7 +121,7 @@ describe('zip-it-and-ship-it', () => {
       expect(normalizedRequires.has('module-with-prebuild')).toBe(true)
 
       // We can only detect native modules when using esbuild.
-      if (bundler === NodeBundlerType.ESBUILD || bundler === NodeBundlerType.ESBUILD_ZISI) {
+      if (bundler === NODE_BUNDLER.ESBUILD || bundler === NODE_BUNDLER.ESBUILD_ZISI) {
         expect(files[0].nativeNodeModules).toEqual({
           'module-with-node-file': { [moduleWithNodeFile]: '3.0.0' },
           'module-with-node-gyp': { [moduleWithNodeGypPath]: '1.0.0' },
@@ -151,7 +151,7 @@ describe('zip-it-and-ship-it', () => {
       expect(normalizedRequires.has('test')).toBe(true)
 
       // We can only detect native modules when using esbuild.
-      if (bundler === NodeBundlerType.ESBUILD || bundler === NodeBundlerType.ESBUILD_ZISI) {
+      if (bundler === NODE_BUNDLER.ESBUILD || bundler === NODE_BUNDLER.ESBUILD_ZISI) {
         expect(files[0].nativeNodeModules).toEqual({ test: { [modulePath]: '1.0.0' } })
       }
     },
@@ -1457,7 +1457,7 @@ describe('zip-it-and-ship-it', () => {
   test('Adds `type: "functionsBundling"` to user errors when transpiling esm in nft bundler', async () => {
     try {
       await zipNode('node-esm-top-level-await-error', {
-        opts: { config: { '*': { nodeBundler: NodeBundlerType.NFT } } },
+        opts: { config: { '*': { nodeBundler: NODE_BUNDLER.NFT } } },
       })
 
       expect.fail('Bundling should have thrown')
@@ -1474,7 +1474,7 @@ describe('zip-it-and-ship-it', () => {
   test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async () => {
     const fixtureName = 'node-module-dynamic-import'
     const { files } = await zipNode(fixtureName, {
-      opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } } },
+      opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } } },
     })
 
     expect(files[0].nodeModulesWithDynamicImports).toHaveLength(2)
@@ -1484,7 +1484,7 @@ describe('zip-it-and-ship-it', () => {
 
   test('Returns an empty list of modules with dynamic imports if the modules are missing a `package.json`', async () => {
     const { files } = await zipNode('node-module-dynamic-import-invalid', {
-      opts: { config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } } },
+      opts: { config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } } },
     })
 
     expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
@@ -1495,7 +1495,7 @@ describe('zip-it-and-ship-it', () => {
     const { tmpDir } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NodeBundlerType.ESBUILD, processDynamicNodeImports: false } },
+        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD, processDynamicNodeImports: false } },
       },
     })
     const functionSource = await readFile(`${tmpDir}/function.js`, 'utf8')
@@ -1514,7 +1514,7 @@ describe('zip-it-and-ship-it', () => {
     const { files, tmpDir } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
+        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
@@ -1533,7 +1533,7 @@ describe('zip-it-and-ship-it', () => {
     const { tmpDir } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
+        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
     const functionSource = await readFile(`${tmpDir}/function.js`, 'utf8')
@@ -1549,7 +1549,7 @@ describe('zip-it-and-ship-it', () => {
     const { tmpDir } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
+        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
@@ -1567,7 +1567,7 @@ describe('zip-it-and-ship-it', () => {
     const { tmpDir } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
+        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
@@ -1588,7 +1588,7 @@ describe('zip-it-and-ship-it', () => {
       opts: {
         archiveFormat: 'none',
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
+        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
@@ -1608,7 +1608,7 @@ describe('zip-it-and-ship-it', () => {
     const { tmpDir } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: NodeBundlerType.ESBUILD } },
+        config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
@@ -1648,7 +1648,7 @@ describe('zip-it-and-ship-it', () => {
       length: FUNCTION_COUNT,
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
+        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
@@ -2040,7 +2040,7 @@ describe('zip-it-and-ship-it', () => {
 
   test('Does not generate a sourcemap unless `nodeSourcemap` is set', async () => {
     const { tmpDir } = await zipNode('node-module-and-local-imports', {
-      opts: { config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } } },
+      opts: { config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } } },
     })
 
     await expect(`${tmpDir}/function.js.map`).not.toPathExist()
@@ -2052,7 +2052,7 @@ describe('zip-it-and-ship-it', () => {
 
   test.skipIf(platform === 'win32')('Generates a sourcemap if `nodeSourcemap` is set', async () => {
     const { tmpDir } = await zipNode('node-module-and-local-imports', {
-      opts: { config: { '*': { nodeBundler: NodeBundlerType.ESBUILD, nodeSourcemap: true } } },
+      opts: { config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD, nodeSourcemap: true } } },
     })
     const sourcemap = await readFile(`${tmpDir}/function.js.map`, 'utf8')
     const { sourceRoot, sources } = JSON.parse(sourcemap)
@@ -2195,7 +2195,7 @@ describe('zip-it-and-ship-it', () => {
       opts: {
         archiveFormat: 'none',
         basePath,
-        config: { '*': { nodeBundler: NodeBundlerType.NFT, nodeSourcemap: true } },
+        config: { '*': { nodeBundler: NODE_BUNDLER.NFT, nodeSourcemap: true } },
       },
     })
     const func = await importFunctionFile(join(files[0].path, 'function.js'))
@@ -2568,8 +2568,8 @@ describe('zip-it-and-ship-it', () => {
       basePath: join(FIXTURES_DIR, fixtureName),
       config: {
         '*': {
-          nodeBundler: NodeBundlerType.ESBUILD,
-          nodeModuleFormat: ModuleFormat.ESM,
+          nodeBundler: NODE_BUNDLER.ESBUILD,
+          nodeModuleFormat: MODULE_FORMAT.ESM,
         },
       },
     }

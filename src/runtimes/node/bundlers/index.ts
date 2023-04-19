@@ -3,27 +3,27 @@ import { extname } from 'path'
 import { FunctionConfig } from '../../../config.js'
 import { FeatureFlags } from '../../../feature_flags.js'
 import { detectEsModule } from '../utils/detect_es_module.js'
-import { ModuleFileExtension } from '../utils/module_format.js'
+import { MODULE_FILE_EXTENSION } from '../utils/module_format.js'
 
 import esbuildBundler from './esbuild/index.js'
 import nftBundler from './nft/index.js'
 import noBundler from './none/index.js'
-import { NodeBundler, NodeBundlerType } from './types.js'
+import { NodeBundler, NodeBundlerName, NODE_BUNDLER } from './types.js'
 import zisiBundler from './zisi/index.js'
 
-export const getBundler = (name: NodeBundlerType): NodeBundler => {
+export const getBundler = (name: NodeBundlerName): NodeBundler => {
   switch (name) {
-    case NodeBundlerType.ESBUILD:
-    case NodeBundlerType.ESBUILD_ZISI:
+    case NODE_BUNDLER.ESBUILD:
+    case NODE_BUNDLER.ESBUILD_ZISI:
       return esbuildBundler
 
-    case NodeBundlerType.NFT:
+    case NODE_BUNDLER.NFT:
       return nftBundler
 
-    case NodeBundlerType.ZISI:
+    case NODE_BUNDLER.ZISI:
       return zisiBundler
 
-    case NodeBundlerType.NONE:
+    case NODE_BUNDLER.NONE:
       return noBundler
 
     default:
@@ -41,7 +41,7 @@ export const getBundlerName = async ({
   extension: string
   featureFlags: FeatureFlags
   mainFile: string
-}): Promise<NodeBundlerType> => {
+}): Promise<NodeBundlerName> => {
   if (nodeBundler) {
     return nodeBundler
   }
@@ -61,20 +61,20 @@ const getDefaultBundler = async ({
   extension: string
   mainFile: string
   featureFlags: FeatureFlags
-}): Promise<NodeBundlerType> => {
-  if (extension === ModuleFileExtension.MJS && featureFlags.zisi_pure_esm_mjs) {
-    return NodeBundlerType.NFT
+}): Promise<NodeBundlerName> => {
+  if (extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) {
+    return NODE_BUNDLER.NFT
   }
 
   if (ESBUILD_EXTENSIONS.has(extension)) {
-    return NodeBundlerType.ESBUILD
+    return NODE_BUNDLER.ESBUILD
   }
 
   if (featureFlags.traceWithNft) {
-    return NodeBundlerType.NFT
+    return NODE_BUNDLER.NFT
   }
 
-  const functionIsESM = extname(mainFile) !== ModuleFileExtension.CJS && (await detectEsModule({ mainFile }))
+  const functionIsESM = extname(mainFile) !== MODULE_FILE_EXTENSION.CJS && (await detectEsModule({ mainFile }))
 
-  return functionIsESM ? NodeBundlerType.NFT : NodeBundlerType.ZISI
+  return functionIsESM ? NODE_BUNDLER.NFT : NODE_BUNDLER.ZISI
 }

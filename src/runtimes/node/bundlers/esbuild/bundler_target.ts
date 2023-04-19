@@ -1,5 +1,5 @@
 import { FeatureFlags } from '../../../../feature_flags.js'
-import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
+import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/module_format.js'
 import { DEFAULT_NODE_VERSION, getNodeSupportMatrix, parseVersion } from '../../utils/node_version.js'
 import { getClosestPackageJson } from '../../utils/package_json.js'
 
@@ -27,10 +27,10 @@ const getModuleFormat = async (
   extension: string,
   configVersion?: string,
 ): Promise<{ includedFiles: string[]; moduleFormat: ModuleFormat }> => {
-  if (featureFlags.zisi_pure_esm_mjs && extension === ModuleFileExtension.MJS) {
+  if (featureFlags.zisi_pure_esm_mjs && extension === MODULE_FILE_EXTENSION.MJS) {
     return {
       includedFiles: [],
-      moduleFormat: ModuleFormat.ESM,
+      moduleFormat: MODULE_FORMAT.ESM,
     }
   }
 
@@ -41,14 +41,14 @@ const getModuleFormat = async (
     if (packageJsonFile?.contents.type === 'module' && nodeSupport.esm) {
       return {
         includedFiles: [packageJsonFile.path],
-        moduleFormat: ModuleFormat.ESM,
+        moduleFormat: MODULE_FORMAT.ESM,
       }
     }
   }
 
   return {
     includedFiles: [],
-    moduleFormat: ModuleFormat.COMMONJS,
+    moduleFormat: MODULE_FORMAT.COMMONJS,
   }
 }
 

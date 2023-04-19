@@ -6,10 +6,16 @@ import { promisify } from 'util'
 import archiver, { Archiver } from 'archiver'
 import endOfStream from 'end-of-stream'
 
+import { ObjectValues } from './types/utils.js'
+
 export { Archiver as ZipArchive } from 'archiver'
 
-// TODO make enum
-export type ArchiveFormat = 'none' | 'zip'
+export const ARCHIVE_FORMAT = {
+  NONE: 'none',
+  ZIP: 'zip',
+} as const
+
+export type ArchiveFormat = ObjectValues<typeof ARCHIVE_FORMAT>
 
 const pEndOfStream = promisify(endOfStream)
 

@@ -6,7 +6,7 @@ import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import type { RuntimeCache } from '../../../../utils/cache.js'
 import { cachedReadFile } from '../../../../utils/fs.js'
-import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
+import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
 
@@ -72,9 +72,9 @@ export const processESM = async ({
 
   // If this is a .mjs file and we want to output pure ESM files, we don't need
   // to transpile anything.
-  if (extension === ModuleFileExtension.MJS && featureFlags.zisi_pure_esm_mjs) {
+  if (extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) {
     return {
-      moduleFormat: ModuleFormat.ESM,
+      moduleFormat: MODULE_FORMAT.ESM,
     }
   }
 
@@ -82,7 +82,7 @@ export const processESM = async ({
 
   if (!entrypointIsESM) {
     return {
-      moduleFormat: ModuleFormat.COMMONJS,
+      moduleFormat: MODULE_FORMAT.COMMONJS,
     }
   }
 
@@ -91,14 +91,14 @@ export const processESM = async ({
 
   if (featureFlags.zisi_pure_esm && packageJson.type === 'module' && nodeSupport.esm) {
     return {
-      moduleFormat: ModuleFormat.ESM,
+      moduleFormat: MODULE_FORMAT.ESM,
     }
   }
 
   const rewrites = await transpileESM({ basePath, cache, config, esmPaths, reasons, name })
 
   return {
-    moduleFormat: ModuleFormat.COMMONJS,
+    moduleFormat: MODULE_FORMAT.COMMONJS,
     rewrites,
   }
 }

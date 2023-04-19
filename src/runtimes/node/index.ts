@@ -3,10 +3,10 @@ import { join } from 'path'
 import { copyFile } from 'cp-file'
 
 import getInternalValue from '../../utils/get_internal_value.js'
-import { GetSrcFilesFunction, Runtime, RuntimeType, ZipFunction } from '../runtime.js'
+import { GetSrcFilesFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.js'
 
 import { getBundler, getBundlerName } from './bundlers/index.js'
-import { NodeBundlerType } from './bundlers/types.js'
+import { NODE_BUNDLER } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
 import { getNodeRuntime } from './utils/node_runtime.js'
@@ -135,17 +135,17 @@ const zipFunction: ZipFunction = async function ({
 
 const zipWithFunctionWithFallback: ZipFunction = async ({ config = {}, ...parameters }) => {
   // If a specific JS bundler version is specified, we'll use it.
-  if (config.nodeBundler !== NodeBundlerType.ESBUILD_ZISI) {
+  if (config.nodeBundler !== NODE_BUNDLER.ESBUILD_ZISI) {
     return zipFunction({ ...parameters, config })
   }
 
   // Otherwise, we'll try to bundle with esbuild and, if that fails, fallback
   // to zisi.
   try {
-    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: NodeBundlerType.ESBUILD } })
+    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: NODE_BUNDLER.ESBUILD } })
   } catch (esbuildError) {
     try {
-      const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: NodeBundlerType.ZISI } })
+      const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: NODE_BUNDLER.ZISI } })
 
       return { ...data, bundlerErrors: esbuildError.errors }
     } catch {
@@ -158,7 +158,7 @@ const runtime: Runtime = {
   findFunctionsInPaths,
   findFunctionInPath,
   getSrcFiles: getSrcFilesWithBundler,
-  name: RuntimeType.JAVASCRIPT,
+  name: RUNTIME.JAVASCRIPT,
   zipFunction: zipWithFunctionWithFallback,
 }
 

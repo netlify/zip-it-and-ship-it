@@ -2,16 +2,19 @@ import type { ArchiveFormat } from '../archive.js'
 import type { FunctionConfig } from '../config.js'
 import type { FeatureFlags } from '../feature_flags.js'
 import type { FunctionSource, SourceFile } from '../function.js'
+import { ObjectValues } from '../types/utils.js'
 import type { RuntimeCache } from '../utils/cache.js'
 
-import type { NodeBundlerType } from './node/bundlers/types.js'
+import type { NodeBundlerName } from './node/bundlers/types.js'
 import type { ISCValues } from './node/in_source_config/index.js'
 
-export const enum RuntimeType {
-  GO = 'go',
-  JAVASCRIPT = 'js',
-  RUST = 'rs',
-}
+export const RUNTIME = {
+  GO: 'go',
+  JAVASCRIPT: 'js',
+  RUST: 'rs',
+} as const
+
+export type RuntimeName = ObjectValues<typeof RUNTIME>
 
 export type FindFunctionsInPathsFunction = (args: {
   cache: RuntimeCache
@@ -35,7 +38,7 @@ export type GetSrcFilesFunction = (
 ) => Promise<string[]>
 
 export interface ZipFunctionResult {
-  bundler?: NodeBundlerType
+  bundler?: NodeBundlerName
   bundlerErrors?: object[]
   bundlerWarnings?: object[]
   config: FunctionConfig
@@ -68,6 +71,6 @@ export interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction
   findFunctionInPath: FindFunctionInPathFunction
   getSrcFiles?: GetSrcFilesFunction
-  name: RuntimeType
+  name: RuntimeName
   zipFunction: ZipFunction
 }

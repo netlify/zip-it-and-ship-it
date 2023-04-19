@@ -6,8 +6,8 @@ import { tmpName } from 'tmp-promise'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { safeUnlink } from '../../../../utils/fs.js'
-import { RuntimeType } from '../../../runtime.js'
-import { NodeBundlerType } from '../types.js'
+import { RUNTIME } from '../../../runtime.js'
+import { NODE_BUNDLER } from '../types.js'
 
 // Maximum number of log messages that an esbuild instance will produce. This
 // limit is important to avoid out-of-memory errors due to too much data being
@@ -63,8 +63,8 @@ const listImportsWithESBuild = async ({
   } catch (error) {
     throw FunctionBundlingUserError.addCustomErrorInfo(error, {
       functionName,
-      runtime: RuntimeType.JAVASCRIPT,
-      bundler: NodeBundlerType.ZISI,
+      runtime: RUNTIME.JAVASCRIPT,
+      bundler: NODE_BUNDLER.ZISI,
     })
   } finally {
     await safeUnlink(targetPath)
@@ -81,8 +81,8 @@ const listImportsWithPrecinct = async ({ functionName, path }: { functionName: s
     if (error.code === 'BABEL_PARSER_SYNTAX_ERROR') {
       throw FunctionBundlingUserError.addCustomErrorInfo(error, {
         functionName,
-        runtime: RuntimeType.JAVASCRIPT,
-        bundler: NodeBundlerType.ZISI,
+        runtime: RUNTIME.JAVASCRIPT,
+        bundler: NODE_BUNDLER.ZISI,
       })
     }
 
