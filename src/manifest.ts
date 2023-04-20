@@ -2,7 +2,8 @@ import { promises as fs } from 'fs'
 import { resolve } from 'path'
 import { arch, platform } from 'process'
 
-import { FunctionResult } from './utils/format_result.js'
+import type { FeatureFlags } from './feature_flags.js'
+import type { FunctionResult } from './utils/format_result.js'
 
 interface ManifestFunction {
   mainFile: string
@@ -28,8 +29,16 @@ export interface Manifest {
 
 const MANIFEST_VERSION = 1
 
-export const createManifest = async ({ functions, path }: { functions: FunctionResult[]; path: string }) => {
-  const formattedFunctions = functions.map(formatFunctionForManifest)
+export const createManifest = async ({
+  featureFlags,
+  functions,
+  path,
+}: {
+  featureFlags: FeatureFlags
+  functions: FunctionResult[]
+  path: string
+}) => {
+  const formattedFunctions = functions.map((func) => formatFunctionForManifest(func, featureFlags))
   const payload: Manifest = {
     functions: formattedFunctions,
     system: { arch, platform },
@@ -40,23 +49,16 @@ export const createManifest = async ({ functions, path }: { functions: FunctionR
   await fs.writeFile(path, JSON.stringify(payload))
 }
 
-const formatFunctionForManifest = ({
+const formatFunctionForManifest = (
+  { bundler, displayName, generator, mainFile, name, path, runtime, runtimeVersion, schedule }: FunctionResult,
+  featureFlags: FeatureFlags,
+): ManifestFunction => ({
   bundler,
   displayName,
   generator,
   mainFile,
   name,
-  path,
-  runtime,
-  runtimeVersion,
-  schedule,
-}: FunctionResult): ManifestFunction => ({
-  bundler,
-  displayName,
-  generator,
-  mainFile,
-  name,
-  runtimeVersion,
+  runtimeVersion: featureFlags.functions_inherit_build_nodejs_version ? runtimeVersion : undefined,
   path: resolve(path),
   runtime,
   schedule,

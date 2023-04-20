@@ -1,6 +1,6 @@
 import { env } from 'process'
 
-export const defaultFlags: Record<string, boolean> = {
+export const defaultFlags = {
   // Build Rust functions from source.
   buildRustSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_RUST_SOURCE),
 
@@ -9,6 +9,9 @@ export const defaultFlags: Record<string, boolean> = {
 
   // Use NFT as the default bundler.
   traceWithNft: false,
+
+  // Should Lambda functions inherit the build Node.js version
+  functions_inherit_build_nodejs_version: false,
 
   // Output pure (i.e. untranspiled) ESM files when the function file has ESM
   // syntax and the parent `package.json` file has `{"type": "module"}`.
@@ -23,10 +26,9 @@ export const defaultFlags: Record<string, boolean> = {
 
   // Do not allow ___netlify-entry-point as function or file name
   zisi_disallow_new_entry_name: false,
-}
+} as const
 
-export type FeatureFlag = keyof typeof defaultFlags
-export type FeatureFlags = Record<FeatureFlag, boolean>
+export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>
 
 // List of supported flags and their default value.
 
