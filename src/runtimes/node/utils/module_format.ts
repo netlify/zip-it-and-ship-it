@@ -1,27 +1,32 @@
 import type { FeatureFlags } from '../../../feature_flags.js'
+import { ObjectValues } from '../../../types/utils.js'
 
-export const enum ModuleFormat {
-  COMMONJS = 'cjs',
-  ESM = 'esm',
-}
+export const MODULE_FORMAT = {
+  COMMONJS: 'cjs',
+  ESM: 'esm',
+} as const
 
-export const enum ModuleFileExtension {
-  CJS = '.cjs',
-  JS = '.js',
-  MJS = '.mjs',
-}
+export type ModuleFormat = ObjectValues<typeof MODULE_FORMAT>
+
+export const MODULE_FILE_EXTENSION = {
+  CJS: '.cjs',
+  JS: '.js',
+  MJS: '.mjs',
+} as const
+
+export type ModuleFileExtension = ObjectValues<typeof MODULE_FILE_EXTENSION>
 
 export const getFileExtensionForFormat = (
   moduleFormat: ModuleFormat,
   featureFlags: FeatureFlags,
 ): ModuleFileExtension => {
-  if (moduleFormat === ModuleFormat.ESM && featureFlags.zisi_pure_esm_mjs) {
-    return ModuleFileExtension.MJS
+  if (moduleFormat === MODULE_FORMAT.ESM && featureFlags.zisi_pure_esm_mjs) {
+    return MODULE_FILE_EXTENSION.MJS
   }
 
-  if (featureFlags.zisi_output_cjs_extension && moduleFormat === ModuleFormat.COMMONJS) {
-    return ModuleFileExtension.CJS
+  if (featureFlags.zisi_output_cjs_extension && moduleFormat === MODULE_FORMAT.COMMONJS) {
+    return MODULE_FILE_EXTENSION.CJS
   }
 
-  return ModuleFileExtension.JS
+  return MODULE_FILE_EXTENSION.JS
 }

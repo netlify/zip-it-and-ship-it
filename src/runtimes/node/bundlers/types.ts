@@ -3,16 +3,19 @@ import type { Message } from '@netlify/esbuild'
 import type { FunctionConfig } from '../../../config.js'
 import type { FeatureFlag, FeatureFlags } from '../../../feature_flags.js'
 import type { FunctionSource } from '../../../function.js'
+import { ObjectValues } from '../../../types/utils.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
 import type { ModuleFormat } from '../utils/module_format.js'
 
-export const enum NodeBundlerType {
-  ESBUILD = 'esbuild',
-  ESBUILD_ZISI = 'esbuild_zisi',
-  NFT = 'nft',
-  ZISI = 'zisi',
-  NONE = 'none',
-}
+export const NODE_BUNDLER = {
+  ESBUILD: 'esbuild',
+  ESBUILD_ZISI: 'esbuild_zisi',
+  NFT: 'nft',
+  ZISI: 'zisi',
+  NONE: 'none',
+} as const
+
+export type NodeBundlerName = ObjectValues<typeof NODE_BUNDLER>
 
 // TODO: Create a generic warning type
 type BundlerWarning = Message

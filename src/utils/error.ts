@@ -1,10 +1,10 @@
-import type { NodeBundlerType } from '../runtimes/node/bundlers/types.js'
-import type { RuntimeType } from '../runtimes/runtime.js'
+import type { NodeBundlerName } from '../runtimes/node/bundlers/types.js'
+import type { RuntimeName } from '../runtimes/runtime.js'
 
 interface CustomErrorLocation {
   functionName: string
-  runtime: RuntimeType
-  bundler?: NodeBundlerType
+  runtime: RuntimeName
+  bundler?: NodeBundlerName
 }
 
 interface CustomErrorInfo {

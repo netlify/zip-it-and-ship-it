@@ -6,7 +6,7 @@ import { dir as getTmpDir } from 'tmp-promise'
 import unixify from 'unixify'
 import { describe, expect, test } from 'vitest'
 
-import { NodeBundlerType, zipFunction } from '../src/main.js'
+import { NODE_BUNDLER, zipFunction } from '../src/main.js'
 
 import { FIXTURES_DIR, importFunctionFile, unzipFiles } from './helpers/main.js'
 import { allBundleConfigs, getNodeBundlerString, testMany } from './helpers/test_many.js'
@@ -98,7 +98,7 @@ describe('zipFunction', () => {
     const fixtureDir = join(FIXTURES_DIR, 'node-module-dynamic-import-2')
     const result = (await zipFunction(join(fixtureDir, 'function.js'), tmpDir, {
       basePath: fixtureDir,
-      config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
+      config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
     }))!
 
     await unzipFiles([result])

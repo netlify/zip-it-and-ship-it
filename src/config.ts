@@ -6,7 +6,7 @@ import isPathInside from 'is-path-inside'
 import mergeOptions from 'merge-options'
 
 import { FunctionSource } from './function.js'
-import type { NodeBundlerType } from './runtimes/node/bundlers/types.js'
+import type { NodeBundlerName } from './runtimes/node/bundlers/types.js'
 import type { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { minimatch } from './utils/matching.js'
 
@@ -15,7 +15,7 @@ interface FunctionConfig {
   includedFiles?: string[]
   includedFilesBasePath?: string
   ignoredNodeModules?: string[]
-  nodeBundler?: NodeBundlerType
+  nodeBundler?: NodeBundlerName
   nodeSourcemap?: boolean
   nodeVersion?: string
   processDynamicNodeImports?: boolean

@@ -3,7 +3,7 @@ import { basename } from 'path'
 
 import { FunctionBundlingUserError } from '../../utils/error.js'
 import { shellUtils } from '../../utils/shell.js'
-import { RuntimeType } from '../runtime.js'
+import { RUNTIME } from '../runtime.js'
 
 export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
   const functionName = basename(srcDir)
@@ -20,7 +20,7 @@ export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; 
   } catch (error) {
     console.error(`Could not compile Go function ${functionName}:\n`)
 
-    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: RuntimeType.GO })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: RUNTIME.GO })
   }
 
   const stat = await fs.lstat(destPath)

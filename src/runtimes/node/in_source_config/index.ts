@@ -2,7 +2,7 @@ import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName 
 
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
-import { RuntimeType } from '../../runtime.js'
+import { RUNTIME } from '../../runtime.js'
 import { createBindingsMethod } from '../parser/bindings.js'
 import { getMainExport } from '../parser/exports.js'
 import { getImports } from '../parser/imports.js'
@@ -18,14 +18,14 @@ const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean
   if (!functionFound) {
     throw new FunctionBundlingUserError(
       "The `schedule` helper was imported but we couldn't find any usages. If you meant to schedule a function, please check that `schedule` is invoked and `handler` correctly exported.",
-      { functionName, runtime: RuntimeType.JAVASCRIPT },
+      { functionName, runtime: RUNTIME.JAVASCRIPT },
     )
   }
 
   if (!scheduleFound) {
     throw new FunctionBundlingUserError(
       'Unable to find cron expression for scheduled function. The cron expression (first argument) for the `schedule` helper needs to be accessible inside the file and cannot be imported.',
-      { functionName, runtime: RuntimeType.JAVASCRIPT },
+      { functionName, runtime: RUNTIME.JAVASCRIPT },
     )
   }
 }

@@ -1,13 +1,13 @@
 import { dirname, extname, normalize } from 'path'
 
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
-import { RuntimeType } from '../../../runtime.js'
+import { RUNTIME } from '../../../runtime.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import { ModuleFormat } from '../../utils/module_format.js'
+import { ModuleFormat, MODULE_FORMAT } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable } from '../../utils/package_json.js'
-import { BundleFunction, GetSrcFilesFunction, NodeBundlerType } from '../types.js'
+import { BundleFunction, GetSrcFilesFunction, NODE_BUNDLER } from '../types.js'
 
 /**
  * This bundler is a simple no-op bundler, that does no bundling at all.
@@ -21,20 +21,20 @@ const getModuleFormat = async function (mainFile: string): Promise<ModuleFormat>
   const extension = extname(mainFile)
 
   if (extension === '.mjs') {
-    return ModuleFormat.ESM
+    return MODULE_FORMAT.ESM
   }
 
   if (extension === '.cjs') {
-    return ModuleFormat.COMMONJS
+    return MODULE_FORMAT.COMMONJS
   }
 
   const packageJson = await getPackageJsonIfAvailable(dirname(mainFile))
 
   if (packageJson.type === 'module') {
-    return ModuleFormat.ESM
+    return MODULE_FORMAT.ESM
   }
 
-  return ModuleFormat.COMMONJS
+  return MODULE_FORMAT.COMMONJS
 }
 
 export const getSrcFiles: GetSrcFilesFunction = async function ({ config, mainFile }) {
@@ -83,13 +83,13 @@ const bundle: BundleFunction = async ({
   const moduleFormat = await getModuleFormat(mainFile)
   const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
-  if (moduleFormat === ModuleFormat.ESM && !nodeSupport.esm) {
+  if (moduleFormat === MODULE_FORMAT.ESM && !nodeSupport.esm) {
     throw new FunctionBundlingUserError(
       `Function file is an ES module, which the Node.js version specified in the config (${config.nodeVersion}) does not support. ES modules are supported as of version 14 of Node.js.`,
       {
         functionName: name,
-        runtime: RuntimeType.JAVASCRIPT,
-        bundler: NodeBundlerType.NONE,
+        runtime: RUNTIME.JAVASCRIPT,
+        bundler: NODE_BUNDLER.NONE,
       },
     )
   }

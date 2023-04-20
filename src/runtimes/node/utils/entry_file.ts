@@ -2,9 +2,15 @@ import { basename, extname, resolve } from 'path'
 
 import type { FeatureFlags } from '../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
-import { RuntimeType } from '../../runtime.js'
+import { RUNTIME } from '../../runtime.js'
 
-import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from './module_format.js'
+import {
+  getFileExtensionForFormat,
+  ModuleFileExtension,
+  ModuleFormat,
+  MODULE_FILE_EXTENSION,
+  MODULE_FORMAT,
+} from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
 export const ENTRY_FILE_NAME = '___netlify-entry-point'
@@ -17,7 +23,7 @@ export interface EntryFile {
 const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
   const importPath = `.${mainPath.startsWith('/') ? mainPath : `/${mainPath}`}`
 
-  if (moduleFormat === ModuleFormat.COMMONJS) {
+  if (moduleFormat === MODULE_FORMAT.COMMONJS) {
     return `module.exports = require('${importPath}')`
   }
 
@@ -25,7 +31,11 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
 }
 
 // They are in the order that AWS Lambda will try to find the entry point
-const POSSIBLE_LAMBDA_ENTRY_EXTENSIONS = [ModuleFileExtension.JS, ModuleFileExtension.MJS, ModuleFileExtension.CJS]
+const POSSIBLE_LAMBDA_ENTRY_EXTENSIONS = [
+  MODULE_FILE_EXTENSION.JS,
+  MODULE_FILE_EXTENSION.MJS,
+  MODULE_FILE_EXTENSION.CJS,
+]
 
 // checks if the file is considered a entry-file in AWS Lambda
 export const isNamedLikeEntryFile = (
@@ -70,7 +80,7 @@ export const conflictsWithEntryFile = (
         `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a file or directory name.`,
         {
           functionName: basename(filename, extension),
-          runtime: RuntimeType.JAVASCRIPT,
+          runtime: RUNTIME.JAVASCRIPT,
         },
       )
     }

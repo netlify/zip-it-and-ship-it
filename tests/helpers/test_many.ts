@@ -5,7 +5,7 @@ import { TestAPI, describe, test } from 'vitest'
 
 import type { Config } from '../../src/config'
 import type { FeatureFlags } from '../../src/feature_flags'
-import { NodeBundlerType } from '../../src/main'
+import { NodeBundlerName, NODE_BUNDLER } from '../../src/main'
 
 import { getBundlerNameFromConfig } from './main'
 
@@ -22,7 +22,7 @@ const getRateLimitedTestFunction = (originalTestFunction: TestAPI): TestAPI => {
 
 interface TestRunnerOptions {
   config: Config
-  getCurrentBundlerName: () => NodeBundlerType | undefined
+  getCurrentBundlerName: () => NodeBundlerName | undefined
 }
 type TestRunner = (opts: TestRunnerOptions, variation: string) => Promise<void> | void
 
@@ -39,7 +39,7 @@ interface TestManyAPI<M> {
 export const makeTestMany = <M extends string>(
   testAPI: TestAPI,
   matrix: Record<M, () => { config: Config; featureFlags?: FeatureFlags }>,
-  getCurrentBundlerName: (config: Config) => NodeBundlerType | undefined,
+  getCurrentBundlerName: (config: Config) => NodeBundlerName | undefined,
 ): TestManyAPI<M | `todo:${M}`> => {
   const filteredVariations = env.ZISI_FILTER_VARIATIONS ? env.ZISI_FILTER_VARIATIONS.split(',') : []
 
@@ -79,21 +79,21 @@ export const makeTestMany = <M extends string>(
   return testBundlers as TestManyAPI<M | `todo:${M}`>
 }
 
-export const getNodeBundlerString = (variation: string): NodeBundlerType => {
+export const getNodeBundlerString = (variation: string): NodeBundlerName => {
   switch (variation) {
     case 'bundler_esbuild':
     case 'bundler_esbuild_zisi':
-      return NodeBundlerType.ESBUILD
+      return NODE_BUNDLER.ESBUILD
 
     case 'bundler_nft':
     case 'bundler_default_nft':
-      return NodeBundlerType.NFT
+      return NODE_BUNDLER.NFT
 
     case 'bundler_none':
-      return NodeBundlerType.NONE
+      return NODE_BUNDLER.NONE
 
     default:
-      return NodeBundlerType.ZISI
+      return NODE_BUNDLER.ZISI
   }
 }
 
@@ -118,16 +118,16 @@ export const testMany = makeTestMany(
       featureFlags: { traceWithNft: true },
     }),
     bundler_esbuild: () => ({
-      config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
+      config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
     }),
     bundler_esbuild_zisi: () => ({
-      config: { '*': { nodeBundler: NodeBundlerType.ESBUILD_ZISI } },
+      config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD_ZISI } },
     }),
     bundler_nft: () => ({
-      config: { '*': { nodeBundler: NodeBundlerType.NFT } },
+      config: { '*': { nodeBundler: NODE_BUNDLER.NFT } },
     }),
     bundler_none: () => ({
-      config: { '*': { nodeBundler: NodeBundlerType.NONE } },
+      config: { '*': { nodeBundler: NODE_BUNDLER.NONE } },
     }),
   },
   getBundlerNameFromConfig,

@@ -7,9 +7,9 @@ import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
-import { RuntimeType } from '../../../runtime.js'
-import { getFileExtensionForFormat, ModuleFormat } from '../../utils/module_format.js'
-import { NodeBundlerType } from '../types.js'
+import { RUNTIME } from '../../../runtime.js'
+import { getFileExtensionForFormat, MODULE_FORMAT } from '../../utils/module_format.js'
+import { NODE_BUNDLER } from '../types.js'
 
 import { getBundlerTarget, getModuleFormat } from './bundler_target.js'
 import { getDynamicImportsPlugin } from './plugin_dynamic_imports.js'
@@ -117,7 +117,7 @@ export const bundleJsFile = async function ({
 
   try {
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
-      banner: moduleFormat === ModuleFormat.ESM ? { js: esmJSBanner } : undefined,
+      banner: moduleFormat === MODULE_FORMAT.ESM ? { js: esmJSBanner } : undefined,
       bundle: true,
       entryPoints: [srcFile],
       external,
@@ -159,8 +159,8 @@ export const bundleJsFile = async function ({
   } catch (error) {
     throw FunctionBundlingUserError.addCustomErrorInfo(error, {
       functionName: name,
-      runtime: RuntimeType.JAVASCRIPT,
-      bundler: NodeBundlerType.ESBUILD,
+      runtime: RUNTIME.JAVASCRIPT,
+      bundler: NODE_BUNDLER.ESBUILD,
     })
   }
 }

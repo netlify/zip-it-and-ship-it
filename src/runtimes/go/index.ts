@@ -10,13 +10,7 @@ import getInternalValue from '../../utils/get_internal_value.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
-import {
-  FindFunctionInPathFunction,
-  FindFunctionsInPathsFunction,
-  Runtime,
-  RuntimeType,
-  ZipFunction,
-} from '../runtime.js'
+import { FindFunctionInPathFunction, FindFunctionsInPathsFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.js'
 
 import { build } from './builder.js'
 
@@ -53,7 +47,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ cac
 const findFunctionInPath: FindFunctionInPathFunction = async function ({ cache, path }) {
   const runtime = await detectBinaryRuntime({ path })
 
-  if (runtime === RuntimeType.GO) {
+  if (runtime === RUNTIME.GO) {
     return processBinary({ cache, path })
   }
 
@@ -169,6 +163,6 @@ const zipFunction: ZipFunction = async function ({
   }
 }
 
-const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RuntimeType.GO, zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RUNTIME.GO, zipFunction }
 
 export default runtime
