@@ -31,7 +31,6 @@ export const defaultFlags = {
   zisi_functions_api_v2: false,
 } as const
 
-
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>
 
 // List of supported flags and their default value.
