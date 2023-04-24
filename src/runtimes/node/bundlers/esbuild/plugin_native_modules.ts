@@ -32,7 +32,6 @@ export const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): 
   setup(build) {
     const cache: NativeModuleCache = {}
 
-    // eslint-disable-next-line max-statements
     build.onResolve({ filter: packageFilter }, async (args) => {
       const pkg = packageName.exec(args.path)
 

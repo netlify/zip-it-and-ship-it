@@ -3,6 +3,7 @@ import { Stats, promises as fs } from 'fs'
 import os from 'os'
 import { basename, join } from 'path'
 
+import { getPath as getV2APIPath } from '@netlify/serverless-functions-api'
 import { copyFile } from 'cp-file'
 import { deleteAsync as deleteFiles } from 'del'
 import pMap from 'p-map'
@@ -20,7 +21,13 @@ import type { FeatureFlags } from '../../../feature_flags.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
 import { cachedLstat, mkdirAndWriteFile } from '../../../utils/fs.js'
 
-import { conflictsWithEntryFile, EntryFile, getEntryFile, isNamedLikeEntryFile } from './entry_file.js'
+import {
+  BOOTSTRAP_FILE_NAME,
+  conflictsWithEntryFile,
+  EntryFile,
+  getEntryFile,
+  isNamedLikeEntryFile,
+} from './entry_file.js'
 import { ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
@@ -99,7 +106,7 @@ const createDirectory = async function ({
 }
 
 const createZipArchive = async function ({
-  aliases,
+  aliases = new Map(),
   basePath,
   cache,
   destFolder,
@@ -144,6 +151,16 @@ const createZipArchive = async function ({
     })
 
     addEntryFileToZip(archive, entryFile)
+  }
+
+  if (featureFlags.zisi_functions_api_v2) {
+    // This is the path to the file that contains all the code for the v2
+    // functions API. We add it to the list of source files and create an
+    // alias so that it's written as `BOOTSTRAP_FILE_NAME` in the ZIP.
+    const v2APIPath = getV2APIPath()
+
+    srcFiles.push(v2APIPath)
+    aliases.set(v2APIPath, BOOTSTRAP_FILE_NAME)
   }
 
   const srcFilesInfos = await Promise.all(srcFiles.map((file) => addStat(cache, file)))
