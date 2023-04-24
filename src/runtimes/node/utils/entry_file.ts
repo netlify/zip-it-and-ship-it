@@ -14,14 +14,23 @@ import {
 import { normalizeFilePath } from './normalize_path.js'
 
 export const ENTRY_FILE_NAME = '___netlify-entry-point'
+export const BOOTSTRAP_FILE_NAME = '___netlify-bootstrap.js'
 
 export interface EntryFile {
   contents: string
   filename: string
 }
 
-const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
+const getEntryFileContents = (mainPath: string, moduleFormat: string, featureFlags: FeatureFlags) => {
   const importPath = `.${mainPath.startsWith('/') ? mainPath : `/${mainPath}`}`
+
+  if (featureFlags.zisi_functions_api_v2) {
+    return [
+      `import func from '${importPath}'`,
+      `import { getLambdaHandler } from './${BOOTSTRAP_FILE_NAME}'`,
+      `export const handler = getLambdaHandler(func)`,
+    ].join(';\n')
+  }
 
   if (moduleFormat === MODULE_FORMAT.COMMONJS) {
     return `module.exports = require('${importPath}')`
@@ -117,7 +126,7 @@ export const getEntryFile = ({
   const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
   const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
   const entryFilename = getEntryFileName({ extension, filename })
-  const contents = getEntryFileContents(mainPath, moduleFormat)
+  const contents = getEntryFileContents(mainPath, moduleFormat, featureFlags)
 
   return {
     contents,

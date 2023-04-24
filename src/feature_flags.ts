@@ -21,12 +21,16 @@ export const defaultFlags = {
   // `.mjs` extension.
   zisi_pure_esm_mjs: false,
 
-  // Output CJS file extension
+  // Output CJS file extension.
   zisi_output_cjs_extension: false,
 
-  // Do not allow ___netlify-entry-point as function or file name
+  // Do not allow ___netlify-entry-point as function or file name.
   zisi_disallow_new_entry_name: false,
+
+  // Inject the compatibility layer required for the v2 runtime API to work.
+  zisi_functions_api_v2: false,
 } as const
+
 
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>
 

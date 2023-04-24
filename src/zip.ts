@@ -142,7 +142,6 @@ export const zipFunctions = async function (
   return formattedResults
 }
 
-// eslint-disable-next-line max-statements
 export const zipFunction = async function (
   relativeSrcPath: string,
   destFolder: string,

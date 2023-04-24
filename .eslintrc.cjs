@@ -34,6 +34,7 @@ module.exports = {
         'import/no-namespace': 'off',
         // https://github.com/typescript-eslint/typescript-eslint/issues/2483
         'max-lines': 'off',
+        'max-statements': 'off',
         'no-shadow': 'off',
         '@typescript-eslint/no-shadow': 'error',
       },
