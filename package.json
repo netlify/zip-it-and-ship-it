@@ -1,6 +1,6 @@
 {
   "name": "@netlify/zip-it-and-ship-it",
-  "version": "9.1.0",
+  "version": "9.2.0",
   "description": "Zip it and ship it",
   "main": "./dist/main.js",
   "type": "module",
@@ -48,7 +48,7 @@
   ],
   "author": "Netlify, Inc",
   "license": "MIT",
-  "repository": "netlify/zip-it-and-ship-it",
+  "repository": "https://github.com/netlify/zip-it-and-ship-it",
   "homepage": "https://github.com/netlify/zip-it-and-ship-it#README",
   "bugs": {
     "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
