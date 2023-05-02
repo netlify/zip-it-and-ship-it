@@ -2206,7 +2206,7 @@ describe('zip-it-and-ship-it', () => {
 
       expect.fail()
     } catch (error) {
-      const filePath = join(files[0].path, 'src', 'tests', 'fixtures', fixtureName, 'function.js')
+      const filePath = join('src', 'tests', 'fixtures', fixtureName, 'function.js')
 
       // Asserts that the line/column of the error match the position of the
       // original source file, not the transpiled one.
