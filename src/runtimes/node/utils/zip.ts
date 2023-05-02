@@ -127,7 +127,6 @@ const createZipArchive = async function ({
   const hasEntryFileConflict = conflictsWithEntryFile(srcFiles, {
     basePath,
     extension,
-    featureFlags,
     filename,
     mainFile,
   })
