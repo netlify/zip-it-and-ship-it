@@ -70,13 +70,11 @@ export const conflictsWithEntryFile = (
   {
     basePath,
     extension,
-    featureFlags,
     filename,
     mainFile,
   }: {
     basePath: string
     extension: string
-    featureFlags: FeatureFlags
     filename: string
     mainFile: string
   },
@@ -84,7 +82,7 @@ export const conflictsWithEntryFile = (
   let hasConflict = false
 
   srcFiles.forEach((srcFile) => {
-    if (featureFlags.zisi_disallow_new_entry_name && srcFile.includes(ENTRY_FILE_NAME)) {
+    if (srcFile.includes(ENTRY_FILE_NAME)) {
       throw new FunctionBundlingUserError(
         `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a file or directory name.`,
         {

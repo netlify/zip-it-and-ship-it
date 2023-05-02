@@ -2671,7 +2671,6 @@ describe('zip-it-and-ship-it', () => {
     const fixtureName = 'entry-file-func-name'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
-      featureFlags: { zisi_disallow_new_entry_name: true },
     })
     await expect(
       zipFixture(fixtureName, {
@@ -2689,7 +2688,6 @@ describe('zip-it-and-ship-it', () => {
       const fixtureName = 'entry-file-file-name'
       const opts = merge(options, {
         basePath: join(FIXTURES_DIR, fixtureName),
-        featureFlags: { zisi_disallow_new_entry_name: true },
       })
       await expect(
         zipFixture(fixtureName, {
