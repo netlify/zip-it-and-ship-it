@@ -17,6 +17,7 @@ import type { Config } from '../src/config.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
 import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
+import { ENTRY_FILE_NAME } from '../src/runtimes/node/utils/entry_file.js'
 import { MODULE_FORMAT } from '../src/runtimes/node/utils/module_format.js'
 import { shellUtils } from '../src/utils/shell.js'
 
@@ -2708,7 +2709,7 @@ describe('zip-it-and-ship-it', () => {
         })
         await unzipFiles(files)
 
-        const func = await importFunctionFile(`${tmpDir}/function.js`)
+        const func = await importFunctionFile(`${tmpDir}/${ENTRY_FILE_NAME}.mjs`)
         const { body, headers = {}, statusCode } = await invokeLambda(func)
 
         expect(body).toBe('<h1>Hello world</h1>')
