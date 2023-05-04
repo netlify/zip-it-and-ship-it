@@ -62,7 +62,10 @@ const getDefaultBundler = async ({
   mainFile: string
   featureFlags: FeatureFlags
 }): Promise<NodeBundlerName> => {
-  if (extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) {
+  if (
+    (extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) ||
+    featureFlags.zisi_functions_api_v2
+  ) {
     return NODE_BUNDLER.NFT
   }
 

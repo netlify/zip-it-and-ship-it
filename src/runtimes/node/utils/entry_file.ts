@@ -14,7 +14,7 @@ import {
 import { normalizeFilePath } from './normalize_path.js'
 
 export const ENTRY_FILE_NAME = '___netlify-entry-point'
-export const BOOTSTRAP_FILE_NAME = '___netlify-bootstrap.js'
+export const BOOTSTRAP_FILE_NAME = '___netlify-bootstrap.mjs'
 
 export interface EntryFile {
   contents: string
@@ -29,7 +29,12 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string, featureFla
       `import func from '${importPath}'`,
       `import { getLambdaHandler } from './${BOOTSTRAP_FILE_NAME}'`,
       `export const handler = getLambdaHandler(func)`,
-    ].join(';\n')
+    ].join(';')
+  }
+
+  if (featureFlags.zisi_unique_entry_file) {
+    // we use dynamic import because we do not know if the user code is cjs or esm
+    return [`const { handler } = await import('${importPath}')`, 'export { handler }'].join(';')
   }
 
   if (moduleFormat === MODULE_FORMAT.COMMONJS) {
@@ -51,14 +56,16 @@ export const isNamedLikeEntryFile = (
   file: string,
   {
     basePath,
+    featureFlags,
     filename,
   }: {
     basePath: string
+    featureFlags: FeatureFlags
     filename: string
   },
 ) =>
   POSSIBLE_LAMBDA_ENTRY_EXTENSIONS.some((extension) => {
-    const entryFilename = getEntryFileName({ extension, filename })
+    const entryFilename = getEntryFileName({ extension, featureFlags, filename })
     const entryFilePath = resolve(basePath, entryFilename)
 
     return entryFilePath === file
@@ -70,11 +77,13 @@ export const conflictsWithEntryFile = (
   {
     basePath,
     extension,
+    featureFlags,
     filename,
     mainFile,
   }: {
     basePath: string
     extension: string
+    featureFlags: FeatureFlags
     filename: string
     mainFile: string
   },
@@ -92,7 +101,13 @@ export const conflictsWithEntryFile = (
       )
     }
 
-    if (!hasConflict && isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile) {
+    // If we're generating a unique entry file, we know we don't have a conflict
+    // at this point.
+    if (featureFlags.zisi_unique_entry_file || featureFlags.zisi_functions_api_v2) {
+      return
+    }
+
+    if (!hasConflict && isNamedLikeEntryFile(srcFile, { basePath, featureFlags, filename }) && srcFile !== mainFile) {
       hasConflict = true
     }
   })
@@ -103,8 +118,21 @@ export const conflictsWithEntryFile = (
 // Returns the name for the AWS Lambda entry file
 // We do set the handler in AWS Lambda to `<func-name>.handler` and because of
 // this it considers `<func-name>.(c|m)?js` as possible entry-points
-const getEntryFileName = ({ extension, filename }: { extension: ModuleFileExtension; filename: string }) =>
-  `${basename(filename, extname(filename))}${extension}`
+const getEntryFileName = ({
+  extension,
+  featureFlags,
+  filename,
+}: {
+  extension: ModuleFileExtension
+  featureFlags: FeatureFlags
+  filename: string
+}) => {
+  if (featureFlags.zisi_unique_entry_file || featureFlags.zisi_functions_api_v2) {
+    return `${ENTRY_FILE_NAME}.mjs`
+  }
+
+  return `${basename(filename, extname(filename))}${extension}`
+}
 
 export const getEntryFile = ({
   commonPrefix,
@@ -123,7 +151,7 @@ export const getEntryFile = ({
 }): EntryFile => {
   const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
   const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
-  const entryFilename = getEntryFileName({ extension, filename })
+  const entryFilename = getEntryFileName({ extension, featureFlags, filename })
   const contents = getEntryFileContents(mainPath, moduleFormat, featureFlags)
 
   return {
