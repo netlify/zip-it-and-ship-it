@@ -34,7 +34,7 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string, featureFla
 
   if (featureFlags.zisi_unique_entry_file) {
     // we use dynamic import because we do not know if the user code is cjs or esm
-    return [`const{ handler } = await import('${importPath}')`, 'export { handler }'].join(';')
+    return [`const { handler } = await import('${importPath}')`, 'export { handler }'].join(';')
   }
 
   if (moduleFormat === MODULE_FORMAT.COMMONJS) {
@@ -101,7 +101,8 @@ export const conflictsWithEntryFile = (
       )
     }
 
-    // We can skip the next check for the new entry file as we have the check above
+    // If we're generating a unique entry file, we know we don't have a conflict
+    // at this point.
     if (featureFlags.zisi_unique_entry_file || featureFlags.zisi_functions_api_v2) {
       return
     }
