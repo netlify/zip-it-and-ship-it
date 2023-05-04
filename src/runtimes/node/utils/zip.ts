@@ -135,7 +135,7 @@ const createZipArchive = async function ({
   // We don't need an entry file if it would end up with the same path as the
   // function's main file. Unless we have a file conflict and need to move everything into a subfolder
   const needsEntryFile =
-    featureFlags.zisi_create_new_entry_file ||
+    featureFlags.zisi_unique_entry_file ||
     featureFlags.zisi_functions_api_v2 ||
     hasEntryFileConflict ||
     !isNamedLikeEntryFile(mainFile, { basePath, featureFlags, filename })

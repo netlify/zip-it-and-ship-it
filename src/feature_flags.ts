@@ -27,8 +27,8 @@ export const defaultFlags = {
   // Inject the compatibility layer required for the v2 runtime API to work.
   zisi_functions_api_v2: false,
 
-  // Create the new unique entry file always instead of the entry file that is based on function name.
-  zisi_create_new_entry_file: false,
+  // Create unique entry file instead of a file that is based on the function name.
+  zisi_unique_entry_file: false,
 } as const
 
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>
