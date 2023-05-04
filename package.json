@@ -100,7 +100,7 @@
     "@types/tmp": "^0.2.3",
     "@types/unixify": "^1.0.0",
     "@types/yargs": "^17.0.4",
-    "@vitest/coverage-c8": "^0.30.0",
+    "@vitest/coverage-c8": "^0.31.0",
     "cpy": "^9.0.0",
     "deepmerge": "^4.2.2",
     "get-stream": "^6.0.0",
@@ -112,7 +112,7 @@
     "throat": "^6.0.1",
     "typescript": "^5.0.0",
     "vite": "^4.0.0",
-    "vitest": "^0.30.0"
+    "vitest": "^0.31.0"
   },
   "engines": {
     "node": "^14.18.0 || >=16.0.0"
