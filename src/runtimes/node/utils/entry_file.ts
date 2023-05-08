@@ -26,7 +26,7 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string, featureFla
 
   if (featureFlags.zisi_functions_api_v2) {
     return [
-      `import func from '${importPath}'`,
+      `import * as func from '${importPath}'`,
       `import { getLambdaHandler } from './${BOOTSTRAP_FILE_NAME}'`,
       `export const handler = getLambdaHandler(func)`,
     ].join(';')

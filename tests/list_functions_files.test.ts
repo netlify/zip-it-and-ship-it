@@ -95,7 +95,6 @@ describe('listFunctionsFiles', () => {
   testMany(
     'Can list all function files from multiple source directories with listFunctionsFiles()',
     [...allBundleConfigs, 'bundler_none'],
-    // eslint-disable-next-line complexity
     async (options) => {
       const fixtureDir = `${FIXTURES_DIR}/multiple-src-directories`
       const opts = merge(options, {
