@@ -52,7 +52,6 @@ const patchESMPackage = async (path: string, cache: RuntimeCache) => {
   return JSON.stringify(patchedPackageJson)
 }
 
-// eslint-disable-next-line complexity
 export const processESM = async ({
   basePath,
   cache,
