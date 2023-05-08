@@ -89,7 +89,7 @@ export const processESM = async ({
   if (!entrypointIsESM) {
     if (featureFlags.zisi_functions_api_v2) {
       throw new FunctionBundlingUserError(
-        `The function '${name}' is written as a commonJS module, but it needs to be written as an ES module.`,
+        `The function '${name}' must use the ES module syntax. To learn more, visit https://ntl.fyi/esm.`,
         {
           functionName: name,
           runtime: RUNTIME.JAVASCRIPT,
@@ -118,7 +118,7 @@ export const processESM = async ({
 
   if (featureFlags.zisi_functions_api_v2) {
     throw new FunctionBundlingUserError(
-      `The function '${name}' is written as a commonJS module, but it needs to be written as an ES module.`,
+      `The function '${name}' must use the ES module syntax. To learn more, visit https://ntl.fyi/esm.`,
       {
         functionName: name,
         runtime: RUNTIME.JAVASCRIPT,
