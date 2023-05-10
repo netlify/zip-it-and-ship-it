@@ -1,7 +1,7 @@
 import type { ArchiveFormat } from '../archive.js'
 import type { FunctionConfig } from '../config.js'
 import type { FeatureFlags } from '../feature_flags.js'
-import type { FunctionSource, SourceFile } from '../function.js'
+import type { FunctionSource, InvocationMode, SourceFile } from '../function.js'
 import { ObjectValues } from '../types/utils.js'
 import type { RuntimeCache } from '../utils/cache.js'
 
@@ -47,6 +47,7 @@ export interface ZipFunctionResult {
   inputs?: string[]
   includedFiles?: string[]
   inSourceConfig?: ISCValues
+  invocationMode?: InvocationMode
   nativeNodeModules?: object
   nodeModulesWithDynamicImports?: string[]
   path: string

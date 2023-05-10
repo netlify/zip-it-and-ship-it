@@ -2,6 +2,7 @@ import { join } from 'path'
 
 import { copyFile } from 'cp-file'
 
+import { INVOCATION_MODE } from '../../function.js'
 import getInternalValue from '../../utils/get_internal_value.js'
 import { GetSrcFilesFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.js'
 
@@ -117,6 +118,8 @@ const zipFunction: ZipFunction = async function ({
 
   await cleanupFunction?.()
 
+  const invocationMode = featureFlags.zisi_functions_api_v2 ? INVOCATION_MODE.Stream : INVOCATION_MODE.Buffer
+
   return {
     bundler: bundlerName,
     bundlerWarnings,
@@ -124,6 +127,7 @@ const zipFunction: ZipFunction = async function ({
     inputs,
     includedFiles,
     inSourceConfig,
+    invocationMode,
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath,
