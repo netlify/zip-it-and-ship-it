@@ -1,5 +1,5 @@
 import { mkdir } from 'fs/promises'
-import { dirname, resolve, join, basename, relative } from 'path'
+import { dirname, resolve, join, basename, posix } from 'path'
 import { env, platform } from 'process'
 import { fileURLToPath } from 'url'
 
@@ -173,8 +173,8 @@ export const normalizeFiles = function (
   },
 ) {
   return {
-    mainFile: relative(fixtureDir, mainFile),
-    srcFile: srcFile ? relative(fixtureDir, srcFile) : undefined,
+    mainFile: posix.relative(fixtureDir, mainFile),
+    srcFile: srcFile ? posix.relative(fixtureDir, srcFile) : undefined,
     ...rest,
   }
 }

@@ -552,7 +552,7 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
-  testMany.only('Works with many dependencies', [...allBundleConfigs], async (options) => {
+  testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
     const fixtureTmpDir = await tmpName({ prefix: 'zip-it-test' })
     const opts = merge(options, {
       basePath: fixtureTmpDir,

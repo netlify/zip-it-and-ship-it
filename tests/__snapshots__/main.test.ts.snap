@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`zip-it-and-ship-it > None bundler throws when using ESM on node < 14 > bundler_none 1`] = `"Function file is an ES module, which the Node.js version specified in the config (12.x) does not support. ES modules are supported as of version 14 of Node.js."`;
