@@ -6,7 +6,7 @@ import { describe, expect, test, vi } from 'vitest'
 
 import { listFunctionsFiles } from '../src/main'
 
-import { FIXTURES_DIR, normalizeFiles } from './helpers/main'
+import { FIXTURES_DIR, getBundlerNameFromOptions, normalizeFiles } from './helpers/main'
 import { allBundleConfigs, testMany } from './helpers/test_many.js'
 
 describe('listFunctionsFiles', () => {
@@ -18,7 +18,7 @@ describe('listFunctionsFiles', () => {
       const opts = merge(options, {
         basePath: fixtureDir,
       })
-      const bundler = options.getCurrentBundlerName()
+      const bundler = getBundlerNameFromOptions(options)
       const files = await listFunctionsFiles(fixtureDir, opts)
       const sortedFiles = sortOn(files, ['mainFile', 'srcFile'])
       const expectedFiles = [
@@ -100,7 +100,7 @@ describe('listFunctionsFiles', () => {
       const opts = merge(options, {
         basePath: fixtureDir,
       })
-      const bundler = options.getCurrentBundlerName()
+      const bundler = getBundlerNameFromOptions(options)
       const functions = await listFunctionsFiles(
         [join(fixtureDir, '.netlify', 'internal-functions'), join(fixtureDir, 'netlify', 'functions')],
         opts,
