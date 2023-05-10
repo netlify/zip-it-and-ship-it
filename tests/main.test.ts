@@ -560,7 +560,7 @@ describe('zip-it-and-ship-it', () => {
 
     const basePath = `${fixtureTmpDir}/many-dependencies`
     await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
-    await execa('npm', ['install', '--no-package-lock', '--no-audit', '--prefer-offline', '--progress=false'], {
+    await execa('npm', ['install', '--no-package-lock', '--no-audit'], {
       cwd: basePath,
     })
 
