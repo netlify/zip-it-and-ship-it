@@ -97,6 +97,7 @@ export const unzipFiles = async function (files: FunctionResult[]): Promise<Test
     Object.keys(files).map(async (key) => {
       const { path, name } = files[key]
       const dest = join(dirname(path), name)
+      await expect(path).toPathExist()
       // eslint-disable-next-line no-param-reassign
       files[key].unzipPath = await unzipFile(path, dest)
     }),
