@@ -98,15 +98,17 @@ export const unzipFiles = async function (files: FunctionResult[]): Promise<Test
       const { path, name } = files[key]
       const dest = join(dirname(path), name)
       await expect(path).toPathExist()
+      await unzipFile(path, dest)
+
       // eslint-disable-next-line no-param-reassign
-      files[key].unzipPath = await unzipFile(path, dest)
+      files[key].unzipPath = dest
     }),
   )
 
   return files as TestFunctionResult[]
 }
 
-const unzipFile = async function (path: string, dest: string): Promise<string> {
+const unzipFile = async function (path: string, dest: string): Promise<void> {
   await mkdir(dest, { recursive: true })
 
   // eslint-disable-next-line unicorn/prefer-ternary
@@ -115,8 +117,6 @@ const unzipFile = async function (path: string, dest: string): Promise<string> {
   } else {
     await execa('unzip', ['-o', path, '-d', dest])
   }
-
-  return dest
 }
 
 const replaceUnzipPath = function ({ path }: { path: string }): string {
