@@ -10,17 +10,8 @@ describe('listFunctions', () => {
   test('Can list function main files with listFunctions()', async () => {
     const fixtureDir = `${FIXTURES_DIR}/list`
     const functions = await listFunctions(fixtureDir)
-    expect(functions).toEqual(
-      [
-        { schedule: undefined, name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
-        { schedule: undefined, name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
-        { schedule: undefined, name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts' },
-        { schedule: undefined, name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
-        { schedule: undefined, name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
-        { schedule: undefined, name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
-        { schedule: undefined, name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
-      ].map(normalizeFiles.bind(null, fixtureDir)),
-    )
+
+    expect(functions.map((file) => normalizeFiles(fixtureDir, file))).toMatchSnapshot()
   })
 
   test('Can list function main files from multiple source directories with listFunctions()', async () => {
@@ -30,38 +21,7 @@ describe('listFunctions', () => {
       join(fixtureDir, 'netlify', 'functions'),
     ])
 
-    expect(functions).toEqual(
-      [
-        {
-          schedule: undefined,
-          name: 'function',
-          mainFile: '.netlify/internal-functions/function.js',
-          runtime: 'js',
-          extension: '.js',
-        },
-        {
-          schedule: undefined,
-          name: 'function_internal',
-          mainFile: '.netlify/internal-functions/function_internal.js',
-          runtime: 'js',
-          extension: '.js',
-        },
-        {
-          schedule: undefined,
-          name: 'function',
-          mainFile: 'netlify/functions/function.js',
-          runtime: 'js',
-          extension: '.js',
-        },
-        {
-          schedule: undefined,
-          name: 'function_user',
-          mainFile: 'netlify/functions/function_user.js',
-          runtime: 'js',
-          extension: '.js',
-        },
-      ].map(normalizeFiles.bind(null, fixtureDir)),
-    )
+    expect(functions.map((file) => normalizeFiles(fixtureDir, file))).toMatchSnapshot()
   })
 
   test('listFunctions surfaces schedule config property', async () => {

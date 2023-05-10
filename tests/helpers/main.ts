@@ -1,5 +1,5 @@
 import { mkdir } from 'fs/promises'
-import { dirname, resolve, normalize, join, basename } from 'path'
+import { dirname, resolve, join, basename, relative } from 'path'
 import { env, platform } from 'process'
 import { fileURLToPath } from 'url'
 
@@ -8,7 +8,7 @@ import { dir as getTmpDir } from 'tmp-promise'
 import { expect } from 'vitest'
 
 import type { Config } from '../../src/config.js'
-import { zipFunctions } from '../../src/main.js'
+import { ListedFunction, zipFunctions } from '../../src/main.js'
 import { listImports } from '../../src/runtimes/node/bundlers/zisi/list_imports.js'
 import type { FunctionResult } from '../../src/utils/format_result.js'
 import { ZipFunctionsOptions } from '../../src/zip.js'
@@ -162,9 +162,19 @@ export const importFunctionFile = async function <T = any>(functionPath: string)
   return result.default === undefined ? result : result.default
 }
 
-export const normalizeFiles = function (fixtureDir: string, { name, mainFile, runtime, extension, srcFile, schedule }) {
-  const mainFileA = normalize(`${fixtureDir}/${mainFile}`)
-  const srcFileA = srcFile === undefined ? {} : { srcFile: normalize(`${fixtureDir}/${srcFile}`) }
-
-  return { name, mainFile: mainFileA, runtime, extension, schedule, ...srcFileA }
+export const normalizeFiles = function (
+  fixtureDir: string,
+  {
+    mainFile,
+    srcFile,
+    ...rest
+  }: ListedFunction & {
+    srcFile?: string
+  },
+) {
+  return {
+    mainFile: relative(fixtureDir, mainFile),
+    srcFile: srcFile ? relative(fixtureDir, srcFile) : undefined,
+    ...rest,
+  }
 }
