@@ -75,6 +75,7 @@ export const zipCheckFunctions = async function (
   const srcFolders = Array.isArray(fixture)
     ? fixture.map((srcFolder) => `${fixtureDir}/${srcFolder}`)
     : `${fixtureDir}/${fixture}`
+
   const files = await zipFunctions(srcFolders, tmpDir, opts)
 
   expect(Array.isArray(files)).toBe(true)
@@ -118,7 +119,7 @@ const unzipFile = async function (path: string, dest: string): Promise<string> {
 }
 
 const replaceUnzipPath = function ({ path }: { path: string }): string {
-  return join(path.replace('.zip', ''), basename(path).replace('.zip', '.js'))
+  return join(path.replace(/.zip$/, ''), basename(path).replace(/.zip$/, '.js'))
 }
 
 // Returns a list of paths included using `require` calls. Relative requires

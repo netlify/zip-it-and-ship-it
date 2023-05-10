@@ -571,15 +571,13 @@ describe('zip-it-and-ship-it', () => {
     const names = new Set(['one', 'two', 'three', 'four', 'five', 'six'])
     const { files } = await zipNode('many-functions', {
       opts: options,
-      length: TEST_FUNCTIONS_LENGTH,
+      length: 6,
     })
 
     files.forEach(({ name }) => {
       expect(names.has(name)).toBe(true)
     })
   })
-
-  const TEST_FUNCTIONS_LENGTH = 6
 
   testMany('Produces deterministic checksums', [...allBundleConfigs, 'bundler_none'], async (options) => {
     const [checksumOne, checksumTwo] = await Promise.all([
