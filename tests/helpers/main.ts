@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 
 import { execa } from 'execa'
 import { dir as getTmpDir } from 'tmp-promise'
-import { expect } from 'vitest'
+import { afterAll, expect } from 'vitest'
 
 import type { Config } from '../../src/config.js'
 import { ListedFunction, zipFunctions } from '../../src/main.js'
@@ -15,6 +15,8 @@ import { ZipFunctionsOptions } from '../../src/zip.js'
 
 export const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url))
 export const BINARY_PATH = fileURLToPath(new URL('../../dist/bin.js', import.meta.url))
+
+const ZISI_KEEP_TEMP_DIRS = env.ZISI_KEEP_TEMP_DIRS !== undefined
 
 interface ZipOptions {
   length?: number
@@ -32,6 +34,16 @@ export type TestFunctionResult = FunctionResult & { unzipPath: string }
 interface ZipNodeReturn extends ZipReturn {
   files: TestFunctionResult[]
 }
+
+let cleanupJobs: Array<() => Promise<void>> = []
+
+// We have to manually clean up all the created temp directories.
+// `tmp-promise` usually does this on process.exit(), but vitest runs the test files
+// in worker threads which do not emit the exit event
+afterAll(async () => {
+  await Promise.all(cleanupJobs.map((job) => job()))
+  cleanupJobs = []
+})
 
 export const zipNode = async function (
   fixture: string[] | string,
@@ -55,14 +67,17 @@ export const zipFixture = async function (
   { length, fixtureDir, opts = {} }: ZipOptions = {},
 ): Promise<ZipReturn> {
   const bundlerString = getBundlerNameFromOptions(opts) || 'default'
-  const { path: tmpDir } = await getTmpDir({
+  const { path: tmpDir, cleanup } = await getTmpDir({
     prefix: `zip-it-test-bundler-${bundlerString}`,
-    // Cleanup the folder on process exit even if there are still files in them
+    // Cleanup the folder even if there are still files in them
     unsafeCleanup: true,
+    keep: ZISI_KEEP_TEMP_DIRS,
   })
 
-  if (env.ZISI_KEEP_TEMP_DIRS !== undefined) {
+  if (ZISI_KEEP_TEMP_DIRS) {
     console.log(tmpDir)
+  } else {
+    cleanupJobs.push(cleanup)
   }
 
   const { files } = await zipCheckFunctions(fixture, { length, fixtureDir, tmpDir, opts })

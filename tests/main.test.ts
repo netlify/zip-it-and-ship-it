@@ -1,11 +1,9 @@
 import { mkdir, readFile, chmod, symlink, unlink, writeFile, rm } from 'fs/promises'
-import { tmpdir } from 'os'
 import { dirname, isAbsolute, join, resolve } from 'path'
-import { arch, env, platform, version as nodeVersion } from 'process'
+import { arch, platform, version as nodeVersion } from 'process'
 
 import cpy from 'cpy'
 import merge from 'deepmerge'
-import { deleteAsync } from 'del'
 import { execa, execaNode } from 'execa'
 import { pathExists } from 'path-exists'
 import semver from 'semver'
@@ -44,7 +42,7 @@ const EXECUTABLE_PERMISSION = 0o755
 const getZipChecksum = async function (opts: ZipFunctionsOptions) {
   const {
     files: [{ path }],
-  } = await zipFixture('many-dependencies', { opts })
+  } = await zipFixture('many-dependencies', { opts, fixtureDir: opts.basePath })
 
   expect(path).toPathExist()
 
@@ -63,12 +61,6 @@ declare module 'vitest' {
 }
 
 describe('zip-it-and-ship-it', () => {
-  afterAll(async () => {
-    if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
-      await deleteAsync(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
-    }
-  })
-
   afterEach(() => {
     vi.resetAllMocks()
   })
@@ -575,11 +567,7 @@ describe('zip-it-and-ship-it', () => {
         basePath: fixtureTmpDir,
       })
 
-      try {
-        await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
-      } catch (error) {
-        console.error(error)
-      }
+      await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
     })
 
     testMany('Produces deterministic checksums', [...allBundleConfigs, 'bundler_none'], async (options) => {

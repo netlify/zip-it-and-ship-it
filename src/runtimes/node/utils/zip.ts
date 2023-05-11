@@ -5,7 +5,6 @@ import { basename, join } from 'path'
 
 import { getPath as getV2APIPath } from '@netlify/serverless-functions-api'
 import { copyFile } from 'cp-file'
-import { deleteAsync as deleteFiles } from 'del'
 import pMap from 'p-map'
 
 import {
@@ -75,7 +74,7 @@ const createDirectory = async function ({
   const functionFolder = join(destFolder, basename(filename, extension))
 
   // Deleting the functions directory in case it exists before creating it.
-  await deleteFiles(functionFolder, { force: true })
+  await fs.rm(functionFolder, { recursive: true, force: true })
   await fs.mkdir(functionFolder, { recursive: true })
 
   // Writing entry file.
