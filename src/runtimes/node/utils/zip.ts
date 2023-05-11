@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer'
-import { Stats, promises as fs } from 'fs'
+import { Stats } from 'fs'
+import { mkdir, rm, writeFile } from 'fs/promises'
 import os from 'os'
 import { basename, join } from 'path'
 
@@ -74,11 +75,11 @@ const createDirectory = async function ({
   const functionFolder = join(destFolder, basename(filename, extension))
 
   // Deleting the functions directory in case it exists before creating it.
-  await fs.rm(functionFolder, { recursive: true, force: true })
-  await fs.mkdir(functionFolder, { recursive: true })
+  await rm(functionFolder, { recursive: true, force: true })
+  await mkdir(functionFolder, { recursive: true })
 
   // Writing entry file.
-  await fs.writeFile(join(functionFolder, entryFilename), entryContents)
+  await writeFile(join(functionFolder, entryFilename), entryContents)
 
   // Copying source files.
   await pMap(

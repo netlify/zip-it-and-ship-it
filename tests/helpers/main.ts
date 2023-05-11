@@ -1,4 +1,4 @@
-import { mkdir } from 'fs/promises'
+import { mkdir, rm } from 'fs/promises'
 import { dirname, resolve, join, basename, relative } from 'path'
 import { env, platform } from 'process'
 import { fileURLToPath } from 'url'
@@ -35,14 +35,23 @@ interface ZipNodeReturn extends ZipReturn {
   files: TestFunctionResult[]
 }
 
-let cleanupJobs: Array<() => Promise<void>> = []
+let cleanupDirectories: string[] = []
 
 // We have to manually clean up all the created temp directories.
 // `tmp-promise` usually does this on process.exit(), but vitest runs the test files
 // in worker threads which do not emit the exit event
 afterAll(async () => {
-  await Promise.all(cleanupJobs.map((job) => job()))
-  cleanupJobs = []
+  try {
+    await Promise.all(cleanupDirectories.map((dir) => rm(dir, { force: true, recursive: true })))
+  } catch (error) {
+    if (error.code === 'EPERM') {
+      return
+    }
+
+    throw error
+  }
+
+  cleanupDirectories = []
 })
 
 export const zipNode = async function (
@@ -67,7 +76,7 @@ export const zipFixture = async function (
   { length, fixtureDir, opts = {} }: ZipOptions = {},
 ): Promise<ZipReturn> {
   const bundlerString = getBundlerNameFromOptions(opts) || 'default'
-  const { path: tmpDir, cleanup } = await getTmpDir({
+  const { path: tmpDir } = await getTmpDir({
     prefix: `zip-it-test-bundler-${bundlerString}`,
     // Cleanup the folder even if there are still files in them
     unsafeCleanup: true,
@@ -77,7 +86,7 @@ export const zipFixture = async function (
   if (ZISI_KEEP_TEMP_DIRS) {
     console.log(tmpDir)
   } else {
-    cleanupJobs.push(cleanup)
+    cleanupDirectories.push(tmpDir)
   }
 
   const { files } = await zipCheckFunctions(fixture, { length, fixtureDir, tmpDir, opts })

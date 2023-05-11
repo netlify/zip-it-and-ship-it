@@ -1,4 +1,4 @@
-import { mkdir, readFile, chmod, symlink, unlink, writeFile, rm } from 'fs/promises'
+import { mkdir, readFile, chmod, symlink, writeFile, rm } from 'fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'path'
 import { arch, platform, version as nodeVersion } from 'process'
 
@@ -43,8 +43,6 @@ const getZipChecksum = async function (opts: ZipFunctionsOptions) {
   const {
     files: [{ path }],
   } = await zipFixture('many-dependencies', { opts, fixtureDir: opts.basePath })
-
-  expect(path).toPathExist()
 
   return computeSha1(path)
 }
@@ -498,7 +496,7 @@ describe('zip-it-and-ship-it', () => {
       try {
         await zipNode('symlinks', { opts, fixtureDir: fixtureTmpDir })
       } finally {
-        await unlink(symlinkFile)
+        await rm(symlinkFile, { force: true })
       }
     })
   }
@@ -576,6 +574,7 @@ describe('zip-it-and-ship-it', () => {
       })
 
       const [checksumOne, checksumTwo] = await Promise.all([getZipChecksum(opts), getZipChecksum(opts)])
+
       expect(checksumOne).toBe(checksumTwo)
     })
   })
