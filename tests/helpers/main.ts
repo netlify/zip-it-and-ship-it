@@ -41,14 +41,8 @@ let cleanupDirectories: string[] = []
 // `tmp-promise` usually does this on process.exit(), but vitest runs the test files
 // in worker threads which do not emit the exit event
 afterAll(async () => {
-  try {
-    await Promise.all(cleanupDirectories.map((dir) => rm(dir, { force: true, recursive: true, maxRetries: 10 })))
-  } catch (error) {
-    if (error.code === 'EPERM') {
-      return
-    }
-
-    throw error
+  for (const folder of cleanupDirectories) {
+    await rm(folder, { force: true, recursive: true, maxRetries: 10 })
   }
 
   cleanupDirectories = []
