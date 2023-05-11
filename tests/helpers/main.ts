@@ -1,5 +1,5 @@
 import { mkdir } from 'fs/promises'
-import { dirname, resolve, normalize } from 'path'
+import { dirname, resolve, join, basename, relative } from 'path'
 import { env, platform } from 'process'
 import { fileURLToPath } from 'url'
 
@@ -8,7 +8,7 @@ import { dir as getTmpDir } from 'tmp-promise'
 import { expect } from 'vitest'
 
 import type { Config } from '../../src/config.js'
-import { zipFunctions } from '../../src/main.js'
+import { ListedFunction, zipFunctions } from '../../src/main.js'
 import { listImports } from '../../src/runtimes/node/bundlers/zisi/list_imports.js'
 import type { FunctionResult } from '../../src/utils/format_result.js'
 import { ZipFunctionsOptions } from '../../src/zip.js'
@@ -27,7 +27,16 @@ interface ZipReturn {
   tmpDir: string
 }
 
-export const zipNode = async function (fixture: string[] | string, zipOptions: ZipOptions = {}): Promise<ZipReturn> {
+export type TestFunctionResult = FunctionResult & { unzipPath: string }
+
+interface ZipNodeReturn extends ZipReturn {
+  files: TestFunctionResult[]
+}
+
+export const zipNode = async function (
+  fixture: string[] | string,
+  zipOptions: ZipOptions = {},
+): Promise<ZipNodeReturn> {
   const { files, tmpDir } = await zipFixture(fixture, zipOptions)
   const { archiveFormat } = zipOptions.opts || {}
 
@@ -35,16 +44,16 @@ export const zipNode = async function (fixture: string[] | string, zipOptions: Z
     await requireExtractedFiles(files)
   }
 
-  return { files, tmpDir }
+  return { files: files as TestFunctionResult[], tmpDir }
 }
 
-export const getBundlerNameFromConfig = (config: Config) => config['*'] && config['*'].nodeBundler
+export const getBundlerNameFromOptions = ({ config = {} }: { config?: Config }) =>
+  config['*'] && config['*'].nodeBundler
 export const zipFixture = async function (
   fixture: string[] | string,
   { length, fixtureDir, opts = {} }: ZipOptions = {},
 ): Promise<ZipReturn> {
-  const { config = {} } = opts
-  const bundlerString = getBundlerNameFromConfig(config) || 'default'
+  const bundlerString = getBundlerNameFromOptions(opts) || 'default'
   const { path: tmpDir } = await getTmpDir({
     prefix: `zip-it-test-bundler-${bundlerString}`,
     // Cleanup the folder on process exit even if there are still files in them
@@ -66,6 +75,7 @@ export const zipCheckFunctions = async function (
   const srcFolders = Array.isArray(fixture)
     ? fixture.map((srcFolder) => `${fixtureDir}/${srcFolder}`)
     : `${fixtureDir}/${fixture}`
+
   const files = await zipFunctions(srcFolders, tmpDir, opts)
 
   expect(Array.isArray(files)).toBe(true)
@@ -82,26 +92,23 @@ const requireExtractedFiles = async function (files: FunctionResult[]): Promise<
   expect(jsFiles.every(Boolean)).toBe(true)
 }
 
-export const unzipFiles = async function (files: FunctionResult[], targetPathGenerator?: (path: string) => string) {
-  // unzip functions in series, as on windows it sometimes fails with permission
-  // errors if two unzip calls try to create the same file
-  for (const { path } of files) {
-    await unzipFile({ path, targetPathGenerator })
-  }
+export const unzipFiles = async function (files: FunctionResult[]): Promise<TestFunctionResult[]> {
+  await Promise.all(
+    Object.keys(files).map(async (key) => {
+      const { path, name } = files[key]
+      const dest = join(dirname(path), name)
+      await expect(path).toPathExist()
+      await unzipFile(path, dest)
+
+      // eslint-disable-next-line no-param-reassign
+      files[key].unzipPath = dest
+    }),
+  )
+
+  return files as TestFunctionResult[]
 }
 
-const unzipFile = async function ({
-  path,
-  targetPathGenerator,
-}: {
-  path: string
-  targetPathGenerator?: (path: string) => string
-}): Promise<void> {
-  let dest = dirname(path)
-  if (targetPathGenerator) {
-    dest = resolve(targetPathGenerator(path))
-  }
-
+const unzipFile = async function (path: string, dest: string): Promise<void> {
   await mkdir(dest, { recursive: true })
 
   // eslint-disable-next-line unicorn/prefer-ternary
@@ -113,7 +120,7 @@ const unzipFile = async function ({
 }
 
 const replaceUnzipPath = function ({ path }: { path: string }): string {
-  return path.replace('.zip', '.js')
+  return join(path.replace(/.zip$/, ''), basename(path).replace(/.zip$/, '.js'))
 }
 
 // Returns a list of paths included using `require` calls. Relative requires
@@ -157,9 +164,19 @@ export const importFunctionFile = async function <T = any>(functionPath: string)
   return result.default === undefined ? result : result.default
 }
 
-export const normalizeFiles = function (fixtureDir: string, { name, mainFile, runtime, extension, srcFile, schedule }) {
-  const mainFileA = normalize(`${fixtureDir}/${mainFile}`)
-  const srcFileA = srcFile === undefined ? {} : { srcFile: normalize(`${fixtureDir}/${srcFile}`) }
-
-  return { name, mainFile: mainFileA, runtime, extension, schedule, ...srcFileA }
+export const normalizeFiles = function (
+  fixtureDir: string,
+  {
+    mainFile,
+    srcFile,
+    ...rest
+  }: ListedFunction & {
+    srcFile?: string
+  },
+) {
+  return {
+    mainFile: relative(fixtureDir, mainFile).replace(/\\/g, '/'),
+    srcFile: srcFile ? relative(fixtureDir, srcFile).replace(/\\/g, '/') : undefined,
+    ...rest,
+  }
 }

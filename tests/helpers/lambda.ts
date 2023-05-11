@@ -25,6 +25,7 @@ export const invokeLambda = async (func, { method = 'GET', ...options }: Request
   const result = (await execute({
     event,
     lambdaFunc: func,
+    verboseLevel: 0,
   })) as LambdaResponse
 
   return result

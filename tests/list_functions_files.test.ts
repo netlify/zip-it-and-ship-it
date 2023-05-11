@@ -1,7 +1,6 @@
 import { join } from 'path'
 
 import merge from 'deepmerge'
-import sortOn from 'sort-on'
 import { describe, expect, test, vi } from 'vitest'
 
 import { listFunctionsFiles } from '../src/main'
@@ -18,77 +17,9 @@ describe('listFunctionsFiles', () => {
       const opts = merge(options, {
         basePath: fixtureDir,
       })
-      const bundler = options.getCurrentBundlerName()
-      const files = await listFunctionsFiles(fixtureDir, opts)
-      const sortedFiles = sortOn(files, ['mainFile', 'srcFile'])
-      const expectedFiles = [
-        {
-          name: 'five',
-          mainFile: 'five/index.ts',
-          runtime: 'js',
-          extension: '.ts',
-          schedule: undefined,
-          srcFile: 'five/index.ts',
-        },
+      const functions = await listFunctionsFiles(fixtureDir, opts)
 
-        bundler === 'nft' && {
-          name: 'five',
-          mainFile: 'five/index.ts',
-          runtime: 'js',
-          extension: '.ts',
-          srcFile: 'five/util.ts',
-          schedule: undefined,
-        },
-
-        {
-          name: 'four',
-          mainFile: 'four.js/four.js.js',
-          runtime: 'js',
-          extension: '.js',
-          srcFile: 'four.js/four.js.js',
-          schedule: undefined,
-        },
-        {
-          name: 'one',
-          mainFile: 'one/index.js',
-          runtime: 'js',
-          extension: '.js',
-          schedule: undefined,
-          srcFile: 'one/index.js',
-        },
-        { name: 'test', mainFile: 'test', runtime: 'go', extension: '', schedule: undefined, srcFile: 'test' },
-        { name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js', schedule: undefined, srcFile: 'test.js' },
-        {
-          name: 'test',
-          mainFile: 'test.zip',
-          runtime: 'js',
-          extension: '.zip',
-          schedule: undefined,
-          srcFile: 'test.zip',
-        },
-
-        (bundler === undefined || bundler === 'nft') && {
-          name: 'two',
-          mainFile: 'two/two.js',
-          runtime: 'js',
-          extension: '.json',
-          schedule: undefined,
-          srcFile: 'two/three.json',
-        },
-
-        {
-          name: 'two',
-          mainFile: 'two/two.js',
-          runtime: 'js',
-          extension: '.js',
-          schedule: undefined,
-          srcFile: 'two/two.js',
-        },
-      ]
-        .filter(Boolean)
-        .map(normalizeFiles.bind(null, fixtureDir))
-
-      expect(sortedFiles).toEqual(sortOn(expectedFiles, ['mainFile', 'srcFile']))
+      expect(functions.map((file) => normalizeFiles(fixtureDir, file))).toMatchSnapshot()
     },
   )
 
@@ -100,118 +31,12 @@ describe('listFunctionsFiles', () => {
       const opts = merge(options, {
         basePath: fixtureDir,
       })
-      const bundler = options.getCurrentBundlerName()
       const functions = await listFunctionsFiles(
         [join(fixtureDir, '.netlify', 'internal-functions'), join(fixtureDir, 'netlify', 'functions')],
         opts,
       )
-      const sortedFunctions = sortOn(functions, 'mainFile')
-      const shouldInlineFiles = bundler === 'esbuild_zisi' || bundler === 'esbuild' || bundler === 'none'
 
-      expect(sortedFunctions).toEqual(
-        sortOn(
-          [
-            {
-              name: 'function',
-              mainFile: '.netlify/internal-functions/function.js',
-              runtime: 'js',
-              extension: '.js',
-              srcFile: '.netlify/internal-functions/function.js',
-            },
-
-            !shouldInlineFiles && {
-              name: 'function',
-              mainFile: '.netlify/internal-functions/function.js',
-              runtime: 'js',
-              extension: '.js',
-              srcFile: 'node_modules/test/index.js',
-            },
-
-            !shouldInlineFiles && {
-              name: 'function',
-              mainFile: '.netlify/internal-functions/function.js',
-              runtime: 'js',
-              extension: '.json',
-              srcFile: 'node_modules/test/package.json',
-            },
-
-            {
-              name: 'function_internal',
-              mainFile: '.netlify/internal-functions/function_internal.js',
-              runtime: 'js',
-              extension: '.js',
-              srcFile: '.netlify/internal-functions/function_internal.js',
-            },
-
-            !shouldInlineFiles && {
-              name: 'function_internal',
-              mainFile: '.netlify/internal-functions/function_internal.js',
-              runtime: 'js',
-              extension: '.js',
-              srcFile: 'node_modules/test/index.js',
-            },
-
-            !shouldInlineFiles && {
-              name: 'function_internal',
-              mainFile: '.netlify/internal-functions/function_internal.js',
-              runtime: 'js',
-              extension: '.json',
-              srcFile: 'node_modules/test/package.json',
-            },
-
-            {
-              name: 'function',
-              mainFile: 'netlify/functions/function.js',
-              runtime: 'js',
-              extension: '.js',
-              srcFile: 'netlify/functions/function.js',
-            },
-
-            !shouldInlineFiles && {
-              name: 'function',
-              mainFile: 'netlify/functions/function.js',
-              runtime: 'js',
-              extension: '.js',
-              srcFile: 'node_modules/test/index.js',
-            },
-
-            !shouldInlineFiles && {
-              name: 'function',
-              mainFile: 'netlify/functions/function.js',
-              runtime: 'js',
-              extension: '.json',
-              srcFile: 'node_modules/test/package.json',
-            },
-
-            {
-              name: 'function_user',
-              mainFile: 'netlify/functions/function_user.js',
-              runtime: 'js',
-              extension: '.js',
-              srcFile: 'netlify/functions/function_user.js',
-            },
-
-            !shouldInlineFiles && {
-              name: 'function_user',
-              mainFile: 'netlify/functions/function_user.js',
-              runtime: 'js',
-              extension: '.js',
-              srcFile: 'node_modules/test/index.js',
-            },
-
-            !shouldInlineFiles && {
-              name: 'function_user',
-              mainFile: 'netlify/functions/function_user.js',
-              runtime: 'js',
-              extension: '.json',
-              srcFile: 'node_modules/test/package.json',
-            },
-          ],
-          'mainFile',
-        )
-          .filter(Boolean)
-          .map(normalizeFiles.bind(null, fixtureDir)),
-      )
+      expect(functions.map((file) => normalizeFiles(fixtureDir, file))).toMatchSnapshot()
     },
   )
 
@@ -242,7 +67,9 @@ describe('listFunctionsFiles', () => {
   })
 
   test('listFunctionsFiles does not include wrong arch functions and warns', async () => {
-    const warn = vi.spyOn(console, 'warn')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {
+      /* ignore */
+    })
     const functions = await listFunctionsFiles(join(FIXTURES_DIR, 'wrong-prebuilt-architecture'))
 
     expect(functions.length).toBe(0)

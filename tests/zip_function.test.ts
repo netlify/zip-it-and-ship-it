@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest'
 
 import { NODE_BUNDLER, zipFunction } from '../src/main.js'
 
-import { FIXTURES_DIR, importFunctionFile, unzipFiles } from './helpers/main.js'
+import { FIXTURES_DIR, getBundlerNameFromOptions, importFunctionFile, unzipFiles } from './helpers/main.js'
 import { allBundleConfigs, getNodeBundlerString, testMany } from './helpers/test_many.js'
 
 describe('zipFunction', () => {
@@ -22,9 +22,9 @@ describe('zipFunction', () => {
 
       expect(result).not.toBeUndefined()
 
-      await unzipFiles([result])
+      const unzippedFunctions = await unzipFiles([result])
 
-      const func = await importFunctionFile(join(tmpDir, 'function.js'))
+      const func = await importFunctionFile(join(unzippedFunctions[0].unzipPath, 'function.js'))
 
       expect(func).toBe(true)
     },
@@ -54,7 +54,7 @@ describe('zipFunction', () => {
   )
 
   testMany('Can use zipFunction()', [...allBundleConfigs, 'bundler_none'], async (options, variation) => {
-    const bundler = options.getCurrentBundlerName()
+    const bundler = getBundlerNameFromOptions(options)
     const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
     const mainFile = join(FIXTURES_DIR, 'simple', 'function.js')
     const result = (await zipFunction(mainFile, tmpDir, options))!
@@ -101,9 +101,9 @@ describe('zipFunction', () => {
       config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
     }))!
 
-    await unzipFiles([result])
+    const unzippedFunctions = await unzipFiles([result])
 
-    const func = await importFunctionFile(`${tmpDir}/function.js`)
+    const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
 
     expect(func('en')[0]).toEqual(['yes', 'no'])
     expect(func('en')[1]).toEqual(['yes', 'no'])
@@ -130,9 +130,9 @@ describe('zipFunction', () => {
       })
       const result = (await zipFunction(`${basePath}/function-1.js`, tmpDir, opts))!
 
-      await unzipFiles([result])
+      const unzippedFunctions = await unzipFiles([result])
 
-      const { mock1, mock2 } = await importFunctionFile(`${tmpDir}/function-1.js`)
+      const { mock1, mock2 } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function-1.js`)
 
       expect(mock1).toBe(true)
       expect(mock2).toBe(true)

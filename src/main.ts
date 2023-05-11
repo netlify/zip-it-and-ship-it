@@ -109,7 +109,7 @@ export const listFunctionsFiles = async function (
     featureFlags: inputFeatureFlags,
     parseISC = false,
   }: ListFunctionsOptions = {},
-) {
+): Promise<ListedFunctionFile[]> {
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
