@@ -1,6 +1,6 @@
-import { mkdir, readFile, chmod, symlink, unlink, writeFile } from 'fs/promises'
+import { mkdir, readFile, chmod, symlink, unlink, writeFile, rm } from 'fs/promises'
 import { tmpdir } from 'os'
-import { basename, dirname, isAbsolute, join, resolve } from 'path'
+import { dirname, isAbsolute, join, resolve } from 'path'
 import { arch, env, platform, version as nodeVersion } from 'process'
 
 import cpy from 'cpy'
@@ -17,11 +17,9 @@ import type { Config } from '../src/config.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
 import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
-import { ENTRY_FILE_NAME } from '../src/runtimes/node/utils/entry_file.js'
 import { MODULE_FORMAT } from '../src/runtimes/node/utils/module_format.js'
 import { shellUtils } from '../src/utils/shell.js'
 
-import { invokeLambda } from './helpers/lambda.js'
 import {
   getRequires,
   zipNode,
@@ -31,6 +29,7 @@ import {
   FIXTURES_DIR,
   BINARY_PATH,
   importFunctionFile,
+  getBundlerNameFromOptions,
 } from './helpers/main.js'
 import { computeSha1 } from './helpers/sha.js'
 import { allBundleConfigs, testMany } from './helpers/test_many.js'
@@ -46,9 +45,21 @@ const getZipChecksum = async function (config: Config) {
   const {
     files: [{ path }],
   } = await zipFixture('many-dependencies', { opts: { config } })
-  const sha1sum = computeSha1(path)
 
-  return sha1sum
+  expect(path).toPathExist()
+
+  return computeSha1(path)
+}
+
+interface CustomMatchers {
+  toPathExist(): Promise<void>
+}
+
+declare module 'vitest' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface Assertion extends CustomMatchers {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 
 describe('zip-it-and-ship-it', () => {
@@ -66,7 +77,6 @@ describe('zip-it-and-ship-it', () => {
     const fixtureName = 'simple'
     const { files } = await zipNode(fixtureName, { opts: options })
 
-    expect(files).toHaveLength(1)
     expect(files[0].runtime).toBe('js')
     expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function.js'))
   })
@@ -84,7 +94,7 @@ describe('zip-it-and-ship-it', () => {
           config: { 'function-1': { name: 'Function One', generator: '@netlify/mock-plugin@1.0.0' } },
         },
       })
-      expect(files).toHaveLength(2)
+
       expect(files[0].displayName).toBe('Function One')
       expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
       expect(files[1].displayName).toBeUndefined()
@@ -95,31 +105,29 @@ describe('zip-it-and-ship-it', () => {
   testMany(
     'Handles Node module with native bindings (buildtime marker module)',
     [...allBundleConfigs],
-    async (options) => {
-      const bundler = options.getCurrentBundlerName()
+    async (opts) => {
+      const bundler = getBundlerNameFromOptions(opts)
       const fixtureDir = 'node-module-native-buildtime'
-      const { files, tmpDir } = await zipNode(fixtureDir, {
-        opts: options,
-      })
-      const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
+      const { files } = await zipNode(fixtureDir, { opts })
+      const [{ runtime, unzipPath }] = files
+      const requires = await getRequires({ filePath: resolve(unzipPath, 'function.js') })
       const normalizedRequires = new Set(requires.map((path) => unixify(path)))
 
-      expect(files).toHaveLength(1)
-      expect(files[0].runtime).toBe('js')
+      expect(runtime).toBe('js')
 
       const moduleWithNodeFile = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-node-file`)
-      await expect(`${tmpDir}/node_modules/module-with-node-file/native.node`).toPathExist()
-      await expect(`${tmpDir}/node_modules/module-with-node-file/side-file.js`).toPathExist()
+      await expect(`${unzipPath}/node_modules/module-with-node-file/native.node`).toPathExist()
+      await expect(`${unzipPath}/node_modules/module-with-node-file/side-file.js`).toPathExist()
       expect(normalizedRequires.has('module-with-node-file')).toBe(true)
 
       const moduleWithNodeGypPath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-node-gyp`)
-      await expect(`${tmpDir}/node_modules/module-with-node-gyp/native.node`).toPathExist()
-      await expect(`${tmpDir}/node_modules/module-with-node-gyp/side-file.js`).toPathExist()
+      await expect(`${unzipPath}/node_modules/module-with-node-gyp/native.node`).toPathExist()
+      await expect(`${unzipPath}/node_modules/module-with-node-gyp/side-file.js`).toPathExist()
       expect(normalizedRequires.has('module-with-node-gyp')).toBe(true)
 
       const moduleWithPrebuildPath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/module-with-prebuild`)
-      await expect(`${tmpDir}/node_modules/module-with-prebuild/native.node`).toPathExist()
-      await expect(`${tmpDir}/node_modules/module-with-prebuild/side-file.js`).toPathExist()
+      await expect(`${unzipPath}/node_modules/module-with-prebuild/native.node`).toPathExist()
+      await expect(`${unzipPath}/node_modules/module-with-prebuild/side-file.js`).toPathExist()
       expect(normalizedRequires.has('module-with-prebuild')).toBe(true)
 
       // We can only detect native modules when using esbuild.
@@ -137,19 +145,20 @@ describe('zip-it-and-ship-it', () => {
     'Handles Node module with native bindings (runtime marker module)',
     [...allBundleConfigs],
     async (options) => {
-      const bundler = options.getCurrentBundlerName()
+      const bundler = getBundlerNameFromOptions(options)
       const fixtureDir = 'node-module-native-runtime'
-      const { files, tmpDir } = await zipNode(fixtureDir, {
+      const { files } = await zipNode(fixtureDir, {
         opts: options,
       })
-      const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
+      const requires = await getRequires({ filePath: resolve(files[0].unzipPath, 'function.js') })
       const normalizedRequires = new Set(requires.map((path) => unixify(path)))
       const modulePath = resolve(FIXTURES_DIR, `${fixtureDir}/node_modules/test`)
 
-      expect(files).toHaveLength(1)
-      expect(files[0].runtime).toBe('js')
-      await expect(`${tmpDir}/node_modules/test/native.node`).toPathExist()
-      await expect(`${tmpDir}/node_modules/test/side-file.js`).toPathExist()
+      const [{ runtime, unzipPath }] = files
+
+      expect(runtime).toBe('js')
+      await expect(`${unzipPath}/node_modules/test/native.node`).toPathExist()
+      await expect(`${unzipPath}/node_modules/test/side-file.js`).toPathExist()
       expect(normalizedRequires.has('test')).toBe(true)
 
       // We can only detect native modules when using esbuild.
@@ -164,11 +173,11 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('Can require deep paths in node modules', [...allBundleConfigs], async (options) => {
-    const { tmpDir } = await zipNode('local-node-module-deep-require', {
+    const { files } = await zipNode('local-node-module-deep-require', {
       opts: options,
     })
 
-    const func = await importFunctionFile(`${tmpDir}/function.js`)
+    const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
 
     expect(func).toEqual({ mock: { stack: 'jam' }, stack: 'jam' })
   })
@@ -196,12 +205,12 @@ describe('zip-it-and-ship-it', () => {
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
     })
-    const { tmpDir } = await zipNode(fixtureName, { opts })
+    const { files } = await zipNode(fixtureName, { opts })
 
-    await expect(`${tmpDir}/node_modules/aws-sdk`).not.toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/aws-sdk`).not.toPathExist()
 
     try {
-      const func = await importFunctionFile(`${tmpDir}/function.js`)
+      const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
 
       func()
 
@@ -212,10 +221,10 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('Ignore TypeScript types', [...allBundleConfigs], async (options) => {
-    const { tmpDir } = await zipNode('node-module-typescript-types', {
+    const { files } = await zipNode('node-module-typescript-types', {
       opts: options,
     })
-    await expect(`${tmpDir}/node_modules/@types/node`).not.toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/@types/node`).not.toPathExist()
   })
 
   testMany('Throws on runtime errors', [...allBundleConfigs], async (options) => {
@@ -296,59 +305,6 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
-    'Can bundle ESM functions and transpile them to CJS when the Node version is <14',
-    ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
-    async (options) => {
-      const length = 4
-      const fixtureName = 'local-require-esm'
-      const opts = merge(options, {
-        basePath: join(FIXTURES_DIR, fixtureName),
-        config: {
-          '*': {
-            nodeVersion: 'nodejs12.x',
-          },
-        },
-        featureFlags: { zisi_pure_esm: false },
-      })
-      const { files, tmpDir } = await zipFixture(fixtureName, {
-        length,
-        opts,
-      })
-
-      await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
-
-      const functionPaths = [
-        join(tmpDir, 'function.zip_out', 'function.js'),
-        join(tmpDir, 'function_cjs.zip_out', 'function_cjs.js'),
-        join(tmpDir, 'function_export_only.zip_out', 'function_export_only.js'),
-        join(tmpDir, 'function_import_only.zip_out', 'function_import_only.js'),
-      ]
-      const func1 = () => importFunctionFile(functionPaths[0])
-      const func2 = () => importFunctionFile(functionPaths[1])
-      const func3 = () => importFunctionFile(functionPaths[2])
-      const func4 = () => importFunctionFile(functionPaths[3])
-
-      const functionsAreESM = await Promise.all(
-        functionPaths.map((functionPath) => detectEsModule({ mainFile: functionPath })),
-      )
-
-      // None of the functions should be ESM since we're transpiling them to CJS.
-      expect(functionsAreESM.some(Boolean)).toBe(false)
-
-      const func2Default = await func2()
-      expect(await func2Default()).toBe(0)
-
-      const { ZERO } = await func1()
-      expect(ZERO).toBe(0)
-
-      const { howdy } = await func3()
-      expect(howdy).toBeTypeOf('string')
-
-      expect(await func4()).toEqual({})
-    },
-  )
-
-  testMany(
     'Can bundle ESM functions and transpile them to CJS when the Node version is <14 and `archiveType` is `none`',
     ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
     async (options) => {
@@ -405,13 +361,13 @@ describe('zip-it-and-ship-it', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_nft'],
     async (opts) => {
       const fixtureName = 'node-cjs-importing-mjs-extension'
-      const { files, tmpDir } = await zipFixture(fixtureName, {
+      const { files } = await zipFixture(fixtureName, {
         opts,
       })
 
-      await unzipFiles(files)
+      const unzippedFunctions = await unzipFiles(files)
 
-      const func = await importFunctionFile(join(tmpDir, 'function.js'))
+      const func = await importFunctionFile(join(unzippedFunctions[0].unzipPath, 'function.js'))
 
       const { body, statusCode } = await func.handler()
 
@@ -430,14 +386,17 @@ describe('zip-it-and-ship-it', () => {
         basePath: join(FIXTURES_DIR, fixtureName),
         featureFlags: { zisi_pure_esm: true },
       })
-      const { files, tmpDir } = await zipFixture(fixtureName, {
+      const { files } = await zipFixture(fixtureName, {
         length,
         opts,
       })
 
-      await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+      const unzippedFunctions = await unzipFiles(files)
 
-      const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
+      const functionPaths = [
+        join(unzippedFunctions[0].unzipPath, 'func1.js'),
+        join(unzippedFunctions[1].unzipPath, 'func2.js'),
+      ]
       const func1 = await importFunctionFile(functionPaths[0])
       const func2 = await importFunctionFile(functionPaths[1])
 
@@ -461,14 +420,17 @@ describe('zip-it-and-ship-it', () => {
       const opts = merge(options, {
         basePath: join(FIXTURES_DIR, fixtureName),
       })
-      const { files, tmpDir } = await zipFixture(fixtureName, {
+      const { files } = await zipFixture(fixtureName, {
         length,
         opts,
       })
 
-      await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+      const unzippedFunctions = await unzipFiles(files)
 
-      const functionPaths = [join(tmpDir, 'func1.zip_out', 'func1.js'), join(tmpDir, 'func2.zip_out', 'func2.js')]
+      const functionPaths = [
+        join(unzippedFunctions[0].unzipPath, 'func1.js'),
+        join(unzippedFunctions[1].unzipPath, 'func2.js'),
+      ]
       const func1 = await importFunctionFile(functionPaths[0])
       const func2 = await importFunctionFile(functionPaths[1])
 
@@ -558,35 +520,35 @@ describe('zip-it-and-ship-it', () => {
 
   testMany('Can target a directory with an index.js file', [...allBundleConfigs], async (options) => {
     const fixtureName = 'index-handler'
-    const { files, tmpDir } = await zipFixture(fixtureName, {
+    const { files } = await zipFixture(fixtureName, {
       opts: options,
     })
-    await unzipFiles(files)
-    const returnValue = await importFunctionFile(`${tmpDir}/function.js`)
+    const unzippedFunctions = await unzipFiles(files)
+    const returnValue = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
     expect(returnValue).toBe(true)
     expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function', 'index.js'))
   })
 
   testMany('Keeps non-required files inside the target directory', [...allBundleConfigs], async (options) => {
-    const { tmpDir } = await zipNode('keep-dir-files', { opts: options })
-    await expect(`${tmpDir}/function.js`).toPathExist()
+    const { files } = await zipNode('keep-dir-files', { opts: options })
+    await expect(`${files[0].unzipPath}/function.js`).toPathExist()
   })
 
   testMany('Ignores non-required node_modules inside the target directory', [...allBundleConfigs], async (options) => {
-    const { tmpDir } = await zipNode('ignore-dir-node-modules', {
+    const { files } = await zipNode('ignore-dir-node-modules', {
       opts: options,
     })
-    await expect(`${tmpDir}/node_modules`).not.toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules`).not.toPathExist()
   })
 
   testMany(
     'Ignores deep non-required node_modules inside the target directory',
     [...allBundleConfigs],
     async (options) => {
-      const { tmpDir } = await zipNode('ignore-deep-dir-node-modules', {
+      const { files } = await zipNode('ignore-deep-dir-node-modules', {
         opts: options,
       })
-      await expect(`${tmpDir}/deep/node_modules`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/deep/node_modules`).not.toPathExist()
     },
   )
 
@@ -598,7 +560,9 @@ describe('zip-it-and-ship-it', () => {
 
     const basePath = `${fixtureTmpDir}/many-dependencies`
     await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
-    await execa('npm', ['install', '--no-package-lock'], { cwd: basePath })
+    await execa('npm', ['install', '--no-package-lock', '--no-audit'], {
+      cwd: basePath,
+    })
 
     await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
   })
@@ -607,15 +571,13 @@ describe('zip-it-and-ship-it', () => {
     const names = new Set(['one', 'two', 'three', 'four', 'five', 'six'])
     const { files } = await zipNode('many-functions', {
       opts: options,
-      length: TEST_FUNCTIONS_LENGTH,
+      length: 6,
     })
 
     files.forEach(({ name }) => {
       expect(names.has(name)).toBe(true)
     })
   })
-
-  const TEST_FUNCTIONS_LENGTH = 6
 
   testMany('Produces deterministic checksums', [...allBundleConfigs, 'bundler_none'], async (options) => {
     const [checksumOne, checksumTwo] = await Promise.all([
@@ -650,8 +612,8 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('Remove useless files', [...allBundleConfigs], async (options) => {
-    const { tmpDir } = await zipNode('useless', { opts: options })
-    await expect(`${tmpDir}/Desktop.ini`).not.toPathExist()
+    const { files } = await zipNode('useless', { opts: options })
+    await expect(`${files[0].unzipPath}/Desktop.ini`).not.toPathExist()
   })
 
   testMany('Works on empty directories', [...allBundleConfigs, 'bundler_none'], async (options) => {
@@ -666,14 +628,13 @@ describe('zip-it-and-ship-it', () => {
     await cpy('no-package-json/**', `${fixtureDir}/no-package-json`, {
       cwd: FIXTURES_DIR,
     })
-    await zipNode('no-package-json', { opts, length: 1, fixtureDir })
+    await zipNode('no-package-json', { opts, fixtureDir })
   })
 
   testMany('Copies already zipped files', [...allBundleConfigs, 'bundler_none'], async () => {
     const tmpDir = await tmpName({ prefix: 'zip-it-test' })
     const { files } = await zipCheckFunctions('keep-zip', { tmpDir })
 
-    expect(files).toHaveLength(1)
     expect(files[0].runtime).toBe('js')
 
     const fileContents = await readFile(files[0].path, 'utf8')
@@ -687,7 +648,7 @@ describe('zip-it-and-ship-it', () => {
   testMany('Can reduce parallelism', [...allBundleConfigs, 'bundler_none'], async (options) => {
     const opts = merge(options, { parallelLimit: 1 })
 
-    await zipNode('simple', { length: 1, opts })
+    await zipNode('simple', { opts })
   })
 
   testMany('Zips node modules', ['bundler_default', 'bundler_nft'], async (options) => {
@@ -699,10 +660,10 @@ describe('zip-it-and-ship-it', () => {
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
     })
-    const { tmpDir } = await zipNode('node-module-included', { opts })
+    const { files } = await zipNode('node-module-included', { opts })
 
-    await expect(`${tmpDir}/node_modules/test/test.map`).not.toPathExist()
-    await expect(`${tmpDir}/node_modules/test/test.html`).toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/test/test.map`).not.toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/test/test.html`).toPathExist()
   })
 
   testMany('Throws on missing critters dependency for Next.js 9', ['bundler_default'], async (options) => {
@@ -713,34 +674,34 @@ describe('zip-it-and-ship-it', () => {
     'Includes specific Next.js dependencies when using next-on-netlify',
     ['bundler_default'],
     async (options) => {
-      const { tmpDir } = await zipNode('node-module-next-on-netlify', {
+      const { files } = await zipNode('node-module-next-on-netlify', {
         opts: options,
       })
 
-      await expect(`${tmpDir}/node_modules/next/dist/next-server/lib/constants.js`).toPathExist()
-      await expect(`${tmpDir}/node_modules/next/dist/compiled/semver.js`).toPathExist()
-      await expect(`${tmpDir}/node_modules/next/dist/other.js`).not.toPathExist()
-      await expect(`${tmpDir}/node_modules/next/index.js`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/node_modules/next/dist/next-server/lib/constants.js`).toPathExist()
+      await expect(`${files[0].unzipPath}/node_modules/next/dist/compiled/semver.js`).toPathExist()
+      await expect(`${files[0].unzipPath}/node_modules/next/dist/other.js`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/node_modules/next/index.js`).not.toPathExist()
     },
   )
 
   testMany('Includes all Next.js dependencies when not using next-on-netlify', ['bundler_default'], async (options) => {
-    const { tmpDir } = await zipNode('node-module-next', { opts: options })
+    const { files } = await zipNode('node-module-next', { opts: options })
 
-    await expect(`${tmpDir}/node_modules/next/dist/next-server/lib/constants.js`).toPathExist()
-    await expect(`${tmpDir}/node_modules/next/dist/compiled/semver.js`).toPathExist()
-    await expect(`${tmpDir}/node_modules/next/dist/other.js`).toPathExist()
-    await expect(`${tmpDir}/node_modules/next/index.js`).toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/next/dist/next-server/lib/constants.js`).toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/next/dist/compiled/semver.js`).toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/next/dist/other.js`).toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/next/index.js`).toPathExist()
   })
 
   testMany('Inlines node modules in the bundle', ['bundler_esbuild'], async (options) => {
-    const { tmpDir } = await zipNode('node-module-included-try-catch', {
+    const { files } = await zipNode('node-module-included-try-catch', {
       opts: options,
     })
-    const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
+    const requires = await getRequires({ filePath: resolve(files[0].unzipPath, 'function.js') })
 
     expect(requires.includes('test')).toBe(false)
-    await expect(`${tmpDir}/node_modules/test`).not.toPathExist()
+    await expect(`${files[0].unzipPath}/node_modules/test`).not.toPathExist()
   })
 
   testMany(
@@ -754,13 +715,13 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { tmpDir } = await zipNode('node-module-included-try-catch', {
+      const { files } = await zipNode('node-module-included-try-catch', {
         opts,
       })
-      const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
+      const requires = await getRequires({ filePath: resolve(files[0].unzipPath, 'function.js') })
 
       expect(requires.includes('test')).toBe(true)
-      await expect(`${tmpDir}/node_modules/test`).toPathExist()
+      await expect(`${files[0].unzipPath}/node_modules/test`).toPathExist()
     },
   )
 
@@ -775,13 +736,13 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { tmpDir } = await zipNode('node-module-included-try-catch', {
+      const { files } = await zipNode('node-module-included-try-catch', {
         opts,
       })
-      const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
+      const requires = await getRequires({ filePath: resolve(files[0].unzipPath, 'function.js') })
 
       expect(requires.includes('test')).toBe(true)
-      await expect(`${tmpDir}/node_modules/test`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/function/node_modules/test`).not.toPathExist()
     },
   )
 
@@ -796,12 +757,12 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { tmpDir } = await zipNode('node-module-included', {
+      const { files } = await zipNode('node-module-included', {
         opts,
       })
 
-      expect(`${tmpDir}/node_modules/test/test.map`).not.toPathExist()
-      expect(`${tmpDir}/node_modules/test/test.html`).toPathExist()
+      expect(`${files[0].unzipPath}/node_modules/test/test.map`).not.toPathExist()
+      expect(`${files[0].unzipPath}/node_modules/test/test.html`).toPathExist()
     },
   )
 
@@ -816,11 +777,11 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { tmpDir } = await zipNode('node-module-included-try-catch', {
+      const { files } = await zipNode('node-module-included-try-catch', {
         opts,
       })
 
-      await expect(`${tmpDir}/node_modules/i-do-not-exist`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/node_modules/i-do-not-exist`).not.toPathExist()
     },
   )
 
@@ -828,9 +789,10 @@ describe('zip-it-and-ship-it', () => {
     'Exposes the main export of `node-fetch` when imported using `require()`',
     [...allBundleConfigs],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-fetch', { opts: options })
-      await unzipFiles(files)
-      const returnValue = await importFunctionFile(`${tmpDir}/function.js`)
+      const { files } = await zipFixture('node-fetch', { opts: options })
+      const unzippedFunctions = await unzipFiles(files)
+      const returnValue = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+
       expect(returnValue).toBeTypeOf('function')
     },
   )
@@ -839,11 +801,11 @@ describe('zip-it-and-ship-it', () => {
     '{name}/{name}.js takes precedence over {name}.js and {name}/index.js',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('conflicting-names-1', {
+      const { files } = await zipFixture('conflicting-names-1', {
         opts: options,
       })
-      await unzipFiles(files)
-      const returnValue = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const returnValue = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(returnValue).toBe('function-js-file-in-directory')
     },
   )
@@ -852,11 +814,11 @@ describe('zip-it-and-ship-it', () => {
     '{name}/index.js takes precedence over {name}.js',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('conflicting-names-2', {
+      const { files } = await zipFixture('conflicting-names-2', {
         opts: options,
       })
-      await unzipFiles(files)
-      const returnValue = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const returnValue = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(returnValue).toBe('index-js-file-in-directory')
     },
   )
@@ -865,30 +827,30 @@ describe('zip-it-and-ship-it', () => {
     '{name}/index.js takes precedence over {name}/index.ts',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('conflicting-names-3', {
+      const { files } = await zipFixture('conflicting-names-3', {
         opts: options,
       })
-      await unzipFiles(files)
-      const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(type).toBe('index-js-file-in-directory')
     },
   )
 
   testMany('{name}.js takes precedence over {name}.ts', [...allBundleConfigs, 'bundler_none'], async (options) => {
-    const { files, tmpDir } = await zipFixture('conflicting-names-4', {
+    const { files } = await zipFixture('conflicting-names-4', {
       opts: options,
     })
-    await unzipFiles(files)
-    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    const unzippedFunctions = await unzipFiles(files)
+    const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
     expect(type).toBe('function-js-file')
   })
 
   testMany('{name}.js takes precedence over {name}.zip', [...allBundleConfigs, 'bundler_none'], async (options) => {
-    const { files, tmpDir } = await zipFixture('conflicting-names-5', {
+    const { files } = await zipFixture('conflicting-names-5', {
       opts: options,
     })
-    await unzipFiles(files)
-    const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+    const unzippedFunctions = await unzipFiles(files)
+    const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
     expect(type).toBe('function-js-file')
   })
 
@@ -896,11 +858,11 @@ describe('zip-it-and-ship-it', () => {
     'Handles a TypeScript function ({name}.ts)',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-typescript', {
+      const { files } = await zipFixture('node-typescript', {
         opts: options,
       })
-      await unzipFiles(files)
-      const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(type).toBeTypeOf('string')
     },
   )
@@ -909,11 +871,11 @@ describe('zip-it-and-ship-it', () => {
     'Handles a TypeScript function ({name}/{name}.ts)',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-typescript-directory-1', {
+      const { files } = await zipFixture('node-typescript-directory-1', {
         opts: options,
       })
-      await unzipFiles(files)
-      const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(type).toBeTypeOf('string')
     },
   )
@@ -922,11 +884,11 @@ describe('zip-it-and-ship-it', () => {
     'Handles a TypeScript function ({name}/index.ts)',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-typescript-directory-2', {
+      const { files } = await zipFixture('node-typescript-directory-2', {
         opts: options,
       })
-      await unzipFiles(files)
-      const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(type).toBeTypeOf('string')
     },
   )
@@ -935,11 +897,11 @@ describe('zip-it-and-ship-it', () => {
     'Handles a TypeScript function with imports',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-typescript-with-imports', {
+      const { files } = await zipFixture('node-typescript-with-imports', {
         opts: options,
       })
-      await unzipFiles(files)
-      const { type } = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(type).toBeTypeOf('string')
     },
   )
@@ -949,17 +911,15 @@ describe('zip-it-and-ship-it', () => {
     ['bundler_esbuild', 'bundler_default'],
     async (options) => {
       const expectedLength = 3
-      const { files, tmpDir } = await zipFixture('node-mjs-extension', {
+      const { files } = await zipFixture('node-mjs-extension', {
         length: expectedLength,
         opts: options,
       })
 
-      await unzipFiles(files)
-
-      expect(files).toHaveLength(expectedLength)
+      const unzippedFunctions = await unzipFiles(files)
 
       for (let index = 0; index < expectedLength; index++) {
-        const funcFile = `${tmpDir}/func${index + 1}.js`
+        const funcFile = `${unzippedFunctions[index].unzipPath}/func${index + 1}.js`
         const { handler: handler1 } = await importFunctionFile(funcFile)
 
         expect(handler1()).toBe(true)
@@ -975,23 +935,22 @@ describe('zip-it-and-ship-it', () => {
     'Handles a JavaScript function ({name}.mts, {name}/{name}.mts, {name}/index.mts)',
     ['bundler_esbuild', 'bundler_default'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-mts-extension', {
+      const { files } = await zipFixture('node-mts-extension', {
         length: 3,
         opts: options,
       })
 
-      await unzipFiles(files)
+      const unzippedFunctions = await unzipFiles(files)
 
-      expect(files).toHaveLength(3)
       files.forEach((file) => {
         expect(file.bundler).toBe('esbuild')
       })
 
-      const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
+      const { handler: handler1 } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/func1.js`)
       expect(handler1()).toBe(true)
-      const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
+      const { handler: handler2 } = await importFunctionFile(`${unzippedFunctions[1].unzipPath}/func2.js`)
       expect(handler2()).toBe(true)
-      const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+      const { handler: handler3 } = await importFunctionFile(`${unzippedFunctions[2].unzipPath}/func3.js`)
       expect(handler3()).toBe(true)
     },
   )
@@ -1000,23 +959,22 @@ describe('zip-it-and-ship-it', () => {
     'Handles a JavaScript function ({name}.cts, {name}/{name}.cts, {name}/index.cts)',
     ['bundler_esbuild', 'bundler_default'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-cts-extension', {
+      const { files } = await zipFixture('node-cts-extension', {
         length: 3,
         opts: options,
       })
 
-      await unzipFiles(files)
+      const unzippedFunctions = await unzipFiles(files)
 
-      expect(files).toHaveLength(3)
       files.forEach((file) => {
         expect(file.bundler).toBe('esbuild')
       })
 
-      const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
+      const { handler: handler1 } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/func1.js`)
       expect(handler1()).toBe(true)
-      const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
+      const { handler: handler2 } = await importFunctionFile(`${unzippedFunctions[1].unzipPath}/func2.js`)
       expect(handler2()).toBe(true)
-      const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+      const { handler: handler3 } = await importFunctionFile(`${unzippedFunctions[2].unzipPath}/func3.js`)
       expect(handler3()).toBe(true)
     },
   )
@@ -1025,23 +983,22 @@ describe('zip-it-and-ship-it', () => {
     'Handles a JavaScript function ({name}.cjs, {name}/{name}.cjs, {name}/index.cjs)',
     ['bundler_esbuild'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-cjs-extension', {
+      const { files } = await zipFixture('node-cjs-extension', {
         length: 3,
         opts: options,
       })
 
-      await unzipFiles(files)
+      const unzippedFunctions = await unzipFiles(files)
 
-      expect(files).toHaveLength(3)
       files.forEach((file) => {
-        expect(file.bundler).toBe(options.getCurrentBundlerName() ?? 'zisi')
+        expect(file.bundler).toBe(getBundlerNameFromOptions(options) ?? 'zisi')
       })
 
-      const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.js`)
+      const { handler: handler1 } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/func1.js`)
       expect(handler1()).toBe(true)
-      const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.js`)
+      const { handler: handler2 } = await importFunctionFile(`${unzippedFunctions[1].unzipPath}/func2.js`)
       expect(handler2()).toBe(true)
-      const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+      const { handler: handler3 } = await importFunctionFile(`${unzippedFunctions[2].unzipPath}/func3.js`)
       expect(handler3()).toBe(true)
     },
   )
@@ -1051,23 +1008,22 @@ describe('zip-it-and-ship-it', () => {
     'Handles a JavaScript function ({name}.cjs, {name}/{name}.cjs, {name}/index.cjs)',
     ['bundler_default'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-cjs-extension', {
+      const { files } = await zipFixture('node-cjs-extension', {
         length: 3,
         opts: options,
       })
 
-      await unzipFiles(files)
+      const unzippedFunctions = await unzipFiles(files)
 
-      expect(files).toHaveLength(3)
       files.forEach((file) => {
-        expect(file.bundler).toBe(options.getCurrentBundlerName() ?? 'zisi')
+        expect(file.bundler).toBe(getBundlerNameFromOptions(options) ?? 'zisi')
       })
 
-      const { handler: handler1 } = await importFunctionFile(`${tmpDir}/func1.cjs`)
+      const { handler: handler1 } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/func1.cjs`)
       expect(handler1()).toBe(true)
-      const { handler: handler2 } = await importFunctionFile(`${tmpDir}/func2.cjs`)
+      const { handler: handler2 } = await importFunctionFile(`${unzippedFunctions[1].unzipPath}/func2.cjs`)
       expect(handler2()).toBe(true)
-      const { handler: handler3 } = await importFunctionFile(`${tmpDir}/func3.js`)
+      const { handler: handler3 } = await importFunctionFile(`${unzippedFunctions[2].unzipPath}/func3.js`)
       expect(handler3()).toBe(true)
     },
   )
@@ -1076,11 +1032,11 @@ describe('zip-it-and-ship-it', () => {
     'Loads a tsconfig.json placed in the same directory as the function',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-typescript-tsconfig-sibling', {
+      const { files } = await zipFixture('node-typescript-tsconfig-sibling', {
         opts: options,
       })
-      await unzipFiles(files)
-      const { value } = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const { value } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(value).toBe(true)
     },
   )
@@ -1089,11 +1045,11 @@ describe('zip-it-and-ship-it', () => {
     'Loads a tsconfig.json placed in a parent directory',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-typescript-tsconfig-parent/functions', {
+      const { files } = await zipFixture('node-typescript-tsconfig-parent/functions', {
         opts: options,
       })
-      await unzipFiles(files)
-      const { value } = await importFunctionFile(`${tmpDir}/function.js`)
+      const unzippedFunctions = await unzipFiles(files)
+      const { value } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
       expect(value).toBe(true)
     },
   )
@@ -1102,12 +1058,12 @@ describe('zip-it-and-ship-it', () => {
     'Respects the target defined in the config over a `target` property defined in tsconfig',
     ['bundler_esbuild', 'bundler_default', 'todo:bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('node-typescript-tsconfig-target/functions', {
+      const { files } = await zipFixture('node-typescript-tsconfig-target/functions', {
         opts: options,
       })
-      await unzipFiles(files)
+      const unzippedFunctions = await unzipFiles(files)
 
-      const result = await importFunctionFile(`${tmpDir}/function.js`)
+      const result = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
 
       // We want to assert that the `target` specified in the tsconfig file (es5)
       // was overridden by our own target. It's not easy to assert that without
@@ -1160,24 +1116,29 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { files, tmpDir } = await zipNode('config-apply-1', { length: 3, opts })
+      const { files } = await zipNode('config-apply-1', { length: 3, opts })
+
+      const anotherFunc = files.find(({ name }) => name === 'another_function')!
+      const func2 = files.find(({ name }) => name === 'function_two')!
+      const func1 = files.find(({ name }) => name === 'function_one')!
+
+      expect(anotherFunc).toBeDefined()
+      expect(func2).toBeDefined()
+      expect(func1).toBeDefined()
+
       const requires = await Promise.all([
-        getRequires({ filePath: resolve(tmpDir, 'another_function.js') }),
-        getRequires({ filePath: resolve(tmpDir, 'function_two.js') }),
-        getRequires({ filePath: resolve(tmpDir, 'function_one.js') }),
+        getRequires({ filePath: resolve(anotherFunc.unzipPath, 'another_function.js') }),
+        getRequires({ filePath: resolve(func2.unzipPath, 'function_two.js') }),
+        getRequires({ filePath: resolve(func1.unzipPath, 'function_one.js') }),
       ])
 
       expect(requires[0]).toEqual(['test-1'])
       expect(requires[1]).toEqual(['test-1', 'test-2'])
       expect(requires[2]).toEqual(['test-1', 'test-2', 'test-3'])
 
-      const matches = ['another_function.zip', 'function_two.zip', 'function_one.zip'].map((zipName) =>
-        files.find(({ path }) => path.endsWith(zipName)),
-      )
-
-      expect(matches[0]?.config).toEqual({ externalNodeModules: ['test-1'], nodeBundler: 'esbuild' })
-      expect(matches[1]?.config).toEqual({ externalNodeModules: ['test-1', 'test-2'], nodeBundler: 'esbuild' })
-      expect(matches[2]?.config).toEqual({
+      expect(anotherFunc.config).toEqual({ externalNodeModules: ['test-1'], nodeBundler: 'esbuild' })
+      expect(func2.config).toEqual({ externalNodeModules: ['test-1', 'test-2'], nodeBundler: 'esbuild' })
+      expect(func1.config).toEqual({
         externalNodeModules: ['test-1', 'test-2', 'test-3'],
         nodeBundler: 'esbuild',
       })
@@ -1201,24 +1162,29 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { files, tmpDir } = await zipNode('config-apply-1', { length: 3, opts })
+      const { files } = await zipNode('config-apply-1', { length: 3, opts })
+
+      const anotherFunc = files.find(({ name }) => name === 'another_function')!
+      const func2 = files.find(({ name }) => name === 'function_two')!
+      const func1 = files.find(({ name }) => name === 'function_one')!
+
+      expect(anotherFunc).toBeDefined()
+      expect(func2).toBeDefined()
+      expect(func1).toBeDefined()
+
       const requires = await Promise.all([
-        getRequires({ filePath: resolve(tmpDir, 'another_function.js') }),
-        getRequires({ filePath: resolve(tmpDir, 'function_two.js') }),
-        getRequires({ filePath: resolve(tmpDir, 'function_one.js') }),
+        getRequires({ filePath: resolve(anotherFunc.unzipPath, 'another_function.js') }),
+        getRequires({ filePath: resolve(func2.unzipPath, 'function_two.js') }),
+        getRequires({ filePath: resolve(func1.unzipPath, 'function_one.js') }),
       ])
 
       expect(requires[0]).toEqual(externalNodeModules)
       expect(requires[1]).toEqual(externalNodeModules)
       expect(requires[2]).toEqual(externalNodeModules)
 
-      const matches = ['another_function.zip', 'function_two.zip', 'function_one.zip'].map((zipName) =>
-        files.find(({ path }) => path.endsWith(zipName)),
-      )
-
-      expect(matches[0]?.config).toEqual({ externalNodeModules, nodeBundler: 'esbuild' })
-      expect(matches[1]?.config).toEqual({ externalNodeModules, nodeBundler: 'esbuild' })
-      expect(matches[2]?.config).toEqual({ externalNodeModules, nodeBundler: 'esbuild' })
+      expect(anotherFunc.config).toEqual({ externalNodeModules, nodeBundler: 'esbuild' })
+      expect(func2.config).toEqual({ externalNodeModules, nodeBundler: 'esbuild' })
+      expect(func1.config).toEqual({ externalNodeModules, nodeBundler: 'esbuild' })
     },
   )
 
@@ -1248,11 +1214,11 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { tmpDir } = await zipNode(`${fixtureName}/netlify/functions`, {
+      const { files } = await zipNode(`${fixtureName}/netlify/functions`, {
         opts,
       })
 
-      const func = await importFunctionFile(`${tmpDir}/func1.js`)
+      const func = await importFunctionFile(`${files[0].unzipPath}/func1.js`)
 
       const { body: body1 } = await func.handler({ queryStringParameters: { name: 'post1' } })
       const { body: body2 } = await func.handler({ queryStringParameters: { name: 'post2' } })
@@ -1262,18 +1228,16 @@ describe('zip-it-and-ship-it', () => {
       expect(body2.includes("I must've called a thousand times")).toBe(true)
       expect(body3.includes('Uh-oh')).toBe(true)
 
-      await expect(`${tmpDir}/content/post1.md`).toPathExist()
-      await expect(`${tmpDir}/content/post2.md`).toPathExist()
-      await expect(`${tmpDir}/content/post3.md`).not.toPathExist()
-      await expect(`${tmpDir}/something.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/content/post1.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/content/post2.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/content/post3.md`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/something.md`).toPathExist()
     },
   )
 
-  testMany('Returns an `inputs` property with all the imported paths', [...allBundleConfigs], async (options) => {
+  testMany('Returns an `inputs` property with all the imported paths', [...allBundleConfigs], async (opts) => {
     const fixtureName = 'node-module-and-local-imports'
-    const { files, tmpDir } = await zipNode(fixtureName, {
-      opts: options,
-    })
+    const { files } = await zipNode(fixtureName, { opts })
 
     expect(files[0].inputs?.includes(join(FIXTURES_DIR, fixtureName, 'function.js'))).toBe(true)
     expect(files[0].inputs?.includes(join(FIXTURES_DIR, fixtureName, 'lib', 'file1.js'))).toBe(true)
@@ -1295,7 +1259,7 @@ describe('zip-it-and-ship-it', () => {
       ).toBe(false)
     }
 
-    const functionEntry = await importFunctionFile(`${tmpDir}/function.js`)
+    const functionEntry = await importFunctionFile(`${files[0].unzipPath}/function.js`)
 
     expect(functionEntry).toBe(true)
   })
@@ -1313,21 +1277,21 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { tmpDir } = await zipNode(`${fixtureName}/netlify/functions1`, {
+      const { files } = await zipNode(`${fixtureName}/netlify/functions1`, {
         opts,
       })
 
-      const function1Entry = await importFunctionFile(`${tmpDir}/func1.js`)
+      const function1Entry = await importFunctionFile(`${files[0].unzipPath}/func1.js`)
 
       // The function should not be on a `src/` namespace.
       expect(unixify(function1Entry[0]).includes('/src/')).toBe(false)
-      await expect(`${tmpDir}/src/func1.js`).not.toPathExist()
-      await expect(`${tmpDir}/content/post1.md`).toPathExist()
-      await expect(`${tmpDir}/content/post2.md`).toPathExist()
-      await expect(`${tmpDir}/content/post3.md`).toPathExist()
-      await expect(`${tmpDir}/src/content/post1.md`).not.toPathExist()
-      await expect(`${tmpDir}/src/content/post2.md`).not.toPathExist()
-      await expect(`${tmpDir}/src/content/post3.md`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/src/func1.js`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/content/post1.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/content/post2.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/content/post3.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/src/content/post1.md`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/src/content/post2.md`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/src/content/post3.md`).not.toPathExist()
     },
   )
 
@@ -1344,22 +1308,22 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { tmpDir } = await zipNode(`${fixtureName}/netlify/functions2`, {
+      const { files } = await zipNode(`${fixtureName}/netlify/functions2`, {
         opts,
       })
 
-      const function2Entry = await importFunctionFile(`${tmpDir}/func2.js`)
+      const function2Entry = await importFunctionFile(`${files[0].unzipPath}/func2.js`)
 
       // The function should be on a `src/` namespace because there's a conflict
       // with the /func2.js path present in `includedFiles`.
       expect(unixify(function2Entry[0]).includes('/src/')).toBe(true)
-      await expect(`${tmpDir}/src/func2.js`).toPathExist()
-      await expect(`${tmpDir}/content/post1.md`).not.toPathExist()
-      await expect(`${tmpDir}/content/post2.md`).not.toPathExist()
-      await expect(`${tmpDir}/content/post3.md`).not.toPathExist()
-      await expect(`${tmpDir}/src/content/post1.md`).toPathExist()
-      await expect(`${tmpDir}/src/content/post2.md`).toPathExist()
-      await expect(`${tmpDir}/src/content/post3.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/src/func2.js`).toPathExist()
+      await expect(`${files[0].unzipPath}/content/post1.md`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/content/post2.md`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/content/post3.md`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/src/content/post1.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/src/content/post2.md`).toPathExist()
+      await expect(`${files[0].unzipPath}/src/content/post3.md`).toPathExist()
     },
   )
 
@@ -1371,17 +1335,14 @@ describe('zip-it-and-ship-it', () => {
       const opts = merge(options, {
         basePath: join(FIXTURES_DIR, fixtureName),
       })
-      const { tmpDir } = await zipNode(fixtureName, {
-        opts,
-        length: 1,
-      })
+      const { files } = await zipNode(fixtureName, { opts })
 
-      const function2Entry = await importFunctionFile(`${tmpDir}/func1.js`)
+      const function2Entry = await importFunctionFile(`${files[0].unzipPath}/func1.js`)
 
       expect(await function2Entry.handler()).toBe(true)
 
-      await expect(`${tmpDir}/src/func1.js`).toPathExist()
-      await expect(`${tmpDir}/src/func1.mjs`).toPathExist()
+      await expect(`${files[0].unzipPath}/src/func1.js`).toPathExist()
+      await expect(`${files[0].unzipPath}/src/func1.mjs`).toPathExist()
     },
   )
 
@@ -1395,27 +1356,27 @@ describe('zip-it-and-ship-it', () => {
       const opts = merge(options, {
         basePath: join(FIXTURES_DIR, fixtureName),
       })
-      const { files, tmpDir } = await zipNode([pathInternal, pathUser], {
+      const { files } = await zipNode([pathInternal, pathUser], {
         length: 3,
         opts,
       })
-
-      const functionCommon = await importFunctionFile(`${tmpDir}/function.js`)
-      const functionInternal = await importFunctionFile(`${tmpDir}/function_internal.js`)
-      const functionUser = await importFunctionFile(`${tmpDir}/function_user.js`)
-
-      // Functions from rightmost directories in the array take precedence.
-      expect(functionCommon).toBe('user')
-      expect(functionInternal).toBe('internal')
-      expect(functionUser).toBe('user')
 
       const functionCommonEntry = files.find(({ name }) => name === 'function')!
       const functionInternalEntry = files.find(({ name }) => name === 'function_internal')!
       const functionUserEntry = files.find(({ name }) => name === 'function_user')!
 
-      expect(functionCommonEntry).not.toBeUndefined()
-      expect(functionInternalEntry).not.toBeUndefined()
-      expect(functionUserEntry).not.toBeUndefined()
+      expect(functionCommonEntry).toBeDefined()
+      expect(functionInternalEntry).toBeDefined()
+      expect(functionUserEntry).toBeDefined()
+
+      const functionCommon = await importFunctionFile(`${functionCommonEntry.unzipPath}/function.js`)
+      const functionInternal = await importFunctionFile(`${functionInternalEntry.unzipPath}/function_internal.js`)
+      const functionUser = await importFunctionFile(`${functionUserEntry.unzipPath}/function_user.js`)
+
+      // Functions from rightmost directories in the array take precedence.
+      expect(functionCommon).toBe('user')
+      expect(functionInternal).toBe('internal')
+      expect(functionUser).toBe('user')
 
       expect(dirname(functionCommonEntry.mainFile)).toBe(resolve(join(FIXTURES_DIR, pathUser)))
       expect(dirname(functionInternalEntry.mainFile)).toBe(resolve(join(FIXTURES_DIR, pathInternal)))
@@ -1436,7 +1397,7 @@ describe('zip-it-and-ship-it', () => {
     'Adds `type: "functionsBundling"` to user errors when parsing with esbuild or zisi',
     ['bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default'],
     async (options) => {
-      const bundler = options.getCurrentBundlerName()
+      const bundler = getBundlerNameFromOptions(options)
 
       try {
         // using zipFixture, because we only want to assert errors from bundling and not when importing the bundled functions
@@ -1494,13 +1455,13 @@ describe('zip-it-and-ship-it', () => {
 
   test('Leaves dynamic imports untouched when the `processDynamicNodeImports` configuration property is `false`', async () => {
     const fixtureName = 'node-module-dynamic-import-template-literal'
-    const { tmpDir } = await zipNode(fixtureName, {
+    const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD, processDynamicNodeImports: false } },
       },
     })
-    const functionSource = await readFile(`${tmpDir}/function.js`, 'utf8')
+    const functionSource = await readFile(`${files[0].unzipPath}/function.js`, 'utf8')
 
     /* eslint-disable no-template-curly-in-string */
     expect(functionSource).toMatch('const require1 = require(`./files/${number}.js`);')
@@ -1513,14 +1474,14 @@ describe('zip-it-and-ship-it', () => {
 
   test('Adds a runtime shim and includes the files needed for dynamic imports using a template literal', async () => {
     const fixtureName = 'node-module-dynamic-import-template-literal'
-    const { files, tmpDir } = await zipNode(fixtureName, {
+    const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
-    const func = await importFunctionFile(`${tmpDir}/function.js`)
+    const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
     const values = func('one')
     const expectedLength = 5
 
@@ -1532,13 +1493,13 @@ describe('zip-it-and-ship-it', () => {
 
   test('Leaves dynamic imports untouched when the files required to resolve the expression cannot be packaged at build time', async () => {
     const fixtureName = 'node-module-dynamic-import-unresolvable'
-    const { tmpDir } = await zipNode(fixtureName, {
+    const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
-    const functionSource = await readFile(`${tmpDir}/function.js`, 'utf8')
+    const functionSource = await readFile(`${files[0].unzipPath}/function.js`, 'utf8')
 
     expect(functionSource).toMatch('const require1 = require(number)')
     // eslint-disable-next-line no-template-curly-in-string
@@ -1548,14 +1509,14 @@ describe('zip-it-and-ship-it', () => {
 
   test('Adds a runtime shim and includes the files needed for dynamic imports using an expression built with the `+` operator', async () => {
     const fixtureName = 'node-module-dynamic-import-2'
-    const { tmpDir } = await zipNode(fixtureName, {
+    const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
-    const func = await importFunctionFile(`${tmpDir}/function.js`)
+    const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
 
     expect(func('en')[0]).toEqual(['yes', 'no'])
     expect(func('en')[1]).toEqual(['yes', 'no'])
@@ -1566,14 +1527,14 @@ describe('zip-it-and-ship-it', () => {
 
   test('The dynamic import runtime shim handles files in nested directories', async () => {
     const fixtureName = 'node-module-dynamic-import-4'
-    const { tmpDir } = await zipNode(fixtureName, {
+    const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
-    const func = await importFunctionFile(`${tmpDir}/function.js`)
+    const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
 
     expect(func('en')[0]).toEqual(['yes', 'no'])
     expect(func('en')[1]).toEqual(['yes', 'no'])
@@ -1607,14 +1568,14 @@ describe('zip-it-and-ship-it', () => {
 
   test('Negated files in `included_files` are excluded from the bundle even if they match a dynamic import expression', async () => {
     const fixtureName = 'node-module-dynamic-import-2'
-    const { tmpDir } = await zipNode(fixtureName, {
+    const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { includedFiles: ['!lang/en.*'], nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
-    const func = await importFunctionFile(`${tmpDir}/function.js`)
+    const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
 
     expect(func('pt')[0]).toEqual(['sim', 'não'])
     expect(func('pt')[1]).toEqual(['sim', 'não'])
@@ -1635,10 +1596,10 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { tmpDir } = await zipNode(fixtureName, { opts })
+      const { files } = await zipNode(fixtureName, { opts })
 
-      await expect(`${tmpDir}/function.js`).toPathExist()
-      await expect(`${tmpDir}/node_modules/test/index.js`).not.toPathExist()
+      await expect(`${files[0].unzipPath}/function.js`).toPathExist()
+      await expect(`${files[0].unzipPath}/node_modules/test/index.js`).not.toPathExist()
     },
   )
 
@@ -1646,7 +1607,7 @@ describe('zip-it-and-ship-it', () => {
     const FUNCTION_COUNT = 30
     const fixtureName = 'node-module-dynamic-import-3'
 
-    const { tmpDir } = await zipNode(fixtureName, {
+    const { files } = await zipNode(fixtureName, {
       length: FUNCTION_COUNT,
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
@@ -1654,8 +1615,8 @@ describe('zip-it-and-ship-it', () => {
       },
     })
 
-    for (let ind = 1; ind <= FUNCTION_COUNT; ind++) {
-      const func = await importFunctionFile(`${tmpDir}/function${ind}.js`)
+    for (let ind = 0; ind < FUNCTION_COUNT; ind++) {
+      const func = await importFunctionFile(`${files[ind].unzipPath}/${files[ind].name}.js`)
 
       expect(func('en')[0]).toEqual(['yes', 'no'])
       expect(func('en')[1]).toEqual(['yes', 'no'])
@@ -1666,8 +1627,8 @@ describe('zip-it-and-ship-it', () => {
   })
 
   test('Uses the default Node bundler if no configuration object is supplied', async () => {
-    const { files, tmpDir } = await zipNode('local-node-module')
-    const requires = await getRequires({ filePath: resolve(tmpDir, 'function.js') })
+    const { files } = await zipNode('local-node-module')
+    const requires = await getRequires({ filePath: resolve(files[0].unzipPath, 'function.js') })
 
     expect(requires).toEqual(['test'])
     expect(files[0].bundler).toBe('zisi')
@@ -1675,13 +1636,13 @@ describe('zip-it-and-ship-it', () => {
   })
 
   test('Zips Rust function files', async () => {
-    const { files, tmpDir } = await zipFixture('rust-simple', { length: 1 })
+    const { files } = await zipFixture('rust-simple')
 
     expect(files.every(({ runtime }) => runtime === 'rs')).toBe(true)
 
-    await unzipFiles(files)
+    const unzippedFunctions = await unzipFiles(files)
 
-    const unzippedFile = `${tmpDir}/bootstrap`
+    const unzippedFile = `${unzippedFunctions[0].unzipPath}/bootstrap`
     await expect(unzippedFile).toPathExist()
 
     // The library we use for unzipping does not keep executable permissions.
@@ -1694,16 +1655,15 @@ describe('zip-it-and-ship-it', () => {
       expect(stdout).toBe('Hello, world!')
     }
 
-    const tcFile = `${tmpDir}/netlify-toolchain`
+    const tcFile = `${unzippedFunctions[0].unzipPath}/netlify-toolchain`
     await expect(tcFile).toPathExist()
     const tc = await readFile(tcFile, 'utf8')
     expect(tc.trim()).toBe('{"runtime":"rs"}')
   })
 
   test('Does not zip Go function binaries by default', async () => {
-    const { files } = await zipFixture('go-simple', { length: 1 })
+    const { files } = await zipFixture('go-simple')
 
-    expect(files).toHaveLength(1)
     expect(files[0].runtime).toBe('go')
     expect(files[0].path).not.toMatch(/\.zip$/)
     await expect(files[0].path).toPathExist()
@@ -1711,8 +1671,7 @@ describe('zip-it-and-ship-it', () => {
 
   test('Zips Go function binaries if the `zipGo` config property is set', async () => {
     const fixtureName = 'go-simple'
-    const { files, tmpDir } = await zipFixture(fixtureName, {
-      length: 1,
+    const { files } = await zipFixture(fixtureName, {
       opts: {
         config: {
           '*': {
@@ -1722,15 +1681,18 @@ describe('zip-it-and-ship-it', () => {
       },
     })
     const binaryPath = join(FIXTURES_DIR, fixtureName, 'test')
+    await expect(binaryPath).toPathExist()
     const binarySha = await computeSha1(binaryPath)
     const [func] = files
 
     expect(func.runtime).toBe('go')
     expect(func.path.endsWith('.zip')).toBe(true)
 
-    await unzipFiles([func])
+    const unzippedFunctions = await unzipFiles([func])
+    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'test')
 
-    const unzippedBinaryPath = join(tmpDir, 'test')
+    await expect(unzippedBinaryPath).toPathExist()
+
     const unzippedBinarySha = await computeSha1(unzippedBinaryPath)
 
     expect(binarySha).toBe(unzippedBinarySha)
@@ -1759,9 +1721,12 @@ describe('zip-it-and-ship-it', () => {
     expect(func.runtime).toBe('go')
     expect(func.path.endsWith('.zip')).toBe(true)
 
-    await unzipFiles([func], (path) => `${path}/../out`)
+    // remove the binary before unzipping
+    await rm(join(tmpDir, 'go-func-1'))
 
-    const unzippedBinaryPath = join(tmpDir, 'out', 'go-func-1')
+    const unzippedFunctions = await unzipFiles([func])
+
+    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'go-func-1')
     const unzippedBinaryContents = await readFile(unzippedBinaryPath, 'utf8')
 
     expect(mockSource).toBe(unzippedBinaryContents)
@@ -1788,7 +1753,6 @@ describe('zip-it-and-ship-it', () => {
       },
     })
 
-    expect(files).toHaveLength(2)
     expect(files[0].displayName).toBe('Go Function One')
     expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
     expect(files[1].displayName).toBeUndefined()
@@ -1863,9 +1827,8 @@ describe('zip-it-and-ship-it', () => {
   })
 
   test('Does not build Rust functions from source if the `buildRustSource` feature flag is not enabled', async () => {
-    const { files } = await zipFixture('rust-source-multiple', { length: 0 })
+    await zipFixture('rust-source-multiple', { length: 0 })
 
-    expect(files).toHaveLength(0)
     expect(shellUtils.runCommand).not.toHaveBeenCalled()
   })
 
@@ -1910,8 +1873,6 @@ describe('zip-it-and-ship-it', () => {
         },
       },
     })
-
-    expect(files).toHaveLength(2)
 
     expect(files).toEqual([
       {
@@ -1982,7 +1943,6 @@ describe('zip-it-and-ship-it', () => {
       },
     })
 
-    expect(files).toHaveLength(2)
     expect(files[0].displayName).toBe('Rust Function Two')
     expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
     expect(files[1].displayName).toBeUndefined()
@@ -2041,22 +2001,22 @@ describe('zip-it-and-ship-it', () => {
   })
 
   test('Does not generate a sourcemap unless `nodeSourcemap` is set', async () => {
-    const { tmpDir } = await zipNode('node-module-and-local-imports', {
+    const { files } = await zipNode('node-module-and-local-imports', {
       opts: { config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } } },
     })
 
-    await expect(`${tmpDir}/function.js.map`).not.toPathExist()
+    await expect(`${files[0].unzipPath}/function.js.map`).not.toPathExist()
 
-    const functionSource = await readFile(`${tmpDir}/function.js`, 'utf8')
+    const functionSource = await readFile(`${files[0].unzipPath}/function.js`, 'utf8')
 
     expect(functionSource).not.toMatch('sourceMappingURL')
   })
 
   test.skipIf(platform === 'win32')('Generates a sourcemap if `nodeSourcemap` is set', async () => {
-    const { tmpDir } = await zipNode('node-module-and-local-imports', {
+    const { files } = await zipNode('node-module-and-local-imports', {
       opts: { config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD, nodeSourcemap: true } } },
     })
-    const sourcemap = await readFile(`${tmpDir}/function.js.map`, 'utf8')
+    const sourcemap = await readFile(`${files[0].unzipPath}/function.js.map`, 'utf8')
     const { sourceRoot, sources } = JSON.parse(sourcemap)
 
     await Promise.all(
@@ -2111,11 +2071,11 @@ describe('zip-it-and-ship-it', () => {
       const opts = merge(options, {
         basePath: join(FIXTURES_DIR, fixtureName),
       })
-      const { tmpDir } = await zipNode(fixtureName, {
+      const { files } = await zipNode(fixtureName, {
         opts,
       })
 
-      const isEven = await importFunctionFile(`${tmpDir}/function.js`)
+      const isEven = await importFunctionFile(`${files[0].unzipPath}/function.js`)
       expect(isEven(2)).toBe('2 is even')
     },
   )
@@ -2219,13 +2179,10 @@ describe('zip-it-and-ship-it', () => {
     'Finds in-source config declarations using the `schedule` helper',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const FUNCTIONS_COUNT = 13
       const { files } = await zipFixture(join('in-source-config', 'functions'), {
         opts: options,
-        length: FUNCTIONS_COUNT,
+        length: 13,
       })
-
-      expect(files).toHaveLength(FUNCTIONS_COUNT)
 
       files.forEach((result) => {
         expect(result.schedule).toBe('@daily')
@@ -2237,11 +2194,9 @@ describe('zip-it-and-ship-it', () => {
     'Throws error when `schedule` helper is used but cron expression not found',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const FUNCTIONS_COUNT = 1
       try {
         await zipFixture(join('in-source-config', 'functions_missing_cron_expression'), {
           opts: options,
-          length: FUNCTIONS_COUNT,
         })
       } catch (error) {
         expect(error.message.startsWith('Unable to find cron expression for scheduled function.')).toBe(true)
@@ -2264,9 +2219,7 @@ describe('zip-it-and-ship-it', () => {
           length: FUNCTIONS_COUNT,
         })
       } catch (error) {
-        expect(error.message.startsWith("The `schedule` helper was imported but we couldn't find any usages.")).toBe(
-          true,
-        )
+        expect(error.message).toMatch(/^The `schedule` helper was imported but we couldn't find any usages./)
         expect(error.customErrorInfo.type).toBe('functionsBundling')
         expect(error.customErrorInfo.location.bundler).toBe(undefined)
         expect(error.customErrorInfo.location.functionName).toBeTypeOf('string')
@@ -2287,31 +2240,36 @@ describe('zip-it-and-ship-it', () => {
         basePath: join(FIXTURES_DIR, fixtureName),
         configFileDirectories: [join(FIXTURES_DIR, pathInternal)],
       })
-      const { files, tmpDir } = await zipFixture([pathInternal, pathNotInternal, pathUser], {
+      const { files } = await zipFixture([pathInternal, pathNotInternal, pathUser], {
         length: 4,
         opts,
       })
 
-      const func1Entry = files.find(({ name }) => name === 'internal-function')
-      const func2Entry = files.find(({ name }) => name === 'root-function')
-      const func3Entry = files.find(({ name }) => name === 'user-function')
-      const func4Entry = files.find(({ name }) => name === 'not-internal')
+      const unzippedFunctions = await unzipFiles(files)
 
-      expect(func1Entry?.displayName).toBe('Internal Function')
-      expect(func1Entry?.generator).toBe('@netlify/mock-plugin@1.0.0')
-      expect(func1Entry?.config.includedFiles).toEqual(['blog/*.md'])
-      expect(func2Entry?.config.includedFiles).toEqual(['blog/*.md'])
-      expect(func2Entry?.generator).toBeUndefined()
-      expect(func3Entry?.config.includedFiles).toBe(undefined)
-      expect(func4Entry?.config.includedFiles).toBe(undefined)
+      const func1Entry = unzippedFunctions.find(({ name }) => name === 'internal-function')!
+      const func2Entry = unzippedFunctions.find(({ name }) => name === 'root-function')!
+      const func3Entry = unzippedFunctions.find(({ name }) => name === 'user-function')!
+      const func4Entry = unzippedFunctions.find(({ name }) => name === 'not-internal')!
 
-      await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+      expect(func1Entry).toBeDefined()
+      expect(func2Entry).toBeDefined()
+      expect(func3Entry).toBeDefined()
+      expect(func4Entry).toBeDefined()
+
+      expect(func1Entry.displayName).toBe('Internal Function')
+      expect(func1Entry.generator).toBe('@netlify/mock-plugin@1.0.0')
+      expect(func1Entry.config.includedFiles).toEqual(['blog/*.md'])
+      expect(func2Entry.config.includedFiles).toEqual(['blog/*.md'])
+      expect(func2Entry.generator).toBeUndefined()
+      expect(func3Entry.config.includedFiles).toBe(undefined)
+      expect(func4Entry.config.includedFiles).toBe(undefined)
 
       const functionPaths = [
-        join(tmpDir, 'internal-function.zip_out', 'internal-function.js'),
-        join(tmpDir, 'root-function.zip_out', 'root-function.js'),
-        join(tmpDir, 'user-function.zip_out', 'user-function.js'),
-        join(tmpDir, 'not-internal.zip_out', 'not-internal.js'),
+        join(func1Entry.unzipPath, 'internal-function.js'),
+        join(func2Entry.unzipPath, 'root-function.js'),
+        join(func3Entry.unzipPath, 'user-function.js'),
+        join(func4Entry.unzipPath, 'not-internal.js'),
       ]
       const func1 = await importFunctionFile(functionPaths[0])
       const func2 = await importFunctionFile(functionPaths[1])
@@ -2323,10 +2281,10 @@ describe('zip-it-and-ship-it', () => {
       expect(func3.handler()).toBe(true)
       expect(func4.handler()).toBe(true)
 
-      await expect(`${tmpDir}/internal-function.zip_out/blog/one.md`).toPathExist()
-      await expect(`${tmpDir}/root-function.zip_out/blog/one.md`).toPathExist()
-      await expect(`${tmpDir}/user-function.zip_out/blog/one.md`).not.toPathExist()
-      await expect(`${tmpDir}/not-internal.zip_out/blog/one.md`).not.toPathExist()
+      await expect(`${func1Entry.unzipPath}/blog/one.md`).toPathExist()
+      await expect(`${func2Entry.unzipPath}/blog/one.md`).toPathExist()
+      await expect(`${func3Entry.unzipPath}/blog/one.md`).not.toPathExist()
+      await expect(`${func4Entry.unzipPath}/blog/one.md`).not.toPathExist()
     },
   )
 
@@ -2399,16 +2357,16 @@ describe('zip-it-and-ship-it', () => {
         basePath: fixtureDir,
         configFileDirectories: [fixtureDir],
       })
-      const { files, tmpDir } = await zipFixture(fixtureName, {
+      const { files } = await zipFixture(fixtureName, {
         length: 2,
         opts,
       })
 
-      await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+      const unzippedFunctions = await unzipFiles(files)
 
       const functionPaths = [
-        join(tmpDir, 'my-function-1.zip_out', 'my-function-1.js'),
-        join(tmpDir, 'my-function-2.zip_out', 'my-function-2.js'),
+        join(unzippedFunctions[0].unzipPath, 'my-function-2.js'),
+        join(unzippedFunctions[1].unzipPath, 'my-function-1.js'),
       ]
       const func1 = await importFunctionFile(functionPaths[0])
       const func2 = await importFunctionFile(functionPaths[1])
@@ -2417,7 +2375,7 @@ describe('zip-it-and-ship-it', () => {
       expect(func2.handler()).toBe(true)
       expect(files[0].config.includedFiles).toBe(undefined)
       expect(files[1].config.includedFiles).toBe(undefined)
-      await expect(`${tmpDir}/my-function-1.zip_out/blog/one.md`).not.toPathExist()
+      await expect(`${unzippedFunctions[0].unzipPath}/blog/one.md`).not.toPathExist()
     },
   )
 
@@ -2428,16 +2386,16 @@ describe('zip-it-and-ship-it', () => {
       basePath: fixtureDir,
       configFileDirectories: [fixtureDir],
     })
-    const { files, tmpDir } = await zipFixture(fixtureName, {
+    const { files } = await zipFixture(fixtureName, {
       length: 2,
       opts,
     })
 
-    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+    const unzippedFunctions = await unzipFiles(files)
 
     const functionPaths = [
-      join(tmpDir, 'my-function-1.zip_out', 'my-function-1.js'),
-      join(tmpDir, 'my-function-2.zip_out', 'my-function-2.js'),
+      join(unzippedFunctions[0].unzipPath, 'my-function-2.js'),
+      join(unzippedFunctions[1].unzipPath, 'my-function-1.js'),
     ]
     const func1 = await importFunctionFile(functionPaths[0])
     const func2 = await importFunctionFile(functionPaths[1])
@@ -2446,19 +2404,16 @@ describe('zip-it-and-ship-it', () => {
     expect(func2.handler()).toBe(true)
     expect(files[0].config.includedFiles).toBe(undefined)
     expect(files[1].config.includedFiles).toBe(undefined)
-    await expect(`${tmpDir}/my-function-1.zip_out/blog/one.md`).not.toPathExist()
+    await expect(`${unzippedFunctions[0].unzipPath}/blog/one.md`).not.toPathExist()
   })
 
-  testMany('None bundler uses files without touching or reading them', ['bundler_none'], async (options) => {
-    const { tmpDir, files } = await zipFixture('node-syntax-error', {
-      length: 1,
-      opts: options,
-    })
+  testMany('None bundler uses files without touching or reading them', ['bundler_none'], async (opts) => {
+    const { files } = await zipFixture('node-syntax-error', { opts })
 
-    await unzipFiles(files)
+    const unzippedFunctions = await unzipFiles(files)
 
     const originalFile = await readFile(join(FIXTURES_DIR, 'node-syntax-error/function.js'), 'utf8')
-    const bundledFile = await readFile(join(tmpDir, 'function.js'), 'utf8')
+    const bundledFile = await readFile(join(unzippedFunctions[0].unzipPath, 'function.js'), 'utf8')
 
     expect(originalFile).toBe(bundledFile)
   })
@@ -2481,15 +2436,15 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('None bundler emits esm with default nodeVersion', ['bundler_none'], async (options) => {
-    const { files, tmpDir } = await zipFixture('node-esm', {
+    const { files } = await zipFixture('node-esm', {
       length: 2,
       opts: options,
     })
 
-    await unzipFiles(files)
+    const unzippedFunctions = await unzipFiles(files)
 
     const originalFile = await readFile(join(FIXTURES_DIR, 'node-esm/func1.js'), 'utf8')
-    const bundledFile = await readFile(join(tmpDir, 'func1.js'), 'utf8')
+    const bundledFile = await readFile(join(unzippedFunctions[0].unzipPath, 'func1.js'), 'utf8')
 
     expect(originalFile).toBe(bundledFile)
   })
@@ -2504,15 +2459,15 @@ describe('zip-it-and-ship-it', () => {
         basePath: join(FIXTURES_DIR, fixtureName),
         featureFlags: { zisi_pure_esm_mjs: true },
       })
-      const { files, tmpDir } = await zipFixture(fixtureName, {
+      const { files } = await zipFixture(fixtureName, {
         length,
         opts,
       })
 
-      await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+      const unzippedFunctions = await unzipFiles(files)
 
       for (let index = 1; index <= length; index++) {
-        const funcDir = join(tmpDir, `func${index}.zip_out`)
+        const funcDir = unzippedFunctions[index - 1].unzipPath
 
         // Writing a basic package.json with `type: "module"` just so that we can
         // import the functions from the test.
@@ -2541,15 +2496,15 @@ describe('zip-it-and-ship-it', () => {
           },
         },
       })
-      const { files, tmpDir } = await zipFixture(fixtureName, {
+      const { files } = await zipFixture(fixtureName, {
         length,
         opts,
       })
 
-      await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+      const unzippedFunctions = await unzipFiles(files)
 
       for (let index = 1; index <= length; index++) {
-        const funcDir = join(tmpDir, `func${index}.zip_out`)
+        const funcDir = unzippedFunctions[index - 1].unzipPath
 
         // Writing a basic package.json with `type: "module"` just so that we can
         // import the functions from the test.
@@ -2575,13 +2530,13 @@ describe('zip-it-and-ship-it', () => {
         },
       },
     }
-    const { files, tmpDir } = await zipFixture([join(fixtureName, 'functions')], {
+    const { files } = await zipFixture([join(fixtureName, 'functions')], {
       opts,
     })
 
-    await unzipFiles(files, (path) => `${path}/../${basename(path)}_out`)
+    const unzippedFunctions = await unzipFiles(files)
 
-    const funcFile = join(tmpDir, `func1.zip_out/func1.mjs`)
+    const funcFile = join(unzippedFunctions[0].unzipPath, `func1.mjs`)
 
     // We have to use execa because when we simply import the file here vitest does provide a `require` function
     // and therefore we do not trigger the problem
@@ -2600,19 +2555,19 @@ describe('zip-it-and-ship-it', () => {
         basePath: join(FIXTURES_DIR, fixtureName),
         featureFlags: { zisi_output_cjs_extension: true },
       })
-      const { files, tmpDir } = await zipFixture(fixtureName, {
+      const { files } = await zipFixture(fixtureName, {
         length: 2,
         opts,
       })
 
-      await unzipFiles(files)
+      const unzippedFunctions = await unzipFiles(files)
 
-      const bundledFile2 = await importFunctionFile(join(tmpDir, 'func2.cjs'))
+      const bundledFile2 = await importFunctionFile(join(unzippedFunctions[1].unzipPath, 'func2.cjs'))
       expect(bundledFile2.handler()).toBe(true)
 
-      if (options.getCurrentBundlerName() === 'esbuild') {
+      if (getBundlerNameFromOptions(options) === 'esbuild') {
         // nft does not create an entry here because the main file is already an entrypoint
-        const bundledFile1 = await importFunctionFile(join(tmpDir, 'func1.cjs'))
+        const bundledFile1 = await importFunctionFile(join(unzippedFunctions[0].unzipPath, 'func1.cjs'))
         expect(bundledFile1.handler()).toBe(true)
       }
     },
@@ -2623,16 +2578,16 @@ describe('zip-it-and-ship-it', () => {
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
     })
-    const { files, tmpDir } = await zipFixture(fixtureName, {
+    const { files } = await zipFixture(fixtureName, {
       length: 3,
       opts,
     })
 
-    await unzipFiles(files)
+    const unzippedFunctions = await unzipFiles(files)
 
-    const bundledFile1 = await importFunctionFile(join(tmpDir, 'func1.cjs'))
-    const bundledFile2 = await importFunctionFile(join(tmpDir, 'func2.cjs'))
-    const bundledFile3 = await importFunctionFile(join(tmpDir, 'index.cjs'))
+    const bundledFile1 = await importFunctionFile(join(unzippedFunctions[0].unzipPath, 'func1.cjs'))
+    const bundledFile2 = await importFunctionFile(join(unzippedFunctions[1].unzipPath, 'func2.cjs'))
+    const bundledFile3 = await importFunctionFile(join(unzippedFunctions[2].unzipPath, 'index.cjs'))
 
     expect(bundledFile1.handler()).toBe(true)
     expect(bundledFile2.handler()).toBe(true)
@@ -2648,23 +2603,23 @@ describe('zip-it-and-ship-it', () => {
         basePath: join(FIXTURES_DIR, fixtureName),
         featureFlags: { zisi_output_cjs_extension: true },
       })
-      const { files, tmpDir } = await zipFixture(fixtureName, {
+      const { files } = await zipFixture(fixtureName, {
         length: 3,
         opts,
       })
 
-      await unzipFiles(files)
+      const unzippedFunctions = await unzipFiles(files)
 
-      const bundledFile1 = await importFunctionFile(join(tmpDir, 'func1.js'))
-      const bundledFile2 = await importFunctionFile(join(tmpDir, 'func2.js'))
+      const bundledFile1 = await importFunctionFile(join(unzippedFunctions[0].unzipPath, 'func1.js'))
+      const bundledFile2 = await importFunctionFile(join(unzippedFunctions[1].unzipPath, 'func2.js'))
 
       expect(bundledFile1.handler()).toBe(true)
       expect(bundledFile2.handler()).toBe(true)
 
-      expect(`${tmpDir}/func1.cjs`).not.toPathExist()
-      expect(`${tmpDir}/func1.mjs`).not.toPathExist()
-      expect(`${tmpDir}/func2.cjs`).not.toPathExist()
-      expect(`${tmpDir}/func2.mjs`).not.toPathExist()
+      expect(`${unzippedFunctions[0].unzipPath}/func1.cjs`).not.toPathExist()
+      expect(`${unzippedFunctions[0].unzipPath}/func1.mjs`).not.toPathExist()
+      expect(`${unzippedFunctions[1].unzipPath}/func2.cjs`).not.toPathExist()
+      expect(`${unzippedFunctions[1].unzipPath}/func2.mjs`).not.toPathExist()
     },
   )
 
@@ -2673,12 +2628,9 @@ describe('zip-it-and-ship-it', () => {
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
     })
-    await expect(
-      zipFixture(fixtureName, {
-        length: 1,
-        opts,
-      }),
-    ).rejects.toThrowError(/is a reserved word and cannot be used as a function name\.$/)
+    await expect(zipFixture(fixtureName, { opts })).rejects.toThrowError(
+      /is a reserved word and cannot be used as a function name\.$/,
+    )
   })
 
   // esbuild does bundle everything into one file, so it does not have any other files in the bundle
@@ -2690,32 +2642,9 @@ describe('zip-it-and-ship-it', () => {
       const opts = merge(options, {
         basePath: join(FIXTURES_DIR, fixtureName),
       })
-      await expect(
-        zipFixture(fixtureName, {
-          length: 1,
-          opts,
-        }),
-      ).rejects.toThrowError(/is a reserved word and cannot be used as a file or directory name\.$/)
+      await expect(zipFixture(fixtureName, { opts })).rejects.toThrowError(
+        /is a reserved word and cannot be used as a file or directory name\.$/,
+      )
     },
   )
-
-  if (semver.gte(nodeVersion, '18.13.0')) {
-    testMany(
-      'Handles a JavaScript function using the V2 API',
-      ['bundler_default', 'todo:bundler_esbuild', 'todo:bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
-      async (options) => {
-        const { files, tmpDir } = await zipFixture('v2-api', {
-          opts: merge(options, { featureFlags: { zisi_functions_api_v2: true } }),
-        })
-        await unzipFiles(files)
-
-        const func = await importFunctionFile(`${tmpDir}/${ENTRY_FILE_NAME}.mjs`)
-        const { body, headers = {}, statusCode } = await invokeLambda(func)
-
-        expect(body).toBe('<h1>Hello world</h1>')
-        expect(headers['content-type']).toBe('text/html')
-        expect(statusCode).toBe(200)
-      },
-    )
-  }
 })
