@@ -496,7 +496,7 @@ describe('zip-it-and-ship-it', () => {
       try {
         await zipNode('symlinks', { opts, fixtureDir: fixtureTmpDir })
       } finally {
-        await rm(symlinkFile, { force: true })
+        await rm(symlinkFile, { force: true, maxRetries: 10 })
       }
     })
   }
@@ -557,7 +557,7 @@ describe('zip-it-and-ship-it', () => {
     })
 
     afterAll(async () => {
-      await rm(fixtureTmpDir, { recursive: true, force: true })
+      await rm(fixtureTmpDir, { recursive: true, force: true, maxRetries: 10 })
     })
 
     testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
@@ -1726,7 +1726,7 @@ describe('zip-it-and-ship-it', () => {
     expect(func.path.endsWith('.zip')).toBe(true)
 
     // remove the binary before unzipping
-    await rm(join(tmpDir, 'go-func-1'))
+    await rm(join(tmpDir, 'go-func-1'), { maxRetries: 10 })
 
     const unzippedFunctions = await unzipFiles([func])
 

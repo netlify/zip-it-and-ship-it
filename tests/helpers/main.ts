@@ -42,7 +42,7 @@ let cleanupDirectories: string[] = []
 // in worker threads which do not emit the exit event
 afterAll(async () => {
   try {
-    await Promise.all(cleanupDirectories.map((dir) => rm(dir, { force: true, recursive: true })))
+    await Promise.all(cleanupDirectories.map((dir) => rm(dir, { force: true, recursive: true, maxRetries: 10 })))
   } catch (error) {
     if (error.code === 'EPERM') {
       return

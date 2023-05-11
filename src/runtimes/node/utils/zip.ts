@@ -75,7 +75,7 @@ const createDirectory = async function ({
   const functionFolder = join(destFolder, basename(filename, extension))
 
   // Deleting the functions directory in case it exists before creating it.
-  await rm(functionFolder, { recursive: true, force: true })
+  await rm(functionFolder, { recursive: true, force: true, maxRetries: 3 })
   await mkdir(functionFolder, { recursive: true })
 
   // Writing entry file.
