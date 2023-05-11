@@ -2,6 +2,14 @@ import { Stats } from 'fs'
 
 import type { FunctionConfig } from './config.js'
 import type { Runtime, ZipFunctionResult } from './runtimes/runtime.js'
+import { ObjectValues } from './types/utils.js'
+
+export const INVOCATION_MODE = {
+  Buffer: 'buffer',
+  Stream: 'stream',
+} as const
+
+export type InvocationMode = ObjectValues<typeof INVOCATION_MODE>
 
 // A function that has been processed and turned into an archive.
 export type FunctionArchive = ZipFunctionResult & {
