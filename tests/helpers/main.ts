@@ -49,6 +49,7 @@ export const zipNode = async function (
 
 export const getBundlerNameFromOptions = ({ config = {} }: { config?: Config }) =>
   config['*'] && config['*'].nodeBundler
+
 export const zipFixture = async function (
   fixture: string[] | string,
   { length, fixtureDir, opts = {} }: ZipOptions = {},

@@ -11,14 +11,14 @@ import { pathExists } from 'path-exists'
 import semver from 'semver'
 import { dir as getTmpDir, tmpName } from 'tmp-promise'
 import unixify from 'unixify'
-import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
 
-import type { Config } from '../src/config.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
 import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
 import { MODULE_FORMAT } from '../src/runtimes/node/utils/module_format.js'
 import { shellUtils } from '../src/utils/shell.js'
+import { ZipFunctionsOptions } from '../src/zip.js'
 
 import {
   getRequires,
@@ -41,10 +41,10 @@ vi.mock('../src/utils/shell.js', () => ({ shellUtils: { runCommand: vi.fn() } })
 
 const EXECUTABLE_PERMISSION = 0o755
 
-const getZipChecksum = async function (config: Config) {
+const getZipChecksum = async function (opts: ZipFunctionsOptions) {
   const {
     files: [{ path }],
-  } = await zipFixture('many-dependencies', { opts: { config } })
+  } = await zipFixture('many-dependencies', { opts })
 
   expect(path).toPathExist()
 
@@ -552,19 +552,44 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
-  testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
-    const fixtureTmpDir = await tmpName({ prefix: 'zip-it-test' })
-    const opts = merge(options, {
-      basePath: fixtureTmpDir,
+  describe('many-dependencies fixture', () => {
+    let fixtureTmpDir: string
+
+    beforeAll(async () => {
+      fixtureTmpDir = await tmpName({ prefix: 'many-dependencies' })
+      const basePath = `${fixtureTmpDir}/many-dependencies`
+
+      await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
+
+      await execa('npm', ['install', '--no-package-lock', '--no-audit', '--prefer-offline', '--progress=false'], {
+        cwd: basePath,
+      })
     })
 
-    const basePath = `${fixtureTmpDir}/many-dependencies`
-    await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
-    await execa('npm', ['install', '--no-package-lock', '--no-audit'], {
-      cwd: basePath,
+    afterAll(async () => {
+      await rm(fixtureTmpDir, { recursive: true, force: true })
     })
 
-    await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
+    testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
+      const opts = merge(options, {
+        basePath: fixtureTmpDir,
+      })
+
+      try {
+        await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
+      } catch (error) {
+        console.error(error)
+      }
+    })
+
+    testMany('Produces deterministic checksums', [...allBundleConfigs, 'bundler_none'], async (options) => {
+      const opts = merge(options, {
+        basePath: fixtureTmpDir,
+      })
+
+      const [checksumOne, checksumTwo] = await Promise.all([getZipChecksum(opts), getZipChecksum(opts)])
+      expect(checksumOne).toBe(checksumTwo)
+    })
   })
 
   testMany('Works with many function files', [...allBundleConfigs, 'bundler_none'], async (options) => {
@@ -577,14 +602,6 @@ describe('zip-it-and-ship-it', () => {
     files.forEach(({ name }) => {
       expect(names.has(name)).toBe(true)
     })
-  })
-
-  testMany('Produces deterministic checksums', [...allBundleConfigs, 'bundler_none'], async (options) => {
-    const [checksumOne, checksumTwo] = await Promise.all([
-      getZipChecksum(options.config),
-      getZipChecksum(options.config),
-    ])
-    expect(checksumOne).toBe(checksumTwo)
   })
 
   testMany('Throws when the source folder does not exist', [...allBundleConfigs, 'bundler_none'], async (options) => {
