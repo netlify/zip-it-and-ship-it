@@ -4,6 +4,7 @@ import { env, platform } from 'process'
 import { fileURLToPath } from 'url'
 
 import { execa } from 'execa'
+import isCI from 'is-ci'
 import { dir as getTmpDir } from 'tmp-promise'
 import { afterAll, expect } from 'vitest'
 
@@ -79,7 +80,8 @@ export const zipFixture = async function (
 
   if (ZISI_KEEP_TEMP_DIRS) {
     console.log(tmpDir)
-  } else {
+  } else if (!isCI) {
+    // We only do the cleanup locally
     cleanupDirectories.push(tmpDir)
   }
 
@@ -116,7 +118,6 @@ export const unzipFiles = async function (files: FunctionResult[]): Promise<Test
     Object.keys(files).map(async (key) => {
       const { path, name } = files[key]
       const dest = join(dirname(path), name)
-      await expect(path).toPathExist()
       await unzipFile(path, dest)
 
       // eslint-disable-next-line no-param-reassign

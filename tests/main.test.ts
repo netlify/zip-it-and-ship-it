@@ -5,6 +5,7 @@ import { arch, platform, version as nodeVersion } from 'process'
 import cpy from 'cpy'
 import merge from 'deepmerge'
 import { execa, execaNode } from 'execa'
+import isCI from 'is-ci'
 import { pathExists } from 'path-exists'
 import semver from 'semver'
 import { dir as getTmpDir, tmpName } from 'tmp-promise'
@@ -557,6 +558,9 @@ describe('zip-it-and-ship-it', () => {
     })
 
     afterAll(async () => {
+      // No need to cleanup on CI
+      if (isCI) return
+
       await rm(fixtureTmpDir, { recursive: true, force: true, maxRetries: 10 })
     })
 
