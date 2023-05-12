@@ -68,6 +68,7 @@ describe('zip-it-and-ship-it', () => {
     const fixtureName = 'simple'
     const { files } = await zipNode(fixtureName, { opts: options })
 
+    expect(files[0].invocationMode).toBeUndefined()
     expect(files[0].runtime).toBe('js')
     expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function.js'))
   })
@@ -88,8 +89,10 @@ describe('zip-it-and-ship-it', () => {
 
       expect(files[0].displayName).toBe('Function One')
       expect(files[0].generator).toBe('@netlify/mock-plugin@1.0.0')
+      expect(files[0].invocationMode).toBeUndefined()
       expect(files[1].displayName).toBeUndefined()
       expect(files[1].generator).toBe('internalFunc')
+      expect(files[1].invocationMode).toBeUndefined()
     },
   )
 
@@ -2194,6 +2197,21 @@ describe('zip-it-and-ship-it', () => {
 
       files.forEach((result) => {
         expect(result.schedule).toBe('@daily')
+      })
+    },
+  )
+
+  testMany(
+    'Finds in-source config declarations using the `stream` helper',
+    [...allBundleConfigs, 'bundler_none'],
+    async (options) => {
+      const { files } = await zipFixture(join('in-source-config', 'functions_stream'), {
+        opts: options,
+        length: 1,
+      })
+
+      files.forEach((result) => {
+        expect(result.invocationMode).toBe('stream')
       })
     },
   )

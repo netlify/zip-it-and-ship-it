@@ -118,7 +118,14 @@ const zipFunction: ZipFunction = async function ({
 
   await cleanupFunction?.()
 
-  const invocationMode = featureFlags.zisi_functions_api_v2 ? INVOCATION_MODE.Stream : INVOCATION_MODE.Buffer
+  // Getting the invocation mode from ISC, in case the function is using the
+  // `stream` helper.
+  let { invocationMode } = inSourceConfig
+
+  // If we're using the V2 API, force the invocation to "stream".
+  if (featureFlags.zisi_functions_api_v2) {
+    invocationMode = INVOCATION_MODE.Stream
+  }
 
   return {
     bundler: bundlerName,

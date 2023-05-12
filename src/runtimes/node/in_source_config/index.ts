@@ -1,5 +1,6 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
+import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { RUNTIME } from '../../runtime.js'
@@ -12,7 +13,10 @@ import { parse as parseSchedule } from './properties/schedule.js'
 
 export const IN_SOURCE_CONFIG_MODULE = '@netlify/functions'
 
-export type ISCValues = Partial<ReturnType<typeof parseSchedule>>
+export type ISCValues = {
+  invocationMode?: InvocationMode
+  schedule?: string
+}
 
 const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean, functionName: string): void => {
   if (!functionFound) {
@@ -67,6 +71,13 @@ export const findISCDeclarationsInPath = async (sourcePath: string, functionName
 
           return parsed
         }
+
+        case 'stream': {
+          return {
+            invocationMode: INVOCATION_MODE.Stream,
+          }
+        }
+
         default:
         // no-op
       }
