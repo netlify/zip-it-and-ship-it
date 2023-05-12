@@ -36,6 +36,7 @@ interface ZipNodeReturn extends ZipReturn {
   files: TestFunctionResult[]
 }
 
+// Accumulator of temporary directories that need to be cleaned up afterwards.
 let cleanupDirectories: string[] = []
 
 // We have to manually clean up all the created temp directories.
