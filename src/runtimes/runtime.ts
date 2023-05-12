@@ -34,6 +34,7 @@ export type GetSrcFilesFunction = (
     config: FunctionConfig
     featureFlags: FeatureFlags
     repositoryRoot?: string
+    runtimeAPIVersion: number
   } & FunctionSource,
 ) => Promise<string[]>
 

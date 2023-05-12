@@ -49,6 +49,7 @@ interface ZipNodeParameters {
   mainFile: string
   moduleFormat: ModuleFormat
   rewrites?: Map<string, string>
+  runtimeAPIVersion: number
   srcFiles: string[]
 }
 
@@ -62,6 +63,7 @@ const createDirectory = async function ({
   mainFile,
   moduleFormat,
   rewrites = new Map(),
+  runtimeAPIVersion,
   srcFiles,
 }: ZipNodeParameters) {
   const { contents: entryContents, filename: entryFilename } = getEntryFile({
@@ -71,6 +73,7 @@ const createDirectory = async function ({
     mainFile,
     moduleFormat,
     userNamespace: DEFAULT_USER_SUBDIRECTORY,
+    runtimeAPIVersion,
   })
   const functionFolder = join(destFolder, basename(filename, extension))
 
@@ -116,6 +119,7 @@ const createZipArchive = async function ({
   mainFile,
   moduleFormat,
   rewrites,
+  runtimeAPIVersion,
   srcFiles,
 }: ZipNodeParameters) {
   const destPath = join(destFolder, `${basename(filename, extension)}.zip`)
@@ -130,15 +134,16 @@ const createZipArchive = async function ({
     featureFlags,
     filename,
     mainFile,
+    runtimeAPIVersion,
   })
 
   // We don't need an entry file if it would end up with the same path as the
   // function's main file. Unless we have a file conflict and need to move everything into a subfolder
   const needsEntryFile =
     featureFlags.zisi_unique_entry_file ||
-    featureFlags.zisi_functions_api_v2 ||
+    runtimeAPIVersion === 2 ||
     hasEntryFileConflict ||
-    !isNamedLikeEntryFile(mainFile, { basePath, featureFlags, filename })
+    !isNamedLikeEntryFile(mainFile, { basePath, featureFlags, filename, runtimeAPIVersion })
 
   // If there is a naming conflict, we move all user files (everything other
   // than the entry file) to its own sub-directory.
@@ -152,12 +157,13 @@ const createZipArchive = async function ({
       moduleFormat,
       userNamespace,
       featureFlags,
+      runtimeAPIVersion,
     })
 
     addEntryFileToZip(archive, entryFile)
   }
 
-  if (featureFlags.zisi_functions_api_v2) {
+  if (runtimeAPIVersion === 2) {
     // This is the path to the file that contains all the code for the v2
     // functions API. We add it to the list of source files and create an
     // alias so that it's written as `BOOTSTRAP_FILE_NAME` in the ZIP.

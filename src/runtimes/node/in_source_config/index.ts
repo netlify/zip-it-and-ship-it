@@ -1,5 +1,6 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
+import { FeatureFlags } from '../../../feature_flags.js'
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
@@ -38,17 +39,21 @@ const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean
 // Parses a JS/TS file and looks for in-source config declarations. It returns
 // an array of all declarations found, with `property` indicating the name of
 // the property and `data` its value.
-export const findISCDeclarationsInPath = async (sourcePath: string, functionName: string): Promise<ISCValues> => {
+export const findISCDeclarationsInPath = async (
+  sourcePath: string,
+  functionName: string,
+  featureFlags: FeatureFlags,
+): Promise<ISCValues> => {
   const source = await safelyReadSource(sourcePath)
 
   if (source === null) {
     return {}
   }
 
-  return findISCDeclarations(source, functionName)
+  return findISCDeclarations(source, functionName, featureFlags)
 }
 
-export const findISCDeclarations = (source: string, functionName: string): ISCValues => {
+export const findISCDeclarations = (source: string, functionName: string, featureFlags: FeatureFlags): ISCValues => {
   const ast = parseSource(source)
 
   if (ast === null) {
@@ -64,7 +69,7 @@ export const findISCDeclarations = (source: string, functionName: string): ISCVa
   const getAllBindings = createBindingsMethod(ast.body)
   const { defaultExport, handlerExports } = getExports(ast.body, getAllBindings)
 
-  if (handlerExports.length === 0 && defaultExport !== undefined) {
+  if (featureFlags.zisi_functions_api_v2 && handlerExports.length === 0 && defaultExport !== undefined) {
     return {
       apiVersion: 2,
     }

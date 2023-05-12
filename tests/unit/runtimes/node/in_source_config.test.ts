@@ -2,13 +2,17 @@ import { describe, expect, test } from 'vitest'
 
 import { findISCDeclarations } from '../../../../src/runtimes/node/in_source_config/index.js'
 
+const featureFlags = {
+  zisi_functions_api_v2: true,
+}
+
 describe('`schedule` helper', () => {
   test('Detects a scheduled function', () => {
     const source = `import { schedule } from "@netlify/functions"
     
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1')
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
 
     expect(isc).toEqual({ schedule: '@daily' })
   })
@@ -18,7 +22,7 @@ describe('`schedule` helper', () => {
     
     exports.handler = somethingElse("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1')
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
 
     expect(isc).toEqual({ schedule: '@daily' })
   })
@@ -28,7 +32,7 @@ describe('`schedule` helper', () => {
     
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1')
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
 
     expect(isc).toEqual({})
   })
@@ -40,7 +44,7 @@ describe('`stream` helper', () => {
     
     exports.handler = stream(() => {})`
 
-    const isc = findISCDeclarations(source, 'func1')
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
 
     expect(isc).toEqual({ invocationMode: 'stream' })
   })
@@ -50,7 +54,7 @@ describe('`stream` helper', () => {
     
     exports.handler = stream(() => {})`
 
-    const isc = findISCDeclarations(source, 'func1')
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
 
     expect(isc).toEqual({})
   })
@@ -62,7 +66,7 @@ describe('V2 API', () => {
       return new Response("Hello!")
     }`
 
-    const isc = findISCDeclarations(source, 'func1')
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
 
     expect(isc).toEqual({ apiVersion: 2 })
   })
@@ -74,7 +78,7 @@ describe('V2 API', () => {
     
     exports.handler = async () => ({ statusCode: 200, body: "Hello!" })`
 
-    const isc = findISCDeclarations(source, 'func1')
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
 
     expect(isc).toEqual({})
   })
