@@ -2190,7 +2190,7 @@ describe('zip-it-and-ship-it', () => {
     'Finds in-source config declarations using the `schedule` helper',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
-      const { files } = await zipFixture(join('in-source-config', 'functions_schedule'), {
+      const { files } = await zipFixture(join('in-source-config', 'functions'), {
         opts: options,
         length: 13,
       })
