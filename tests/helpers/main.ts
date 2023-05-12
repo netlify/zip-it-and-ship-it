@@ -1,11 +1,12 @@
-import { mkdir } from 'fs/promises'
+import { mkdir, rm } from 'fs/promises'
 import { dirname, resolve, join, basename, relative } from 'path'
 import { env, platform } from 'process'
 import { fileURLToPath } from 'url'
 
 import { execa } from 'execa'
+import isCI from 'is-ci'
 import { dir as getTmpDir } from 'tmp-promise'
-import { expect } from 'vitest'
+import { afterAll, expect } from 'vitest'
 
 import type { Config } from '../../src/config.js'
 import { ListedFunction, zipFunctions } from '../../src/main.js'
@@ -15,6 +16,8 @@ import { ZipFunctionsOptions } from '../../src/zip.js'
 
 export const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url))
 export const BINARY_PATH = fileURLToPath(new URL('../../dist/bin.js', import.meta.url))
+
+const keepTempDirs = env.ZISI_KEEP_TEMP_DIRS !== undefined
 
 interface ZipOptions {
   length?: number
@@ -33,6 +36,18 @@ interface ZipNodeReturn extends ZipReturn {
   files: TestFunctionResult[]
 }
 
+// Accumulator of temporary directories that need to be cleaned up afterwards.
+let cleanupDirectories: string[] = []
+
+// We have to manually clean up all the created temp directories.
+// `tmp-promise` usually does this on process.exit(), but vitest runs the test files
+// in worker threads which do not emit the exit event
+afterAll(async () => {
+  await Promise.all(cleanupDirectories.map((dir) => rm(dir, { force: true, recursive: true, maxRetries: 10 })))
+
+  cleanupDirectories = []
+})
+
 export const zipNode = async function (
   fixture: string[] | string,
   zipOptions: ZipOptions = {},
@@ -49,6 +64,7 @@ export const zipNode = async function (
 
 export const getBundlerNameFromOptions = ({ config = {} }: { config?: Config }) =>
   config['*'] && config['*'].nodeBundler
+
 export const zipFixture = async function (
   fixture: string[] | string,
   { length, fixtureDir, opts = {} }: ZipOptions = {},
@@ -56,12 +72,16 @@ export const zipFixture = async function (
   const bundlerString = getBundlerNameFromOptions(opts) || 'default'
   const { path: tmpDir } = await getTmpDir({
     prefix: `zip-it-test-bundler-${bundlerString}`,
-    // Cleanup the folder on process exit even if there are still files in them
+    // Cleanup the folder even if there are still files in them
     unsafeCleanup: true,
+    keep: keepTempDirs,
   })
 
-  if (env.ZISI_KEEP_TEMP_DIRS !== undefined) {
+  if (keepTempDirs) {
     console.log(tmpDir)
+  } else if (!isCI) {
+    // We only do the cleanup locally
+    cleanupDirectories.push(tmpDir)
   }
 
   const { files } = await zipCheckFunctions(fixture, { length, fixtureDir, tmpDir, opts })
@@ -97,7 +117,6 @@ export const unzipFiles = async function (files: FunctionResult[]): Promise<Test
     Object.keys(files).map(async (key) => {
       const { path, name } = files[key]
       const dest = join(dirname(path), name)
-      await expect(path).toPathExist()
       await unzipFile(path, dest)
 
       // eslint-disable-next-line no-param-reassign

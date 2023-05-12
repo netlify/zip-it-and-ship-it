@@ -1,10 +1,8 @@
-import { tmpdir } from 'os'
-import { env, version as nodeVersion } from 'process'
+import { version as nodeVersion } from 'process'
 
 import merge from 'deepmerge'
-import { deleteAsync } from 'del'
 import semver from 'semver'
-import { afterAll, afterEach, describe, expect, vi } from 'vitest'
+import { afterEach, describe, expect, vi } from 'vitest'
 
 import { ENTRY_FILE_NAME } from '../src/runtimes/node/utils/entry_file.js'
 
@@ -15,12 +13,6 @@ import { testMany } from './helpers/test_many.js'
 vi.mock('../src/utils/shell.js', () => ({ shellUtils: { runCommand: vi.fn() } }))
 
 describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
-  afterAll(async () => {
-    if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
-      await deleteAsync(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
-    }
-  })
-
   afterEach(() => {
     vi.resetAllMocks()
   })

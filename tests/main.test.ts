@@ -1,24 +1,23 @@
-import { mkdir, readFile, chmod, symlink, unlink, writeFile, rm } from 'fs/promises'
-import { tmpdir } from 'os'
+import { mkdir, readFile, chmod, symlink, writeFile, rm } from 'fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'path'
-import { arch, env, platform, version as nodeVersion } from 'process'
+import { arch, platform, version as nodeVersion } from 'process'
 
 import cpy from 'cpy'
 import merge from 'deepmerge'
-import { deleteAsync } from 'del'
 import { execa, execaNode } from 'execa'
+import isCI from 'is-ci'
 import { pathExists } from 'path-exists'
 import semver from 'semver'
 import { dir as getTmpDir, tmpName } from 'tmp-promise'
 import unixify from 'unixify'
-import { afterAll, afterEach, describe, expect, test, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
 
-import type { Config } from '../src/config.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
 import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
 import { MODULE_FORMAT } from '../src/runtimes/node/utils/module_format.js'
 import { shellUtils } from '../src/utils/shell.js'
+import type { ZipFunctionsOptions } from '../src/zip.js'
 
 import {
   getRequires,
@@ -41,12 +40,10 @@ vi.mock('../src/utils/shell.js', () => ({ shellUtils: { runCommand: vi.fn() } })
 
 const EXECUTABLE_PERMISSION = 0o755
 
-const getZipChecksum = async function (config: Config) {
+const getZipChecksum = async function (opts: ZipFunctionsOptions) {
   const {
     files: [{ path }],
-  } = await zipFixture('many-dependencies', { opts: { config } })
-
-  expect(path).toPathExist()
+  } = await zipFixture('many-dependencies', { opts, fixtureDir: opts.basePath })
 
   return computeSha1(path)
 }
@@ -63,12 +60,6 @@ declare module 'vitest' {
 }
 
 describe('zip-it-and-ship-it', () => {
-  afterAll(async () => {
-    if (env.ZISI_KEEP_TEMP_DIRS === undefined) {
-      await deleteAsync(`${tmpdir()}/zip-it-test-bundler-*`, { force: true })
-    }
-  })
-
   afterEach(() => {
     vi.resetAllMocks()
   })
@@ -506,7 +497,7 @@ describe('zip-it-and-ship-it', () => {
       try {
         await zipNode('symlinks', { opts, fixtureDir: fixtureTmpDir })
       } finally {
-        await unlink(symlinkFile)
+        await rm(symlinkFile, { force: true, maxRetries: 10 })
       }
     })
   }
@@ -552,19 +543,44 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
-  testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
-    const fixtureTmpDir = await tmpName({ prefix: 'zip-it-test' })
-    const opts = merge(options, {
-      basePath: fixtureTmpDir,
+  describe('many-dependencies fixture', () => {
+    let fixtureTmpDir: string
+
+    beforeAll(async () => {
+      fixtureTmpDir = await tmpName({ prefix: 'many-dependencies' })
+      const basePath = `${fixtureTmpDir}/many-dependencies`
+
+      await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
+
+      await execa('npm', ['install', '--no-package-lock', '--no-audit', '--prefer-offline', '--progress=false'], {
+        cwd: basePath,
+      })
     })
 
-    const basePath = `${fixtureTmpDir}/many-dependencies`
-    await cpy('many-dependencies/**', basePath, { cwd: FIXTURES_DIR })
-    await execa('npm', ['install', '--no-package-lock', '--no-audit'], {
-      cwd: basePath,
+    afterAll(async () => {
+      // No need to cleanup on CI
+      if (isCI) return
+
+      await rm(fixtureTmpDir, { recursive: true, force: true, maxRetries: 10 })
     })
 
-    await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
+    testMany('Works with many dependencies', [...allBundleConfigs], async (options) => {
+      const opts = merge(options, {
+        basePath: fixtureTmpDir,
+      })
+
+      await zipNode('many-dependencies', { opts, fixtureDir: fixtureTmpDir })
+    })
+
+    testMany('Produces deterministic checksums', [...allBundleConfigs, 'bundler_none'], async (options) => {
+      const opts = merge(options, {
+        basePath: fixtureTmpDir,
+      })
+
+      const [checksumOne, checksumTwo] = await Promise.all([getZipChecksum(opts), getZipChecksum(opts)])
+
+      expect(checksumOne).toBe(checksumTwo)
+    })
   })
 
   testMany('Works with many function files', [...allBundleConfigs, 'bundler_none'], async (options) => {
@@ -577,14 +593,6 @@ describe('zip-it-and-ship-it', () => {
     files.forEach(({ name }) => {
       expect(names.has(name)).toBe(true)
     })
-  })
-
-  testMany('Produces deterministic checksums', [...allBundleConfigs, 'bundler_none'], async (options) => {
-    const [checksumOne, checksumTwo] = await Promise.all([
-      getZipChecksum(options.config),
-      getZipChecksum(options.config),
-    ])
-    expect(checksumOne).toBe(checksumTwo)
   })
 
   testMany('Throws when the source folder does not exist', [...allBundleConfigs, 'bundler_none'], async (options) => {
@@ -1722,7 +1730,7 @@ describe('zip-it-and-ship-it', () => {
     expect(func.path.endsWith('.zip')).toBe(true)
 
     // remove the binary before unzipping
-    await rm(join(tmpDir, 'go-func-1'))
+    await rm(join(tmpDir, 'go-func-1'), { maxRetries: 10 })
 
     const unzippedFunctions = await unzipFiles([func])
 

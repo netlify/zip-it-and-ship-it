@@ -1,11 +1,11 @@
 import { Buffer } from 'buffer'
-import { Stats, promises as fs } from 'fs'
+import { Stats } from 'fs'
+import { mkdir, rm, writeFile } from 'fs/promises'
 import os from 'os'
 import { basename, join } from 'path'
 
 import { getPath as getV2APIPath } from '@netlify/serverless-functions-api'
 import { copyFile } from 'cp-file'
-import { deleteAsync as deleteFiles } from 'del'
 import pMap from 'p-map'
 
 import {
@@ -75,11 +75,11 @@ const createDirectory = async function ({
   const functionFolder = join(destFolder, basename(filename, extension))
 
   // Deleting the functions directory in case it exists before creating it.
-  await deleteFiles(functionFolder, { force: true })
-  await fs.mkdir(functionFolder, { recursive: true })
+  await rm(functionFolder, { recursive: true, force: true, maxRetries: 3 })
+  await mkdir(functionFolder, { recursive: true })
 
   // Writing entry file.
-  await fs.writeFile(join(functionFolder, entryFilename), entryContents)
+  await writeFile(join(functionFolder, entryFilename), entryContents)
 
   // Copying source files.
   await pMap(

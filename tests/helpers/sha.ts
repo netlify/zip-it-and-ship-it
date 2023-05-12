@@ -9,7 +9,11 @@ export const computeSha1 = async function (filePath: string): Promise<string> {
   const fileStream = createReadStream(filePath)
   const hashStream = createHash('sha1')
   hashStream.setEncoding('hex')
+
   const sha1Checksum = await getStream(fileStream.pipe(hashStream))
+
+  fileStream.destroy()
+  hashStream.destroy()
 
   return sha1Checksum
 }
