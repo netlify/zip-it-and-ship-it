@@ -66,4 +66,16 @@ describe('V2 API', () => {
 
     expect(isc).toEqual({ apiVersion: 2 })
   })
+
+  test('Does not detect the V2 API when both a default export and a `handler` export are found', () => {
+    const source = `exports.default = async () => {
+      return new Response("Hello!")
+    }
+    
+    exports.handler = async () => ({ statusCode: 200, body: "Hello!" })`
+
+    const isc = findISCDeclarations(source, 'func1')
+
+    expect(isc).toEqual({})
+  })
 })
