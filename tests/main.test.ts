@@ -17,7 +17,7 @@ import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
 import { MODULE_FORMAT } from '../src/runtimes/node/utils/module_format.js'
 import { shellUtils } from '../src/utils/shell.js'
-import { ZipFunctionsOptions } from '../src/zip.js'
+import type { ZipFunctionsOptions } from '../src/zip.js'
 
 import {
   getRequires,
