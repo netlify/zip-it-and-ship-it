@@ -17,7 +17,7 @@ import { ZipFunctionsOptions } from '../../src/zip.js'
 export const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url))
 export const BINARY_PATH = fileURLToPath(new URL('../../dist/bin.js', import.meta.url))
 
-const ZISI_KEEP_TEMP_DIRS = env.ZISI_KEEP_TEMP_DIRS !== undefined
+const keepTempDirs = env.ZISI_KEEP_TEMP_DIRS !== undefined
 
 interface ZipOptions {
   length?: number
@@ -74,10 +74,10 @@ export const zipFixture = async function (
     prefix: `zip-it-test-bundler-${bundlerString}`,
     // Cleanup the folder even if there are still files in them
     unsafeCleanup: true,
-    keep: ZISI_KEEP_TEMP_DIRS,
+    keep: keepTempDirs,
   })
 
-  if (ZISI_KEEP_TEMP_DIRS) {
+  if (keepTempDirs) {
     console.log(tmpDir)
   } else if (!isCI) {
     // We only do the cleanup locally
