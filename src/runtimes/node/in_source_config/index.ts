@@ -1,6 +1,6 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
-import type { InvocationMode } from '../../../function.js'
+import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { RUNTIME } from '../../runtime.js'
@@ -74,7 +74,7 @@ export const findISCDeclarationsInPath = async (sourcePath: string, functionName
 
         case 'stream': {
           return {
-            invocationMode: 'stream',
+            invocationMode: INVOCATION_MODE.Stream,
           }
         }
 
