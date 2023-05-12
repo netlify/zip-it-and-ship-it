@@ -555,7 +555,7 @@ describe('zip-it-and-ship-it', () => {
       await execa('npm', ['install', '--no-package-lock', '--no-audit', '--prefer-offline', '--progress=false'], {
         cwd: basePath,
       })
-    })
+    }, 30_000)
 
     afterAll(async () => {
       // No need to cleanup on CI
