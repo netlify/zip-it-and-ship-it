@@ -104,10 +104,9 @@ export const parseExpression = ({
   }
 }
 
-// Parses a JS/TS file and returns the resulting AST.
-const parseFile = async (path: string) => {
-  const code = await fs.readFile(path, 'utf8')
-  const ast = parse(code, {
+// Parses a JS/TS source and returns the resulting AST.
+export const parseSource = (source: string) => {
+  const ast = parse(source, {
     plugins: ['typescript'],
     sourceType: 'module',
     // disable tokens, ranges and comments for performance and we do not use them
@@ -121,13 +120,15 @@ const parseFile = async (path: string) => {
 
 // Attempts to parse a JS/TS file at the given path, returning its AST if
 // successful, or `null` if not.
-export const safelyParseFile = async (path: string) => {
+export const safelyReadSource = async (path: string) => {
   if (!path) {
     return null
   }
 
   try {
-    return await parseFile(path)
+    const source = await fs.readFile(path, 'utf8')
+
+    return source
   } catch {
     return null
   }

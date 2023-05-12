@@ -1,35 +1,47 @@
-import type { ExportNamedDeclaration, ExportSpecifier, Expression, Statement } from '@babel/types'
+import type {
+  ExportDefaultDeclaration,
+  ExportNamedDeclaration,
+  ExportSpecifier,
+  Expression,
+  Statement,
+} from '@babel/types'
 
 import type { ISCExport } from '../in_source_config/index.js'
 
 import type { BindingMethod } from './bindings.js'
 import { isModuleExports } from './helpers.js'
 
-// Finds the main handler export in an AST.
-export const getMainExport = (nodes: Statement[], getAllBindings: BindingMethod) => {
-  let handlerExport: ISCExport[] = []
+// Finds two different types of exports in an AST:
+// - Named `handler` exports, and
+// - Default export
+export const getExports = (nodes: Statement[], getAllBindings: BindingMethod) => {
+  const handlerExports: ISCExport[] = []
 
-  nodes.find((node) => {
+  let defaultExport: ExportDefaultDeclaration | undefined
+
+  nodes.forEach((node) => {
     const esmExports = getMainExportFromESM(node, getAllBindings)
 
     if (esmExports.length !== 0) {
-      handlerExport = esmExports
+      handlerExports.push(...esmExports)
 
-      return true
+      return
     }
 
     const cjsExports = getMainExportFromCJS(node)
 
     if (cjsExports.length !== 0) {
-      handlerExport = cjsExports
+      handlerExports.push(...cjsExports)
 
-      return true
+      return
     }
 
-    return false
+    if (isDefaultExport(node)) {
+      defaultExport = node
+    }
   })
 
-  return handlerExport
+  return { defaultExport, handlerExports }
 }
 
 // Finds the main handler export in a CJS AST.
@@ -87,6 +99,8 @@ const isHandlerExport = (node: ExportNamedDeclaration['specifiers'][number]): no
       (exported.type === 'StringLiteral' && exported.value === 'handler'))
   )
 }
+
+const isDefaultExport = (node: Statement): node is ExportDefaultDeclaration => node.type === 'ExportDefaultDeclaration'
 
 // Tries to resolve the export from a binding (variable)
 // for example `let handler; handler = () => {}; export { handler }` would
