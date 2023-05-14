@@ -119,6 +119,16 @@ export const parseSource = (source: string) => {
   return ast.program
 }
 
+// Parses a JS/TS source and returns the resulting AST. If there is a parsing
+// error, it will get swallowed and `null` will be returned.
+export const safelyParseSource = (source: string) => {
+  try {
+    return parseSource(source)
+  } catch {
+    return null
+  }
+}
+
 // Attempts to parse a JS/TS file at the given path, returning its AST if
 // successful, or `null` if not.
 export const safelyReadSource = async (path: string) => {

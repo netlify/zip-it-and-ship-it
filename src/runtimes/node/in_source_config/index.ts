@@ -8,7 +8,7 @@ import { RUNTIME } from '../../runtime.js'
 import { createBindingsMethod } from '../parser/bindings.js'
 import { getExports } from '../parser/exports.js'
 import { getImports } from '../parser/imports.js'
-import { parseSource, safelyReadSource } from '../parser/index.js'
+import { safelyParseSource, safelyReadSource } from '../parser/index.js'
 
 import { parse as parseSchedule } from './properties/schedule.js'
 
@@ -54,7 +54,7 @@ export const findISCDeclarationsInPath = async (
 }
 
 export const findISCDeclarations = (source: string, functionName: string, featureFlags: FeatureFlags): ISCValues => {
-  const ast = parseSource(source)
+  const ast = safelyParseSource(source)
 
   if (ast === null) {
     return {}
