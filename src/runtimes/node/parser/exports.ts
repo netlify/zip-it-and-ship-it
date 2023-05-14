@@ -112,7 +112,10 @@ const isHandlerExport = (node: ExportNamedDeclaration['specifiers'][number]): no
 // Returns whether a given node is a default export declaration.
 const isDefaultExport = (node: Statement): node is ExportDefaultDeclaration => node.type === 'ExportDefaultDeclaration'
 
-// Finds a `config` named export and returns the corresopnding plain object.
+// Finds a `config` named export that maps to an object variable declaration,
+// like:
+//
+// export const config = { prop1: "value 1" }
 const parseConfigExport = (node: Statement) => {
   if (
     node.type === 'ExportNamedDeclaration' &&
@@ -131,6 +134,7 @@ const parseConfigExport = (node: Statement) => {
 // Takes an object expression node and returns the object resulting from the
 // subtree. The following types are accepted as values, and any others will
 // be ignored and excluded from the resulting object:
+//
 // - boolean
 // - number
 // - object
