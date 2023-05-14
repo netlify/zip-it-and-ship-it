@@ -151,7 +151,11 @@ const getListedFunctionFiles = async function (
   func: AugmentedFunctionSource,
   options: { basePath?: string; featureFlags: FeatureFlags },
 ): Promise<ListedFunctionFile[]> {
-  const srcFiles = await getSrcFiles({ ...func, ...options, runtimeAPIVersion: func.inSourceConfig?.apiVersion ?? 1 })
+  const srcFiles = await getSrcFiles({
+    ...func,
+    ...options,
+    runtimeAPIVersion: func.inSourceConfig?.runtimeAPIVersion ?? 1,
+  })
 
   return srcFiles.map((srcFile) => ({ ...getListedFunction(func), srcFile, extension: extname(srcFile) }))
 }

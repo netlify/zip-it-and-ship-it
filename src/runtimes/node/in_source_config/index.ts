@@ -15,8 +15,8 @@ import { parse as parseSchedule } from './properties/schedule.js'
 export const IN_SOURCE_CONFIG_MODULE = '@netlify/functions'
 
 export type ISCValues = {
-  apiVersion?: number
   invocationMode?: InvocationMode
+  runtimeAPIVersion?: number
   schedule?: string
 }
 
@@ -72,7 +72,7 @@ export const findISCDeclarations = (source: string, functionName: string, featur
 
   if (featureFlags.zisi_functions_api_v2 && isV2API) {
     const config: ISCValues = {
-      apiVersion: 2,
+      runtimeAPIVersion: 2,
     }
 
     if (typeof configExport.schedule === 'string') {
