@@ -116,8 +116,7 @@ const isDefaultExport = (node: Statement): node is ExportDefaultDeclaration => n
 const parseConfigExport = (node: Statement) => {
   if (
     node.type === 'ExportNamedDeclaration' &&
-    node.declaration &&
-    node.declaration.type === 'VariableDeclaration' &&
+    node.declaration?.type === 'VariableDeclaration' &&
     node.declaration.declarations[0].type === 'VariableDeclarator' &&
     node.declaration.declarations[0].id.type === 'Identifier' &&
     node.declaration.declarations[0].id.name === 'config' &&
