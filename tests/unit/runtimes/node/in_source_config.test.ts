@@ -61,7 +61,7 @@ describe('`stream` helper', () => {
 })
 
 describe('V2 API', () => {
-  test('Detects the V2 API when a default export and no `handler` export are found', () => {
+  test('ESM file with a default export and no `handler` export', () => {
     const source = `export default async () => {
       return new Response("Hello!")
     }`
@@ -71,7 +71,29 @@ describe('V2 API', () => {
     expect(isc).toEqual({ apiVersion: 2 })
   })
 
-  test('Does not detect the V2 API when both a default export and a `handler` export are found', () => {
+  test('ESM file with a default export and a `handler` export', () => {
+    const source = `export default async () => {
+      return new Response("Hello!")
+    }
+    
+    export const handler = async () => ({ statusCode: 200, body: "Hello!" })`
+
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
+
+    expect(isc).toEqual({ apiVersion: 2 })
+  })
+
+  test('TypeScript file with a default export and no `handler` export', () => {
+    const source = `export default async (req: Request) => {
+      return new Response("Hello!")
+    }`
+
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
+
+    expect(isc).toEqual({ apiVersion: 2 })
+  })
+
+  test('CommonJS file with a default export and a `handler` export', () => {
     const source = `exports.default = async () => {
       return new Response("Hello!")
     }
@@ -81,5 +103,29 @@ describe('V2 API', () => {
     const isc = findISCDeclarations(source, 'func1', featureFlags)
 
     expect(isc).toEqual({})
+  })
+
+  test('CommonJS file with a default export and no `handler` export', () => {
+    const source = `exports.default = async () => {
+      return new Response("Hello!")
+    }`
+
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
+
+    expect(isc).toEqual({})
+  })
+
+  test('Config object with `schedule` property', () => {
+    const source = `export default async () => {
+      return new Response("Hello!")
+    }
+    
+    export const config = {
+      schedule: "@daily"
+    }`
+
+    const isc = findISCDeclarations(source, 'func1', featureFlags)
+
+    expect(isc).toEqual({ apiVersion: 2, schedule: '@daily' })
   })
 })

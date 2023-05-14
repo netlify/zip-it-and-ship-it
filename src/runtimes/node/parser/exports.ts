@@ -3,6 +3,7 @@ import type {
   ExportNamedDeclaration,
   ExportSpecifier,
   Expression,
+  ObjectExpression,
   Statement,
 } from '@babel/types'
 
@@ -11,12 +12,14 @@ import type { ISCExport } from '../in_source_config/index.js'
 import type { BindingMethod } from './bindings.js'
 import { isModuleExports } from './helpers.js'
 
-// Finds two different types of exports in an AST:
-// - Named `handler` exports, and
-// - Default export
+// Finds and returns the following types of exports in an AST:
+// 1. Named `handler` function exports
+// 2. Default function export
+// 3. Named `config` object export
 export const getExports = (nodes: Statement[], getAllBindings: BindingMethod) => {
   const handlerExports: ISCExport[] = []
 
+  let configExport: Record<string, unknown> = {}
   let defaultExport: ExportDefaultDeclaration | undefined
 
   nodes.forEach((node) => {
@@ -39,9 +42,15 @@ export const getExports = (nodes: Statement[], getAllBindings: BindingMethod) =>
     if (isDefaultExport(node)) {
       defaultExport = node
     }
+
+    const config = parseConfigExport(node)
+
+    if (Object.keys(config).length !== 0) {
+      configExport = config
+    }
   })
 
-  return { defaultExport, handlerExports }
+  return { configExport, defaultExport, handlerExports }
 }
 
 // Finds the main handler export in a CJS AST.
@@ -100,7 +109,59 @@ const isHandlerExport = (node: ExportNamedDeclaration['specifiers'][number]): no
   )
 }
 
+// Returns whether a given node is a default export declaration.
 const isDefaultExport = (node: Statement): node is ExportDefaultDeclaration => node.type === 'ExportDefaultDeclaration'
+
+// Finds a `config` named export and returns the corresopnding plain object.
+const parseConfigExport = (node: Statement) => {
+  if (
+    node.type === 'ExportNamedDeclaration' &&
+    node.declaration &&
+    node.declaration.type === 'VariableDeclaration' &&
+    node.declaration.declarations[0].type === 'VariableDeclarator' &&
+    node.declaration.declarations[0].id.type === 'Identifier' &&
+    node.declaration.declarations[0].id.name === 'config' &&
+    node.declaration.declarations[0].init?.type === 'ObjectExpression'
+  ) {
+    return parseObject(node.declaration.declarations[0].init)
+  }
+
+  return {}
+}
+
+// Takes an object expression node and returns the object resulting from the
+// subtree. The following types are accepted as values, and any others will
+// be ignored and excluded from the resulting object:
+// - boolean
+// - number
+// - object
+// - string
+const parseObject = (node: ObjectExpression) =>
+  node.properties.reduce((acc, property): Record<string, unknown> => {
+    if (property.type !== 'ObjectProperty' || property.key.type !== 'Identifier') {
+      return acc
+    }
+
+    if (
+      property.value.type === 'BooleanLiteral' ||
+      property.value.type === 'NumericLiteral' ||
+      property.value.type === 'StringLiteral'
+    ) {
+      return {
+        ...acc,
+        [property.key.name]: property.value.value,
+      }
+    }
+
+    if (property.value.type === 'ObjectExpression') {
+      return {
+        ...acc,
+        [property.key.name]: parseObject(property.value),
+      }
+    }
+
+    return acc
+  }, {} as Record<string, unknown>)
 
 // Tries to resolve the export from a binding (variable)
 // for example `let handler; handler = () => {}; export { handler }` would

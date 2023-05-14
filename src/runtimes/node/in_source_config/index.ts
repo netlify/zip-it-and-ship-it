@@ -67,12 +67,19 @@ export const findISCDeclarations = (source: string, functionName: string, featur
   let scheduleFound = false
 
   const getAllBindings = createBindingsMethod(ast.body)
-  const { defaultExport, handlerExports } = getExports(ast.body, getAllBindings)
+  const { configExport, defaultExport, handlerExports } = getExports(ast.body, getAllBindings)
+  const isV2API = handlerExports.length === 0 && defaultExport !== undefined
 
-  if (featureFlags.zisi_functions_api_v2 && handlerExports.length === 0 && defaultExport !== undefined) {
-    return {
+  if (featureFlags.zisi_functions_api_v2 && isV2API) {
+    const config: ISCValues = {
       apiVersion: 2,
     }
+
+    if (typeof configExport.schedule === 'string') {
+      config.schedule = configExport.schedule
+    }
+
+    return config
   }
 
   const iscExports = handlerExports
