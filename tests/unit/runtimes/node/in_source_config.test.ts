@@ -2,65 +2,95 @@ import { describe, expect, test } from 'vitest'
 
 import { findISCDeclarations } from '../../../../src/runtimes/node/in_source_config/index.js'
 
-const featureFlags = {
-  zisi_functions_api_v2: true,
-}
-
 describe('`schedule` helper', () => {
-  test('Detects a scheduled function', () => {
-    const source = `import { schedule } from "@netlify/functions"
+  test('CommonJS file with `schedule` helper', () => {
+    const source = `const { schedule } = require("@netlify/functions")
     
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, 'func1', {})
 
     expect(isc).toEqual({ schedule: '@daily' })
   })
 
-  test('Detects a scheduled function when the wrapper function has been renamed locally', () => {
-    const source = `import { schedule as somethingElse } from "@netlify/functions"
+  test('CommonJS file with `schedule` helper renamed locally', () => {
+    const source = `const { schedule: somethingElse } = require("@netlify/functions")
     
     exports.handler = somethingElse("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, 'func1', {})
 
     expect(isc).toEqual({ schedule: '@daily' })
   })
 
-  test('Does not detect a schedule function when importing from a package other than "@netlify/functions"', () => {
-    const source = `import { schedule } from "@netlify/something-else"
+  test('CommonJS file importing from a package other than "@netlify/functions"', () => {
+    const source = `const { schedule } = require("@not-netlify/not-functions")
     
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, 'func1', {})
+
+    expect(isc).toEqual({})
+  })
+
+  test('ESM file with `schedule` helper', () => {
+    const source = `import { schedule } from "@netlify/functions"
+    
+    export const handler = schedule("@daily", () => {})`
+
+    const isc = findISCDeclarations(source, 'func1', {})
+
+    expect(isc).toEqual({ schedule: '@daily' })
+  })
+
+  test('ESM file with `schedule` helper renamed locally', () => {
+    const source = `import { schedule as somethingElse } from "@netlify/functions"
+    
+    export const handler = somethingElse("@daily", () => {})`
+
+    const isc = findISCDeclarations(source, 'func1', {})
+
+    expect(isc).toEqual({ schedule: '@daily' })
+  })
+
+  test('ESM file importing from a package other than "@netlify/functions"', () => {
+    const source = `import { schedule } from "@not-netlify/not-functions"
+    
+    export comst handler = schedule("@daily", () => {})`
+
+    const isc = findISCDeclarations(source, 'func1', {})
 
     expect(isc).toEqual({})
   })
 })
 
 describe('`stream` helper', () => {
-  test('Detects a streaming function', () => {
+  test('CommonJS file with the `stream` helper', () => {
     const source = `import { stream } from "@netlify/functions"
     
     exports.handler = stream(() => {})`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, 'func1', {})
 
     expect(isc).toEqual({ invocationMode: 'stream' })
   })
 
-  test('Does not detect a streaming function when importing from a package other than "@netlify/functions"', () => {
+  test('CommonJS file importing from a package other than "@netlify/functions"', () => {
     const source = `import { stream } from "@netlify/something-else"
     
     exports.handler = stream(() => {})`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, 'func1', {})
 
     expect(isc).toEqual({})
   })
 })
 
 describe('V2 API', () => {
+  const featureFlags = {
+    zisi_functions_api_v2: true,
+  }
+
   test('ESM file with a default export and no `handler` export', () => {
     const source = `export default async () => {
       return new Response("Hello!")
