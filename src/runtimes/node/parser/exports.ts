@@ -47,7 +47,7 @@ export const getExports = (nodes: Statement[], getAllBindings: BindingMethod) =>
 
     const config = parseConfigExport(node)
 
-    if (Object.keys(config).length !== 0) {
+    if (config !== undefined) {
       configExport = config
     }
   })
@@ -129,8 +129,6 @@ const parseConfigExport = (node: Statement) => {
   ) {
     return parseObject(node.declaration.declarations[0].init)
   }
-
-  return {}
 }
 
 // Takes an object expression node and returns the object resulting from the

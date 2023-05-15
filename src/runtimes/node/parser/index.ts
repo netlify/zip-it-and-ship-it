@@ -76,7 +76,6 @@ export const parseExpression = ({
   resolveDir: string
 }) => {
   const { program } = parse(rawExpression, {
-    plugins: ['typescript'],
     sourceType: 'module',
   })
   const [statement] = program.body
