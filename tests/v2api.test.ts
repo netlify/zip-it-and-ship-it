@@ -6,7 +6,7 @@ import { afterEach, describe, expect, vi } from 'vitest'
 
 import { ENTRY_FILE_NAME } from '../src/runtimes/node/utils/entry_file.js'
 
-import { invokeLambda } from './helpers/lambda.js'
+import { invokeLambda, readAsBuffer } from './helpers/lambda.js'
 import { zipFixture, unzipFiles, importFunctionFile } from './helpers/main.js'
 import { testMany } from './helpers/test_many.js'
 
@@ -27,7 +27,8 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       const unzippedFunctions = await unzipFiles(files)
 
       const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/${ENTRY_FILE_NAME}.mjs`)
-      const { body, headers = {}, statusCode } = await invokeLambda(func)
+      const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
+      const body = await readAsBuffer(bodyStream)
 
       expect(body).toBe('<h1>Hello world</h1>')
       expect(headers['content-type']).toBe('text/html')

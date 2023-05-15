@@ -1,4 +1,4 @@
-import { execute } from 'lambda-local'
+import { execute } from '@skn0tt/lambda-local'
 
 interface LambdaResponse {
   statusCode: number
@@ -8,7 +8,7 @@ interface LambdaResponse {
   multiValueHeaders?: {
     [header: string]: ReadonlyArray<boolean | number | string>
   }
-  body?: string
+  body?: string | NodeJS.ReadableStream
   isBase64Encoded?: boolean
 }
 
@@ -30,3 +30,32 @@ export const invokeLambda = async (func, { method = 'GET', ...options }: Request
 
   return result
 }
+
+export const readAsBuffer = (input?: NodeJS.ReadableStream | string): Promise<string> =>
+  new Promise((resolve, reject) => {
+    let buffer = ''
+
+    if (input === undefined) {
+      resolve(buffer)
+
+      return
+    }
+
+    if (typeof input === 'string') {
+      resolve(input)
+
+      return
+    }
+
+    input.on('data', (chunk) => {
+      buffer += chunk
+    })
+
+    input.on('error', (error) => {
+      reject(error)
+    })
+
+    input.on('end', () => {
+      resolve(buffer)
+    })
+  })
