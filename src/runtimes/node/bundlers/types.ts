@@ -32,6 +32,7 @@ export type BundleFunction = (
     featureFlags: FeatureFlags
     pluginsModulesPath?: string
     repositoryRoot?: string
+    runtimeAPIVersion: number
   } & FunctionSource,
 ) => Promise<{
   // Aliases are used to change the path that a file should take inside the

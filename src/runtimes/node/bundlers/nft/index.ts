@@ -28,6 +28,7 @@ const bundle: BundleFunction = async ({
   name,
   pluginsModulesPath,
   repositoryRoot = basePath,
+  runtimeAPIVersion,
 }) => {
   const { includedFiles = [], includedFilesBasePath } = config
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
@@ -46,6 +47,7 @@ const bundle: BundleFunction = async ({
     mainFile,
     pluginsModulesPath,
     name,
+    runtimeAPIVersion,
   })
   const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
   const filteredIncludedPaths = [...filterExcludedPaths(dependencyPaths, excludePatterns), ...includedPaths]
@@ -79,6 +81,7 @@ const traceFilesAndTranspile = async function ({
   mainFile,
   pluginsModulesPath,
   name,
+  runtimeAPIVersion,
 }: {
   basePath?: string
   cache: RuntimeCache
@@ -87,6 +90,7 @@ const traceFilesAndTranspile = async function ({
   mainFile: string
   pluginsModulesPath?: string
   name: string
+  runtimeAPIVersion: number
 }) {
   const {
     fileList: dependencyPaths,
@@ -140,6 +144,7 @@ const traceFilesAndTranspile = async function ({
     mainFile,
     reasons,
     name,
+    runtimeAPIVersion,
   })
 
   return {

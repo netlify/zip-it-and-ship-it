@@ -21,10 +21,15 @@ export interface EntryFile {
   filename: string
 }
 
-const getEntryFileContents = (mainPath: string, moduleFormat: string, featureFlags: FeatureFlags) => {
+const getEntryFileContents = (
+  mainPath: string,
+  moduleFormat: string,
+  featureFlags: FeatureFlags,
+  runtimeAPIVersion: number,
+) => {
   const importPath = `.${mainPath.startsWith('/') ? mainPath : `/${mainPath}`}`
 
-  if (featureFlags.zisi_functions_api_v2) {
+  if (runtimeAPIVersion === 2) {
     return [
       `import * as func from '${importPath}'`,
       `import { getLambdaHandler } from './${BOOTSTRAP_FILE_NAME}'`,
@@ -58,14 +63,16 @@ export const isNamedLikeEntryFile = (
     basePath,
     featureFlags,
     filename,
+    runtimeAPIVersion,
   }: {
     basePath: string
     featureFlags: FeatureFlags
     filename: string
+    runtimeAPIVersion: number
   },
 ) =>
   POSSIBLE_LAMBDA_ENTRY_EXTENSIONS.some((extension) => {
-    const entryFilename = getEntryFileName({ extension, featureFlags, filename })
+    const entryFilename = getEntryFileName({ extension, featureFlags, filename, runtimeAPIVersion })
     const entryFilePath = resolve(basePath, entryFilename)
 
     return entryFilePath === file
@@ -80,12 +87,14 @@ export const conflictsWithEntryFile = (
     featureFlags,
     filename,
     mainFile,
+    runtimeAPIVersion,
   }: {
     basePath: string
     extension: string
     featureFlags: FeatureFlags
     filename: string
     mainFile: string
+    runtimeAPIVersion: number
   },
 ) => {
   let hasConflict = false
@@ -103,11 +112,15 @@ export const conflictsWithEntryFile = (
 
     // If we're generating a unique entry file, we know we don't have a conflict
     // at this point.
-    if (featureFlags.zisi_unique_entry_file || featureFlags.zisi_functions_api_v2) {
+    if (featureFlags.zisi_unique_entry_file || runtimeAPIVersion === 2) {
       return
     }
 
-    if (!hasConflict && isNamedLikeEntryFile(srcFile, { basePath, featureFlags, filename }) && srcFile !== mainFile) {
+    if (
+      !hasConflict &&
+      isNamedLikeEntryFile(srcFile, { basePath, featureFlags, filename, runtimeAPIVersion }) &&
+      srcFile !== mainFile
+    ) {
       hasConflict = true
     }
   })
@@ -122,12 +135,14 @@ const getEntryFileName = ({
   extension,
   featureFlags,
   filename,
+  runtimeAPIVersion,
 }: {
   extension: ModuleFileExtension
   featureFlags: FeatureFlags
   filename: string
+  runtimeAPIVersion: number
 }) => {
-  if (featureFlags.zisi_unique_entry_file || featureFlags.zisi_functions_api_v2) {
+  if (featureFlags.zisi_unique_entry_file || runtimeAPIVersion === 2) {
     return `${ENTRY_FILE_NAME}.mjs`
   }
 
@@ -141,6 +156,7 @@ export const getEntryFile = ({
   mainFile,
   moduleFormat,
   userNamespace,
+  runtimeAPIVersion,
 }: {
   commonPrefix: string
   featureFlags: FeatureFlags
@@ -148,11 +164,12 @@ export const getEntryFile = ({
   mainFile: string
   moduleFormat: ModuleFormat
   userNamespace: string
+  runtimeAPIVersion: number
 }): EntryFile => {
   const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
   const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
-  const entryFilename = getEntryFileName({ extension, featureFlags, filename })
-  const contents = getEntryFileContents(mainPath, moduleFormat, featureFlags)
+  const entryFilename = getEntryFileName({ extension, featureFlags, filename, runtimeAPIVersion })
+  const contents = getEntryFileContents(mainPath, moduleFormat, featureFlags, runtimeAPIVersion)
 
   return {
     contents,

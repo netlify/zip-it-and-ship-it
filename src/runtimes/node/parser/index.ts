@@ -76,6 +76,7 @@ export const parseExpression = ({
   resolveDir: string
 }) => {
   const { program } = parse(rawExpression, {
+    plugins: ['typescript'],
     sourceType: 'module',
   })
   const [statement] = program.body
@@ -104,10 +105,9 @@ export const parseExpression = ({
   }
 }
 
-// Parses a JS/TS file and returns the resulting AST.
-const parseFile = async (path: string) => {
-  const code = await fs.readFile(path, 'utf8')
-  const ast = parse(code, {
+// Parses a JS/TS source and returns the resulting AST.
+export const parseSource = (source: string) => {
+  const ast = parse(source, {
     plugins: ['typescript'],
     sourceType: 'module',
     // disable tokens, ranges and comments for performance and we do not use them
@@ -119,15 +119,27 @@ const parseFile = async (path: string) => {
   return ast.program
 }
 
+// Parses a JS/TS source and returns the resulting AST. If there is a parsing
+// error, it will get swallowed and `null` will be returned.
+export const safelyParseSource = (source: string) => {
+  try {
+    return parseSource(source)
+  } catch {
+    return null
+  }
+}
+
 // Attempts to parse a JS/TS file at the given path, returning its AST if
 // successful, or `null` if not.
-export const safelyParseFile = async (path: string) => {
+export const safelyReadSource = async (path: string) => {
   if (!path) {
     return null
   }
 
   try {
-    return await parseFile(path)
+    const source = await fs.readFile(path, 'utf8')
+
+    return source
   } catch {
     return null
   }

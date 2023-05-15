@@ -36,17 +36,19 @@ export const getBundlerName = async ({
   extension,
   featureFlags,
   mainFile,
+  runtimeAPIVersion,
 }: {
   config: FunctionConfig
   extension: string
   featureFlags: FeatureFlags
   mainFile: string
+  runtimeAPIVersion: number
 }): Promise<NodeBundlerName> => {
   if (nodeBundler) {
     return nodeBundler
   }
 
-  return await getDefaultBundler({ extension, featureFlags, mainFile })
+  return await getDefaultBundler({ extension, featureFlags, mainFile, runtimeAPIVersion })
 }
 
 const ESBUILD_EXTENSIONS = new Set(['.mjs', '.ts', '.tsx', '.cts', '.mts'])
@@ -57,15 +59,14 @@ const getDefaultBundler = async ({
   extension,
   featureFlags,
   mainFile,
+  runtimeAPIVersion,
 }: {
   extension: string
   mainFile: string
   featureFlags: FeatureFlags
+  runtimeAPIVersion: number
 }): Promise<NodeBundlerName> => {
-  if (
-    (extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) ||
-    featureFlags.zisi_functions_api_v2
-  ) {
+  if ((extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) || runtimeAPIVersion === 2) {
     return NODE_BUNDLER.NFT
   }
 

@@ -43,14 +43,14 @@ interface AugmentedFunctionSource extends FunctionSource {
   inSourceConfig?: ISCValues
 }
 
-const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSource> => {
+const augmentWithISC = async (func: FunctionSource, featureFlags: FeatureFlags): Promise<AugmentedFunctionSource> => {
   // ISC is currently only supported in JavaScript and TypeScript functions
   // and only supports scheduled functions.
   if (func.runtime.name !== RUNTIME.JAVASCRIPT) {
     return func
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, func.name)
+  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, func.name, featureFlags)
 
   return { ...func, inSourceConfig }
 }
@@ -71,7 +71,9 @@ export const listFunctions = async function (
   const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
-  const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions
+  const augmentedFunctions = parseISC
+    ? await Promise.all(functions.map((func) => augmentWithISC(func, featureFlags)))
+    : functions
 
   return augmentedFunctions.map(getListedFunction)
 }
@@ -94,7 +96,7 @@ export const listFunction = async function (
     return
   }
 
-  const augmentedFunction = parseISC ? await augmentWithISC(func) : func
+  const augmentedFunction = parseISC ? await augmentWithISC(func, featureFlags) : func
 
   return getListedFunction(augmentedFunction)
 }
@@ -116,7 +118,9 @@ export const listFunctionsFiles = async function (
   const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
-  const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions
+  const augmentedFunctions = parseISC
+    ? await Promise.all(functions.map((func) => augmentWithISC(func, featureFlags)))
+    : functions
   const listedFunctionsFiles = await Promise.all(
     augmentedFunctions.map((func) => getListedFunctionFiles(func, { basePath, featureFlags })),
   )
@@ -147,7 +151,11 @@ const getListedFunctionFiles = async function (
   func: AugmentedFunctionSource,
   options: { basePath?: string; featureFlags: FeatureFlags },
 ): Promise<ListedFunctionFile[]> {
-  const srcFiles = await getSrcFiles({ ...func, ...options })
+  const srcFiles = await getSrcFiles({
+    ...func,
+    ...options,
+    runtimeAPIVersion: func.inSourceConfig?.runtimeAPIVersion ?? 1,
+  })
 
   return srcFiles.map((srcFile) => ({ ...getListedFunction(func), srcFile, extension: extname(srcFile) }))
 }

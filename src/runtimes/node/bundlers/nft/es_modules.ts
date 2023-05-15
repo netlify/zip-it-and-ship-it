@@ -61,6 +61,7 @@ export const processESM = async ({
   mainFile,
   reasons,
   name,
+  runtimeAPIVersion,
 }: {
   basePath: string | undefined
   cache: RuntimeCache
@@ -70,15 +71,13 @@ export const processESM = async ({
   mainFile: string
   reasons: NodeFileTraceReasons
   name: string
+  runtimeAPIVersion: number
 }): Promise<{ rewrites?: Map<string, string>; moduleFormat: ModuleFormat }> => {
   const extension = extname(mainFile)
 
   // If this is a .mjs file and we want to output pure ESM files, we don't need
   // to transpile anything.
-  if (
-    extension === MODULE_FILE_EXTENSION.MJS &&
-    (featureFlags.zisi_pure_esm_mjs || featureFlags.zisi_functions_api_v2)
-  ) {
+  if (extension === MODULE_FILE_EXTENSION.MJS && (featureFlags.zisi_pure_esm_mjs || runtimeAPIVersion === 2)) {
     return {
       moduleFormat: MODULE_FORMAT.ESM,
     }
@@ -87,7 +86,7 @@ export const processESM = async ({
   const entrypointIsESM = isEntrypointESM({ basePath, esmPaths, mainFile })
 
   if (!entrypointIsESM) {
-    if (featureFlags.zisi_functions_api_v2) {
+    if (runtimeAPIVersion === 2) {
       throw new FunctionBundlingUserError(
         `The function '${name}' must use the ES module syntax. To learn more, visit https://ntl.fyi/esm.`,
         {
@@ -106,17 +105,13 @@ export const processESM = async ({
   const packageJson = await getPackageJsonIfAvailable(dirname(mainFile))
   const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
-  if (
-    (featureFlags.zisi_pure_esm || featureFlags.zisi_functions_api_v2) &&
-    packageJson.type === 'module' &&
-    nodeSupport.esm
-  ) {
+  if ((featureFlags.zisi_pure_esm || runtimeAPIVersion === 2) && packageJson.type === 'module' && nodeSupport.esm) {
     return {
       moduleFormat: MODULE_FORMAT.ESM,
     }
   }
 
-  if (featureFlags.zisi_functions_api_v2) {
+  if (runtimeAPIVersion === 2) {
     throw new FunctionBundlingUserError(
       `The function '${name}' must use the ES module syntax. To learn more, visit https://ntl.fyi/esm.`,
       {

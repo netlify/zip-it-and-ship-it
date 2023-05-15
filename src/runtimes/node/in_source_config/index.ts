@@ -1,13 +1,14 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
+import { FeatureFlags } from '../../../feature_flags.js'
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { RUNTIME } from '../../runtime.js'
 import { createBindingsMethod } from '../parser/bindings.js'
-import { getMainExport } from '../parser/exports.js'
+import { getExports } from '../parser/exports.js'
 import { getImports } from '../parser/imports.js'
-import { safelyParseFile } from '../parser/index.js'
+import { safelyParseSource, safelyReadSource } from '../parser/index.js'
 
 import { parse as parseSchedule } from './properties/schedule.js'
 
@@ -15,6 +16,7 @@ export const IN_SOURCE_CONFIG_MODULE = '@netlify/functions'
 
 export type ISCValues = {
   invocationMode?: InvocationMode
+  runtimeAPIVersion?: number
   schedule?: string
 }
 
@@ -37,22 +39,50 @@ const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean
 // Parses a JS/TS file and looks for in-source config declarations. It returns
 // an array of all declarations found, with `property` indicating the name of
 // the property and `data` its value.
-export const findISCDeclarationsInPath = async (sourcePath: string, functionName: string): Promise<ISCValues> => {
-  const ast = await safelyParseFile(sourcePath)
+export const findISCDeclarationsInPath = async (
+  sourcePath: string,
+  functionName: string,
+  featureFlags: FeatureFlags,
+): Promise<ISCValues> => {
+  const source = await safelyReadSource(sourcePath)
+
+  if (source === null) {
+    return {}
+  }
+
+  return findISCDeclarations(source, functionName, featureFlags)
+}
+
+export const findISCDeclarations = (source: string, functionName: string, featureFlags: FeatureFlags): ISCValues => {
+  const ast = safelyParseSource(source)
 
   if (ast === null) {
     return {}
   }
 
   const imports = ast.body.flatMap((node) => getImports(node, IN_SOURCE_CONFIG_MODULE))
-
   const scheduledFunctionExpected = imports.some(({ imported }) => imported === 'schedule')
+
   let scheduledFunctionFound = false
   let scheduleFound = false
 
   const getAllBindings = createBindingsMethod(ast.body)
-  const mainExports = getMainExport(ast.body, getAllBindings)
-  const iscExports = mainExports
+  const { configExport, defaultExport, handlerExports } = getExports(ast.body, getAllBindings)
+  const isV2API = handlerExports.length === 0 && defaultExport !== undefined
+
+  if (featureFlags.zisi_functions_api_v2 && isV2API) {
+    const config: ISCValues = {
+      runtimeAPIVersion: 2,
+    }
+
+    if (typeof configExport.schedule === 'string') {
+      config.schedule = configExport.schedule
+    }
+
+    return config
+  }
+
+  const iscExports = handlerExports
     .map(({ args, local: exportName }) => {
       const matchingImport = imports.find(({ local: importName }) => importName === exportName)
 
