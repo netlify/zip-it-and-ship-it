@@ -74,6 +74,24 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany(
+    'Zips Node.js function files with latest version of babel',
+    [...allBundleConfigs, 'bundler_none'],
+    async (options) => {
+      const fixtureName = 'simple'
+      const { files } = await zipNode(fixtureName, {
+        opts: {
+          ...options,
+          featureFlags: { zisi_use_latest_babel_version: true },
+        },
+      })
+
+      expect(files[0].invocationMode).toBeUndefined()
+      expect(files[0].runtime).toBe('js')
+      expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function.js'))
+    },
+  )
+
+  testMany(
     'Zips Node.js function files from an internal functions dir with a configured fields',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {

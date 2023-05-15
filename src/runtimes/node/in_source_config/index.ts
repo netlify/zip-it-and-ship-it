@@ -1,6 +1,6 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
-import { FeatureFlags } from '../../../feature_flags.js'
+import type { FeatureFlags } from '../../../feature_flags.js'
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
@@ -54,7 +54,7 @@ export const findISCDeclarationsInPath = async (
 }
 
 export const findISCDeclarations = (source: string, functionName: string, featureFlags: FeatureFlags): ISCValues => {
-  const ast = safelyParseSource(source)
+  const ast = safelyParseSource(source, featureFlags)
 
   if (ast === null) {
     return {}
