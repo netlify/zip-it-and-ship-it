@@ -41,6 +41,8 @@ export const getExports = (nodes: Statement[], getAllBindings: BindingMethod) =>
 
     if (isDefaultExport(node)) {
       defaultExport = node
+
+      return
     }
 
     const config = parseConfigExport(node)
