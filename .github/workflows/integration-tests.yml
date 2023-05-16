@@ -33,7 +33,7 @@ jobs:
           cache-dependency-path: |
             zip-it-and-ship-it/package-lock.json
             test-site/package-lock.json
-            netlify-cli/npm-shrinkwrap.json
+            netlify-cli/package-lock.json
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli
@@ -78,7 +78,6 @@ jobs:
           DEBUG: '@cypress/github-action'
           CYPRESS_baseUrl: ${{ env.deploy_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CYPRESS_RECORD_KEY: ${{ secrets.DEFAULT_CYPRESS_RECORD_KEY }}
       - name: Find Comment
         uses: peter-evans/find-comment@v2
         id: fc
