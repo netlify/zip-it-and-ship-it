@@ -69,7 +69,7 @@ jobs:
         with:
           working-directory: test-site
           browser: chrome
-          record: false
+          record: true
           parallel: true
           config-file: cypress/config/ci.config.ts
           group: 'ZISI Integration Test - Next'
