@@ -54,6 +54,7 @@
     "url": "https://github.com/netlify/zip-it-and-ship-it/issues"
   },
   "dependencies": {
+    "@babel/parser_latest": "npm:@babel/parser@7.21.8",
     "@babel/parser": "7.16.8",
     "@netlify/binary-info": "^1.0.0",
     "@netlify/esbuild": "0.14.39",

@@ -4,6 +4,7 @@ import type { Plugin } from '@netlify/esbuild'
 import { findUp, findUpStop, pathExists } from 'find-up'
 import normalizePath from 'normalize-path'
 
+import type { FeatureFlags } from '../../../../feature_flags.js'
 import { parseExpression } from '../../parser/index.js'
 import { readPackageJson } from '../../utils/package_json.js'
 
@@ -22,12 +23,14 @@ export const getDynamicImportsPlugin = ({
   moduleNames,
   processImports,
   srcDir,
+  featureFlags,
 }: {
   basePath?: string
   includedPaths: Set<string>
   moduleNames: Set<string>
   processImports: boolean
   srcDir: string
+  featureFlags: FeatureFlags
 }): Plugin => ({
   name: 'dynamic-imports',
   setup(build) {
@@ -41,7 +44,8 @@ export const getDynamicImportsPlugin = ({
       // Also don't parse the expression if we're not interested in processing
       // the dynamic import expressions.
       if (basePath && processImports) {
-        const { includedPathsGlob, type: expressionType } = parseExpression({ basePath, expression, resolveDir }) || {}
+        const { includedPathsGlob, type: expressionType } =
+          parseExpression({ basePath, expression, resolveDir, featureFlags }) || {}
 
         if (includedPathsGlob) {
           // The parser has found a glob of paths that should be included in the
