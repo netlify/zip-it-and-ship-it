@@ -1,9 +1,11 @@
 import { promises as fs } from 'fs'
 import { join, relative, resolve } from 'path'
 
-import { parse } from '@babel/parser'
+import { parse as parseOld } from '@babel/parser'
+import { parse as parseLatest } from '@babel/parser_latest'
 import type { BinaryExpression, CallExpression, Expression, PrivateName, TemplateLiteral, TSType } from '@babel/types'
 
+import type { FeatureFlags } from '../../../feature_flags.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 
 const GLOB_WILDCARD = '**'
@@ -63,6 +65,8 @@ const getWildcardFromASTNode = (node: Expression | PrivateName | TSType) => {
   }
 }
 
+const getParser = (featureFlags: FeatureFlags) => (featureFlags.zisi_use_latest_babel_version ? parseOld : parseLatest)
+
 // Tries to parse an expression, returning an object with:
 // - `includedPathsGlob`: A glob with the files to be included in the bundle
 // - `type`: The expression type (e.g. "require", "import")
@@ -70,11 +74,15 @@ export const parseExpression = ({
   basePath,
   expression: rawExpression,
   resolveDir,
+  featureFlags,
 }: {
   basePath: string
   expression: string
   resolveDir: string
+  featureFlags: FeatureFlags
 }) => {
+  const parse = getParser(featureFlags)
+
   const { program } = parse(rawExpression, {
     sourceType: 'module',
   })
@@ -105,7 +113,9 @@ export const parseExpression = ({
 }
 
 // Parses a JS/TS source and returns the resulting AST.
-export const parseSource = (source: string) => {
+const parseSource = (source: string, featureFlags: FeatureFlags) => {
+  const parse = getParser(featureFlags)
+
   const ast = parse(source, {
     plugins: ['typescript'],
     sourceType: 'module',
@@ -120,9 +130,9 @@ export const parseSource = (source: string) => {
 
 // Parses a JS/TS source and returns the resulting AST. If there is a parsing
 // error, it will get swallowed and `null` will be returned.
-export const safelyParseSource = (source: string) => {
+export const safelyParseSource = (source: string, featureFlags: FeatureFlags) => {
   try {
-    return parseSource(source)
+    return parseSource(source, featureFlags)
   } catch {
     return null
   }
