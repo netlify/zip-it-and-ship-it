@@ -69,7 +69,7 @@ jobs:
         with:
           working-directory: test-site
           browser: chrome
-          record: true
+          record: false
           parallel: true
           config-file: cypress/config/ci.config.ts
           group: 'ZISI Integration Test - Next'
@@ -78,7 +78,6 @@ jobs:
           DEBUG: '@cypress/github-action'
           CYPRESS_baseUrl: ${{ env.deploy_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CYPRESS_RECORD_KEY: ${{ secrets.DEFAULT_CYPRESS_RECORD_KEY }}
       - name: Find Comment
         uses: peter-evans/find-comment@v2
         id: fc
