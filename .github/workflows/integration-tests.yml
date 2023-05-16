@@ -33,7 +33,7 @@ jobs:
           cache-dependency-path: |
             zip-it-and-ship-it/package-lock.json
             test-site/package-lock.json
-            netlify-cli/npm-shrinkwrap.json
+            netlify-cli/package-lock.json
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli
