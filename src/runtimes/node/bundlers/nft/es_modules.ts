@@ -5,10 +5,13 @@ import { NodeFileTraceReasons } from '@vercel/nft'
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import type { RuntimeCache } from '../../../../utils/cache.js'
+import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { cachedReadFile } from '../../../../utils/fs.js'
+import { RUNTIME } from '../../../runtime.js'
 import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
+import { NODE_BUNDLER } from '../types.js'
 
 import { transpile } from './transpile.js'
 
@@ -58,6 +61,7 @@ export const processESM = async ({
   mainFile,
   reasons,
   name,
+  runtimeAPIVersion,
 }: {
   basePath: string | undefined
   cache: RuntimeCache
@@ -67,12 +71,13 @@ export const processESM = async ({
   mainFile: string
   reasons: NodeFileTraceReasons
   name: string
+  runtimeAPIVersion: number
 }): Promise<{ rewrites?: Map<string, string>; moduleFormat: ModuleFormat }> => {
   const extension = extname(mainFile)
 
   // If this is a .mjs file and we want to output pure ESM files, we don't need
   // to transpile anything.
-  if (extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) {
+  if (extension === MODULE_FILE_EXTENSION.MJS && (featureFlags.zisi_pure_esm_mjs || runtimeAPIVersion === 2)) {
     return {
       moduleFormat: MODULE_FORMAT.ESM,
     }
@@ -81,6 +86,17 @@ export const processESM = async ({
   const entrypointIsESM = isEntrypointESM({ basePath, esmPaths, mainFile })
 
   if (!entrypointIsESM) {
+    if (runtimeAPIVersion === 2) {
+      throw new FunctionBundlingUserError(
+        `The function '${name}' must use the ES module syntax. To learn more, visit https://ntl.fyi/esm.`,
+        {
+          functionName: name,
+          runtime: RUNTIME.JAVASCRIPT,
+          bundler: NODE_BUNDLER.NFT,
+        },
+      )
+    }
+
     return {
       moduleFormat: MODULE_FORMAT.COMMONJS,
     }
@@ -89,10 +105,21 @@ export const processESM = async ({
   const packageJson = await getPackageJsonIfAvailable(dirname(mainFile))
   const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
-  if (featureFlags.zisi_pure_esm && packageJson.type === 'module' && nodeSupport.esm) {
+  if ((featureFlags.zisi_pure_esm || runtimeAPIVersion === 2) && packageJson.type === 'module' && nodeSupport.esm) {
     return {
       moduleFormat: MODULE_FORMAT.ESM,
     }
+  }
+
+  if (runtimeAPIVersion === 2) {
+    throw new FunctionBundlingUserError(
+      `The function '${name}' must use the ES module syntax. To learn more, visit https://ntl.fyi/esm.`,
+      {
+        functionName: name,
+        runtime: RUNTIME.JAVASCRIPT,
+        bundler: NODE_BUNDLER.NFT,
+      },
+    )
   }
 
   const rewrites = await transpileESM({ basePath, cache, config, esmPaths, reasons, name })

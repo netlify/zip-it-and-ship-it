@@ -2,6 +2,7 @@ import { join } from 'path'
 
 import { copyFile } from 'cp-file'
 
+import { INVOCATION_MODE } from '../../function.js'
 import getInternalValue from '../../utils/get_internal_value.js'
 import { GetSrcFilesFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.js'
 
@@ -15,13 +16,14 @@ import { zipNodeJs } from './utils/zip.js'
 
 // A proxy for the `getSrcFiles` that calls `getSrcFiles` on the bundler
 const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
-  const { config, extension, featureFlags, mainFile, srcDir } = parameters
+  const { config, extension, featureFlags, mainFile, runtimeAPIVersion, srcDir } = parameters
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
     config,
     extension,
     featureFlags,
     mainFile,
+    runtimeAPIVersion,
   })
   const bundler = getBundler(bundlerName)
   const result = await bundler.getSrcFiles({ ...parameters, pluginsModulesPath })
@@ -47,15 +49,6 @@ const zipFunction: ZipFunction = async function ({
   stat,
   isInternal,
 }) {
-  const pluginsModulesPath = await getPluginsModulesPath(srcDir)
-  const bundlerName = await getBundlerName({
-    config,
-    extension,
-    featureFlags,
-    mainFile,
-  })
-  const bundler = getBundler(bundlerName)
-
   // If the file is a zip, we assume the function is bundled and ready to go.
   // We simply copy it to the destination path with no further processing.
   if (extension === '.zip') {
@@ -66,6 +59,17 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath }
   }
 
+  const inSourceConfig = await findISCDeclarationsInPath(mainFile, name, featureFlags)
+  const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
+  const pluginsModulesPath = await getPluginsModulesPath(srcDir)
+  const bundlerName = await getBundlerName({
+    config,
+    extension,
+    featureFlags,
+    mainFile,
+    runtimeAPIVersion,
+  })
+  const bundler = getBundler(bundlerName)
   const {
     aliases = new Map(),
     cleanupFunction,
@@ -91,12 +95,11 @@ const zipFunction: ZipFunction = async function ({
     pluginsModulesPath,
     repositoryRoot,
     runtime,
+    runtimeAPIVersion,
     srcDir,
     srcPath,
     stat,
   })
-
-  const inSourceConfig = await findISCDeclarationsInPath(mainFile, name)
 
   createPluginsModulesPathAliases(srcFiles, pluginsModulesPath, aliases, finalBasePath)
 
@@ -112,10 +115,20 @@ const zipFunction: ZipFunction = async function ({
     mainFile: finalMainFile,
     moduleFormat,
     rewrites,
+    runtimeAPIVersion,
     srcFiles,
   })
 
   await cleanupFunction?.()
+
+  // Getting the invocation mode from ISC, in case the function is using the
+  // `stream` helper.
+  let { invocationMode } = inSourceConfig
+
+  // If we're using the V2 API, force the invocation to "stream".
+  if (runtimeAPIVersion === 2) {
+    invocationMode = INVOCATION_MODE.Stream
+  }
 
   return {
     bundler: bundlerName,
@@ -124,6 +137,7 @@ const zipFunction: ZipFunction = async function ({
     inputs,
     includedFiles,
     inSourceConfig,
+    invocationMode,
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath,

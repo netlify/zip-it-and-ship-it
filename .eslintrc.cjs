@@ -6,6 +6,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    complexity: 'off',
     'import/extensions': ['error', 'ignorePackages'],
     'max-lines': 'off',
     'n/no-missing-import': 'off',

@@ -3,9 +3,11 @@ import { resolve } from 'path'
 import { arch, platform } from 'process'
 
 import type { FeatureFlags } from './feature_flags.js'
+import type { InvocationMode } from './function.js'
 import type { FunctionResult } from './utils/format_result.js'
 
 interface ManifestFunction {
+  invocationMode?: InvocationMode
   mainFile: string
   name: string
   path: string
@@ -50,12 +52,24 @@ export const createManifest = async ({
 }
 
 const formatFunctionForManifest = (
-  { bundler, displayName, generator, mainFile, name, path, runtime, runtimeVersion, schedule }: FunctionResult,
+  {
+    bundler,
+    displayName,
+    generator,
+    invocationMode,
+    mainFile,
+    name,
+    path,
+    runtime,
+    runtimeVersion,
+    schedule,
+  }: FunctionResult,
   featureFlags: FeatureFlags,
 ): ManifestFunction => ({
   bundler,
   displayName,
   generator,
+  invocationMode,
   mainFile,
   name,
   runtimeVersion: featureFlags.functions_inherit_build_nodejs_version ? runtimeVersion : undefined,
