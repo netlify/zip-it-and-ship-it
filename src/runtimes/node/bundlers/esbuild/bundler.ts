@@ -7,6 +7,7 @@ import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
+import { Logger } from '../../../../utils/logger.js'
 import { RUNTIME } from '../../../runtime.js'
 import { getFileExtensionForFormat, MODULE_FORMAT } from '../../utils/module_format.js'
 import { NODE_BUNDLER } from '../types.js'
@@ -32,6 +33,7 @@ export const bundleJsFile = async function ({
   externalModules = [],
   featureFlags,
   ignoredModules = [],
+  logger,
   mainFile,
   name,
   srcDir,
@@ -43,6 +45,7 @@ export const bundleJsFile = async function ({
   externalModules: string[]
   featureFlags: FeatureFlags
   ignoredModules: string[]
+  logger: Logger
   mainFile: string
   name: string
   srcDir: string
@@ -144,6 +147,13 @@ export const bundleJsFile = async function ({
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
     const additionalPaths = [...dynamicImportsIncludedPaths, ...includedFilesFromModuleDetection]
+
+    if (featureFlags.zisi_log_dynamic_imports && dynamicImportsIncludedPaths.size !== 0) {
+      // Capping the number of paths to avoid large log volumes.
+      const paths = [...dynamicImportsIncludedPaths].slice(0, 20).join(', ')
+
+      logger.system(`Functions bundling included paths by parsing dynamic import: ${paths}`)
+    }
 
     return {
       additionalPaths,
