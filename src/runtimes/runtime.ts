@@ -4,6 +4,7 @@ import type { FeatureFlags } from '../feature_flags.js'
 import type { FunctionSource, InvocationMode, SourceFile } from '../function.js'
 import { ObjectValues } from '../types/utils.js'
 import type { RuntimeCache } from '../utils/cache.js'
+import { Logger } from '../utils/logger.js'
 
 import type { NodeBundlerName } from './node/bundlers/types.js'
 import type { ISCValues } from './node/in_source_config/index.js'
@@ -63,6 +64,7 @@ export type ZipFunction = (
     config: FunctionConfig
     destFolder: string
     featureFlags: FeatureFlags
+    logger: Logger
     repositoryRoot?: string
     generator?: string
     isInternal: boolean

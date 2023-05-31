@@ -5,6 +5,7 @@ import type { FeatureFlags } from '../../../feature_flags.js'
 import type { FunctionSource } from '../../../function.js'
 import { ObjectValues } from '../../../types/utils.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
+import { Logger } from '../../../utils/logger.js'
 import type { ModuleFormat } from '../utils/module_format.js'
 
 export const NODE_BUNDLER = {
@@ -30,6 +31,7 @@ export type BundleFunction = (
     cache: RuntimeCache
     config: FunctionConfig
     featureFlags: FeatureFlags
+    logger: Logger
     pluginsModulesPath?: string
     repositoryRoot?: string
     runtimeAPIVersion: number

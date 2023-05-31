@@ -1502,11 +1502,13 @@ describe('zip-it-and-ship-it', () => {
   })
 
   test('Adds a runtime shim and includes the files needed for dynamic imports using a template literal', async () => {
+    const systemLog = vi.fn()
     const fixtureName = 'node-module-dynamic-import-template-literal'
     const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
+        systemLog,
       },
     })
 
@@ -1518,6 +1520,10 @@ describe('zip-it-and-ship-it', () => {
     expect(values).toEqual(Array(expectedLength).fill(true))
     expect(() => func('two')).toThrowError()
     expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
+
+    expect(systemLog).toHaveBeenCalledWith(
+      'Functions bundling included paths by parsing dynamic import: node_modules/@org/test/files/**, node_modules/@org/test/files/**.js',
+    )
   })
 
   test('Leaves dynamic imports untouched when the files required to resolve the expression cannot be packaged at build time', async () => {
