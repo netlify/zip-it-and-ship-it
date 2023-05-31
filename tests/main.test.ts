@@ -1508,6 +1508,9 @@ describe('zip-it-and-ship-it', () => {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
+        featureFlags: {
+          zisi_log_dynamic_imports: true,
+        },
         systemLog,
       },
     })
