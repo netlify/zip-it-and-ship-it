@@ -1524,8 +1524,13 @@ describe('zip-it-and-ship-it', () => {
     expect(() => func('two')).toThrowError()
     expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
 
+    const pathsFromDynamicImports = [
+      join('node_modules', '@org', 'test', 'files', '**'),
+      join('node_modules', '@org', 'test', 'files', '**.js'),
+    ]
+
     expect(systemLog).toHaveBeenCalledWith(
-      'Functions bundling included paths by parsing dynamic import: node_modules/@org/test/files/**, node_modules/@org/test/files/**.js',
+      `Functions bundling included paths by parsing dynamic import: ${pathsFromDynamicImports.join(', ')}`,
     )
   })
 
