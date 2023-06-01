@@ -128,7 +128,7 @@ The following properties are accepted:
 - `nodeVersion`
 
   - _Type_: `string`\
-  - _Default value_: `16`
+  - _Default value_: `18`
 
   The version of Node.js to use as the compilation target for bundlers. This is also used to determine the runtime
   reported in the manifest. Any valid and supported Node.js version is accepted. Examples:
@@ -478,9 +478,9 @@ need to be the same as the one used when installing those native modules.
 
 In Netlify, this is done by ensuring that the following Node.js versions are the same:
 
-- Build-time Node.js version: this defaults to Node `16`, but can be
+- Build-time Node.js version: this defaults to Node `18`, but can be
   [overridden with a `.nvmrc` or `NODE_VERSION` environment variable](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript).
-- Function runtime Node.js version: this defaults to `nodejs16.x` but can be
+- Function runtime Node.js version: this defaults to `nodejs18.x` but can be
   [overridden with a `AWS_LAMBDA_JS_RUNTIME` environment variable](https://docs.netlify.com/functions/optional-configuration/?fn-language=js#node-js-version-for-runtime-2).
 
 Note that this problem might not apply for Node.js native modules using the [N-API](https://nodejs.org/api/n-api.html).

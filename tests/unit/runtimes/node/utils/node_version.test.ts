@@ -11,6 +11,7 @@ describe('getNodeVersion', () => {
     ['nodejs14.x', 14],
     ['nodejs12.x', 12],
     ['nodejs16.x', 16],
+    ['nodejs18.x', 18],
     ['18.x', 18],
     ['node16', 16],
     ['14.1.1', 14],
