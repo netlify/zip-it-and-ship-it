@@ -17,7 +17,6 @@ import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 import { getLogger, LogFunction } from './utils/logger.js'
 import { nonNullable } from './utils/non_nullable.js'
-import { endTimer, startTimer } from './utils/timer.js'
 
 export interface ZipFunctionOptions {
   archiveFormat?: ArchiveFormat
@@ -92,7 +91,6 @@ export const zipFunctions = async function (
         ...(func.config.nodeModuleFormat === MODULE_FORMAT.ESM ? { zisi_pure_esm_mjs: true } : {}),
       }
 
-      const startIntervalTime = startTimer()
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
         basePath,
@@ -112,15 +110,6 @@ export const zipFunctions = async function (
         stat: func.stat,
         isInternal: Boolean(internalFunctionsPath && isPathInside(func.srcPath, internalFunctionsPath)),
       })
-      const durationNs = endTimer(startIntervalTime)
-      const logObject = {
-        name: func.name,
-        config: func.config,
-        featureFlags: functionFlags,
-        durationNs,
-      }
-
-      logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
 
       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
     },
@@ -190,7 +179,6 @@ export const zipFunction = async function (
     // extend the feature flags with `zisi_pure_esm_mjs` enabled.
     ...(config.nodeModuleFormat === MODULE_FORMAT.ESM ? { zisi_pure_esm_mjs: true } : {}),
   }
-  const startIntervalTime = startTimer()
   const zipResult = await runtime.zipFunction({
     archiveFormat,
     basePath,
@@ -210,15 +198,6 @@ export const zipFunction = async function (
     stat: stats,
     isInternal: Boolean(internalFunctionsPath && isPathInside(srcPath, internalFunctionsPath)),
   })
-  const durationNs = endTimer(startIntervalTime)
-  const logObject = {
-    name,
-    config,
-    featureFlags: functionFlags,
-    durationNs,
-  }
-
-  logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })
 }
