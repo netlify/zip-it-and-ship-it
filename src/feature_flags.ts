@@ -33,9 +33,6 @@ export const defaultFlags = {
 
   // Create unique entry file instead of a file that is based on the function name.
   zisi_unique_entry_file: false,
-
-  // Uses the latest babel parser version
-  zisi_use_latest_babel_version: false,
 } as const
 
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>

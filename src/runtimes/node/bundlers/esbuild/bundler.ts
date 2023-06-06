@@ -81,7 +81,6 @@ export const bundleJsFile = async function ({
       moduleNames: nodeModulesWithDynamicImports,
       processImports: config.processDynamicNodeImports !== false,
       srcDir,
-      featureFlags,
     }),
   ]
 
