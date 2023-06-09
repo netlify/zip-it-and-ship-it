@@ -6,5 +6,12 @@
   "lockFileMaintenance": { "enabled": true },
   "semanticCommits": "enabled",
   "dependencyDashboard": true,
-  "automerge": false
+  "automerge": false,
+  "postUpdateOptions": ["npmDedupe"],
+  "packageRules": [
+    {
+      "matchFiles": ["package.json"],
+      "extends": [":pinDevDependencies"]
+    }
+  ]
 }
