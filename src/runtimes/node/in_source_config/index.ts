@@ -54,7 +54,7 @@ export const findISCDeclarationsInPath = async (
 }
 
 export const findISCDeclarations = (source: string, functionName: string, featureFlags: FeatureFlags): ISCValues => {
-  const ast = safelyParseSource(source, featureFlags)
+  const ast = safelyParseSource(source)
 
   if (ast === null) {
     return {}
