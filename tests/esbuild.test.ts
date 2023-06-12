@@ -1,6 +1,7 @@
 import { build } from '@netlify/esbuild'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+import { ARCHIVE_FORMAT } from '../src/archive.js'
 import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 
 import { zipFixture } from './helpers/main.js'
@@ -30,7 +31,10 @@ describe('esbuild', () => {
     // - in Node <10 we should see `try {} catch (e) {}`
     // - in Node >= 10 we should see `try {} catch {}`
     await zipFixture('node-module-optional-catch-binding', {
-      opts: { archiveFormat: 'none', config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD, nodeVersion: '18.x' } } },
+      opts: {
+        archiveFormat: ARCHIVE_FORMAT.NONE,
+        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD, nodeVersion: '18.x' } },
+      },
     })
 
     expect(build).toHaveBeenCalledWith(expect.objectContaining({ target: ['node18'] }))

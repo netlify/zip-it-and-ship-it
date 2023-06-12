@@ -12,6 +12,7 @@ import { dir as getTmpDir, tmpName } from 'tmp-promise'
 import unixify from 'unixify'
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
 
+import { ARCHIVE_FORMAT } from '../src/archive.js'
 import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler.js'
 import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
@@ -305,7 +306,7 @@ describe('zip-it-and-ship-it', () => {
       const length = 4
       const fixtureName = 'local-require-esm'
       const opts = merge(options, {
-        archiveFormat: 'none' as const,
+        archiveFormat: ARCHIVE_FORMAT.NONE,
         basePath: join(FIXTURES_DIR, fixtureName),
         config: {
           '*': {
@@ -1201,7 +1202,7 @@ describe('zip-it-and-ship-it', () => {
 
   testMany('Generates a directory if `archiveFormat` is set to `none`', [...allBundleConfigs], async (options) => {
     const opts = merge(options, {
-      archiveFormat: 'none' as const,
+      archiveFormat: ARCHIVE_FORMAT.NONE,
     })
     const { files } = await zipNode('node-module-included', {
       opts,
@@ -1574,7 +1575,7 @@ describe('zip-it-and-ship-it', () => {
     const fixtureName = 'node-module-dynamic-import-4'
     const { tmpDir } = await zipNode(fixtureName, {
       opts: {
-        archiveFormat: 'none',
+        archiveFormat: ARCHIVE_FORMAT.NONE,
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
@@ -2180,7 +2181,7 @@ describe('zip-it-and-ship-it', () => {
     const basePath = join(FIXTURES_DIR, fixtureName)
     const { files } = await zipFixture(fixtureName, {
       opts: {
-        archiveFormat: 'none',
+        archiveFormat: ARCHIVE_FORMAT.NONE,
         basePath,
         config: { '*': { nodeBundler: NODE_BUNDLER.NFT, nodeSourcemap: true } },
       },
