@@ -122,7 +122,7 @@ export const findISCDeclarations = (source: string, functionName: string, featur
 
   const mergedExports: ISCValues = iscExports.reduce((acc, obj) => ({ ...acc, ...obj }), {})
 
-  return mergedExports
+  return { ...mergedExports, runtimeAPIVersion: 1 }
 }
 
 export type ISCHandlerArg = ArgumentPlaceholder | Expression | SpreadElement | JSXNamespacedName

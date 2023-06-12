@@ -22,6 +22,7 @@ export interface ListedFunction {
   mainFile: string
   runtime: RuntimeName
   extension: string
+  runtimeAPIVersion?: number
   schedule?: string
   displayName?: string
   generator?: string
@@ -129,21 +130,22 @@ export const listFunctionsFiles = async function (
 }
 
 const getListedFunction = function ({
-  runtime,
-  name,
-  mainFile,
-  extension,
   config,
+  extension,
   inSourceConfig,
+  mainFile,
+  name,
+  runtime,
 }: AugmentedFunctionSource): ListedFunction {
   return {
-    name,
     displayName: config.name,
-    mainFile,
-    runtime: runtime.name,
     extension,
-    schedule: inSourceConfig?.schedule ?? config.schedule,
     generator: config.generator,
+    mainFile,
+    name,
+    runtime: runtime.name,
+    runtimeAPIVersion: inSourceConfig ? inSourceConfig?.runtimeAPIVersion ?? 1 : undefined,
+    schedule: inSourceConfig?.schedule ?? config.schedule,
   }
 }
 
