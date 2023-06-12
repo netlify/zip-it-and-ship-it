@@ -53,6 +53,16 @@ interface ZipNodeParameters {
   srcFiles: string[]
 }
 
+const addBootstrapFile = function (srcFiles: string[], aliases: Map<string, string>) {
+  // This is the path to the file that contains all the code for the v2
+  // functions API. We add it to the list of source files and create an
+  // alias so that it's written as `BOOTSTRAP_FILE_NAME` in the ZIP/Directory.
+  const v2APIPath = getV2APIPath()
+
+  srcFiles.push(v2APIPath)
+  aliases.set(v2APIPath, BOOTSTRAP_FILE_NAME)
+}
+
 const createDirectory = async function ({
   aliases = new Map(),
   basePath,
@@ -83,6 +93,10 @@ const createDirectory = async function ({
 
   // Writing entry file.
   await writeFile(join(functionFolder, entryFilename), entryContents)
+
+  if (runtimeAPIVersion === 2) {
+    addBootstrapFile(srcFiles, aliases)
+  }
 
   // Copying source files.
   await pMap(
@@ -164,13 +178,7 @@ const createZipArchive = async function ({
   }
 
   if (runtimeAPIVersion === 2) {
-    // This is the path to the file that contains all the code for the v2
-    // functions API. We add it to the list of source files and create an
-    // alias so that it's written as `BOOTSTRAP_FILE_NAME` in the ZIP.
-    const v2APIPath = getV2APIPath()
-
-    srcFiles.push(v2APIPath)
-    aliases.set(v2APIPath, BOOTSTRAP_FILE_NAME)
+    addBootstrapFile(srcFiles, aliases)
   }
 
   const srcFilesInfos = await Promise.all(srcFiles.map((file) => addStat(cache, file)))
