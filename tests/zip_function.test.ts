@@ -6,7 +6,7 @@ import { dir as getTmpDir } from 'tmp-promise'
 import unixify from 'unixify'
 import { describe, expect, test } from 'vitest'
 
-import { NODE_BUNDLER, zipFunction } from '../src/main.js'
+import { ARCHIVE_FORMAT, NODE_BUNDLER, zipFunction } from '../src/main.js'
 
 import { FIXTURES_DIR, getBundlerNameFromOptions, importFunctionFile, unzipFiles } from './helpers/main.js'
 import { allBundleConfigs, getNodeBundlerString, testMany } from './helpers/test_many.js'
@@ -83,7 +83,7 @@ describe('zipFunction', () => {
     await writeFile(testFilePath, 'module.exports = true')
 
     await zipFunction(`${FIXTURES_DIR}/simple/function.js`, tmpDir, {
-      archiveFormat: 'none',
+      archiveFormat: ARCHIVE_FORMAT.NONE,
     })
 
     const functionEntry = await importFunctionFile(`${functionDirectory}/function.js`)
