@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`listFunctions > Can list function main files from multiple source directories with listFunctions() 1`] = `
+exports[`listFunctions > v1 > Can list function main files from multiple source directories with listFunctions() 1`] = `
 [
   {
     "displayName": undefined,
@@ -9,6 +9,7 @@ exports[`listFunctions > Can list function main files from multiple source direc
     "mainFile": ".netlify/internal-functions/function.js",
     "name": "function",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -19,6 +20,7 @@ exports[`listFunctions > Can list function main files from multiple source direc
     "mainFile": ".netlify/internal-functions/function_internal.js",
     "name": "function_internal",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -29,6 +31,7 @@ exports[`listFunctions > Can list function main files from multiple source direc
     "mainFile": "netlify/functions/function.js",
     "name": "function",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -39,13 +42,14 @@ exports[`listFunctions > Can list function main files from multiple source direc
     "mainFile": "netlify/functions/function_user.js",
     "name": "function_user",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
 ]
 `;
 
-exports[`listFunctions > Can list function main files with listFunctions() 1`] = `
+exports[`listFunctions > v1 > Can list function main files with listFunctions() 1`] = `
 [
   {
     "displayName": undefined,
@@ -54,6 +58,7 @@ exports[`listFunctions > Can list function main files with listFunctions() 1`] =
     "mainFile": "test.zip",
     "name": "test",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -64,6 +69,7 @@ exports[`listFunctions > Can list function main files with listFunctions() 1`] =
     "mainFile": "test.js",
     "name": "test",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -74,6 +80,7 @@ exports[`listFunctions > Can list function main files with listFunctions() 1`] =
     "mainFile": "five/index.ts",
     "name": "five",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -84,6 +91,7 @@ exports[`listFunctions > Can list function main files with listFunctions() 1`] =
     "mainFile": "four.js/four.js.js",
     "name": "four",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -94,6 +102,7 @@ exports[`listFunctions > Can list function main files with listFunctions() 1`] =
     "mainFile": "one/index.js",
     "name": "one",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -104,6 +113,7 @@ exports[`listFunctions > Can list function main files with listFunctions() 1`] =
     "mainFile": "two/two.js",
     "name": "two",
     "runtime": "js",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
@@ -114,6 +124,7 @@ exports[`listFunctions > Can list function main files with listFunctions() 1`] =
     "mainFile": "test",
     "name": "test",
     "runtime": "go",
+    "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": undefined,
   },
