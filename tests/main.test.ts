@@ -1803,6 +1803,7 @@ describe('zip-it-and-ship-it', () => {
         mainFile: join(FIXTURES_DIR, fixtureName, 'go-func-1', 'main.go'),
         name: 'go-func-1',
         path: expect.anything(),
+        entryFilename: '',
         runtime: 'go',
       },
       {
@@ -1810,6 +1811,7 @@ describe('zip-it-and-ship-it', () => {
         mainFile: join(FIXTURES_DIR, fixtureName, 'go-func-2', 'go-func-2.go'),
         name: 'go-func-2',
         path: expect.anything(),
+        entryFilename: '',
         runtime: 'go',
       },
     ])
@@ -1906,6 +1908,7 @@ describe('zip-it-and-ship-it', () => {
         mainFile: join(FIXTURES_DIR, fixtureName, 'rust-func-1', 'src', 'main.rs'),
         name: 'rust-func-1',
         path: expect.anything(),
+        entryFilename: '',
         runtime: 'rs',
         size: 278,
       },
@@ -1914,6 +1917,7 @@ describe('zip-it-and-ship-it', () => {
         mainFile: join(FIXTURES_DIR, fixtureName, 'rust-func-2', 'src', 'main.rs'),
         name: 'rust-func-2',
         path: expect.anything(),
+        entryFilename: '',
         runtime: 'rs',
         size: 278,
       },
