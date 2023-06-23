@@ -145,7 +145,7 @@ const zipFunction: ZipFunction = async function ({
 
     await zipBinary({ ...zipOptions, srcPath: binary.path, stat: binary.stat })
 
-    return { config, path: zipPath }
+    return { config, path: zipPath, entryFilename: zipOptions.filename }
   }
 
   // We don't need to zip the binary, so we can just copy it to the right path.
@@ -158,6 +158,7 @@ const zipFunction: ZipFunction = async function ({
   return {
     config,
     path: destPath,
+    entryFilename: '',
     displayName: config?.name,
     generator: config?.generator || getInternalValue(isInternal),
   }

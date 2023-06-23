@@ -57,7 +57,7 @@ const zipFunction: ZipFunction = async function ({
 
     await copyFile(srcPath, destPath)
 
-    return { config, path: destPath }
+    return { config, path: destPath, entryFilename: '' }
   }
 
   const inSourceConfig = await findISCDeclarationsInPath(mainFile, name, featureFlags)
@@ -142,7 +142,8 @@ const zipFunction: ZipFunction = async function ({
     invocationMode,
     nativeNodeModules,
     nodeModulesWithDynamicImports,
-    path: zipPath,
+    path: zipPath.path,
+    entryFilename: zipPath.entryFilename,
     runtimeVersion: getNodeRuntime(config.nodeVersion),
     displayName: config?.name,
     generator: config?.generator || getInternalValue(isInternal),

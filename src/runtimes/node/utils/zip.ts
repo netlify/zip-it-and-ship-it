@@ -2,7 +2,7 @@ import { Buffer } from 'buffer'
 import { Stats } from 'fs'
 import { mkdir, rm, writeFile } from 'fs/promises'
 import os from 'os'
-import { basename, join } from 'path'
+import { basename, extname, join } from 'path'
 
 import { getPath as getV2APIPath } from '@netlify/serverless-functions-api'
 import { copyFile } from 'cp-file'
@@ -119,7 +119,7 @@ const createDirectory = async function ({
     { concurrency: COPY_FILE_CONCURRENCY },
   )
 
-  return functionFolder
+  return { path: functionFolder, entryFilename }
 }
 
 const createZipArchive = async function ({
@@ -163,6 +163,8 @@ const createZipArchive = async function ({
   // than the entry file) to its own sub-directory.
   const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
+  let entryFilename = `${basename(filename, extname(filename))}.js`
+
   if (needsEntryFile) {
     const entryFile = getEntryFile({
       commonPrefix: basePath,
@@ -173,6 +175,8 @@ const createZipArchive = async function ({
       featureFlags,
       runtimeAPIVersion,
     })
+
+    entryFilename = entryFile.filename
 
     addEntryFileToZip(archive, entryFile)
   }
@@ -199,13 +203,13 @@ const createZipArchive = async function ({
 
   await endZip(archive, output)
 
-  return destPath
+  return { path: destPath, entryFilename }
 }
 
 export const zipNodeJs = function ({
   archiveFormat,
   ...options
-}: ZipNodeParameters & { archiveFormat: ArchiveFormat }): Promise<string> {
+}: ZipNodeParameters & { archiveFormat: ArchiveFormat }): Promise<{ path: string; entryFilename: string }> {
   if (archiveFormat === ARCHIVE_FORMAT.ZIP) {
     return createZipArchive(options)
   }

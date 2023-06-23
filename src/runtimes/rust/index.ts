@@ -156,6 +156,7 @@ const zipFunction: ZipFunction = async function ({
   return {
     config,
     path: destPath,
+    entryFilename: '',
     displayName: config?.name,
     generator: config?.generator || getInternalValue(isInternal),
   }
