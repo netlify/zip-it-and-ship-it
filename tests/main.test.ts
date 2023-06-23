@@ -2688,4 +2688,18 @@ describe('zip-it-and-ship-it', () => {
       )
     },
   )
+
+  testMany('Outputs correct entryFilename', ['bundler_esbuild', 'bundler_nft', 'bundler_default'], async (options) => {
+    const { files } = await zipFixture('node-mts-extension', {
+      length: 3,
+      opts: options,
+    })
+
+    const unzippedFunctions = await unzipFiles(files)
+
+    for (const { unzipPath, entryFilename } of unzippedFunctions) {
+      const { handler } = await importFunctionFile(`${unzipPath}/${entryFilename}`)
+      expect(handler()).toBe(true)
+    }
+  })
 })

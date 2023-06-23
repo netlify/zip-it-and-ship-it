@@ -57,7 +57,7 @@ const zipFunction: ZipFunction = async function ({
 
     await copyFile(srcPath, destPath)
 
-    return { config, path: destPath }
+    return { config, path: destPath, entryFilename: '' }
   }
 
   const inSourceConfig = await findISCDeclarationsInPath(mainFile, name, featureFlags)
