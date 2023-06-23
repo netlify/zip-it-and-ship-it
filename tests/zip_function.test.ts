@@ -180,6 +180,7 @@ describe('zipFunction', () => {
       expect(result.mainFile).toBe(mainFile)
       expect(result.config).toEqual(bundler === undefined ? {} : expectedConfig)
       expect(result.runtimeAPIVersion).toEqual(2)
+      expect(result.entryFilename).toEqual('___netlify-entry-point.mjs')
     })
   })
 })

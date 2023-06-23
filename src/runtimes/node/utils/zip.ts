@@ -119,7 +119,7 @@ const createDirectory = async function ({
     { concurrency: COPY_FILE_CONCURRENCY },
   )
 
-  return functionFolder
+  return { path: functionFolder, entryFilename }
 }
 
 const createZipArchive = async function ({
@@ -163,8 +163,10 @@ const createZipArchive = async function ({
   // than the entry file) to its own sub-directory.
   const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
 
+  let entryFile: EntryFile | undefined
+
   if (needsEntryFile) {
-    const entryFile = getEntryFile({
+    entryFile = getEntryFile({
       commonPrefix: basePath,
       filename,
       mainFile,
@@ -199,13 +201,13 @@ const createZipArchive = async function ({
 
   await endZip(archive, output)
 
-  return destPath
+  return { path: destPath, entryFilename: entryFile?.filename }
 }
 
 export const zipNodeJs = function ({
   archiveFormat,
   ...options
-}: ZipNodeParameters & { archiveFormat: ArchiveFormat }): Promise<string> {
+}: ZipNodeParameters & { archiveFormat: ArchiveFormat }): Promise<{ path: string; entryFilename?: string }> {
   if (archiveFormat === ARCHIVE_FORMAT.ZIP) {
     return createZipArchive(options)
   }

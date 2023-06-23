@@ -5,7 +5,6 @@ import semver from 'semver'
 import { afterEach, describe, expect, vi } from 'vitest'
 
 import { ARCHIVE_FORMAT } from '../src/archive.js'
-import { ENTRY_FILE_NAME } from '../src/runtimes/node/utils/entry_file.js'
 
 import { invokeLambda, readAsBuffer } from './helpers/lambda.js'
 import { zipFixture, unzipFiles, importFunctionFile } from './helpers/main.js'
@@ -27,7 +26,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
       const unzippedFunctions = await unzipFiles(files)
 
-      const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/${ENTRY_FILE_NAME}.mjs`)
+      const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/${files[0].entryFilename}`)
       const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
       const body = await readAsBuffer(bodyStream)
 
@@ -48,7 +47,8 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         }),
       })
 
-      const func = await importFunctionFile(`${tmpDir}/${files[0].name}/${ENTRY_FILE_NAME}.mjs`)
+      const [{ name: archive, entryFilename }] = files
+      const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
       const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
       const body = await readAsBuffer(bodyStream)
 
