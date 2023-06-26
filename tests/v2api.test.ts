@@ -19,10 +19,12 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
   testMany(
     'Handles a basic JavaScript function',
-    ['bundler_default', 'todo:bundler_esbuild', 'todo:bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('v2-api', {
-        opts: merge(options, { featureFlags: { zisi_functions_api_v2: true } }),
+        opts: merge(options, {
+          featureFlags: { zisi_functions_api_v2: true, zisi_pure_esm: true, zisi_pure_esm_mjs: true },
+        }),
       })
       const unzippedFunctions = await unzipFiles(files)
 
@@ -38,12 +40,12 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
   testMany(
     'Handles a basic JavaScript function with archiveFormat set to `none`',
-    ['bundler_default', 'todo:bundler_esbuild', 'todo:bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files, tmpDir } = await zipFixture('v2-api', {
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
-          featureFlags: { zisi_functions_api_v2: true },
+          featureFlags: { zisi_functions_api_v2: true, zisi_pure_esm: true, zisi_pure_esm_mjs: true },
         }),
       })
 
@@ -63,7 +65,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     [
       'todo:bundler_default',
       'bundler_esbuild',
-      'todo:bundler_esbuild_zisi',
+      'bundler_esbuild_zisi',
       'todo:bundler_default_nft',
       'todo:bundler_nft',
     ],
