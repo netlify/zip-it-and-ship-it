@@ -62,13 +62,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
   testMany(
     'Handles a basic TypeScript function',
-    [
-      'todo:bundler_default',
-      'bundler_esbuild',
-      'bundler_esbuild_zisi',
-      'todo:bundler_default_nft',
-      'todo:bundler_nft',
-    ],
+    ['todo:bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'todo:bundler_default_nft', 'todo:bundler_nft'],
     async (options) => {
       const { files, tmpDir } = await zipFixture('v2-api-ts', {
         opts: merge(options, {
