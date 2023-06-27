@@ -918,7 +918,7 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
-  testMany.only(
+  testMany(
     'Handles a JavaScript function importing TypeScript',
     ['todo:bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
     async (options) => {
