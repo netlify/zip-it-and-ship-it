@@ -16,9 +16,10 @@ import { zipNodeJs } from './utils/zip.js'
 
 // A proxy for the `getSrcFiles` that calls `getSrcFiles` on the bundler
 const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
-  const { config, extension, featureFlags, mainFile, runtimeAPIVersion, srcDir } = parameters
+  const { cache, config, extension, featureFlags, mainFile, runtimeAPIVersion, srcDir } = parameters
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
+    cache,
     config,
     extension,
     featureFlags,
@@ -64,6 +65,7 @@ const zipFunction: ZipFunction = async function ({
   const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
+    cache,
     config,
     extension,
     featureFlags,

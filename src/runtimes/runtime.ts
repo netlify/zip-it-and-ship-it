@@ -32,6 +32,7 @@ export type FindFunctionInPathFunction = (args: {
 export type GetSrcFilesFunction = (
   args: {
     basePath?: string
+    cache: RuntimeCache
     config: FunctionConfig
     featureFlags: FeatureFlags
     repositoryRoot?: string

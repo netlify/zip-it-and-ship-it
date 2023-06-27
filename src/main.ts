@@ -123,7 +123,7 @@ export const listFunctionsFiles = async function (
     ? await Promise.all(functions.map((func) => augmentWithISC(func, featureFlags)))
     : functions
   const listedFunctionsFiles = await Promise.all(
-    augmentedFunctions.map((func) => getListedFunctionFiles(func, { basePath, featureFlags })),
+    augmentedFunctions.map((func) => getListedFunctionFiles(func, { basePath, cache, featureFlags })),
   )
 
   return listedFunctionsFiles.flat()
@@ -151,7 +151,7 @@ const getListedFunction = function ({
 
 const getListedFunctionFiles = async function (
   func: AugmentedFunctionSource,
-  options: { basePath?: string; featureFlags: FeatureFlags },
+  options: { basePath?: string; cache: RuntimeCache; featureFlags: FeatureFlags },
 ): Promise<ListedFunctionFile[]> {
   const srcFiles = await getSrcFiles({
     ...func,

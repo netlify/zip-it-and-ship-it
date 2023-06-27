@@ -2,7 +2,9 @@ import { extname } from 'path'
 
 import { FunctionConfig } from '../../../config.js'
 import { FeatureFlags } from '../../../feature_flags.js'
+import { RuntimeCache } from '../../../utils/cache.js'
 import { detectEsModule } from '../utils/detect_es_module.js'
+import detectTSImports from '../utils/detect_ts_imports.js'
 import { MODULE_FILE_EXTENSION } from '../utils/module_format.js'
 
 import esbuildBundler from './esbuild/index.js'
@@ -32,12 +34,14 @@ export const getBundler = (name: NodeBundlerName): NodeBundler => {
 }
 
 export const getBundlerName = async ({
+  cache,
   config: { nodeBundler },
   extension,
   featureFlags,
   mainFile,
   runtimeAPIVersion,
 }: {
+  cache: RuntimeCache
   config: FunctionConfig
   extension: string
   featureFlags: FeatureFlags
@@ -48,7 +52,7 @@ export const getBundlerName = async ({
     return nodeBundler
   }
 
-  return await getDefaultBundler({ extension, featureFlags, mainFile, runtimeAPIVersion })
+  return await getDefaultBundler({ cache, extension, featureFlags, mainFile, runtimeAPIVersion })
 }
 
 const ESBUILD_EXTENSIONS = new Set(['.mjs', '.ts', '.tsx', '.cts', '.mts'])
@@ -56,11 +60,13 @@ const ESBUILD_EXTENSIONS = new Set(['.mjs', '.ts', '.tsx', '.cts', '.mts'])
 // We use ZISI as the default bundler, except for certain extensions, for which
 // esbuild is the only option.
 const getDefaultBundler = async ({
+  cache,
   extension,
   featureFlags,
   mainFile,
   runtimeAPIVersion,
 }: {
+  cache: RuntimeCache
   extension: string
   mainFile: string
   featureFlags: FeatureFlags
@@ -75,6 +81,10 @@ const getDefaultBundler = async ({
   }
 
   if (featureFlags.traceWithNft) {
+    if (await detectTSImports(mainFile, cache)) {
+      return NODE_BUNDLER.ESBUILD
+    }
+
     return NODE_BUNDLER.NFT
   }
 
