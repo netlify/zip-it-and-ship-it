@@ -1,6 +1,9 @@
+import { join } from 'path'
 import { version as nodeVersion } from 'process'
+import { promisify } from 'util'
 
 import merge from 'deepmerge'
+import glob from 'glob'
 import semver from 'semver'
 import { afterEach, describe, expect, vi } from 'vitest'
 
@@ -9,6 +12,8 @@ import { ARCHIVE_FORMAT } from '../src/archive.js'
 import { invokeLambda, readAsBuffer } from './helpers/lambda.js'
 import { zipFixture, unzipFiles, importFunctionFile } from './helpers/main.js'
 import { testMany } from './helpers/test_many.js'
+
+const pGlob = promisify(glob)
 
 vi.mock('../src/utils/shell.js', () => ({ shellUtils: { runCommand: vi.fn() } }))
 
@@ -71,7 +76,11 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         }),
       })
 
-      const [{ name: archive, entryFilename }] = files
+      const [{ name: archive, entryFilename, path }] = files
+
+      const untranspiledFiles = await pGlob(join(path, "**", "*.ts"))
+      expect(untranspiledFiles).toEqual([])
+
       const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
       const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
       const body = await readAsBuffer(bodyStream)
