@@ -919,6 +919,19 @@ describe('zip-it-and-ship-it', () => {
   )
 
   testMany(
+    'Handles a JavaScript function importing TypeScript',
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    async (options) => {
+      const { files } = await zipFixture('node-typescript-imported-by-javascript', {
+        opts: options,
+      })
+      const unzippedFunctions = await unzipFiles(files)
+      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+      expect(type).toBeTypeOf('string')
+    },
+  )
+
+  testMany(
     'Handles a JavaScript function ({name}.mjs, {name}/{name}.mjs, {name}/index.mjs)',
     ['bundler_esbuild', 'bundler_default'],
     async (options) => {
