@@ -66,7 +66,15 @@ const getDefaultBundler = async ({
   featureFlags: FeatureFlags
   runtimeAPIVersion: number
 }): Promise<NodeBundlerName> => {
-  if ((extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) || runtimeAPIVersion === 2) {
+  if (runtimeAPIVersion === 2) {
+    if (ESBUILD_EXTENSIONS.has(extension)) {
+      return NODE_BUNDLER.ESBUILD
+    }
+
+    return NODE_BUNDLER.NFT
+  }
+
+  if (extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) {
     return NODE_BUNDLER.NFT
   }
 
