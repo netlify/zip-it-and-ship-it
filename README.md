@@ -426,7 +426,8 @@ When using the `zisi` bundler, the following files are included in the generated
 The following files are excluded:
 
 - `@types/*` TypeScript definitions
-- `aws-sdk`
+- `aws-sdk` (on Node v16 and earlier)
+- `@aws-sdk/*` (on Node v18 and later)
 - Temporary files like `*~`, `*.swp`, etc.
 
 ## esbuild

@@ -5,7 +5,7 @@ import type { GetSrcFilesFunction } from '../types.js'
 import { getDependencyPathsForDependency } from '../zisi/traverse.js'
 
 export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {
-  const { externalNodeModules = [], includedFiles = [], includedFilesBasePath } = config
+  const { externalNodeModules = [], includedFiles = [], includedFilesBasePath, nodeVersion } = config
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
@@ -14,6 +14,7 @@ export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, plugi
     basedir: srcDir,
     dependencies: externalNodeModules,
     pluginsModulesPath,
+    nodeVersion,
   })
   const srcFiles = filterExcludedPaths(dependencyPaths, excludePatterns)
   const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
@@ -29,11 +30,13 @@ const getSrcFilesForDependencies = async function ({
   dependencies: dependencyNames,
   state = getNewCache(),
   pluginsModulesPath,
+  nodeVersion,
 }: {
   basedir: string
   dependencies: string[]
   state?: TraversalCache
   pluginsModulesPath?: string
+  nodeVersion?: string
 }) {
   if (dependencyNames.length === 0) {
     return []
@@ -48,6 +51,7 @@ const getSrcFilesForDependencies = async function ({
         state,
         packageJson,
         pluginsModulesPath,
+        nodeVersion,
       }),
     ),
   )
@@ -62,15 +66,24 @@ const getSrcFilesForDependency = async function ({
   state = getNewCache(),
   packageJson,
   pluginsModulesPath,
+  nodeVersion,
 }: {
   dependency: string
   basedir: string
   state: TraversalCache
   packageJson: PackageJson
   pluginsModulesPath?: string
+  nodeVersion?: string
 }) {
   try {
-    const paths = await getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath })
+    const paths = await getDependencyPathsForDependency({
+      dependency,
+      basedir,
+      state,
+      packageJson,
+      pluginsModulesPath,
+      nodeVersion,
+    })
 
     return paths
   } catch (error) {
