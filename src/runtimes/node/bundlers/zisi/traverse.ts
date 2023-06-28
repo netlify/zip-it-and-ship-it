@@ -83,7 +83,7 @@ const getDependenciesForModuleName = async function ({
   const [publishedFiles, sideFiles, depsPaths] = await Promise.all([
     getPublishedFiles(modulePath),
     getSideFiles(modulePath, moduleName),
-    getNestedModules({ modulePath, state, packageJson, pluginsModulesPath }),
+    getNestedModules({ modulePath, state, packageJson, pluginsModulesPath, nodeVersion }),
   ])
 
   return [...publishedFiles, ...sideFiles, ...depsPaths]
@@ -107,17 +107,26 @@ const getNestedModules = async function ({
   state,
   packageJson,
   pluginsModulesPath,
+  nodeVersion,
 }: {
   modulePath: string
   state: TraversalCache
   packageJson: PackageJson
   pluginsModulesPath?: string
+  nodeVersion?: string
 }) {
   const dependencies = getNestedDependencies(packageJson)
 
   const depsPaths = await Promise.all(
     dependencies.map((dependency) =>
-      getDependencyPathsForDependency({ dependency, basedir: modulePath, state, packageJson, pluginsModulesPath }),
+      getDependencyPathsForDependency({
+        dependency,
+        basedir: modulePath,
+        state,
+        packageJson,
+        pluginsModulesPath,
+        nodeVersion,
+      }),
     ),
   )
 

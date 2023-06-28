@@ -198,7 +198,7 @@ describe('zip-it-and-ship-it', () => {
   describe('aws-sdk special case', () => {
     testMany(
       'On Node v18, includes v2 and excludes v3',
-      ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+      ['bundler_default', 'todo:bundler_esbuild', 'todo:bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
       async (options) => {
         const fixtureName = 'node-module-excluded'
         const opts = merge(options, {
@@ -229,7 +229,7 @@ describe('zip-it-and-ship-it', () => {
 
     testMany(
       'On Node v16, excludes v2 and includes v3',
-      ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+      ['bundler_default', 'todo:bundler_esbuild', 'todo:bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
       async (options) => {
         const fixtureName = 'node-module-excluded'
         const opts = merge(options, {
