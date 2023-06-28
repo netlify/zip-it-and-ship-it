@@ -65,7 +65,7 @@ const bundle: BundleFunction = async ({
   }
 }
 
-const ignoreFunction = (config: FunctionConfig) => {
+const getIgnoreFunction = (config: FunctionConfig) => {
   const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
   // Paths that will be excluded from the tracing process.
@@ -106,7 +106,7 @@ const traceFilesAndTranspile = async function ({
     fileIOConcurrency: 2048,
     base: basePath,
     cache: cache.nftCache,
-    ignore: ignoreFunction(config),
+    ignore: getIgnoreFunction(config),
     readFile: async (path: string) => {
       try {
         const source = await cachedReadFile(cache.fileCache, path)
@@ -167,7 +167,7 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
   )
   const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
     base: basePath,
-    ignore: ignoreFunction(config),
+    ignore: getIgnoreFunction(config),
   })
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
