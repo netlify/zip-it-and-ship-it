@@ -90,16 +90,13 @@ const getDependenciesForModuleName = async function ({
 }
 
 const isExcludedModule = function (moduleName: string, nodeVersion?: string): boolean {
-  const nodeSupport = getNodeSupportMatrix(nodeVersion)
-
-  if (nodeSupport.awsSDKV3) {
-    if (moduleName.startsWith('@aws-sdk/')) return true
-  } else {
-    // eslint-disable-next-line no-lonely-if
-    if (moduleName === 'aws-sdk') return true
+  if (moduleName.startsWith('@types/')) {
+    return true
   }
 
-  return moduleName.startsWith('@types/')
+  const nodeSupport = getNodeSupportMatrix(nodeVersion)
+
+  return nodeSupport.awsSDKV3 ? moduleName.startsWith('@aws-sdk/') : moduleName === 'aws-sdk'
 }
 
 const getNestedModules = async function ({
