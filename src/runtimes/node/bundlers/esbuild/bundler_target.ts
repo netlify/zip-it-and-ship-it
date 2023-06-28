@@ -35,8 +35,16 @@ const getModuleFormat = async (
   }
 
   if (featureFlags.zisi_pure_esm) {
-    const packageJsonFile = await getClosestPackageJson(srcDir)
     const nodeSupport = getNodeSupportMatrix(configVersion)
+
+    if (extension.includes('ts') && nodeSupport.esm) {
+      return {
+        includedFiles: [],
+        moduleFormat: MODULE_FORMAT.ESM,
+      }
+    }
+
+    const packageJsonFile = await getClosestPackageJson(srcDir)
 
     if (packageJsonFile?.contents.type === 'module' && nodeSupport.esm) {
       return {
