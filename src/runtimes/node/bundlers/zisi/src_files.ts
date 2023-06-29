@@ -28,14 +28,14 @@ export const getSrcFiles: GetSrcFilesFunction = async function ({
   srcPath,
   stat,
 }) {
-  const { includedFiles = [], includedFilesBasePath } = config
+  const { includedFiles = [], includedFilesBasePath, nodeVersion } = config
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath,
   )
   const [treeFiles, depFiles] = await Promise.all([
     getTreeFiles(srcPath, stat),
-    getDependencies({ featureFlags, functionName: name, mainFile, pluginsModulesPath, srcDir }),
+    getDependencies({ featureFlags, functionName: name, mainFile, pluginsModulesPath, srcDir, nodeVersion }),
   ])
   const files = [...treeFiles, ...depFiles].map(normalize)
   const uniqueFiles = [...new Set(files)]
@@ -61,12 +61,14 @@ const getDependencies = async function ({
   mainFile,
   pluginsModulesPath,
   srcDir,
+  nodeVersion,
 }: {
   featureFlags: FeatureFlags
   functionName: string
   mainFile: string
   pluginsModulesPath?: string
   srcDir: string
+  nodeVersion?: string
 }) {
   const packageJson = await getPackageJson(srcDir)
   const state = getNewCache()
@@ -79,6 +81,7 @@ const getDependencies = async function ({
       packageJson,
       pluginsModulesPath,
       state,
+      nodeVersion,
     })
   } catch (error) {
     error.message = `In file "${mainFile}"\n${error.message}`
@@ -94,6 +97,7 @@ const getFileDependencies = async function ({
   pluginsModulesPath,
   state,
   treeShakeNext = false,
+  nodeVersion,
 }: {
   featureFlags: FeatureFlags
   functionName: string
@@ -102,6 +106,7 @@ const getFileDependencies = async function ({
   pluginsModulesPath?: string
   state: TraversalCache
   treeShakeNext?: boolean
+  nodeVersion?: string
 }): Promise<string[]> {
   if (state.localFiles.has(path)) {
     return []
@@ -123,6 +128,7 @@ const getFileDependencies = async function ({
         pluginsModulesPath,
         state,
         treeShakeNext,
+        nodeVersion,
       }),
     ),
   )
@@ -139,6 +145,7 @@ const getImportDependencies = function ({
   pluginsModulesPath,
   state,
   treeShakeNext,
+  nodeVersion,
 }: {
   dependency: string
   basedir: string
@@ -148,6 +155,7 @@ const getImportDependencies = function ({
   pluginsModulesPath?: string
   state: TraversalCache
   treeShakeNext: boolean
+  nodeVersion?: string
 }): Promise<string[]> {
   const shouldTreeShakeNext = treeShakeNext || isNextOnNetlify(dependency)
 
@@ -164,7 +172,7 @@ const getImportDependencies = function ({
     })
   }
 
-  return getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath })
+  return getDependencyPathsForDependency({ dependency, basedir, state, packageJson, pluginsModulesPath, nodeVersion })
 }
 
 const isNextOnNetlify = function (dependency: string) {
@@ -181,6 +189,7 @@ const getTreeShakedDependencies = async function ({
   pluginsModulesPath,
   state,
   treeShakeNext,
+  nodeVersion,
 }: {
   dependency: string
   basedir: string
@@ -190,6 +199,7 @@ const getTreeShakedDependencies = async function ({
   pluginsModulesPath?: string
   state: TraversalCache
   treeShakeNext: boolean
+  nodeVersion?: string
 }) {
   const path = await resolvePathPreserveSymlinks(dependency, [basedir, pluginsModulesPath].filter(nonNullable))
   const depsPath = await getFileDependencies({
@@ -200,6 +210,7 @@ const getTreeShakedDependencies = async function ({
     pluginsModulesPath,
     state,
     treeShakeNext,
+    nodeVersion,
   })
 
   return [path, ...depsPath]

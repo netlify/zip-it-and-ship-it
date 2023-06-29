@@ -195,24 +195,85 @@ describe('zip-it-and-ship-it', () => {
     await zipNode('side-module', { opts: options })
   })
 
-  testMany('Ignore some excluded node modules', [...allBundleConfigs], async (options) => {
-    const fixtureName = 'node-module-excluded'
-    const opts = merge(options, {
-      basePath: join(FIXTURES_DIR, fixtureName),
-    })
-    const { files } = await zipNode(fixtureName, { opts })
+  describe('aws-sdk special case', () => {
+    testMany(
+      'On Node v18, includes v2 and excludes v3',
+      ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+      async (options) => {
+        const fixtureName = 'node-module-excluded'
+        const opts = merge(options, {
+          basePath: join(FIXTURES_DIR, fixtureName),
+          config: {
+            '*': {
+              ...options.config['*'],
+              nodeVersion: '18',
+            },
+          },
+        })
+        const { files } = await zipNode(fixtureName, { opts })
 
-    await expect(`${files[0].unzipPath}/node_modules/aws-sdk`).not.toPathExist()
+        const [{ unzipPath, bundler, entryFilename }] = files
 
-    try {
-      const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
+        if (bundler === 'esbuild') {
+          // esbuild bundles everything into one file, so we need to assert on the file contents
+          const bundle = await readFile(`${unzipPath}/${entryFilename}`, 'utf-8')
+          expect(bundle).toContain('/aws-sdk')
+          expect(bundle).not.toContain('/@aws-sdk')
+        } else {
+          await expect(`${files[0].unzipPath}/node_modules/aws-sdk`).toPathExist()
+          await expect(`${files[0].unzipPath}/node_modules/@aws-sdk/client-s3`).not.toPathExist()
+        }
 
-      func()
+        try {
+          const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
 
-      expect.fail('Running the function should fail due to the missing module')
-    } catch (error) {
-      expect(error.code).toBe('MODULE_NOT_FOUND')
-    }
+          func()
+
+          expect.fail('Running the function should fail due to the missing module')
+        } catch (error) {
+          expect(error.code).toBe('MODULE_NOT_FOUND')
+        }
+      },
+    )
+
+    testMany(
+      'On Node v16, excludes v2 and includes v3',
+      ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+      async (options) => {
+        const fixtureName = 'node-module-excluded'
+        const opts = merge(options, {
+          basePath: join(FIXTURES_DIR, fixtureName),
+          config: {
+            '*': {
+              ...options.config['*'],
+              nodeVersion: '16',
+            },
+          },
+        })
+        const { files } = await zipNode(fixtureName, { opts })
+
+        const [{ unzipPath, bundler, entryFilename }] = files
+        if (bundler === 'esbuild') {
+          // esbuild bundles everything into one file, so we need to assert on the file contents
+          const bundle = await readFile(`${unzipPath}/${entryFilename}`, 'utf-8')
+          expect(bundle).not.toContain('/aws-sdk')
+          expect(bundle).toContain('/@aws-sdk')
+        } else {
+          await expect(`${files[0].unzipPath}/node_modules/aws-sdk`).not.toPathExist()
+          await expect(`${files[0].unzipPath}/node_modules/@aws-sdk/client-s3`).toPathExist()
+        }
+
+        try {
+          const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
+
+          func()
+
+          expect.fail('Running the function should fail due to the missing module')
+        } catch (error) {
+          expect(error.code).toBe('MODULE_NOT_FOUND')
+        }
+      },
+    )
   })
 
   testMany('Ignore TypeScript types', [...allBundleConfigs], async (options) => {

@@ -3,6 +3,7 @@ import { dirname } from 'path'
 
 import { nonNullable } from '../../../../utils/non_nullable.js'
 import { getModuleName } from '../../utils/module.js'
+import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { PackageJson } from '../../utils/package_json.js'
 import { TraversalCache } from '../../utils/traversal_cache.js'
 
@@ -10,8 +11,6 @@ import { getNestedDependencies, handleModuleNotFound } from './nested.js'
 import { getPublishedFiles } from './published.js'
 import { resolvePackage } from './resolve.js'
 import { getSideFiles } from './side_files.js'
-
-const EXCLUDED_MODULES = new Set(['aws-sdk'])
 
 // When a file requires a module, we find its path inside `node_modules` and
 // use all its published files. We also recurse on the module's dependencies.
@@ -21,12 +20,14 @@ export const getDependencyPathsForDependency = async function ({
   state,
   packageJson,
   pluginsModulesPath,
+  nodeVersion,
 }: {
   dependency: string
   basedir: string
   state: TraversalCache
   packageJson: PackageJson
   pluginsModulesPath?: string
+  nodeVersion?: string
 }): Promise<string[]> {
   const moduleName = getModuleName(dependency)
 
@@ -37,7 +38,7 @@ export const getDependencyPathsForDependency = async function ({
   }
 
   try {
-    return await getDependenciesForModuleName({ moduleName, basedir, state, pluginsModulesPath })
+    return await getDependenciesForModuleName({ moduleName, basedir, state, pluginsModulesPath, nodeVersion })
   } catch (error) {
     return handleModuleNotFound({ error, moduleName, packageJson })
   }
@@ -48,13 +49,15 @@ const getDependenciesForModuleName = async function ({
   basedir,
   state,
   pluginsModulesPath,
+  nodeVersion,
 }: {
   moduleName: string
   basedir: string
   state: TraversalCache
   pluginsModulesPath?: string
+  nodeVersion?: string
 }): Promise<string[]> {
-  if (isExcludedModule(moduleName)) {
+  if (isExcludedModule(moduleName, nodeVersion)) {
     return []
   }
 
@@ -80,14 +83,20 @@ const getDependenciesForModuleName = async function ({
   const [publishedFiles, sideFiles, depsPaths] = await Promise.all([
     getPublishedFiles(modulePath),
     getSideFiles(modulePath, moduleName),
-    getNestedModules({ modulePath, state, packageJson, pluginsModulesPath }),
+    getNestedModules({ modulePath, state, packageJson, pluginsModulesPath, nodeVersion }),
   ])
 
   return [...publishedFiles, ...sideFiles, ...depsPaths]
 }
 
-const isExcludedModule = function (moduleName: string): boolean {
-  return EXCLUDED_MODULES.has(moduleName) || moduleName.startsWith('@types/')
+const isExcludedModule = function (moduleName: string, nodeVersion?: string): boolean {
+  if (moduleName.startsWith('@types/')) {
+    return true
+  }
+
+  const nodeSupport = getNodeSupportMatrix(nodeVersion)
+
+  return nodeSupport.awsSDKV3 ? moduleName.startsWith('@aws-sdk/') : moduleName === 'aws-sdk'
 }
 
 const getNestedModules = async function ({
@@ -95,17 +104,26 @@ const getNestedModules = async function ({
   state,
   packageJson,
   pluginsModulesPath,
+  nodeVersion,
 }: {
   modulePath: string
   state: TraversalCache
   packageJson: PackageJson
   pluginsModulesPath?: string
+  nodeVersion?: string
 }) {
   const dependencies = getNestedDependencies(packageJson)
 
   const depsPaths = await Promise.all(
     dependencies.map((dependency) =>
-      getDependencyPathsForDependency({ dependency, basedir: modulePath, state, packageJson, pluginsModulesPath }),
+      getDependencyPathsForDependency({
+        dependency,
+        basedir: modulePath,
+        state,
+        packageJson,
+        pluginsModulesPath,
+        nodeVersion,
+      }),
     ),
   )
 

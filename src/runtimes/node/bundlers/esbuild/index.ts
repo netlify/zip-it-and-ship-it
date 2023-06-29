@@ -41,7 +41,7 @@ const getExternalAndIgnoredModules = async ({ config, srcDir }: { config: Functi
   const { externalNodeModules: externalModulesFromConfig = [], ignoredNodeModules: ignoredModulesFromConfig = [] } =
     config
   const { externalModules: externalModulesFromSpecialCases, ignoredModules: ignoredModulesFromSpecialCases } =
-    await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
+    await getExternalAndIgnoredModulesFromSpecialCases({ config, srcDir })
   const externalModules = [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])]
   const ignoredModules = [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases]
 

@@ -10,12 +10,10 @@ import { cachedReadFile } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
+import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
-
-// Paths that will be excluded from the tracing process.
-const ignore = ['node_modules/aws-sdk/**']
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -67,10 +65,17 @@ const bundle: BundleFunction = async ({
   }
 }
 
-const ignoreFunction = (path: string) => {
-  const shouldIgnore = ignore.some((expression) => minimatch(path, expression))
+const getIgnoreFunction = (config: FunctionConfig) => {
+  const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
-  return shouldIgnore
+  // Paths that will be excluded from the tracing process.
+  const ignore = nodeSupport.awsSDKV3 ? ['node_modules/@aws-sdk/**'] : ['node_modules/aws-sdk/**']
+
+  return (path: string) => {
+    const shouldIgnore = ignore.some((expression) => minimatch(path, expression))
+
+    return shouldIgnore
+  }
 }
 
 const traceFilesAndTranspile = async function ({
@@ -101,7 +106,7 @@ const traceFilesAndTranspile = async function ({
     fileIOConcurrency: 2048,
     base: basePath,
     cache: cache.nftCache,
-    ignore: ignoreFunction,
+    ignore: getIgnoreFunction(config),
     readFile: async (path: string) => {
       try {
         const source = await cachedReadFile(cache.fileCache, path)
@@ -160,7 +165,10 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
     includedFiles,
     includedFilesBasePath,
   )
-  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: basePath, ignore: ignoreFunction })
+  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
+    base: basePath,
+    ignore: getIgnoreFunction(config),
+  })
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )

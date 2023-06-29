@@ -2,6 +2,7 @@ import semver from 'semver'
 
 export interface NodeVersionSupport {
   esm: boolean
+  awsSDKV3: boolean
 }
 
 // Must match the default version used in Bitballoon.
@@ -14,6 +15,7 @@ export const getNodeSupportMatrix = (configVersion?: string): NodeVersionSupport
 
   return {
     esm: versionNumber >= 14,
+    awsSDKV3: versionNumber >= 18,
   }
 }
 
