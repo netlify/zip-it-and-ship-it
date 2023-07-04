@@ -21,20 +21,27 @@ const getBundlerTarget = (suppliedVersion?: string): VersionValues => {
   return versionMap[DEFAULT_NODE_VERSION]
 }
 
-const getModuleFormat = async (
-  srcDir: string,
-  featureFlags: FeatureFlags,
-  extension: string,
-  configVersion?: string,
-): Promise<{ includedFiles: string[]; moduleFormat: ModuleFormat }> => {
-  if (featureFlags.zisi_pure_esm_mjs && extension === MODULE_FILE_EXTENSION.MJS) {
+const getModuleFormat = async ({
+  srcDir,
+  featureFlags,
+  extension,
+  runtimeAPIVersion,
+  configVersion,
+}: {
+  srcDir: string
+  featureFlags: FeatureFlags
+  extension: string
+  runtimeAPIVersion: number
+  configVersion?: string
+}): Promise<{ includedFiles: string[]; moduleFormat: ModuleFormat }> => {
+  if (extension === MODULE_FILE_EXTENSION.MJS && (runtimeAPIVersion === 2 || featureFlags.zisi_pure_esm_mjs)) {
     return {
       includedFiles: [],
       moduleFormat: MODULE_FORMAT.ESM,
     }
   }
 
-  if (featureFlags.zisi_pure_esm) {
+  if (runtimeAPIVersion === 2 || featureFlags.zisi_pure_esm) {
     const nodeSupport = getNodeSupportMatrix(configVersion)
 
     if (extension.includes('ts') && nodeSupport.esm) {
