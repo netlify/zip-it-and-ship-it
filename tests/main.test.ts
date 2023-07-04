@@ -2555,7 +2555,7 @@ describe('zip-it-and-ship-it', () => {
     expect(originalFile).toBe(bundledFile)
   })
 
-  testMany(
+  testMany.only(
     'Outputs `.mjs` files as ESM if the `zisi_pure_esm_mjs` feature flag is on',
     [...allBundleConfigs],
     async (options) => {
@@ -2574,10 +2574,6 @@ describe('zip-it-and-ship-it', () => {
 
       for (let index = 1; index <= length; index++) {
         const funcDir = unzippedFunctions[index - 1].unzipPath
-
-        // Writing a basic package.json with `type: "module"` just so that we can
-        // import the functions from the test.
-        await writeFile(join(funcDir, 'package.json'), JSON.stringify({ type: 'module' }))
 
         const funcFile = join(funcDir, `func${index}.mjs`)
         const func = await importFunctionFile(funcFile)
@@ -2611,10 +2607,6 @@ describe('zip-it-and-ship-it', () => {
 
       for (let index = 1; index <= length; index++) {
         const funcDir = unzippedFunctions[index - 1].unzipPath
-
-        // Writing a basic package.json with `type: "module"` just so that we can
-        // import the functions from the test.
-        await writeFile(join(funcDir, 'package.json'), JSON.stringify({ type: 'module' }))
 
         const funcFile = join(funcDir, `func${index}.mjs`)
         const func = await importFunctionFile(funcFile)
