@@ -27,7 +27,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     async (options) => {
       const { files } = await zipFixture('v2-api', {
         opts: merge(options, {
-          featureFlags: { zisi_functions_api_v2: true, zisi_pure_esm: true, zisi_pure_esm_mjs: true },
+          featureFlags: { zisi_functions_api_v2: true },
         }),
       })
       const unzippedFunctions = await unzipFiles(files)
@@ -49,7 +49,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       const { files, tmpDir } = await zipFixture('v2-api', {
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
-          featureFlags: { zisi_functions_api_v2: true, zisi_pure_esm: true, zisi_pure_esm_mjs: true },
+          featureFlags: { zisi_functions_api_v2: true },
         }),
       })
 
@@ -71,7 +71,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       const { files, tmpDir } = await zipFixture('v2-api-ts', {
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
-          featureFlags: { zisi_pure_esm: true, zisi_functions_api_v2: true },
+          featureFlags: { zisi_functions_api_v2: true },
         }),
       })
 

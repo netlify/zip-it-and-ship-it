@@ -38,7 +38,7 @@ const zipFunction: ZipFunction = async function ({
   config = {},
   destFolder,
   extension,
-  featureFlags,
+  featureFlags: _featureFlags,
   filename,
   logger,
   mainFile,
@@ -50,6 +50,9 @@ const zipFunction: ZipFunction = async function ({
   stat,
   isInternal,
 }) {
+  // cloning this so we can modify it
+  const featureFlags = { ..._featureFlags }
+
   // If the file is a zip, we assume the function is bundled and ready to go.
   // We simply copy it to the destination path with no further processing.
   if (extension === '.zip') {
@@ -62,6 +65,12 @@ const zipFunction: ZipFunction = async function ({
 
   const inSourceConfig = await findISCDeclarationsInPath(mainFile, name, featureFlags)
   const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
+
+  if (runtimeAPIVersion === 2) {
+    featureFlags.zisi_pure_esm = true
+    featureFlags.zisi_pure_esm_mjs = true
+  }
+
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
     config,
