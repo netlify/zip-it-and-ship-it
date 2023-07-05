@@ -2555,7 +2555,7 @@ describe('zip-it-and-ship-it', () => {
     expect(originalFile).toBe(bundledFile)
   })
 
-  testMany.only(
+  testMany(
     'Outputs `.mjs` files as ESM if the `zisi_pure_esm_mjs` feature flag is on',
     [...allBundleConfigs],
     async (options) => {
