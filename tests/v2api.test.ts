@@ -4,7 +4,7 @@ import { promisify } from 'util'
 import merge from 'deepmerge'
 import glob from 'glob'
 import semver from 'semver'
-import { afterEach, describe, expect, vi } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ARCHIVE_FORMAT } from '../src/archive.js'
 
@@ -110,4 +110,49 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       expect(statusCode).toBe(200)
     },
   )
+
+  test('Returns Node.js 18 if older version is set', async () => {
+    const { files } = await zipFixture('v2-api-mjs', {
+      opts: {
+        featureFlags: { zisi_functions_api_v2: true },
+        config: {
+          '*': {
+            nodeVersion: '16.0.0',
+          },
+        },
+      },
+    })
+
+    expect(files[0].runtimeVersion).toBe('nodejs18.x')
+  })
+
+  test('Returns Node.js 18 if invalid version is set', async () => {
+    const { files } = await zipFixture('v2-api-mjs', {
+      opts: {
+        featureFlags: { zisi_functions_api_v2: true },
+        config: {
+          '*': {
+            nodeVersion: 'invalid',
+          },
+        },
+      },
+    })
+
+    expect(files[0].runtimeVersion).toBe('nodejs18.x')
+  })
+
+  test('Returns no Node.js version if version is newer than 18 but not a valid runtime', async () => {
+    const { files } = await zipFixture('v2-api-mjs', {
+      opts: {
+        featureFlags: { zisi_functions_api_v2: true },
+        config: {
+          '*': {
+            nodeVersion: '19.0.0',
+          },
+        },
+      },
+    })
+
+    expect(files[0].runtimeVersion).toBeUndefined()
+  })
 })

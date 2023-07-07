@@ -10,7 +10,7 @@ import { getBundler, getBundlerName } from './bundlers/index.js'
 import { NODE_BUNDLER } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
-import { getNodeRuntime } from './utils/node_runtime.js'
+import { getNodeRuntime, getNodeRuntimeForV2 } from './utils/node_runtime.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
 import { zipNodeJs } from './utils/zip.js'
 
@@ -137,6 +137,9 @@ const zipFunction: ZipFunction = async function ({
     bundler: bundlerName,
     bundlerWarnings,
     config,
+    displayName: config?.name,
+    entryFilename: zipPath.entryFilename,
+    generator: config?.generator || getInternalValue(isInternal),
     inputs,
     includedFiles,
     inSourceConfig,
@@ -144,10 +147,8 @@ const zipFunction: ZipFunction = async function ({
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath.path,
-    entryFilename: zipPath.entryFilename,
-    runtimeVersion: getNodeRuntime(config.nodeVersion),
-    displayName: config?.name,
-    generator: config?.generator || getInternalValue(isInternal),
+    runtimeVersion:
+      runtimeAPIVersion === 2 ? getNodeRuntimeForV2(config.nodeVersion) : getNodeRuntime(config.nodeVersion),
   }
 }
 
