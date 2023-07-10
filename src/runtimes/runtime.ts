@@ -65,10 +65,10 @@ export type ZipFunction = (
     config: FunctionConfig
     destFolder: string
     featureFlags: FeatureFlags
-    logger: Logger
-    repositoryRoot?: string
     generator?: string
     isInternal: boolean
+    logger: Logger
+    repositoryRoot?: string
   } & FunctionSource,
 ) => Promise<ZipFunctionResult>
 

@@ -100,6 +100,7 @@ export const zipFunctions = async function (
         extension: func.extension,
         featureFlags: functionFlags,
         filename: func.filename,
+        isInternal: Boolean(internalFunctionsPath && isPathInside(func.srcPath, internalFunctionsPath)),
         logger,
         mainFile: func.mainFile,
         name: func.name,
@@ -108,7 +109,6 @@ export const zipFunctions = async function (
         srcDir: func.srcDir,
         srcPath: func.srcPath,
         stat: func.stat,
-        isInternal: Boolean(internalFunctionsPath && isPathInside(func.srcPath, internalFunctionsPath)),
       })
 
       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
@@ -188,6 +188,7 @@ export const zipFunction = async function (
     extension,
     featureFlags: functionFlags,
     filename,
+    isInternal: Boolean(internalFunctionsPath && isPathInside(srcPath, internalFunctionsPath)),
     logger,
     mainFile,
     name,
@@ -196,7 +197,6 @@ export const zipFunction = async function (
     srcDir,
     srcPath,
     stat: stats,
-    isInternal: Boolean(internalFunctionsPath && isPathInside(srcPath, internalFunctionsPath)),
   })
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })
