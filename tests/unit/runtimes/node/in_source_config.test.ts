@@ -1,14 +1,17 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { findISCDeclarations } from '../../../../src/runtimes/node/in_source_config/index.js'
+import { getLogger } from '../../../../src/utils/logger.js'
 
 describe('`schedule` helper', () => {
+  const options = { functionName: 'func1', featureFlags: {}, logger: getLogger() }
+
   test('CommonJS file with `schedule` helper', () => {
     const source = `const { schedule } = require("@netlify/functions")
 
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', {})
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -18,7 +21,7 @@ describe('`schedule` helper', () => {
 
     exports.handler = somethingElse("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', {})
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -28,7 +31,7 @@ describe('`schedule` helper', () => {
 
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', {})
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
   })
@@ -38,7 +41,7 @@ describe('`schedule` helper', () => {
 
     export const handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', {})
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -48,7 +51,7 @@ describe('`schedule` helper', () => {
 
     export const handler = somethingElse("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', {})
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -58,19 +61,21 @@ describe('`schedule` helper', () => {
 
     export const handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, 'func1', {})
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
   })
 })
 
 describe('`stream` helper', () => {
+  const options = { functionName: 'func1', featureFlags: {}, logger: getLogger() }
+
   test('CommonJS file with the `stream` helper', () => {
     const source = `import { stream } from "@netlify/functions"
 
     exports.handler = stream(() => {})`
 
-    const isc = findISCDeclarations(source, 'func1', {})
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ invocationMode: 'stream', runtimeAPIVersion: 1 })
   })
@@ -80,15 +85,19 @@ describe('`stream` helper', () => {
 
     exports.handler = stream(() => {})`
 
-    const isc = findISCDeclarations(source, 'func1', {})
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
   })
 })
 
 describe('V2 API', () => {
-  const featureFlags = {
-    zisi_functions_api_v2: true,
+  const options = {
+    functionName: 'func1',
+    featureFlags: {
+      zisi_functions_api_v2: true,
+    },
+    logger: getLogger(),
   }
 
   test('ESM file with a default export and no `handler` export', () => {
@@ -96,8 +105,12 @@ describe('V2 API', () => {
       return new Response("Hello!")
     }`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const systemLog = vi.fn()
 
+    const isc = findISCDeclarations(source, { ...options, logger: getLogger(systemLog) })
+
+    expect(systemLog).toHaveBeenCalledOnce()
+    expect(systemLog).toHaveBeenCalledWith('detected v2 function')
     expect(isc).toEqual({ runtimeAPIVersion: 2 })
   })
 
@@ -108,7 +121,7 @@ describe('V2 API', () => {
 
     export const handler = async () => ({ statusCode: 200, body: "Hello!" })`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 2 })
   })
@@ -118,7 +131,7 @@ describe('V2 API', () => {
       return new Response("Hello!")
     }`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 2 })
   })
@@ -130,7 +143,7 @@ describe('V2 API', () => {
 
     exports.handler = async () => ({ statusCode: 200, body: "Hello!" })`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
   })
@@ -140,7 +153,7 @@ describe('V2 API', () => {
       return new Response("Hello!")
     }`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
   })
@@ -154,7 +167,7 @@ describe('V2 API', () => {
       schedule: "@daily"
     }`
 
-    const isc = findISCDeclarations(source, 'func1', featureFlags)
+    const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 2, schedule: '@daily' })
   })

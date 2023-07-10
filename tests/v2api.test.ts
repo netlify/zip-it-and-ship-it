@@ -155,4 +155,31 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
     expect(files[0].runtimeVersion).toBeUndefined()
   })
+
+  test('Logs to systemlog', async () => {
+    const systemLog = vi.fn()
+
+    await zipFixture('v2-api', {
+      opts: {
+        featureFlags: { zisi_functions_api_v2: true },
+        systemLog,
+      },
+    })
+
+    expect(systemLog).toHaveBeenCalledOnce()
+    expect(systemLog).toHaveBeenCalledWith('detected v2 function')
+  })
+
+  test('Does not log to systemlog for v1', async () => {
+    const systemLog = vi.fn()
+
+    await zipFixture('simple', {
+      opts: {
+        featureFlags: { zisi_functions_api_v2: true },
+        systemLog,
+      },
+    })
+
+    expect(systemLog).not.toHaveBeenCalled()
+  })
 })

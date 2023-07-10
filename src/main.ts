@@ -8,6 +8,7 @@ import { findISCDeclarationsInPath, ISCValues } from './runtimes/node/in_source_
 import { GetSrcFilesFunction, RuntimeName, RUNTIME } from './runtimes/runtime.js'
 import { RuntimeCache } from './utils/cache.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
+import { getLogger } from './utils/logger.js'
 
 export { Config, FunctionConfig } from './config.js'
 export { zipFunction, zipFunctions, ZipFunctionOptions, ZipFunctionsOptions } from './zip.js'
@@ -51,7 +52,11 @@ const augmentWithISC = async (func: FunctionSource, featureFlags: FeatureFlags):
     return func
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, func.name, featureFlags)
+  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, {
+    functionName: func.name,
+    featureFlags,
+    logger: getLogger(),
+  })
 
   return { ...func, inSourceConfig }
 }

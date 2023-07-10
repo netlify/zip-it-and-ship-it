@@ -4,7 +4,7 @@ import { join } from 'path'
 import merge from 'deepmerge'
 import { dir as getTmpDir } from 'tmp-promise'
 import unixify from 'unixify'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { ARCHIVE_FORMAT, NODE_BUNDLER, zipFunction } from '../src/main.js'
 
@@ -181,6 +181,33 @@ describe('zipFunction', () => {
       expect(result.config).toEqual(bundler === undefined ? {} : expectedConfig)
       expect(result.runtimeAPIVersion).toEqual(2)
       expect(result.entryFilename).toEqual('___netlify-entry-point.mjs')
+    })
+
+    test('Logs to systemlog', async () => {
+      const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+      const mainFile = join(FIXTURES_DIR, 'v2-api', 'function.js')
+      const systemLog = vi.fn()
+
+      await zipFunction(mainFile, tmpDir, {
+        featureFlags: { zisi_functions_api_v2: true },
+        systemLog,
+      })
+
+      expect(systemLog).toHaveBeenCalledOnce()
+      expect(systemLog).toHaveBeenCalledWith('detected v2 function')
+    })
+
+    test('Does not log to systemlog for v1', async () => {
+      const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+      const mainFile = join(FIXTURES_DIR, 'simple', 'function.js')
+      const systemLog = vi.fn()
+
+      await zipFunction(mainFile, tmpDir, {
+        featureFlags: { zisi_functions_api_v2: true },
+        systemLog,
+      })
+
+      expect(systemLog).not.toHaveBeenCalled()
     })
   })
 })

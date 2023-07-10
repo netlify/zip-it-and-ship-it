@@ -3,6 +3,7 @@ import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName 
 import type { FeatureFlags } from '../../../feature_flags.js'
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
+import { Logger } from '../../../utils/logger.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { RUNTIME } from '../../runtime.js'
 import { createBindingsMethod } from '../parser/bindings.js'
@@ -18,6 +19,12 @@ export type ISCValues = {
   invocationMode?: InvocationMode
   runtimeAPIVersion?: number
   schedule?: string
+}
+
+interface FindISCDeclarationsOptions {
+  functionName: string
+  featureFlags: FeatureFlags
+  logger: Logger
 }
 
 const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean, functionName: string): void => {
@@ -41,8 +48,7 @@ const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean
 // the property and `data` its value.
 export const findISCDeclarationsInPath = async (
   sourcePath: string,
-  functionName: string,
-  featureFlags: FeatureFlags,
+  { functionName, featureFlags, logger }: FindISCDeclarationsOptions,
 ): Promise<ISCValues> => {
   const source = await safelyReadSource(sourcePath)
 
@@ -50,10 +56,13 @@ export const findISCDeclarationsInPath = async (
     return {}
   }
 
-  return findISCDeclarations(source, functionName, featureFlags)
+  return findISCDeclarations(source, { functionName, featureFlags, logger })
 }
 
-export const findISCDeclarations = (source: string, functionName: string, featureFlags: FeatureFlags): ISCValues => {
+export const findISCDeclarations = (
+  source: string,
+  { functionName, featureFlags, logger }: FindISCDeclarationsOptions,
+): ISCValues => {
   const ast = safelyParseSource(source)
 
   if (ast === null) {
@@ -74,6 +83,8 @@ export const findISCDeclarations = (source: string, functionName: string, featur
     const config: ISCValues = {
       runtimeAPIVersion: 2,
     }
+
+    logger.system('detected v2 function')
 
     if (typeof configExport.schedule === 'string') {
       config.schedule = configExport.schedule

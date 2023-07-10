@@ -40,6 +40,7 @@ const zipFunction: ZipFunction = async function ({
   extension,
   featureFlags,
   filename,
+  isInternal,
   logger,
   mainFile,
   name,
@@ -48,7 +49,6 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
-  isInternal,
 }) {
   // If the file is a zip, we assume the function is bundled and ready to go.
   // We simply copy it to the destination path with no further processing.
@@ -60,7 +60,7 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath, entryFilename: '' }
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(mainFile, name, featureFlags)
+  const inSourceConfig = await findISCDeclarationsInPath(mainFile, { functionName: name, featureFlags, logger })
   const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
 
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
