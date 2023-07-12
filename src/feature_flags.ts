@@ -10,9 +10,6 @@ export const defaultFlags = {
   // Use NFT as the default bundler.
   traceWithNft: false,
 
-  // Should Lambda functions inherit the build Node.js version
-  functions_inherit_build_nodejs_version: false,
-
   // Emit a system log for every path that has been included in the bundle due
   // to the parsing of a dynamic import.
   zisi_log_dynamic_imports: false,
