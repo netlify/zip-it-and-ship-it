@@ -167,7 +167,7 @@ export const getEntryFile = ({
   runtimeAPIVersion: number
 }): EntryFile => {
   const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
-  const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
+  const extension = getFileExtensionForFormat(moduleFormat, featureFlags, runtimeAPIVersion)
   const entryFilename = getEntryFileName({ extension, featureFlags, filename, runtimeAPIVersion })
   const contents = getEntryFileContents(mainPath, moduleFormat, featureFlags, runtimeAPIVersion)
 

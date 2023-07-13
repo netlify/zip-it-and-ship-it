@@ -19,8 +19,9 @@ export type ModuleFileExtension = ObjectValues<typeof MODULE_FILE_EXTENSION>
 export const getFileExtensionForFormat = (
   moduleFormat: ModuleFormat,
   featureFlags: FeatureFlags,
+  runtimeAPIVersion: number,
 ): ModuleFileExtension => {
-  if (moduleFormat === MODULE_FORMAT.ESM && featureFlags.zisi_pure_esm_mjs) {
+  if (moduleFormat === MODULE_FORMAT.ESM && (runtimeAPIVersion === 2 || featureFlags.zisi_pure_esm_mjs)) {
     return MODULE_FILE_EXTENSION.MJS
   }
 

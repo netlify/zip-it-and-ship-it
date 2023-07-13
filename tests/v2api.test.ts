@@ -30,6 +30,11 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
           featureFlags: { zisi_functions_api_v2: true },
         }),
       })
+
+      for (const entry of files) {
+        expect(entry.runtimeAPIVersion).toBe(2)
+      }
+
       const unzippedFunctions = await unzipFiles(files)
 
       const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/${files[0].entryFilename}`)
@@ -51,6 +56,11 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
           featureFlags: { zisi_functions_api_v2: true },
         }),
       })
+
+      for (const entry of files) {
+        expect(entry.runtimeAPIVersion).toBe(2)
+      }
+
       const unzippedFunctions = await unzipFiles(files)
 
       const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/${files[0].entryFilename}`)
@@ -74,6 +84,10 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         }),
       })
 
+      for (const entry of files) {
+        expect(entry.runtimeAPIVersion).toBe(2)
+      }
+
       const [{ name: archive, entryFilename }] = files
       const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
       const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
@@ -95,6 +109,10 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
           featureFlags: { zisi_functions_api_v2: true },
         }),
       })
+
+      for (const entry of files) {
+        expect(entry.runtimeAPIVersion).toBe(2)
+      }
 
       const [{ name: archive, entryFilename, path }] = files
 
