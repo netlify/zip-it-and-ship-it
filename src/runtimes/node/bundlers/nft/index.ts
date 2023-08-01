@@ -124,8 +124,7 @@ const traceFilesAndTranspile = async function ({
         const extension = extname(path)
 
         if (tsExtensions.has(extension)) {
-          const format = extension === '.cts' ? MODULE_FORMAT.COMMONJS : tsFormat
-          const transpiledSource = await transpile({ config, name, format, path })
+          const transpiledSource = await transpile({ config, name, format: tsFormat, path })
           const newPath = getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
           // Overriding the contents of the `.ts` file.
