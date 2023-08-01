@@ -10,12 +10,14 @@ import { cachedReadFile, getPathWithExtension } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import { MODULE_FORMAT } from '../../utils/module_format.js'
+import { MODULE_FORMAT, MODULE_FILE_EXTENSION } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
 import { transpile } from './transpile.js'
+
+const TS_EXTENSIONS = new Set(['.ts', '.mts', '.cts'])
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -102,9 +104,10 @@ const traceFilesAndTranspile = async function ({
   name: string
   runtimeAPIVersion: number
 }) {
-  const isTypeScript = extname(mainFile) === '.ts'
+  const isTypeScript = TS_EXTENSIONS.has(extname(mainFile))
   const tsAliases = new Map<string, string>()
   const tsRewrites = new Map<string, string>()
+  const tsFormat = runtimeAPIVersion === 2 ? MODULE_FORMAT.ESM : MODULE_FORMAT.COMMONJS
 
   const {
     fileList: dependencyPaths,
@@ -118,9 +121,12 @@ const traceFilesAndTranspile = async function ({
     ignore: getIgnoreFunction(config),
     readFile: async (path: string) => {
       try {
-        if (extname(path) === '.ts') {
-          const transpiledSource = await transpile({ config, name, path })
-          const newPath = getPathWithExtension(path, '.js')
+        const extension = extname(path)
+
+        if (TS_EXTENSIONS.has(extension)) {
+          const format = extension === '.cts' ? MODULE_FORMAT.COMMONJS : tsFormat
+          const transpiledSource = await transpile({ config, name, format, path })
+          const newPath = getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
           // Overriding the contents of the `.ts` file.
           tsRewrites.set(path, transpiledSource)
@@ -131,9 +137,7 @@ const traceFilesAndTranspile = async function ({
           return transpiledSource
         }
 
-        const source = await cachedReadFile(cache.fileCache, path)
-
-        return source
+        return await cachedReadFile(cache.fileCache, path)
       } catch (error) {
         if (error.code === 'ENOENT' || error.code === 'EISDIR') {
           return null
@@ -166,8 +170,8 @@ const traceFilesAndTranspile = async function ({
   if (isTypeScript) {
     return {
       aliases: tsAliases,
-      mainFile: getPathWithExtension(mainFile, '.js'),
-      moduleFormat: MODULE_FORMAT.ESM,
+      mainFile: getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
+      moduleFormat: tsFormat,
       paths: normalizedDependencyPaths,
       rewrites: tsRewrites,
     }
