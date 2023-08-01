@@ -17,9 +17,9 @@ import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 import { processESM } from './es_modules.js'
 import { transpile } from './transpile.js'
 
-const TS_EXTENSIONS = new Set(['.ts', '.mts', '.cts'])
-
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
+
+const tsExtensions = new Set(['.ts', '.mts', '.cts'])
 
 const bundle: BundleFunction = async ({
   basePath,
@@ -104,7 +104,7 @@ const traceFilesAndTranspile = async function ({
   name: string
   runtimeAPIVersion: number
 }) {
-  const isTypeScript = TS_EXTENSIONS.has(extname(mainFile))
+  const isTypeScript = tsExtensions.has(extname(mainFile))
   const tsAliases = new Map<string, string>()
   const tsRewrites = new Map<string, string>()
   const tsFormat = runtimeAPIVersion === 2 ? MODULE_FORMAT.ESM : MODULE_FORMAT.COMMONJS
@@ -123,7 +123,7 @@ const traceFilesAndTranspile = async function ({
       try {
         const extension = extname(path)
 
-        if (TS_EXTENSIONS.has(extension)) {
+        if (tsExtensions.has(extension)) {
           const format = extension === '.cts' ? MODULE_FORMAT.COMMONJS : tsFormat
           const transpiledSource = await transpile({ config, name, format, path })
           const newPath = getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
