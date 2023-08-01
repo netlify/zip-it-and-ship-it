@@ -6,17 +6,22 @@ import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import type { RuntimeCache } from '../../../../utils/cache.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
-import { cachedReadFile } from '../../../../utils/fs.js'
 import { RUNTIME } from '../../../runtime.js'
 import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
-import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
+import { getPackageJSONWithType, getPackageJsonIfAvailable } from '../../utils/package_json.js'
 import { NODE_BUNDLER } from '../types.js'
 
 import { transpile } from './transpile.js'
 
 const getPatchedESMPackages = async (packages: string[], cache: RuntimeCache) => {
-  const patchedPackages = await Promise.all(packages.map((path) => patchESMPackage(path, cache)))
+  const patchedPackages = await Promise.all(
+    packages.map(async (path) => {
+      const patchedPackage = await getPackageJSONWithType(path, 'commonjs', cache)
+
+      return JSON.stringify(patchedPackage)
+    }),
+  )
   const patchedPackagesMap = new Map<string, string>()
 
   packages.forEach((packagePath, index) => {
@@ -39,17 +44,6 @@ const isEntrypointESM = ({
   const entrypointIsESM = absoluteESMPaths.has(mainFile)
 
   return entrypointIsESM
-}
-
-const patchESMPackage = async (path: string, cache: RuntimeCache) => {
-  const file = await cachedReadFile(cache.fileCache, path)
-  const packageJson: PackageJson = JSON.parse(file)
-  const patchedPackageJson = {
-    ...packageJson,
-    type: 'commonjs',
-  }
-
-  return JSON.stringify(patchedPackageJson)
 }
 
 export const processESM = async ({
