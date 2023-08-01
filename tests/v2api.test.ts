@@ -33,6 +33,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       for (const entry of files) {
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
 
@@ -60,6 +61,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       for (const entry of files) {
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
 
@@ -88,6 +90,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       for (const entry of files) {
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
 
@@ -104,7 +107,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
   testMany(
     'Handles a basic TypeScript function',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files, tmpDir } = await zipFixture('v2-api-ts', {
         fixtureDir: FIXTURES_V2_DIR,
@@ -115,6 +118,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       for (const entry of files) {
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
 
