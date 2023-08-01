@@ -209,7 +209,12 @@ const transpileESM = async ({
   await Promise.all(
     pathsToTranspile.map(async (path) => {
       const absolutePath = resolvePath(path, basePath)
-      const transpiled = await transpile(absolutePath, config, name)
+      const transpiled = await transpile({
+        config,
+        format: MODULE_FORMAT.COMMONJS,
+        name,
+        path: absolutePath,
+      })
 
       rewrites.set(absolutePath, transpiled)
     }),

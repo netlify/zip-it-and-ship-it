@@ -67,10 +67,6 @@ const getDefaultBundler = async ({
   runtimeAPIVersion: number
 }): Promise<NodeBundlerName> => {
   if (runtimeAPIVersion === 2) {
-    if (ESBUILD_EXTENSIONS.has(extension)) {
-      return NODE_BUNDLER.ESBUILD
-    }
-
     return NODE_BUNDLER.NFT
   }
 
