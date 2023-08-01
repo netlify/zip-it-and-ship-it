@@ -1,4 +1,4 @@
-import { basename, dirname, join, normalize, resolve } from 'path'
+import { basename, dirname, join, normalize, resolve, extname } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
@@ -6,14 +6,16 @@ import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import type { RuntimeCache } from '../../../../utils/cache.js'
-import { cachedReadFile } from '../../../../utils/fs.js'
+import { cachedReadFile, getPathWithExtension } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
+import { MODULE_FORMAT } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
+import { transpile } from './transpile.js'
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -34,6 +36,8 @@ const bundle: BundleFunction = async ({
     includedFilesBasePath || basePath,
   )
   const {
+    aliases,
+    mainFile: normalizedMainFile,
     moduleFormat,
     paths: dependencyPaths,
     rewrites,
@@ -55,10 +59,11 @@ const bundle: BundleFunction = async ({
   const srcFiles = [...filteredIncludedPaths].sort()
 
   return {
+    aliases,
     basePath: getBasePath(dirnames),
     includedFiles: includedPaths,
     inputs: dependencyPaths,
-    mainFile,
+    mainFile: normalizedMainFile,
     moduleFormat,
     rewrites,
     srcFiles,
@@ -97,6 +102,7 @@ const traceFilesAndTranspile = async function ({
   name: string
   runtimeAPIVersion: number
 }) {
+  const aliases = new Map<string, string>()
   const {
     fileList: dependencyPaths,
     esmFileList,
@@ -109,6 +115,15 @@ const traceFilesAndTranspile = async function ({
     ignore: getIgnoreFunction(config),
     readFile: async (path: string) => {
       try {
+        if (extname(path) === '.ts') {
+          const source = await transpile({ config, format: MODULE_FORMAT.ESM, name, path })
+          const newPath = getPathWithExtension(path, '.js')
+
+          aliases.set(path, newPath)
+
+          return source
+        }
+
         const source = await cachedReadFile(cache.fileCache, path)
 
         return source
@@ -151,8 +166,11 @@ const traceFilesAndTranspile = async function ({
     name,
     runtimeAPIVersion,
   })
+  const normalizedMainFile = extname(mainFile) === '.ts' ? getPathWithExtension(mainFile, '.js') : mainFile
 
   return {
+    aliases,
+    mainFile: normalizedMainFile,
     moduleFormat,
     paths: normalizedDependencyPaths,
     rewrites,

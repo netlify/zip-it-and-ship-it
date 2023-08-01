@@ -929,7 +929,7 @@ describe('zip-it-and-ship-it', () => {
 
   testMany(
     'Handles a TypeScript function ({name}.ts)',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('node-typescript', {
         opts: options,
@@ -942,7 +942,7 @@ describe('zip-it-and-ship-it', () => {
 
   testMany(
     'Handles a TypeScript function ({name}/{name}.ts)',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('node-typescript-directory-1', {
         opts: options,
@@ -955,7 +955,7 @@ describe('zip-it-and-ship-it', () => {
 
   testMany(
     'Handles a TypeScript function ({name}/index.ts)',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('node-typescript-directory-2', {
         opts: options,
@@ -968,7 +968,7 @@ describe('zip-it-and-ship-it', () => {
 
   testMany(
     'Handles a TypeScript function with imports',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('node-typescript-with-imports', {
         opts: options,
