@@ -186,6 +186,8 @@ const createZipArchive = async function ({
     addBootstrapFile(srcFiles, aliases)
   }
 
+  // If the module format is ESM, we need to have a `package.json` file with
+  // `type` set to `module`.
   if (moduleFormat === MODULE_FORMAT.ESM) {
     await addOrUpdatePackageJSON({ archive, basePath, cache, rewrites, srcFiles, userNamespace })
   }
@@ -234,9 +236,6 @@ const addStat = async function (cache: RuntimeCache, srcFile: string) {
   return { srcFile, stat }
 }
 
-// If the module format is ESM, we need to have a `package.json` file with
-// `type` set to `module`. If there is a `package.json` already, patch it
-// with the right `type`. If not, create one.
 const addOrUpdatePackageJSON = async function ({
   archive,
   basePath,
@@ -255,20 +254,24 @@ const addOrUpdatePackageJSON = async function ({
   const packageJSONPath = join(basePath, 'package.json')
   const hasPackageJSON = srcFiles.includes(packageJSONPath)
 
+  // If there is a `package.json` already, patch it with the right `type`.
   if (hasPackageJSON) {
     const patchedPackageJSON = await getPackageJSONWithType(packageJSONPath, 'module', cache)
 
     rewrites.set(packageJSONPath, JSON.stringify(patchedPackageJSON))
-  } else {
-    const normalizedPackageJSONPath = normalizeFilePath({
-      commonPrefix: basePath,
-      path: packageJSONPath,
-      userNamespace,
-    })
-    const contents = JSON.stringify({ type: 'module' })
 
-    addZipContent(archive, contents, normalizedPackageJSONPath)
+    return
   }
+
+  // If not, create one.
+  const normalizedPackageJSONPath = normalizeFilePath({
+    commonPrefix: basePath,
+    path: packageJSONPath,
+    userNamespace,
+  })
+  const contents = JSON.stringify({ type: 'module' })
+
+  addZipContent(archive, contents, normalizedPackageJSONPath)
 }
 
 const zipJsFile = function ({
