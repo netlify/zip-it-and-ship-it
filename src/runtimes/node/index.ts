@@ -10,9 +10,7 @@ import { getBundler, getBundlerName } from './bundlers/index.js'
 import { NODE_BUNDLER } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
-import { MODULE_FORMAT } from './utils/module_format.js'
 import { getNodeRuntime, getNodeRuntimeForV2 } from './utils/node_runtime.js'
-import { getPackageJSONWithType } from './utils/package_json.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
 import { zipNodeJs } from './utils/zip.js'
 
@@ -107,23 +105,6 @@ const zipFunction: ZipFunction = async function ({
   })
 
   createPluginsModulesPathAliases(srcFiles, pluginsModulesPath, aliases, finalBasePath)
-
-  const packageJSONPath = join(finalBasePath, 'package.json')
-
-  // If the module format is ESM, we need to have a `package.json` file with
-  // `type` set to `module`. If there is a `package.json` already, patch it
-  // with the right `type`. If not, create one.
-  if (moduleFormat === MODULE_FORMAT.ESM) {
-    if (srcFiles.includes(packageJSONPath)) {
-      const patchedPackageJSON = await getPackageJSONWithType(packageJSONPath, 'module', cache)
-
-      rewrites.set(packageJSONPath, JSON.stringify(patchedPackageJSON))
-    } else {
-      srcFiles.push(packageJSONPath)
-
-      rewrites.set(packageJSONPath, JSON.stringify({ type: 'module' }))
-    }
-  }
 
   const zipPath = await zipNodeJs({
     aliases,
