@@ -10,7 +10,7 @@ import { ARCHIVE_FORMAT, NODE_BUNDLER, zipFunction } from '../src/main.js'
 
 import {
   FIXTURES_DIR,
-  FIXTURES_V2_DIR,
+  FIXTURES_ESM_DIR,
   getBundlerNameFromOptions,
   importFunctionFile,
   unzipFiles,
@@ -168,7 +168,7 @@ describe('zipFunction', () => {
     testMany('Can use zipFunction()', [...allBundleConfigs, 'bundler_none'], async (options, variation) => {
       const bundler = getBundlerNameFromOptions(options)
       const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-      const mainFile = join(FIXTURES_V2_DIR, 'v2-api', 'function.js')
+      const mainFile = join(FIXTURES_ESM_DIR, 'v2-api', 'function.js')
       const result = (await zipFunction(mainFile, tmpDir, {
         ...options,
         featureFlags: { zisi_functions_api_v2: true },
@@ -191,7 +191,7 @@ describe('zipFunction', () => {
 
     test('Logs to systemlog', async () => {
       const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-      const mainFile = join(FIXTURES_V2_DIR, 'v2-api', 'function.js')
+      const mainFile = join(FIXTURES_ESM_DIR, 'v2-api', 'function.js')
       const systemLog = vi.fn()
 
       await zipFunction(mainFile, tmpDir, {

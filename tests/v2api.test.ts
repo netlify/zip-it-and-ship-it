@@ -9,7 +9,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { ARCHIVE_FORMAT } from '../src/archive.js'
 
 import { invokeLambda, readAsBuffer } from './helpers/lambda.js'
-import { zipFixture, unzipFiles, importFunctionFile, FIXTURES_V2_DIR } from './helpers/main.js'
+import { zipFixture, unzipFiles, importFunctionFile, FIXTURES_ESM_DIR } from './helpers/main.js'
 import { testMany } from './helpers/test_many.js'
 
 const pGlob = promisify(glob)
@@ -26,7 +26,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('v2-api', {
-        fixtureDir: FIXTURES_V2_DIR,
+        fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           featureFlags: { zisi_functions_api_v2: true },
         }),
@@ -54,7 +54,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('v2-api-mjs', {
-        fixtureDir: FIXTURES_V2_DIR,
+        fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           featureFlags: { zisi_functions_api_v2: true },
         }),
@@ -82,7 +82,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files, tmpDir } = await zipFixture('v2-api', {
-        fixtureDir: FIXTURES_V2_DIR,
+        fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
           featureFlags: { zisi_functions_api_v2: true },
@@ -110,7 +110,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files, tmpDir } = await zipFixture('v2-api-ts', {
-        fixtureDir: FIXTURES_V2_DIR,
+        fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
           featureFlags: { zisi_functions_api_v2: true },
@@ -139,7 +139,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
   test('Returns Node.js 18 if older version is set', async () => {
     const { files } = await zipFixture('v2-api-mjs', {
-      fixtureDir: FIXTURES_V2_DIR,
+      fixtureDir: FIXTURES_ESM_DIR,
       opts: {
         featureFlags: { zisi_functions_api_v2: true },
         config: {
@@ -155,7 +155,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
   test('Returns Node.js 18 if invalid version is set', async () => {
     const { files } = await zipFixture('v2-api-mjs', {
-      fixtureDir: FIXTURES_V2_DIR,
+      fixtureDir: FIXTURES_ESM_DIR,
       opts: {
         featureFlags: { zisi_functions_api_v2: true },
         config: {
@@ -171,7 +171,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
   test('Returns no Node.js version if version is newer than 18 but not a valid runtime', async () => {
     const { files } = await zipFixture('v2-api-mjs', {
-      fixtureDir: FIXTURES_V2_DIR,
+      fixtureDir: FIXTURES_ESM_DIR,
       opts: {
         featureFlags: { zisi_functions_api_v2: true },
         config: {
@@ -189,7 +189,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     const systemLog = vi.fn()
 
     await zipFixture('v2-api', {
-      fixtureDir: FIXTURES_V2_DIR,
+      fixtureDir: FIXTURES_ESM_DIR,
       opts: {
         featureFlags: { zisi_functions_api_v2: true },
         systemLog,
