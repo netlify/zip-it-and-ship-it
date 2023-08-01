@@ -9,7 +9,7 @@ import { NODE_BUNDLER } from '../types.js'
 
 interface TranspileOptions {
   config: FunctionConfig
-  format: ModuleFormat
+  format?: ModuleFormat
   name: string
   path: string
 }

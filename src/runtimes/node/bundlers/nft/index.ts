@@ -102,7 +102,10 @@ const traceFilesAndTranspile = async function ({
   name: string
   runtimeAPIVersion: number
 }) {
-  const aliases = new Map<string, string>()
+  const isTypeScript = extname(mainFile) === '.ts'
+  const tsAliases = new Map<string, string>()
+  const tsRewrites = new Map<string, string>()
+
   const {
     fileList: dependencyPaths,
     esmFileList,
@@ -116,12 +119,16 @@ const traceFilesAndTranspile = async function ({
     readFile: async (path: string) => {
       try {
         if (extname(path) === '.ts') {
-          const source = await transpile({ config, format: MODULE_FORMAT.ESM, name, path })
+          const transpiledSource = await transpile({ config, name, path })
           const newPath = getPathWithExtension(path, '.js')
 
-          aliases.set(path, newPath)
+          // Overriding the contents of the `.ts` file.
+          tsRewrites.set(path, transpiledSource)
 
-          return source
+          // Rewriting the `.ts` path to `.js` in the bundle.
+          tsAliases.set(path, newPath)
+
+          return transpiledSource
         }
 
         const source = await cachedReadFile(cache.fileCache, path)
@@ -155,6 +162,17 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
+
+  if (isTypeScript) {
+    return {
+      aliases: tsAliases,
+      mainFile: getPathWithExtension(mainFile, '.js'),
+      moduleFormat: MODULE_FORMAT.ESM,
+      paths: normalizedDependencyPaths,
+      rewrites: tsRewrites,
+    }
+  }
+
   const { moduleFormat, rewrites } = await processESM({
     basePath,
     cache,
@@ -166,11 +184,9 @@ const traceFilesAndTranspile = async function ({
     name,
     runtimeAPIVersion,
   })
-  const normalizedMainFile = extname(mainFile) === '.ts' ? getPathWithExtension(mainFile, '.js') : mainFile
 
   return {
-    aliases,
-    mainFile: normalizedMainFile,
+    mainFile,
     moduleFormat,
     paths: normalizedDependencyPaths,
     rewrites,

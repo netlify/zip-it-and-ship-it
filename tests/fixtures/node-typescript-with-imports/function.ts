@@ -1,1 +1,3 @@
-export { type } from './lib/util.js'
+import { type } from './lib/util.js'
+
+export const handler = () => type

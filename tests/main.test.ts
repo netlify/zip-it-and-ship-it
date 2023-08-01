@@ -935,8 +935,8 @@ describe('zip-it-and-ship-it', () => {
         opts: options,
       })
       const unzippedFunctions = await unzipFiles(files)
-      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
-      expect(type).toBeTypeOf('string')
+      const { handler } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+      expect(handler()).toBe('❤️ TypeScript')
     },
   )
 
@@ -948,8 +948,8 @@ describe('zip-it-and-ship-it', () => {
         opts: options,
       })
       const unzippedFunctions = await unzipFiles(files)
-      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
-      expect(type).toBeTypeOf('string')
+      const { handler } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+      expect(handler()).toBe('❤️ TypeScript')
     },
   )
 
@@ -961,8 +961,8 @@ describe('zip-it-and-ship-it', () => {
         opts: options,
       })
       const unzippedFunctions = await unzipFiles(files)
-      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
-      expect(type).toBeTypeOf('string')
+      const { handler } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+      expect(handler()).toBe('❤️ TypeScript')
     },
   )
 
@@ -974,8 +974,9 @@ describe('zip-it-and-ship-it', () => {
         opts: options,
       })
       const unzippedFunctions = await unzipFiles(files)
-      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
-      expect(type).toBeTypeOf('string')
+      const { handler } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+
+      expect(handler()).toBe('❤️ TypeScript')
     },
   )
 
