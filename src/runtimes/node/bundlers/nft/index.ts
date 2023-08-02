@@ -50,6 +50,7 @@ const bundle: BundleFunction = async ({
     mainFile,
     pluginsModulesPath,
     name,
+    repositoryRoot,
     runtimeAPIVersion,
   })
   const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
@@ -92,6 +93,7 @@ const traceFilesAndTranspile = async function ({
   mainFile,
   pluginsModulesPath,
   name,
+  repositoryRoot,
   runtimeAPIVersion,
 }: {
   basePath?: string
@@ -101,10 +103,11 @@ const traceFilesAndTranspile = async function ({
   mainFile: string
   pluginsModulesPath?: string
   name: string
+  repositoryRoot?: string
   runtimeAPIVersion: number
 }) {
   const isTypeScript = tsExtensions.has(extname(mainFile))
-  const tsFormat = isTypeScript ? getTSModuleFormat(mainFile) : MODULE_FORMAT.COMMONJS
+  const tsFormat = isTypeScript ? getTSModuleFormat(mainFile, repositoryRoot) : MODULE_FORMAT.COMMONJS
   const tsAliases = new Map<string, string>()
   const tsRewrites = new Map<string, string>()
 
