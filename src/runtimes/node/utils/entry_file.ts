@@ -33,7 +33,8 @@ const getEntryFileContents = (
     return [
       `import * as func from '${importPath}'`,
       `import * as bootstrap from './${BOOTSTRAP_FILE_NAME}'`,
-      `export const handler = bootstrap.getLambdaHandler(func)`,
+      'const funcModule = typeof func.default === "function" ? func : func.default',
+      `export const handler = bootstrap.getLambdaHandler(funcModule)`,
     ].join(';')
   }
 
