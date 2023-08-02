@@ -1,6 +1,8 @@
 import type { FeatureFlags } from '../../../feature_flags.js'
 import { ObjectValues } from '../../../types/utils.js'
 
+export const tsExtensions = new Set(['.ts', '.cts', '.mts'])
+
 export const MODULE_FORMAT = {
   COMMONJS: 'cjs',
   ESM: 'esm',

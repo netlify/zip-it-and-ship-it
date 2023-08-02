@@ -117,6 +117,7 @@ const zipFunction: ZipFunction = async function ({
     filename,
     mainFile: finalMainFile,
     moduleFormat,
+    name,
     rewrites,
     runtimeAPIVersion,
     srcFiles,

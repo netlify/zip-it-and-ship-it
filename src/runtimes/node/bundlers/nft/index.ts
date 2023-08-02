@@ -10,7 +10,7 @@ import { cachedReadFile, getPathWithExtension } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import { MODULE_FORMAT, MODULE_FILE_EXTENSION } from '../../utils/module_format.js'
+import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getModuleFormat as getTSModuleFormat } from '../../utils/tsconfig.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
@@ -19,8 +19,6 @@ import { processESM } from './es_modules.js'
 import { transpile } from './transpile.js'
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
-
-const tsExtensions = new Set(['.ts', '.mts', '.cts'])
 
 const bundle: BundleFunction = async ({
   basePath,
