@@ -3,9 +3,6 @@ import { basename, join } from 'path'
 
 import { findUp, findUpStop, pathExists } from 'find-up'
 
-import type { RuntimeCache } from '../../../utils/cache.js'
-import { cachedReadFile } from '../../../utils/fs.js'
-
 export interface PackageJson {
   name?: string
   version?: string
@@ -94,14 +91,3 @@ export const sanitizePackageJson = (packageJson: Record<string, unknown>): Packa
   ...packageJson,
   files: sanitizeFiles(packageJson.files),
 })
-
-export const getPackageJSONWithType = async (path: string, type: string, cache: RuntimeCache) => {
-  const file = await cachedReadFile(cache.fileCache, path)
-  const packageJson: PackageJson = JSON.parse(file)
-  const patchedPackageJson = {
-    ...packageJson,
-    type,
-  }
-
-  return patchedPackageJson
-}
