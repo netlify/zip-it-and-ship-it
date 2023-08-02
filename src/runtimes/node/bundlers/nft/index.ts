@@ -12,6 +12,7 @@ import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
 import { MODULE_FORMAT, MODULE_FILE_EXTENSION } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
+import { getModuleFormat as getTSModuleFormat } from '../../utils/tsconfig.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
@@ -105,9 +106,9 @@ const traceFilesAndTranspile = async function ({
   runtimeAPIVersion: number
 }) {
   const isTypeScript = tsExtensions.has(extname(mainFile))
+  const tsFormat = isTypeScript ? getTSModuleFormat(mainFile) : MODULE_FORMAT.COMMONJS
   const tsAliases = new Map<string, string>()
   const tsRewrites = new Map<string, string>()
-  const tsFormat = runtimeAPIVersion === 2 ? MODULE_FORMAT.ESM : MODULE_FORMAT.COMMONJS
 
   const {
     fileList: dependencyPaths,

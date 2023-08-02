@@ -32,8 +32,8 @@ const getEntryFileContents = (
   if (runtimeAPIVersion === 2) {
     return [
       `import * as func from '${importPath}'`,
-      `import { getLambdaHandler } from './${BOOTSTRAP_FILE_NAME}'`,
-      `export const handler = getLambdaHandler(func)`,
+      `import * as bootstrap from './${BOOTSTRAP_FILE_NAME}'`,
+      `export const handler = bootstrap.getLambdaHandler(func)`,
     ].join(';')
   }
 

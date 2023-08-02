@@ -28,9 +28,8 @@ import {
   getEntryFile,
   isNamedLikeEntryFile,
 } from './entry_file.js'
-import { ModuleFormat, MODULE_FORMAT } from './module_format.js'
+import { ModuleFormat } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
-import { getPackageJSONWithType } from './package_json.js'
 
 // Taken from https://www.npmjs.com/package/cpy.
 const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2
@@ -186,12 +185,6 @@ const createZipArchive = async function ({
     addBootstrapFile(srcFiles, aliases)
   }
 
-  // If the module format is ESM, we need to have a `package.json` file with
-  // `type` set to `module`.
-  if (moduleFormat === MODULE_FORMAT.ESM) {
-    await addOrUpdatePackageJSON({ archive, basePath, cache, rewrites, srcFiles, userNamespace })
-  }
-
   const srcFilesInfos = await Promise.all(srcFiles.map((file) => addStat(cache, file)))
 
   // We ensure this is not async, so that the archive's checksum is
@@ -234,44 +227,6 @@ const addStat = async function (cache: RuntimeCache, srcFile: string) {
   const stat = await cachedLstat(cache.lstatCache, srcFile)
 
   return { srcFile, stat }
-}
-
-const addOrUpdatePackageJSON = async function ({
-  archive,
-  basePath,
-  cache,
-  rewrites,
-  srcFiles,
-  userNamespace,
-}: {
-  archive: ZipArchive
-  basePath: string
-  cache: RuntimeCache
-  rewrites: Map<string, string>
-  srcFiles: string[]
-  userNamespace: string
-}) {
-  const packageJSONPath = join(basePath, 'package.json')
-  const hasPackageJSON = srcFiles.includes(packageJSONPath)
-
-  // If there is a `package.json` already, patch it with the right `type`.
-  if (hasPackageJSON) {
-    const patchedPackageJSON = await getPackageJSONWithType(packageJSONPath, 'module', cache)
-
-    rewrites.set(packageJSONPath, JSON.stringify(patchedPackageJSON))
-
-    return
-  }
-
-  // If not, create one.
-  const normalizedPackageJSONPath = normalizeFilePath({
-    commonPrefix: basePath,
-    path: packageJSONPath,
-    userNamespace,
-  })
-  const contents = JSON.stringify({ type: 'module' })
-
-  addZipContent(archive, contents, normalizedPackageJSONPath)
 }
 
 const zipJsFile = function ({
