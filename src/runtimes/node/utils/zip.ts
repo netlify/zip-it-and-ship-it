@@ -52,6 +52,7 @@ interface ZipNodeParameters {
   mainFile: string
   moduleFormat: ModuleFormat
   name: string
+  repositoryRoot?: string
   rewrites?: Map<string, string>
   runtimeAPIVersion: number
   srcFiles: string[]
@@ -137,6 +138,7 @@ const createZipArchive = async function ({
   mainFile,
   moduleFormat,
   name,
+  repositoryRoot,
   rewrites,
   runtimeAPIVersion,
   srcFiles,
@@ -190,7 +192,7 @@ const createZipArchive = async function ({
     addBootstrapFile(srcFiles, aliases)
 
     if (tsExtensions.has(extension) && moduleFormat === MODULE_FORMAT.ESM) {
-      await ensurePackageJSONWithModuleType({ archive, basePath, mainFile, name, userNamespace })
+      await ensurePackageJSONWithModuleType({ archive, basePath, mainFile, name, repositoryRoot, userNamespace })
     }
   }
 
@@ -243,12 +245,14 @@ const ensurePackageJSONWithModuleType = async function ({
   basePath,
   mainFile,
   name,
+  repositoryRoot,
   userNamespace,
 }: {
   archive: ZipArchive
   basePath: string
   mainFile: string
   name: string
+  repositoryRoot?: string
   userNamespace: string
 }) {
   const functionDirectory = dirname(mainFile)
@@ -256,7 +260,7 @@ const ensurePackageJSONWithModuleType = async function ({
   let packageJSON: PackageJsonFile | null = null
 
   try {
-    packageJSON = await getClosestPackageJson(functionDirectory)
+    packageJSON = await getClosestPackageJson(functionDirectory, repositoryRoot)
   } catch {
     // There is no valid `package.json`. This is a no-op.
   }
