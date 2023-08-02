@@ -132,7 +132,7 @@ const createZipArchive = async function ({
   filename,
   mainFile,
   moduleFormat,
-  rewrites = new Map(),
+  rewrites,
   runtimeAPIVersion,
   srcFiles,
 }: ZipNodeParameters) {
