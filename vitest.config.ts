@@ -10,7 +10,7 @@ export default defineConfig({
     deps: {
       // Disable vitest handling of imports to these paths, especially the tmpdir is important as we extract functions to there
       // and then import them and we want them to be handled as normal Node.js imports without any vite magic
-      external: [/\/fixtures\//, /\/node_modules\//, /\/dist\//, new RegExp(tmpdir())],
+      external: [/\/fixtures\//, /\/fixtures-esm\//, /\/node_modules\//, /\/dist\//, new RegExp(tmpdir())],
       interopDefault: false,
     },
     coverage: {
