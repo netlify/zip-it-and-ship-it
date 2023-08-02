@@ -5,13 +5,10 @@ import { NodeFileTraceReasons } from '@vercel/nft'
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import type { RuntimeCache } from '../../../../utils/cache.js'
-import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { cachedReadFile } from '../../../../utils/fs.js'
-import { RUNTIME } from '../../../runtime.js'
 import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
-import { NODE_BUNDLER } from '../types.js'
 
 import { transpile } from './transpile.js'
 
@@ -83,20 +80,7 @@ export const processESM = async ({
     }
   }
 
-  const entrypointIsESM = isEntrypointESM({ basePath, esmPaths, mainFile })
-
-  if (!entrypointIsESM) {
-    if (runtimeAPIVersion === 2) {
-      throw new FunctionBundlingUserError(
-        `The function '${name}' must use the ES module syntax. To learn more, visit https://ntl.fyi/esm.`,
-        {
-          functionName: name,
-          runtime: RUNTIME.JAVASCRIPT,
-          bundler: NODE_BUNDLER.NFT,
-        },
-      )
-    }
-
+  if (!isEntrypointESM({ basePath, esmPaths, mainFile })) {
     return {
       moduleFormat: MODULE_FORMAT.COMMONJS,
     }
@@ -109,17 +93,6 @@ export const processESM = async ({
     return {
       moduleFormat: MODULE_FORMAT.ESM,
     }
-  }
-
-  if (runtimeAPIVersion === 2) {
-    throw new FunctionBundlingUserError(
-      `The function '${name}' must use the ES module syntax. To learn more, visit https://ntl.fyi/esm.`,
-      {
-        functionName: name,
-        runtime: RUNTIME.JAVASCRIPT,
-        bundler: NODE_BUNDLER.NFT,
-      },
-    )
   }
 
   const rewrites = await transpileESM({ basePath, cache, config, esmPaths, reasons, name })
