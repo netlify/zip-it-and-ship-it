@@ -128,18 +128,15 @@ const createDirectory = async function ({
 
   if (tsExtensions.has(extension) && moduleFormat === MODULE_FORMAT.ESM && runtimeAPIVersion === 2) {
     const packageJSON = await ensurePackageJSONWithModuleType({
-      functionDirectory: dirname(mainFile),
+      basePath,
+      mainFile,
       name,
       repositoryRoot,
+      userNamespace: DEFAULT_USER_SUBDIRECTORY,
     })
 
     if (packageJSON) {
-      const normalizedDestPath = normalizeFilePath({
-        commonPrefix: basePath,
-        path: packageJSON.path,
-        userNamespace: DEFAULT_USER_SUBDIRECTORY,
-      })
-      const absoluteDestPath = join(functionFolder, normalizedDestPath)
+      const absoluteDestPath = join(functionFolder, packageJSON.path)
 
       await writeFile(absoluteDestPath, packageJSON.contents)
     }
@@ -215,15 +212,15 @@ const createZipArchive = async function ({
 
   if (tsExtensions.has(extension) && moduleFormat === MODULE_FORMAT.ESM && runtimeAPIVersion === 2) {
     const packageJSON = await ensurePackageJSONWithModuleType({
-      functionDirectory: dirname(mainFile),
+      basePath,
+      mainFile,
       name,
       repositoryRoot,
+      userNamespace,
     })
 
     if (packageJSON) {
-      const normalizedPath = normalizeFilePath({ commonPrefix: basePath, path: packageJSON.path, userNamespace })
-
-      addZipContent(archive, packageJSON.contents, normalizedPath)
+      addZipContent(archive, packageJSON.contents, packageJSON.path)
     }
   }
 
@@ -272,14 +269,20 @@ const addStat = async function (cache: RuntimeCache, srcFile: string) {
 }
 
 const ensurePackageJSONWithModuleType = async function ({
-  functionDirectory,
+  basePath,
+  mainFile,
   name,
   repositoryRoot,
+  userNamespace,
 }: {
-  functionDirectory: string
+  basePath: string
+  mainFile: string
   name: string
   repositoryRoot?: string
+  userNamespace: string
 }) {
+  const functionDirectory = dirname(mainFile)
+
   let packageJSON: PackageJsonFile | null = null
 
   try {
@@ -300,7 +303,7 @@ const ensurePackageJSONWithModuleType = async function ({
   // configuration settings.
   if (packageJSON !== null && dirname(packageJSON.path) === functionDirectory) {
     throw new FunctionBundlingUserError(
-      `The function '${name}' has a contradictory configuration: a 'tsconfig.json' file is defining the module format as ESM, but '${packageJSON.path}' specifies CommonJS. If you want to use ESM, consider adding '"type": "module"' to 'package.json'; if you'd like to use CommonJS, consider setting the 'compilerOptions.module' property in 'tsconfig.json' to 'commonjs'.`,
+      `The function defined in '${mainFile}' has a contradictory configuration: a 'tsconfig.json' file is defining the module format as ESM, but '${packageJSON.path}' specifies CommonJS. If you want to use ESM, consider adding '"type": "module"' to 'package.json'; if you'd like to use CommonJS, consider setting the 'compilerOptions.module' property in 'tsconfig.json' to 'commonjs'.`,
       {
         functionName: name,
         runtime: RUNTIME.JAVASCRIPT,
@@ -311,11 +314,12 @@ const ensurePackageJSONWithModuleType = async function ({
   // To ensure that the entry file and any local imports run as ESM, plant a
   // `package.json` with `"type": "module"` adjacent to the entry point.
   const path = join(functionDirectory, 'package.json')
+  const normalizedPath = normalizeFilePath({ commonPrefix: basePath, path, userNamespace })
   const contents = JSON.stringify({ type: 'module' })
 
   return {
     contents,
-    path,
+    path: normalizedPath,
   }
 }
 
