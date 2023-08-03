@@ -77,6 +77,8 @@ const createDirectory = async function ({
   filename,
   mainFile,
   moduleFormat,
+  name,
+  repositoryRoot,
   rewrites = new Map(),
   runtimeAPIVersion,
   srcFiles,
@@ -123,6 +125,22 @@ const createDirectory = async function ({
     },
     { concurrency: COPY_FILE_CONCURRENCY },
   )
+
+  if (tsExtensions.has(extension) && moduleFormat === MODULE_FORMAT.ESM && runtimeAPIVersion === 2) {
+    const packageJSON = await ensurePackageJSONWithModuleType({
+      basePath,
+      mainFile,
+      name,
+      repositoryRoot,
+      userNamespace: DEFAULT_USER_SUBDIRECTORY,
+    })
+
+    if (packageJSON) {
+      const absoluteDestPath = join(functionFolder, packageJSON.path)
+
+      await writeFile(absoluteDestPath, packageJSON.contents)
+    }
+  }
 
   return { path: functionFolder, entryFilename }
 }
@@ -190,9 +208,19 @@ const createZipArchive = async function ({
 
   if (runtimeAPIVersion === 2) {
     addBootstrapFile(srcFiles, aliases)
+  }
 
-    if (tsExtensions.has(extension) && moduleFormat === MODULE_FORMAT.ESM) {
-      await ensurePackageJSONWithModuleType({ archive, basePath, mainFile, name, repositoryRoot, userNamespace })
+  if (tsExtensions.has(extension) && moduleFormat === MODULE_FORMAT.ESM && runtimeAPIVersion === 2) {
+    const packageJSON = await ensurePackageJSONWithModuleType({
+      basePath,
+      mainFile,
+      name,
+      repositoryRoot,
+      userNamespace,
+    })
+
+    if (packageJSON) {
+      addZipContent(archive, packageJSON.contents, packageJSON.path)
     }
   }
 
@@ -241,14 +269,12 @@ const addStat = async function (cache: RuntimeCache, srcFile: string) {
 }
 
 const ensurePackageJSONWithModuleType = async function ({
-  archive,
   basePath,
   mainFile,
   name,
   repositoryRoot,
   userNamespace,
 }: {
-  archive: ZipArchive
   basePath: string
   mainFile: string
   name: string
@@ -291,7 +317,10 @@ const ensurePackageJSONWithModuleType = async function ({
   const normalizedPath = normalizeFilePath({ commonPrefix: basePath, path, userNamespace })
   const contents = JSON.stringify({ type: 'module' })
 
-  addZipContent(archive, contents, normalizedPath)
+  return {
+    contents,
+    path: normalizedPath,
+  }
 }
 
 const zipJsFile = function ({
