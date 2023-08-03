@@ -83,7 +83,7 @@ const zipFunction: ZipFunction = async function ({
     moduleFormat,
     nativeNodeModules,
     nodeModulesWithDynamicImports,
-    rewrites,
+    rewrites = new Map(),
     srcFiles,
   } = await bundler.bundle({
     basePath,
@@ -117,6 +117,8 @@ const zipFunction: ZipFunction = async function ({
     filename,
     mainFile: finalMainFile,
     moduleFormat,
+    name,
+    repositoryRoot,
     rewrites,
     runtimeAPIVersion,
     srcFiles,

@@ -53,5 +53,5 @@ module.exports = {
       },
     },
   ],
-  ignorePatterns: ['tests/fixtures/**/*'],
+  ignorePatterns: ['tests/fixtures/**/*', 'tests/fixtures-esm/**/*'],
 }

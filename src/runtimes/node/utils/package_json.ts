@@ -22,7 +22,7 @@ export interface PackageJsonFile {
   path: string
 }
 
-export const getClosestPackageJson = async (resolveDir: string): Promise<PackageJsonFile | null> => {
+export const getClosestPackageJson = async (resolveDir: string, boundary?: string): Promise<PackageJsonFile | null> => {
   const packageJsonPath = await findUp(
     async (directory) => {
       // We stop traversing if we're about to leave the boundaries of any
@@ -36,7 +36,7 @@ export const getClosestPackageJson = async (resolveDir: string): Promise<Package
 
       return hasPackageJson ? path : undefined
     },
-    { cwd: resolveDir },
+    { cwd: resolveDir, stopAt: boundary },
   )
 
   if (packageJsonPath === undefined) {

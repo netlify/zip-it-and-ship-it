@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest'
 
 import { listFunctions } from '../src/main.js'
 
-import { FIXTURES_DIR, normalizeFiles } from './helpers/main.js'
+import { FIXTURES_DIR, FIXTURES_ESM_DIR, normalizeFiles } from './helpers/main.js'
 
 describe('listFunctions', () => {
   describe('v1', () => {
@@ -79,7 +79,7 @@ describe('listFunctions', () => {
 
   describe('v2', () => {
     test('listFunctions does not include runtimeAPIVersion when parseISC is false', async () => {
-      const dir = join(FIXTURES_DIR, 'v2-api')
+      const dir = join(FIXTURES_ESM_DIR, 'v2-api')
       const [func] = await listFunctions([dir], {
         featureFlags: {
           zisi_functions_api_v2: true,
@@ -91,7 +91,7 @@ describe('listFunctions', () => {
     })
 
     test('listFunctions includes runtimeAPIVersion when parseISC is true', async () => {
-      const dir = join(FIXTURES_DIR, 'v2-api')
+      const dir = join(FIXTURES_ESM_DIR, 'v2-api')
       const [func] = await listFunctions([dir], {
         featureFlags: {
           zisi_functions_api_v2: true,
