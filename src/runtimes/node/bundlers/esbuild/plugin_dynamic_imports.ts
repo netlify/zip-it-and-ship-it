@@ -4,6 +4,7 @@ import type { Plugin } from '@netlify/esbuild'
 import { findUp, findUpStop, pathExists } from 'find-up'
 import normalizePath from 'normalize-path'
 
+import { Logger } from '../../../../utils/logger.js'
 import { parseExpression } from '../../parser/index.js'
 import { readPackageJson } from '../../utils/package_json.js'
 
@@ -19,12 +20,14 @@ type PackageCache = Map<string, Promise<string | undefined>>
 export const getDynamicImportsPlugin = ({
   basePath,
   includedPaths,
+  logger,
   moduleNames,
   processImports,
   srcDir,
 }: {
   basePath?: string
   includedPaths: Set<string>
+  logger?: Logger
   moduleNames: Set<string>
   processImports: boolean
   srcDir: string
@@ -47,6 +50,8 @@ export const getDynamicImportsPlugin = ({
           // The parser has found a glob of paths that should be included in the
           // bundle to make this import work, so we add it to `includedPaths`.
           includedPaths.add(includedPathsGlob)
+
+          logger?.system(`Functions bundling processed dynamic import with expression: ${expression}`)
 
           // Create the shim that will handle the import at runtime.
           const contents = getShimContents({ expressionType, resolveDir, srcDir })

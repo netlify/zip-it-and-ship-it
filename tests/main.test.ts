@@ -1569,13 +1569,25 @@ describe('zip-it-and-ship-it', () => {
     expect(() => func('two')).toThrowError()
     expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
 
-    const pathsFromDynamicImports = [
-      join('node_modules', '@org', 'test', 'files', '**'),
-      join('node_modules', '@org', 'test', 'files', '**.js'),
-    ]
-
     expect(systemLog).toHaveBeenCalledWith(
-      `Functions bundling included paths by parsing dynamic import: ${pathsFromDynamicImports.join(', ')}`,
+      // eslint-disable-next-line no-template-curly-in-string
+      'Functions bundling processed dynamic import with expression: require(`./files/${parent.child}`)',
+    )
+    expect(systemLog).toHaveBeenCalledWith(
+      // eslint-disable-next-line no-template-curly-in-string
+      "Functions bundling processed dynamic import with expression: require(`./files/${number.length > 0 ? number : 'uh-oh'}`)",
+    )
+    expect(systemLog).toHaveBeenCalledWith(
+      // eslint-disable-next-line no-template-curly-in-string
+      'Functions bundling processed dynamic import with expression: require(`./files/${number}`)',
+    )
+    expect(systemLog).toHaveBeenCalledWith(
+      // eslint-disable-next-line no-template-curly-in-string
+      'Functions bundling processed dynamic import with expression: require(`./files/${arr[0]}`)',
+    )
+    expect(systemLog).toHaveBeenCalledWith(
+      // eslint-disable-next-line no-template-curly-in-string
+      'Functions bundling processed dynamic import with expression: require(`./files/${number}.js`)',
     )
   })
 
