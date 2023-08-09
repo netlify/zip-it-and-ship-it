@@ -80,6 +80,7 @@ export const bundleJsFile = async function ({
     getDynamicImportsPlugin({
       basePath,
       includedPaths: dynamicImportsIncludedPaths,
+      logger: featureFlags.zisi_log_dynamic_imports ? logger : undefined,
       moduleNames: nodeModulesWithDynamicImports,
       processImports: config.processDynamicNodeImports !== false,
       srcDir,
@@ -149,13 +150,6 @@ let require=___nfyCreateRequire(import.meta.url);
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
     const additionalPaths = [...dynamicImportsIncludedPaths, ...includedFilesFromModuleDetection]
-
-    if (featureFlags.zisi_log_dynamic_imports && dynamicImportsIncludedPaths.size !== 0) {
-      // Capping the number of paths to avoid large log volumes.
-      const paths = [...dynamicImportsIncludedPaths].slice(0, 20).join(', ')
-
-      logger.system(`Functions bundling included paths by parsing dynamic import: ${paths}`)
-    }
 
     return {
       additionalPaths,
