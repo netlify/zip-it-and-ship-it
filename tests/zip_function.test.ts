@@ -4,11 +4,17 @@ import { join } from 'path'
 import merge from 'deepmerge'
 import { dir as getTmpDir } from 'tmp-promise'
 import unixify from 'unixify'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { ARCHIVE_FORMAT, NODE_BUNDLER, zipFunction } from '../src/main.js'
 
-import { FIXTURES_DIR, getBundlerNameFromOptions, importFunctionFile, unzipFiles } from './helpers/main.js'
+import {
+  FIXTURES_DIR,
+  FIXTURES_ESM_DIR,
+  getBundlerNameFromOptions,
+  importFunctionFile,
+  unzipFiles,
+} from './helpers/main.js'
 import { allBundleConfigs, getNodeBundlerString, testMany } from './helpers/test_many.js'
 
 describe('zipFunction', () => {
@@ -162,7 +168,7 @@ describe('zipFunction', () => {
     testMany('Can use zipFunction()', [...allBundleConfigs, 'bundler_none'], async (options, variation) => {
       const bundler = getBundlerNameFromOptions(options)
       const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-      const mainFile = join(FIXTURES_DIR, 'v2-api', 'function.js')
+      const mainFile = join(FIXTURES_ESM_DIR, 'v2-api', 'function.js')
       const result = (await zipFunction(mainFile, tmpDir, {
         ...options,
         featureFlags: { zisi_functions_api_v2: true },
@@ -181,6 +187,33 @@ describe('zipFunction', () => {
       expect(result.config).toEqual(bundler === undefined ? {} : expectedConfig)
       expect(result.runtimeAPIVersion).toEqual(2)
       expect(result.entryFilename).toEqual('___netlify-entry-point.mjs')
+    })
+
+    test('Logs to systemlog', async () => {
+      const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+      const mainFile = join(FIXTURES_ESM_DIR, 'v2-api', 'function.js')
+      const systemLog = vi.fn()
+
+      await zipFunction(mainFile, tmpDir, {
+        featureFlags: { zisi_functions_api_v2: true },
+        systemLog,
+      })
+
+      expect(systemLog).toHaveBeenCalledOnce()
+      expect(systemLog).toHaveBeenCalledWith('detected v2 function')
+    })
+
+    test('Does not log to systemlog for v1', async () => {
+      const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+      const mainFile = join(FIXTURES_DIR, 'simple', 'function.js')
+      const systemLog = vi.fn()
+
+      await zipFunction(mainFile, tmpDir, {
+        featureFlags: { zisi_functions_api_v2: true },
+        systemLog,
+      })
+
+      expect(systemLog).not.toHaveBeenCalled()
     })
   })
 })

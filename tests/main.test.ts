@@ -929,53 +929,54 @@ describe('zip-it-and-ship-it', () => {
 
   testMany(
     'Handles a TypeScript function ({name}.ts)',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('node-typescript', {
         opts: options,
       })
       const unzippedFunctions = await unzipFiles(files)
-      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
-      expect(type).toBeTypeOf('string')
+      const { handler } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+      expect(handler()).toBe('❤️ TypeScript')
     },
   )
 
   testMany(
     'Handles a TypeScript function ({name}/{name}.ts)',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('node-typescript-directory-1', {
         opts: options,
       })
       const unzippedFunctions = await unzipFiles(files)
-      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
-      expect(type).toBeTypeOf('string')
+      const { handler } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+      expect(handler()).toBe('❤️ TypeScript')
     },
   )
 
   testMany(
     'Handles a TypeScript function ({name}/index.ts)',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('node-typescript-directory-2', {
         opts: options,
       })
       const unzippedFunctions = await unzipFiles(files)
-      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
-      expect(type).toBeTypeOf('string')
+      const { handler } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+      expect(handler()).toBe('❤️ TypeScript')
     },
   )
 
   testMany(
     'Handles a TypeScript function with imports',
-    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'todo:bundler_nft'],
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const { files } = await zipFixture('node-typescript-with-imports', {
         opts: options,
       })
       const unzippedFunctions = await unzipFiles(files)
-      const { type } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
-      expect(type).toBeTypeOf('string')
+      const { handler } = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/function.js`)
+
+      expect(handler()).toBe('❤️ TypeScript')
     },
   )
 
@@ -1568,13 +1569,25 @@ describe('zip-it-and-ship-it', () => {
     expect(() => func('two')).toThrowError()
     expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
 
-    const pathsFromDynamicImports = [
-      join('node_modules', '@org', 'test', 'files', '**'),
-      join('node_modules', '@org', 'test', 'files', '**.js'),
-    ]
-
     expect(systemLog).toHaveBeenCalledWith(
-      `Functions bundling included paths by parsing dynamic import: ${pathsFromDynamicImports.join(', ')}`,
+      // eslint-disable-next-line no-template-curly-in-string
+      'Functions bundling processed dynamic import with expression: require(`./files/${parent.child}`)',
+    )
+    expect(systemLog).toHaveBeenCalledWith(
+      // eslint-disable-next-line no-template-curly-in-string
+      "Functions bundling processed dynamic import with expression: require(`./files/${number.length > 0 ? number : 'uh-oh'}`)",
+    )
+    expect(systemLog).toHaveBeenCalledWith(
+      // eslint-disable-next-line no-template-curly-in-string
+      'Functions bundling processed dynamic import with expression: require(`./files/${number}`)',
+    )
+    expect(systemLog).toHaveBeenCalledWith(
+      // eslint-disable-next-line no-template-curly-in-string
+      'Functions bundling processed dynamic import with expression: require(`./files/${arr[0]}`)',
+    )
+    expect(systemLog).toHaveBeenCalledWith(
+      // eslint-disable-next-line no-template-curly-in-string
+      'Functions bundling processed dynamic import with expression: require(`./files/${number}.js`)',
     )
   })
 

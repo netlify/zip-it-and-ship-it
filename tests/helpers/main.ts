@@ -15,6 +15,7 @@ import type { FunctionResult } from '../../src/utils/format_result.js'
 import { ZipFunctionsOptions } from '../../src/zip.js'
 
 export const FIXTURES_DIR = fileURLToPath(new URL('../fixtures', import.meta.url))
+export const FIXTURES_ESM_DIR = fileURLToPath(new URL('../fixtures-esm', import.meta.url))
 export const BINARY_PATH = fileURLToPath(new URL('../../dist/bin.js', import.meta.url))
 
 const keepTempDirs = env.ZISI_KEEP_TEMP_DIRS !== undefined

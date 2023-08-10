@@ -10,7 +10,7 @@ import { getBundler, getBundlerName } from './bundlers/index.js'
 import { NODE_BUNDLER } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
-import { getNodeRuntime } from './utils/node_runtime.js'
+import { getNodeRuntime, getNodeRuntimeForV2 } from './utils/node_runtime.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
 import { zipNodeJs } from './utils/zip.js'
 
@@ -40,6 +40,7 @@ const zipFunction: ZipFunction = async function ({
   extension,
   featureFlags,
   filename,
+  isInternal,
   logger,
   mainFile,
   name,
@@ -48,7 +49,6 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
-  isInternal,
 }) {
   // If the file is a zip, we assume the function is bundled and ready to go.
   // We simply copy it to the destination path with no further processing.
@@ -60,8 +60,9 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath, entryFilename: '' }
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(mainFile, name, featureFlags)
+  const inSourceConfig = await findISCDeclarationsInPath(mainFile, { functionName: name, featureFlags, logger })
   const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
+
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
     config,
@@ -82,7 +83,7 @@ const zipFunction: ZipFunction = async function ({
     moduleFormat,
     nativeNodeModules,
     nodeModulesWithDynamicImports,
-    rewrites,
+    rewrites = new Map(),
     srcFiles,
   } = await bundler.bundle({
     basePath,
@@ -116,6 +117,8 @@ const zipFunction: ZipFunction = async function ({
     filename,
     mainFile: finalMainFile,
     moduleFormat,
+    name,
+    repositoryRoot,
     rewrites,
     runtimeAPIVersion,
     srcFiles,
@@ -136,6 +139,9 @@ const zipFunction: ZipFunction = async function ({
     bundler: bundlerName,
     bundlerWarnings,
     config,
+    displayName: config?.name,
+    entryFilename: zipPath.entryFilename,
+    generator: config?.generator || getInternalValue(isInternal),
     inputs,
     includedFiles,
     inSourceConfig,
@@ -143,10 +149,8 @@ const zipFunction: ZipFunction = async function ({
     nativeNodeModules,
     nodeModulesWithDynamicImports,
     path: zipPath.path,
-    entryFilename: zipPath.entryFilename,
-    runtimeVersion: getNodeRuntime(config.nodeVersion),
-    displayName: config?.name,
-    generator: config?.generator || getInternalValue(isInternal),
+    runtimeVersion:
+      runtimeAPIVersion === 2 ? getNodeRuntimeForV2(config.nodeVersion) : getNodeRuntime(config.nodeVersion),
   }
 }
 

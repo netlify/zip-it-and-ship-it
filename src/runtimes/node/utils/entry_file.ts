@@ -32,8 +32,12 @@ const getEntryFileContents = (
   if (runtimeAPIVersion === 2) {
     return [
       `import * as func from '${importPath}'`,
-      `import { getLambdaHandler } from './${BOOTSTRAP_FILE_NAME}'`,
-      `export const handler = getLambdaHandler(func)`,
+      `import * as bootstrap from './${BOOTSTRAP_FILE_NAME}'`,
+
+      // See https://esbuild.github.io/content-types/#default-interop.
+      'const funcModule = typeof func.default === "function" ? func : func.default',
+
+      `export const handler = bootstrap.getLambdaHandler(funcModule)`,
     ].join(';')
   }
 
@@ -167,7 +171,7 @@ export const getEntryFile = ({
   runtimeAPIVersion: number
 }): EntryFile => {
   const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
-  const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
+  const extension = getFileExtensionForFormat(moduleFormat, featureFlags, runtimeAPIVersion)
   const entryFilename = getEntryFileName({ extension, featureFlags, filename, runtimeAPIVersion })
   const contents = getEntryFileContents(mainPath, moduleFormat, featureFlags, runtimeAPIVersion)
 

@@ -1,3 +1,5 @@
 type MyType = string
 
-export const type: MyType = '❤️ TypeScript'
+const type: MyType = '❤️ TypeScript'
+
+export const handler = () => type

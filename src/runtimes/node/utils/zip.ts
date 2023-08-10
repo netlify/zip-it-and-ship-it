@@ -2,7 +2,7 @@ import { Buffer } from 'buffer'
 import { Stats } from 'fs'
 import { mkdir, rm, writeFile } from 'fs/promises'
 import os from 'os'
-import { basename, extname, join } from 'path'
+import { basename, dirname, extname, join } from 'path'
 
 import { getPath as getV2APIPath } from '@netlify/serverless-functions-api'
 import { copyFile } from 'cp-file'
@@ -19,7 +19,9 @@ import {
 } from '../../../archive.js'
 import type { FeatureFlags } from '../../../feature_flags.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
+import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { cachedLstat, mkdirAndWriteFile } from '../../../utils/fs.js'
+import { RUNTIME } from '../../runtime.js'
 
 import {
   BOOTSTRAP_FILE_NAME,
@@ -28,8 +30,9 @@ import {
   getEntryFile,
   isNamedLikeEntryFile,
 } from './entry_file.js'
-import { ModuleFormat } from './module_format.js'
+import { ModuleFormat, tsExtensions, MODULE_FORMAT } from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
+import { getClosestPackageJson, PackageJsonFile } from './package_json.js'
 
 // Taken from https://www.npmjs.com/package/cpy.
 const COPY_FILE_CONCURRENCY = os.cpus().length === 0 ? 2 : os.cpus().length * 2
@@ -48,6 +51,8 @@ interface ZipNodeParameters {
   filename: string
   mainFile: string
   moduleFormat: ModuleFormat
+  name: string
+  repositoryRoot?: string
   rewrites?: Map<string, string>
   runtimeAPIVersion: number
   srcFiles: string[]
@@ -72,6 +77,8 @@ const createDirectory = async function ({
   filename,
   mainFile,
   moduleFormat,
+  name,
+  repositoryRoot,
   rewrites = new Map(),
   runtimeAPIVersion,
   srcFiles,
@@ -119,6 +126,22 @@ const createDirectory = async function ({
     { concurrency: COPY_FILE_CONCURRENCY },
   )
 
+  if (tsExtensions.has(extension) && moduleFormat === MODULE_FORMAT.ESM && runtimeAPIVersion === 2) {
+    const packageJSON = await ensurePackageJSONWithModuleType({
+      basePath,
+      mainFile,
+      name,
+      repositoryRoot,
+      userNamespace: DEFAULT_USER_SUBDIRECTORY,
+    })
+
+    if (packageJSON) {
+      const absoluteDestPath = join(functionFolder, packageJSON.path)
+
+      await writeFile(absoluteDestPath, packageJSON.contents)
+    }
+  }
+
   return { path: functionFolder, entryFilename }
 }
 
@@ -132,6 +155,8 @@ const createZipArchive = async function ({
   filename,
   mainFile,
   moduleFormat,
+  name,
+  repositoryRoot,
   rewrites,
   runtimeAPIVersion,
   srcFiles,
@@ -185,6 +210,20 @@ const createZipArchive = async function ({
     addBootstrapFile(srcFiles, aliases)
   }
 
+  if (tsExtensions.has(extension) && moduleFormat === MODULE_FORMAT.ESM && runtimeAPIVersion === 2) {
+    const packageJSON = await ensurePackageJSONWithModuleType({
+      basePath,
+      mainFile,
+      name,
+      repositoryRoot,
+      userNamespace,
+    })
+
+    if (packageJSON) {
+      addZipContent(archive, packageJSON.contents, packageJSON.path)
+    }
+  }
+
   const srcFilesInfos = await Promise.all(srcFiles.map((file) => addStat(cache, file)))
 
   // We ensure this is not async, so that the archive's checksum is
@@ -227,6 +266,61 @@ const addStat = async function (cache: RuntimeCache, srcFile: string) {
   const stat = await cachedLstat(cache.lstatCache, srcFile)
 
   return { srcFile, stat }
+}
+
+const ensurePackageJSONWithModuleType = async function ({
+  basePath,
+  mainFile,
+  name,
+  repositoryRoot,
+  userNamespace,
+}: {
+  basePath: string
+  mainFile: string
+  name: string
+  repositoryRoot?: string
+  userNamespace: string
+}) {
+  const functionDirectory = dirname(mainFile)
+
+  let packageJSON: PackageJsonFile | null = null
+
+  try {
+    packageJSON = await getClosestPackageJson(functionDirectory, repositoryRoot)
+  } catch {
+    // There is no valid `package.json`. This is a no-op.
+  }
+
+  // If the closest `package.json` already has a `module` type, there's nothing
+  // else we need to do.
+  if (packageJSON?.contents?.type === 'module') {
+    return
+  }
+
+  // If there is already a `package.json` adjacent to the function entry point,
+  // we won't simply overwrite it because that might cause unexpected problems.
+  // Instead, we fail the build and tell the user that we found contradictory
+  // configuration settings.
+  if (packageJSON !== null && dirname(packageJSON.path) === functionDirectory) {
+    throw new FunctionBundlingUserError(
+      `The function defined in '${mainFile}' has a contradictory configuration: a 'tsconfig.json' file is defining the module format as ESM, but '${packageJSON.path}' specifies CommonJS. If you want to use ESM, consider adding '"type": "module"' to 'package.json'; if you'd like to use CommonJS, consider setting the 'compilerOptions.module' property in 'tsconfig.json' to 'commonjs'.`,
+      {
+        functionName: name,
+        runtime: RUNTIME.JAVASCRIPT,
+      },
+    )
+  }
+
+  // To ensure that the entry file and any local imports run as ESM, plant a
+  // `package.json` with `"type": "module"` adjacent to the entry point.
+  const path = join(functionDirectory, 'package.json')
+  const normalizedPath = normalizeFilePath({ commonPrefix: basePath, path, userNamespace })
+  const contents = JSON.stringify({ type: 'module' })
+
+  return {
+    contents,
+    path: normalizedPath,
+  }
 }
 
 const zipJsFile = function ({
