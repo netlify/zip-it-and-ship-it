@@ -111,7 +111,7 @@ describe('V2 API', () => {
 
     expect(systemLog).toHaveBeenCalledOnce()
     expect(systemLog).toHaveBeenCalledWith('detected v2 function')
-    expect(isc).toEqual({ runtimeAPIVersion: 2 })
+    expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
   })
 
   test('ESM file with a default export and a `handler` export', () => {
@@ -123,7 +123,7 @@ describe('V2 API', () => {
 
     const isc = findISCDeclarations(source, options)
 
-    expect(isc).toEqual({ runtimeAPIVersion: 2 })
+    expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
   })
 
   test('TypeScript file with a default export and no `handler` export', () => {
@@ -133,7 +133,7 @@ describe('V2 API', () => {
 
     const isc = findISCDeclarations(source, options)
 
-    expect(isc).toEqual({ runtimeAPIVersion: 2 })
+    expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
   })
 
   test('CommonJS file with a default export and a `handler` export', () => {
@@ -169,6 +169,6 @@ describe('V2 API', () => {
 
     const isc = findISCDeclarations(source, options)
 
-    expect(isc).toEqual({ runtimeAPIVersion: 2, schedule: '@daily' })
+    expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2, schedule: '@daily' })
   })
 })
