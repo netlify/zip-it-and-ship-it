@@ -40,16 +40,23 @@ export const getRoutesFromPath = (path: unknown, functionName: string): Route[] 
     return [{ pattern: path, literal: path }]
   }
 
-  const pattern = new ExtendedURLPattern({ pathname: path })
+  try {
+    const pattern = new ExtendedURLPattern({ pathname: path })
 
-  // Removing the `^` and `$` delimiters because we'll need to modify what's
-  // between them.
-  const regex = pattern.regexp.pathname.source.slice(1, -1)
+    // Removing the `^` and `$` delimiters because we'll need to modify what's
+    // between them.
+    const regex = pattern.regexp.pathname.source.slice(1, -1)
 
-  // Wrapping the expression source with `^` and `$`. Also, adding an optional
-  // trailing slash, so that a declaration of `path: "/foo"` matches requests
-  // for both `/foo` and `/foo/`.
-  const normalizedRegex = `^${regex}\\/?$`
+    // Wrapping the expression source with `^` and `$`. Also, adding an optional
+    // trailing slash, so that a declaration of `path: "/foo"` matches requests
+    // for both `/foo` and `/foo/`.
+    const normalizedRegex = `^${regex}\\/?$`
 
-  return [{ pattern: path, expression: normalizedRegex }]
+    return [{ pattern: path, expression: normalizedRegex }]
+  } catch {
+    throw new FunctionBundlingUserError(`'${path}' is not a valid path according to the URLPattern specification`, {
+      functionName,
+      runtime: RUNTIME.JAVASCRIPT,
+    })
+  }
 }

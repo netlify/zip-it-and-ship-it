@@ -171,4 +171,85 @@ describe('V2 API', () => {
 
     expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2, schedule: '@daily' })
   })
+
+  describe('`path` property', () => {
+    test('Missing a leading slash', () => {
+      expect.assertions(4)
+
+      try {
+        const source = `export default async () => {
+          return new Response("Hello!")
+        }
+    
+        export const config = {
+          path: "missing-slash"
+        }`
+
+        findISCDeclarations(source, options)
+      } catch (error) {
+        const { customErrorInfo, message } = error
+
+        expect(message).toBe(`'path' property must start with a '/'`)
+        expect(customErrorInfo.type).toBe('functionsBundling')
+        expect(customErrorInfo.location.functionName).toBe('func1')
+        expect(customErrorInfo.location.runtime).toBe('js')
+      }
+    })
+
+    test('With an invalid pattern', () => {
+      expect.assertions(4)
+
+      try {
+        const source = `export default async () => {
+          return new Response("Hello!")
+        }
+    
+        export const config = {
+          path: "/products("
+        }`
+
+        findISCDeclarations(source, options)
+      } catch (error) {
+        const { customErrorInfo, message } = error
+
+        expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
+        expect(customErrorInfo.type).toBe('functionsBundling')
+        expect(customErrorInfo.location.functionName).toBe('func1')
+        expect(customErrorInfo.location.runtime).toBe('js')
+      }
+    })
+
+    test('Using a literal pattern', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: "/products"
+      }`
+
+      const { routes } = findISCDeclarations(source, options)
+
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products' }])
+    })
+
+    test('Using a pattern with named groupd', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: "/store/:category/products/:product-id"
+      }`
+
+      const { routes } = findISCDeclarations(source, options)
+
+      expect(routes).toEqual([
+        {
+          pattern: '/store/:category/products/:product-id',
+          expression: '^\\/store(?:\\/([^\\/]+?))\\/products(?:\\/([^\\/]+?))-id\\/?$',
+        },
+      ])
+    })
+  })
 })
