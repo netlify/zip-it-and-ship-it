@@ -5,6 +5,7 @@ import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { Logger } from '../../../utils/logger.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
+import { getRoutesFromPath, Route } from '../../../utils/routes.js'
 import { RUNTIME } from '../../runtime.js'
 import { createBindingsMethod } from '../parser/bindings.js'
 import { getExports } from '../parser/exports.js'
@@ -17,6 +18,7 @@ export const IN_SOURCE_CONFIG_MODULE = '@netlify/functions'
 
 export type ISCValues = {
   invocationMode?: InvocationMode
+  routes?: Route[]
   runtimeAPIVersion?: number
   schedule?: string
 }
@@ -81,6 +83,7 @@ export const findISCDeclarations = (
 
   if (featureFlags.zisi_functions_api_v2 && isV2API) {
     const config: ISCValues = {
+      routes: getRoutesFromPath(configExport.path, functionName),
       runtimeAPIVersion: 2,
     }
 

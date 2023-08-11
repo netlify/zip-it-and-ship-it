@@ -5,12 +5,14 @@ import { arch, platform } from 'process'
 import type { FeatureFlags } from './feature_flags.js'
 import type { InvocationMode } from './function.js'
 import type { FunctionResult } from './utils/format_result.js'
+import type { Route } from './utils/routes.js'
 
 interface ManifestFunction {
   invocationMode?: InvocationMode
   mainFile: string
   name: string
   path: string
+  routes?: Route[]
   runtime: string
   runtimeVersion?: string
   schedule?: string
@@ -60,20 +62,29 @@ const formatFunctionForManifest = (
     mainFile,
     name,
     path,
+    routes,
     runtime,
     runtimeVersion,
     schedule,
   }: FunctionResult,
   featureFlags: FeatureFlags,
-): ManifestFunction => ({
-  bundler,
-  displayName,
-  generator,
-  invocationMode,
-  mainFile,
-  name,
-  runtimeVersion: featureFlags.functions_inherit_build_nodejs_version ? runtimeVersion : undefined,
-  path: resolve(path),
-  runtime,
-  schedule,
-})
+): ManifestFunction => {
+  const manifestFunction: ManifestFunction = {
+    bundler,
+    displayName,
+    generator,
+    invocationMode,
+    mainFile,
+    name,
+    runtimeVersion: featureFlags.functions_inherit_build_nodejs_version ? runtimeVersion : undefined,
+    path: resolve(path),
+    runtime,
+    schedule,
+  }
+
+  if (routes?.length !== 0) {
+    manifestFunction.routes = routes
+  }
+
+  return manifestFunction
+}

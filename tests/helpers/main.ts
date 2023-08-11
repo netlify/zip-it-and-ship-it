@@ -99,8 +99,13 @@ export const zipCheckFunctions = async function (
 
   const files = await zipFunctions(srcFolders, tmpDir, opts)
 
-  expect(Array.isArray(files)).toBe(true)
-  expect(files).toHaveLength(length)
+  if (!Array.isArray(files)) {
+    throw new TypeError(`Expected 'zipFunctions' to return an array, found ${typeof files}`)
+  }
+
+  if (files.length !== length) {
+    throw new Error(`Expected 'zipFunctions' to return ${length} items, found ${files.length}`)
+  }
 
   return { files, tmpDir }
 }
