@@ -5,16 +5,16 @@ import { ExtendedURLPattern } from './urlpattern.js'
 
 export type Route = { pattern: string } & ({ literal: string } | { expression: string })
 
+// Based on https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API.
+const isExpression = (part: string) =>
+  part.includes('*') || part.startsWith(':') || part.includes('{') || part.includes('[') || part.includes('(')
+
 // Detects whether a path can be represented as a literal or whether it needs
 // a regular expression.
 const isPathLiteral = (path: string) => {
   const parts = path.split('/')
 
-  // Based on https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API.
-  return !parts.some(
-    (part) =>
-      part.includes('*') || part.startsWith(':') || part.includes('{') || part.includes('[') || part.includes('('),
-  )
+  return parts.every((part) => !isExpression(part))
 }
 
 export const getRoutesFromPath = (path: unknown, functionName: string): Route[] => {
