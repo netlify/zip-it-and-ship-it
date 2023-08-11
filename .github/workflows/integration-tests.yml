@@ -65,6 +65,7 @@ jobs:
           node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
         working-directory: test-site/demos/default
       - name: Print deploy log
+        if: always()
         run: cat .netlify-deploy-log.json
         working-directory: test-site/demos/default
       - name: Cypress run
