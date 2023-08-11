@@ -212,4 +212,67 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
     expect(systemLog).not.toHaveBeenCalled()
   })
+
+  test('Extracts routes from the `path` in-source configuration property', async () => {
+    const { files } = await zipFixture('v2-api-with-path', {
+      fixtureDir: FIXTURES_ESM_DIR,
+      length: 3,
+      opts: {
+        featureFlags: { zisi_functions_api_v2: true },
+      },
+    })
+
+    expect.assertions(files.length)
+
+    for (const file of files) {
+      switch (file.name) {
+        case 'with-literal':
+          expect(file.routes).toEqual([{ pattern: '/products', literal: '/products' }])
+
+          break
+
+        case 'with-named-group':
+          expect(file.routes).toEqual([
+            {
+              pattern: '/products/:id',
+              expression: '^\\/products(?:\\/([^\\/]+?))\\/?$',
+            },
+          ])
+
+          break
+
+        case 'with-regex':
+          expect(file.routes).toEqual([
+            {
+              pattern: '/numbers/(\\d+)',
+              expression: '^\\/numbers(?:\\/(\\d+))\\/?$',
+            },
+          ])
+
+          break
+
+        default:
+          continue
+      }
+    }
+  })
+
+  test('Flags invalid values of the `path` in-source configuration property as user errors', async () => {
+    expect.assertions(3)
+
+    try {
+      await zipFixture('v2-api-with-invalid-path', {
+        fixtureDir: FIXTURES_ESM_DIR,
+        opts: {
+          featureFlags: { zisi_functions_api_v2: true },
+        },
+      })
+    } catch (error) {
+      const { customErrorInfo } = error
+
+      expect(customErrorInfo.type).toBe('functionsBundling')
+      expect(customErrorInfo.location.functionName).toBe('function')
+      expect(customErrorInfo.location.runtime).toBe('js')
+    }
+  })
 })

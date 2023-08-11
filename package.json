@@ -84,6 +84,7 @@
     "tmp-promise": "^3.0.2",
     "toml": "^3.0.0",
     "unixify": "^1.0.0",
+    "urlpattern-polyfill": "8.0.2",
     "yargs": "^17.0.0"
   },
   "devDependencies": {
