@@ -66,7 +66,7 @@ jobs:
         working-directory: test-site/demos/default
       - name: Print deploy log
         if: always()
-        run: cat .netlify-deploy-log.json
+        run: echo "deploylog=$(cat .netlify-deploy-log.json)" >> $GITHUB_OUTPUT
         working-directory: test-site/demos/default
       - name: Cypress run
         uses: cypress-io/github-action@v5
