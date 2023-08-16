@@ -97,12 +97,14 @@ export const findISCDeclarations = (
   }
 
   const iscExports = handlerExports
-    .map((exp) => {
-      if (exp.type !== 'call-expression') {
+    .map((node) => {
+      // We're only interested in exports with call expressions, since that's
+      // the pattern we use for the wrapper functions.
+      if (node.type !== 'call-expression') {
         return null
       }
 
-      const { args, local: exportName } = exp
+      const { args, local: exportName } = node
       const matchingImport = imports.find(({ local: importName }) => importName === exportName)
 
       if (matchingImport === undefined) {
