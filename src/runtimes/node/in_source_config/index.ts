@@ -97,7 +97,12 @@ export const findISCDeclarations = (
   }
 
   const iscExports = handlerExports
-    .map(({ args, local: exportName }) => {
+    .map((exp) => {
+      if (exp.type !== 'call-expression') {
+        return null
+      }
+
+      const { args, local: exportName } = exp
       const matchingImport = imports.find(({ local: importName }) => importName === exportName)
 
       if (matchingImport === undefined) {
@@ -141,7 +146,14 @@ export const findISCDeclarations = (
 
 export type ISCHandlerArg = ArgumentPlaceholder | Expression | SpreadElement | JSXNamespacedName
 
-export interface ISCExport {
-  local: string
+export type ISCExportWithCallExpression = {
+  type: 'call-expression'
   args: ISCHandlerArg[]
+  local: string
 }
+export type ISCExportWithArrowFunctionExpression = { type: 'arrow-function-expression' }
+export type ISCExportWithFunctionExpression = { type: 'function-expression' }
+export type ISCExport =
+  | ISCExportWithArrowFunctionExpression
+  | ISCExportWithCallExpression
+  | ISCExportWithFunctionExpression
