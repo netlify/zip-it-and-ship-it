@@ -100,7 +100,7 @@ describe('V2 API', () => {
     logger: getLogger(),
   }
 
-  describe('Detects the correct runtime version', () => {
+  describe('Detects the correct runtime API version', () => {
     test('ESM file with a default export and no `handler` export', () => {
       const source = `export default async () => {
         return new Response("Hello!")
