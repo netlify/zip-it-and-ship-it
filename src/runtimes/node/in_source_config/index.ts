@@ -153,7 +153,9 @@ export type ISCExportWithCallExpression = {
 }
 export type ISCExportWithArrowFunctionExpression = { type: 'arrow-function-expression' }
 export type ISCExportWithFunctionExpression = { type: 'function-expression' }
+export type ISCExportOther = { type: 'other' }
 export type ISCExport =
   | ISCExportWithArrowFunctionExpression
   | ISCExportWithCallExpression
   | ISCExportWithFunctionExpression
+  | ISCExportOther

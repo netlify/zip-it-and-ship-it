@@ -203,6 +203,10 @@ const getExportsFromExpression = (node: Expression | undefined | null): ISCExpor
     }
 
     default: {
+      if (node !== undefined) {
+        return [{ type: 'other' }]
+      }
+
       return []
     }
   }
