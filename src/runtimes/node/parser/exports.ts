@@ -184,10 +184,6 @@ const getExportsFromBindings = (specifiers: ExportNamedDeclaration['specifiers']
 
 const getExportsFromExpression = (node: Expression | undefined | null): ISCExport[] => {
   switch (node?.type) {
-    case 'ArrowFunctionExpression': {
-      return [{ type: 'arrow-function-expression' as const }]
-    }
-
     case 'CallExpression': {
       const { arguments: args, callee } = node
 
@@ -195,11 +191,7 @@ const getExportsFromExpression = (node: Expression | undefined | null): ISCExpor
         return []
       }
 
-      return [{ args, local: callee.name, type: 'call-expression' as const }]
-    }
-
-    case 'FunctionExpression': {
-      return [{ type: 'function-expression' as const }]
+      return [{ args, local: callee.name, type: 'call-expression' }]
     }
 
     default: {

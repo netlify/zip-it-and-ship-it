@@ -153,11 +153,5 @@ export type ISCExportWithCallExpression = {
   args: ISCHandlerArg[]
   local: string
 }
-export type ISCExportWithArrowFunctionExpression = { type: 'arrow-function-expression' }
-export type ISCExportWithFunctionExpression = { type: 'function-expression' }
 export type ISCExportOther = { type: 'other' }
-export type ISCExport =
-  | ISCExportWithArrowFunctionExpression
-  | ISCExportWithCallExpression
-  | ISCExportWithFunctionExpression
-  | ISCExportOther
+export type ISCExport = ISCExportWithCallExpression | ISCExportOther
