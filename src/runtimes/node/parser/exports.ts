@@ -182,20 +182,24 @@ const getExportsFromBindings = (specifiers: ExportNamedDeclaration['specifiers']
   return exports
 }
 
-const getExportsFromExpression = (node: Expression | undefined | null) => {
-  // We're only interested in expressions representing function calls, because
-  // the ISC patterns we implement at the moment are all helper functions.
-  if (node?.type !== 'CallExpression') {
-    return []
+const getExportsFromExpression = (node: Expression | undefined | null): ISCExport[] => {
+  switch (node?.type) {
+    case 'CallExpression': {
+      const { arguments: args, callee } = node
+
+      if (callee.type !== 'Identifier') {
+        return []
+      }
+
+      return [{ args, local: callee.name, type: 'call-expression' }]
+    }
+
+    default: {
+      if (node !== undefined) {
+        return [{ type: 'other' }]
+      }
+
+      return []
+    }
   }
-
-  const { arguments: args, callee } = node
-
-  if (callee.type !== 'Identifier') {
-    return []
-  }
-
-  const exports = [{ local: callee.name, args }]
-
-  return exports
 }

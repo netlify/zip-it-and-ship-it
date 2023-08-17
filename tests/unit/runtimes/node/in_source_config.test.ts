@@ -36,6 +36,18 @@ describe('`schedule` helper', () => {
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
   })
 
+  test.todo('CommonJS file with `schedule` helper exported from a variable', () => {
+    const source = `const { schedule } = require("@netlify/functions")
+
+    const handler = schedule("@daily", () => {})
+
+    exports.handler = handler`
+
+    const isc = findISCDeclarations(source, options)
+
+    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
+  })
+
   test('ESM file with `schedule` helper', () => {
     const source = `import { schedule } from "@netlify/functions"
 
@@ -64,6 +76,18 @@ describe('`schedule` helper', () => {
     const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
+  })
+
+  test('ESM file with `handler` exported from a variable', () => {
+    const source = `import { schedule } from "@netlify/functions"
+
+    const handler = schedule("@daily", () => {})
+    
+    export { handler }`
+
+    const isc = findISCDeclarations(source, options)
+
+    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
   })
 })
 
@@ -100,76 +124,90 @@ describe('V2 API', () => {
     logger: getLogger(),
   }
 
-  test('ESM file with a default export and no `handler` export', () => {
-    const source = `export default async () => {
-      return new Response("Hello!")
-    }`
+  describe('Detects the correct runtime API version', () => {
+    test('ESM file with a default export and no `handler` export', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }`
 
-    const systemLog = vi.fn()
+      const systemLog = vi.fn()
 
-    const isc = findISCDeclarations(source, { ...options, logger: getLogger(systemLog) })
+      const isc = findISCDeclarations(source, { ...options, logger: getLogger(systemLog) })
 
-    expect(systemLog).toHaveBeenCalledOnce()
-    expect(systemLog).toHaveBeenCalledWith('detected v2 function')
-    expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
+      expect(systemLog).toHaveBeenCalledOnce()
+      expect(systemLog).toHaveBeenCalledWith('detected v2 function')
+      expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
+    })
+
+    test('ESM file with a default export and a `handler` export', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const handler = function () { return { statusCode: 200, body: "Hello!" } }`
+
+      const isc = findISCDeclarations(source, options)
+
+      expect(isc).toEqual({ runtimeAPIVersion: 1 })
+    })
+
+    test('ESM file with no default export and a `handler` export', () => {
+      const source = `const handler = async () => ({ statusCode: 200, body: "Hello" })
+      
+      export { handler }`
+
+      const isc = findISCDeclarations(source, options)
+
+      expect(isc).toEqual({ runtimeAPIVersion: 1 })
+    })
+
+    test('TypeScript file with a default export and no `handler` export', () => {
+      const source = `export default async (req: Request) => {
+        return new Response("Hello!")
+      }`
+
+      const isc = findISCDeclarations(source, options)
+
+      expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
+    })
+
+    test('CommonJS file with a default export and a `handler` export', () => {
+      const source = `exports.default = async () => {
+        return new Response("Hello!")
+      }
+  
+      exports.handler = async () => ({ statusCode: 200, body: "Hello!" })`
+
+      const isc = findISCDeclarations(source, options)
+
+      expect(isc).toEqual({ runtimeAPIVersion: 1 })
+    })
+
+    test('CommonJS file with a default export and no `handler` export', () => {
+      const source = `exports.default = async () => {
+        return new Response("Hello!")
+      }`
+
+      const isc = findISCDeclarations(source, options)
+
+      expect(isc).toEqual({ runtimeAPIVersion: 1 })
+    })
   })
 
-  test('ESM file with a default export and a `handler` export', () => {
-    const source = `export default async () => {
-      return new Response("Hello!")
-    }
+  describe('`scheduled` property', () => {
+    test('Using a cron expression string', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        schedule: "@daily"
+      }`
 
-    export const handler = async () => ({ statusCode: 200, body: "Hello!" })`
+      const isc = findISCDeclarations(source, options)
 
-    const isc = findISCDeclarations(source, options)
-
-    expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
-  })
-
-  test('TypeScript file with a default export and no `handler` export', () => {
-    const source = `export default async (req: Request) => {
-      return new Response("Hello!")
-    }`
-
-    const isc = findISCDeclarations(source, options)
-
-    expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
-  })
-
-  test('CommonJS file with a default export and a `handler` export', () => {
-    const source = `exports.default = async () => {
-      return new Response("Hello!")
-    }
-
-    exports.handler = async () => ({ statusCode: 200, body: "Hello!" })`
-
-    const isc = findISCDeclarations(source, options)
-
-    expect(isc).toEqual({ runtimeAPIVersion: 1 })
-  })
-
-  test('CommonJS file with a default export and no `handler` export', () => {
-    const source = `exports.default = async () => {
-      return new Response("Hello!")
-    }`
-
-    const isc = findISCDeclarations(source, options)
-
-    expect(isc).toEqual({ runtimeAPIVersion: 1 })
-  })
-
-  test('Config object with `schedule` property', () => {
-    const source = `export default async () => {
-      return new Response("Hello!")
-    }
-
-    export const config = {
-      schedule: "@daily"
-    }`
-
-    const isc = findISCDeclarations(source, options)
-
-    expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2, schedule: '@daily' })
+      expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2, schedule: '@daily' })
+    })
   })
 
   describe('`path` property', () => {
