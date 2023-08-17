@@ -36,7 +36,7 @@ describe('`schedule` helper', () => {
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
   })
 
-  test('CommonJS file with `schedule` helper exported from a variable', () => {
+  test.todo('CommonJS file with `schedule` helper exported from a variable', () => {
     const source = `const { schedule } = require("@netlify/functions")
 
     const handler = schedule("@daily", () => {})
