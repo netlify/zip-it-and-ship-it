@@ -36,6 +36,18 @@ describe('`schedule` helper', () => {
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
   })
 
+  test('CommonJS file with `schedule` helper exported from a variable', () => {
+    const source = `const { schedule } = require("@netlify/functions")
+
+    const handler = schedule("@daily", () => {})
+
+    exports.handler = handler`
+
+    const isc = findISCDeclarations(source, options)
+
+    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
+  })
+
   test('ESM file with `schedule` helper', () => {
     const source = `import { schedule } from "@netlify/functions"
 
@@ -64,6 +76,18 @@ describe('`schedule` helper', () => {
     const isc = findISCDeclarations(source, options)
 
     expect(isc).toEqual({ runtimeAPIVersion: 1 })
+  })
+
+  test('ESM file with `handler` exported from a variable', () => {
+    const source = `import { schedule } from "@netlify/functions"
+
+    const handler = schedule("@daily", () => {})
+    
+    export { handler }`
+
+    const isc = findISCDeclarations(source, options)
+
+    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
   })
 })
 
