@@ -8,6 +8,7 @@ import { NodeBundlerName, NODE_BUNDLER } from '../../src/main'
 
 interface TestRunnerOptions {
   config: Config
+  featureFlags?: FeatureFlags
 }
 type TestRunner = (opts: TestRunnerOptions, variation: string) => Promise<void> | void
 type ChainableTestAPI = TestAPI['skip']
@@ -50,6 +51,22 @@ export const makeTestMany = <M extends string>(
         const variation = matrix[name]()
 
         testFn(name, runner.bind(null, variation, name))
+
+        // run with zisi upstream
+        testFn(
+          `${name}_upstream_esbuild`,
+          runner.bind(
+            null,
+            {
+              ...variation,
+              featureFlags: {
+                ...variation.featureFlags,
+                zisi_esbuild_upstream: true,
+              },
+            },
+            `${name}_upstream_esbuild`,
+          ),
+        )
       })
     })
   }
@@ -70,6 +87,11 @@ export const makeTestMany = <M extends string>(
 }
 
 export const getNodeBundlerString = (variation: string): NodeBundlerName => {
+  if (variation.endsWith('_upstream_esbuild')) {
+    // eslint-disable-next-line no-param-reassign
+    variation = variation.slice(0, -'_upstream_esbuild'.length)
+  }
+
   switch (variation) {
     case 'bundler_esbuild':
     case 'bundler_esbuild_zisi':

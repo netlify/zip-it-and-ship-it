@@ -31,7 +31,7 @@ export const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): 
   name: 'external-native-modules',
   setup(build) {
     const cache: NativeModuleCache = {}
-    
+
     build.onResolve({ filter: packageFilter }, async (args) => {
       const pkg = packageName.exec(args.path)
 

@@ -176,7 +176,10 @@ describe('zipFunction', () => {
 
       expect(result).not.toBeUndefined()
 
-      const bundlerUsed = variation === 'bundler_default' ? NODE_BUNDLER.NFT : getNodeBundlerString(variation)
+      const bundlerUsed =
+        variation === 'bundler_default' || variation === 'bundler_default_upstream_esbuild'
+          ? NODE_BUNDLER.NFT
+          : getNodeBundlerString(variation)
       const expectedConfig = options.config['*']
       expectedConfig.nodeBundler = bundlerUsed
 

@@ -33,6 +33,8 @@ export const defaultFlags = {
 
   // Create unique entry file instead of a file that is based on the function name.
   zisi_unique_entry_file: false,
+
+  zisi_esbuild_upstream: false,
 } as const
 
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>

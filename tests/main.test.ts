@@ -343,7 +343,9 @@ describe('zip-it-and-ship-it', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi'],
     async (options) => {
       await expect(zipNode('invalid-package-json', { opts: options })).rejects.toThrowError(
-        /(invalid json|package.json:1:1: error: expected string but found "{")/i,
+        options.featureFlags?.zisi_esbuild_upstream
+          ? /(invalid json|package.json:1:1: error: expected string in json but found "{")/i
+          : /(invalid json|package.json:1:1: error: expected string but found "{")/i,
       )
     },
   )

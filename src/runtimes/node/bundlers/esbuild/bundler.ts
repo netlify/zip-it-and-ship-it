@@ -77,7 +77,7 @@ export const bundleJsFile = async function ({
   // The list of esbuild plugins to enable for this build.
   const plugins = [getNodeBuiltinPlugin(), getNativeModulesPlugin(nativeNodeModules)]
 
-  if (true) {
+  if (!featureFlags.zisi_esbuild_upstream) {
     plugins.push(
       getDynamicImportsPlugin({
         basePath,
@@ -86,7 +86,7 @@ export const bundleJsFile = async function ({
         moduleNames: nodeModulesWithDynamicImports,
         processImports: config.processDynamicNodeImports !== false,
         srcDir,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       }) as any,
     )
   }
@@ -126,7 +126,7 @@ let require=___nfyCreateRequire(import.meta.url);
 `
 
   try {
-    const build = forkBuild
+    const build = featureFlags.zisi_esbuild_upstream ? upstreamBuild : forkBuild
 
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
       banner: moduleFormat === MODULE_FORMAT.ESM ? { js: esmJSBanner } : undefined,
