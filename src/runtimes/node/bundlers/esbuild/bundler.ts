@@ -1,6 +1,7 @@
 import { basename, dirname, extname, resolve, join } from 'path'
 
-import { build, Metafile } from '@netlify/esbuild'
+import { build as forkBuild } from '@netlify/esbuild'
+import { build as upstreamBuild, Metafile } from 'esbuild'
 import { tmpName } from 'tmp-promise'
 
 import type { FunctionConfig } from '../../../../config.js'
@@ -74,18 +75,21 @@ export const bundleJsFile = async function ({
   const dynamicImportsIncludedPaths: Set<string> = new Set()
 
   // The list of esbuild plugins to enable for this build.
-  const plugins = [
-    getNodeBuiltinPlugin(),
-    getNativeModulesPlugin(nativeNodeModules),
-    getDynamicImportsPlugin({
-      basePath,
-      includedPaths: dynamicImportsIncludedPaths,
-      logger: featureFlags.zisi_log_dynamic_imports ? logger : undefined,
-      moduleNames: nodeModulesWithDynamicImports,
-      processImports: config.processDynamicNodeImports !== false,
-      srcDir,
-    }),
-  ]
+  const plugins = [getNodeBuiltinPlugin(), getNativeModulesPlugin(nativeNodeModules)]
+
+  if (true) {
+    plugins.push(
+      getDynamicImportsPlugin({
+        basePath,
+        includedPaths: dynamicImportsIncludedPaths,
+        logger: featureFlags.zisi_log_dynamic_imports ? logger : undefined,
+        moduleNames: nodeModulesWithDynamicImports,
+        processImports: config.processDynamicNodeImports !== false,
+        srcDir,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any,
+    )
+  }
 
   // The version of ECMAScript to use as the build target. This will determine
   // whether certain features are transpiled down or left untransformed.
@@ -122,6 +126,8 @@ let require=___nfyCreateRequire(import.meta.url);
 `
 
   try {
+    const build = forkBuild
+
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
       banner: moduleFormat === MODULE_FORMAT.ESM ? { js: esmJSBanner } : undefined,
       bundle: true,
@@ -135,7 +141,8 @@ let require=___nfyCreateRequire(import.meta.url);
       outdir: targetDirectory,
       outExtension: { '.js': outputExtension },
       platform: 'node',
-      plugins,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      plugins: plugins as any,
       resolveExtensions: RESOLVE_EXTENSIONS,
       sourcemap: Boolean(config.nodeSourcemap),
       sourceRoot,
