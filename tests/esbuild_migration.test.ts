@@ -6,7 +6,7 @@
 
 import { describe, expect } from 'vitest'
 
-import { zipNode } from './helpers/main.js'
+import { importFunctionFile, zipNode } from './helpers/main.js'
 import { testMany } from './helpers/test_many.js'
 
 const esbuildConfigs = ['bundler_esbuild', 'bundler_esbuild_zisi'] as const
@@ -31,5 +31,22 @@ describe('ESBuild Migration', () => {
    */
   testMany('webpack chunks', esbuildConfigs, async (opts) => {
     await expect(() => zipNode('webpack-chunks', { opts })).rejects.toThrowError()
+  })
+
+  /**
+   * This test covers `require(`cardinal${REQUIRE_TERMINATOR}`)`.
+   */
+  testMany('cardinal require terminator', esbuildConfigs, async (opts) => {
+    const {
+      files: [{ unzipPath, entryFilename }],
+    } = await zipNode('cardinal-require-terminator', { opts })
+    const res = await importFunctionFile(`${unzipPath}/${entryFilename}`)
+    expect(res).toEqual('Cardinal is unavailable!')
+  })
+
+  testMany('template strings', esbuildConfigs, async (opts) => {
+    await expect(() => zipNode('require-template-string', { opts })).rejects.toThrowError(
+      "Cannot find module './foo.js'",
+    )
   })
 })
