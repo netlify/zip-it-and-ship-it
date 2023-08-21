@@ -18,7 +18,7 @@ describe('ESBuild Migration', () => {
    *  - require("caniuse-lite/data/features/"+t+".js")
    * Both are within browserslist: https://github.com/browserslist/browserslist/blob/main/node.js
    * And both are not supported by esbuild, neither by our fork nor by upstream.
-   **/
+   */
   testMany('caniuse-lite', esbuildConfigs, async (opts) => {
     await expect(() => zipNode('caniuse-lite', { opts })).rejects.toThrowError('Unknown region name `DE`.')
   })
@@ -46,7 +46,7 @@ describe('ESBuild Migration', () => {
 
   testMany('template strings', esbuildConfigs, async (opts) => {
     await expect(() => zipNode('require-template-string', { opts })).rejects.toThrowError(
-      "Cannot find module './foo.js'",
+      "Cannot find module './languages/FR/regions/PARIS/translations.js'",
     )
   })
 })
