@@ -15,7 +15,7 @@ type ChainableTestAPI = TestAPI['skip']
 
 type TestMany<M> = (title: string, variations: M[], runner: TestRunner) => void
 interface TestManyAPI<M> {
-  (title: string, variations: M[], runner: TestRunner): void
+  (title: string, variations: readonly M[], runner: TestRunner): void
   fails: TestMany<M>
   only: TestMany<M>
   concurrent: TestMany<M>
