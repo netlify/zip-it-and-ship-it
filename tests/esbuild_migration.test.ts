@@ -4,9 +4,12 @@
  * upstream esbuild.
  */
 
+import { join } from 'path'
+
+import merge from 'deepmerge'
 import { describe, expect } from 'vitest'
 
-import { importFunctionFile, zipNode } from './helpers/main.js'
+import { FIXTURES_DIR, importFunctionFile, zipNode } from './helpers/main.js'
 import { testMany } from './helpers/test_many.js'
 
 const esbuildConfigs = ['bundler_esbuild', 'bundler_esbuild_zisi'] as const
@@ -24,13 +27,18 @@ describe('ESBuild Migration', () => {
   })
 
   /**
-   * This test covers `require("../chunks/" + __webpack_require__.u(chunkId))`,
+   * This test covers `require("../chunks/" + __webpack_require__.u(chunkId))`.
    * arguably one of the most important patterns for us to support.
-   * Surprisingly, this is unsupported in both our fork and upstream?
-   * I'll have to look into this more, probably the test is off.
+   * It's supported by our ESBuild fork, but not by upstream.
+   * This is blocking the migration for now, opened an issue about it:
+   * https://github.com/evanw/esbuild/issues/3328
    */
-  testMany('webpack chunks', esbuildConfigs, async (opts) => {
-    await expect(() => zipNode('webpack-chunks', { opts })).rejects.toThrowError()
+  testMany('webpack chunks', esbuildConfigs, async (options) => {
+    const fixtureName = 'webpack-chunks'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    await zipNode(fixtureName, { opts })
   })
 
   /**
