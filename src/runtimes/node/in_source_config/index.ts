@@ -21,6 +21,7 @@ export type ISCValues = {
   routes?: Route[]
   runtimeAPIVersion?: number
   schedule?: string
+  methods?: string[]
 }
 
 interface FindISCDeclarationsOptions {
@@ -91,6 +92,10 @@ export const findISCDeclarations = (
 
     if (typeof configExport.schedule === 'string') {
       config.schedule = configExport.schedule
+    }
+
+    if (configExport.method !== undefined) {
+      config.methods = Array.isArray(configExport.method) ? configExport.method : [configExport.method]
     }
 
     return config
