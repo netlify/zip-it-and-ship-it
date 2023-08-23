@@ -66,10 +66,9 @@ export const findISCDeclarationsInPath = async (
  * Normalizes method names into arrays of uppercase strings.
  * (e.g. "get" becomes ["GET"])
  */
-const normalizeMethods = (method: unknown, name: string): string[] | undefined => {
-  const methods = Array.isArray(method) ? method : [method]
+const normalizeMethods = (input: unknown, name: string): string[] | undefined => {
+  const methods = Array.isArray(input) ? input : [input]
 
-  // eslint-disable-next-line @typescript-eslint/no-shadow
   return methods.map((method) => {
     if (typeof method !== 'string') {
       throw new TypeError(
