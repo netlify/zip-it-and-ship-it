@@ -170,7 +170,7 @@ var __glob = (map) => (path) => {
       `.trim(),
         `
 var __glob = (map) => (path) => {
-  var fn = map[path] || map[path + '.js'] || map[path + '/index.js'];
+  var fn = map[path] || map[path + '.js'] || map[path + '.json'] || map[path + '/index.js'] || map[path + '/index.json'];
   if (fn)
     return fn();
   throw new Error("Module not found in bundle: " + path);

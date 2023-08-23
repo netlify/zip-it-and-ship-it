@@ -32,9 +32,33 @@ describe('ESBuild Migration', () => {
    * It's supported by our ESBuild fork, but not by upstream.
    * This is blocking the migration for now, opened an issue about it:
    * https://github.com/evanw/esbuild/issues/3328
+   * In the meantime, we found a workaround.
    */
   testMany('webpack chunks', esbuildConfigs, async (options) => {
     const fixtureName = 'webpack-chunks'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    await zipNode(fixtureName, { opts })
+  })
+
+  /**
+   * This is the same test as above, but with a `.cjs` chunk.
+   * It works on neither our fork nor upstream.
+   */
+  testMany('webpack chunks .cjs', esbuildConfigs, async (options) => {
+    const fixtureName = 'webpack-chunks-cjs'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    await expect(() => zipNode(fixtureName, { opts })).rejects.toThrowError()
+  })
+
+  /**
+   * This is the same test as above, but with a `.json` chunk.
+   */
+  testMany('webpack chunks .json', esbuildConfigs, async (options) => {
+    const fixtureName = 'webpack-chunks-json'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
     })
@@ -52,6 +76,10 @@ describe('ESBuild Migration', () => {
     expect(res).toEqual('Cardinal is unavailable!')
   })
 
+  /**
+   * We're seeing one site do `require(`../../data/${req.params.foo}/${req.params.bar}`)`.
+   * It's not supported on our fork, but it is on upstream!
+   */
   testMany('template strings', esbuildConfigs, async (opts) => {
     await expect(() => zipNode('require-template-string', { opts })).rejects.toThrowError(
       "Cannot find module './languages/FR/regions/PARIS/translations.js'",
