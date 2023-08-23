@@ -7,6 +7,7 @@ import { Logger } from '../../../utils/logger.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { getRoutesFromPath, Route } from '../../../utils/routes.js'
 import { RUNTIME } from '../../runtime.js'
+import { NODE_BUNDLER } from '../bundlers/types.js'
 import { createBindingsMethod } from '../parser/bindings.js'
 import { getExports } from '../parser/exports.js'
 import { getImports } from '../parser/imports.js'
@@ -71,8 +72,13 @@ const normalizeMethods = (input: unknown, name: string): string[] | undefined =>
 
   return methods.map((method) => {
     if (typeof method !== 'string') {
-      throw new TypeError(
+      throw new FunctionBundlingUserError(
         `Could not parse method declaration of function '${name}'. Expecting HTTP Method, got ${method}`,
+        {
+          functionName: name,
+          runtime: RUNTIME.JAVASCRIPT,
+          bundler: NODE_BUNDLER.ESBUILD,
+        },
       )
     }
 
