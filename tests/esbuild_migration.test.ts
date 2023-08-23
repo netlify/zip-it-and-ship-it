@@ -66,6 +66,18 @@ describe('ESBuild Migration', () => {
   })
 
   /**
+   * This is the same test as above, but with a binary file.
+   * It fails on our fork and upstream.
+   */
+  testMany('webpack chunks .node', esbuildConfigs, async (options) => {
+    const fixtureName = 'glob-require-native-module'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    await expect(() => zipNode(fixtureName, { opts })).rejects.toThrowError()
+  })
+
+  /**
    * This test covers `require(`cardinal${REQUIRE_TERMINATOR}`)`.
    */
   testMany('cardinal require terminator', esbuildConfigs, async (opts) => {
