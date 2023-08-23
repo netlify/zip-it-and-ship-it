@@ -62,6 +62,25 @@ export const findISCDeclarationsInPath = async (
   return findISCDeclarations(source, { functionName, featureFlags, logger })
 }
 
+/**
+ * Normalizes method names into arrays of uppercase strings.
+ * (e.g. "get" becomes ["GET"])
+ */
+const normalizeMethods = (method: unknown, name: string): string[] | undefined => {
+  const methods = Array.isArray(method) ? method : [method]
+
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  return methods.map((method) => {
+    if (typeof method !== 'string') {
+      throw new TypeError(
+        `Could not parse method declaration of function '${name}'. Expecting HTTP Method, got ${method}`,
+      )
+    }
+
+    return method.toUpperCase()
+  })
+}
+
 export const findISCDeclarations = (
   source: string,
   { functionName, featureFlags, logger }: FindISCDeclarationsOptions,
@@ -95,7 +114,7 @@ export const findISCDeclarations = (
     }
 
     if (configExport.method !== undefined) {
-      config.methods = Array.isArray(configExport.method) ? configExport.method : [configExport.method]
+      config.methods = normalizeMethods(configExport.method, functionName)
     }
 
     return config
