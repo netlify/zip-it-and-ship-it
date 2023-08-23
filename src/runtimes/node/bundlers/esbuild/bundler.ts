@@ -1,3 +1,4 @@
+import { readFile, writeFile } from 'fs/promises'
 import { basename, dirname, extname, resolve, join } from 'path'
 
 import { build as forkBuild } from '@netlify/esbuild'
@@ -154,6 +155,31 @@ let require=___nfyCreateRequire(import.meta.url);
       srcFile,
       outputExtension,
     })
+
+    for (const [filename] of Object.entries(metafile.outputs)) {
+      const content = await readFile(filename, { encoding: 'utf-8' })
+
+      const updated = content.replace(
+        `
+var __glob = (map) => (path) => {
+  var fn = map[path];
+  if (fn)
+    return fn();
+  throw new Error("Module not found in bundle: " + path);
+};
+      `.trim(),
+        `
+var __glob = (map) => (path) => {
+  var fn = map[path] || map[path + '.js'] || map[path + '/index.js'];
+  if (fn)
+    return fn();
+  throw new Error("Module not found in bundle: " + path);
+};
+            `.trim(),
+      )
+
+      await writeFile(filename, updated, { encoding: 'utf-8' })
+    }
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
     const additionalPaths = [...dynamicImportsIncludedPaths, ...includedFilesFromModuleDetection]
