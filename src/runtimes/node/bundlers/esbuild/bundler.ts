@@ -59,11 +59,6 @@ export const bundleJsFile = async function ({
   // paths of any Node modules with native dependencies.
   const nativeNodeModules = {}
 
-  // To be populated by the dynamic imports plugin with any paths (in a glob
-  // format) to be included in the bundle in order to make a dynamic import
-  // work at runtime.
-  const dynamicImportsIncludedPaths: Set<string> = new Set()
-
   // The list of esbuild plugins to enable for this build.
   const plugins = [getNodeBuiltinPlugin(), getNativeModulesPlugin(nativeNodeModules)]
 
@@ -161,7 +156,7 @@ var __glob = (map) => (path) => {
 
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
-    const additionalPaths = [...dynamicImportsIncludedPaths, ...includedFilesFromModuleDetection]
+    const additionalPaths = [...includedFilesFromModuleDetection]
 
     return {
       additionalPaths,
