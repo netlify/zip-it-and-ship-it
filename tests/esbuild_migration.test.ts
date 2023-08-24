@@ -123,7 +123,7 @@ describe('ESBuild Migration', () => {
   })
 
   /**
-   * If user code defines `__glob` in global scope, esbuild will rename its `__glob` helper.
+   * If user code defines `__glob` in global scope, esbuild will rename the user symbol, not its helper.
    * Our workaround shouldn't break on this!
    */
   testMany('collision with __glob', esbuildConfigs, async (options) => {
