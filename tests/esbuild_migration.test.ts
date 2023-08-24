@@ -21,6 +21,7 @@ describe('ESBuild Migration', () => {
    *  - require("caniuse-lite/data/features/"+t+".js")
    * Both are within browserslist: https://github.com/browserslist/browserslist/blob/main/node.js
    * And both are not supported by esbuild, neither by our fork nor by upstream.
+   * They only support relative imports, not absolute ones.
    */
   testMany('caniuse-lite', esbuildConfigs, async (opts) => {
     await expect(() => zipNode('caniuse-lite', { opts })).rejects.toThrowError('Unknown region name `DE`.')
@@ -80,22 +81,27 @@ describe('ESBuild Migration', () => {
   /**
    * This test covers `require(`cardinal${REQUIRE_TERMINATOR}`)`.
    */
-  testMany('cardinal require terminator', esbuildConfigs, async (opts) => {
+  testMany('cardinal require terminator', esbuildConfigs, async (options) => {
+    const fixtureName = 'cardinal-require-terminator'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
     const {
       files: [{ unzipPath, entryFilename }],
-    } = await zipNode('cardinal-require-terminator', { opts })
+    } = await zipNode(fixtureName, { opts })
     const res = await importFunctionFile(`${unzipPath}/${entryFilename}`)
     expect(res).toEqual('Cardinal is unavailable!')
   })
 
   /**
    * We're seeing one site do `require(`../../data/${req.params.foo}/${req.params.bar}`)`.
-   * It's not supported on our fork, but it is on upstream!
    */
-  testMany('template strings', esbuildConfigs, async (opts) => {
-    await expect(() => zipNode('require-template-string', { opts })).rejects.toThrowError(
-      "Cannot find module './languages/FR/regions/PARIS/translations.js'",
-    )
+  testMany('template strings', esbuildConfigs, async (options) => {
+    const fixtureName = 'require-template-string'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    await zipNode(fixtureName, { opts })
   })
 
   /**
@@ -107,6 +113,6 @@ describe('ESBuild Migration', () => {
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
     })
-    await expect(() => zipNode('esbuild-glob', { opts })).rejects.toThrowError('__glob go poof')
+    await expect(() => zipNode(fixtureName, { opts })).rejects.toThrowError('__glob go poof')
   })
 })
