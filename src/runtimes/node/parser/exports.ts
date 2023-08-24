@@ -139,6 +139,7 @@ const parseConfigExport = (node: Statement) => {
 // - number
 // - object
 // - string
+// - array of strings
 const parseObject = (node: ObjectExpression) =>
   node.properties.reduce((acc, property): Record<string, unknown> => {
     if (property.type !== 'ObjectProperty' || property.key.type !== 'Identifier') {
@@ -153,6 +154,15 @@ const parseObject = (node: ObjectExpression) =>
       return {
         ...acc,
         [property.key.name]: property.value.value,
+      }
+    }
+
+    if (property.value.type === 'ArrayExpression') {
+      return {
+        ...acc,
+        [property.key.name]: property.value.elements.flatMap((element) =>
+          element?.type === 'StringLiteral' ? [element.value] : [],
+        ),
       }
     }
 

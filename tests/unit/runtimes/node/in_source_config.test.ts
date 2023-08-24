@@ -210,6 +210,36 @@ describe('V2 API', () => {
     })
   })
 
+  describe('`method` property', () => {
+    test('Using an array', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        method: ["GET", "POST"]
+      }`
+
+      const { methods } = findISCDeclarations(source, options)
+
+      expect(methods).toEqual(['GET', 'POST'])
+    })
+
+    test('Using single method', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        method: "GET"
+      }`
+
+      const { methods } = findISCDeclarations(source, options)
+
+      expect(methods).toEqual(['GET'])
+    })
+  })
+
   describe('`path` property', () => {
     test('Missing a leading slash', () => {
       expect.assertions(4)

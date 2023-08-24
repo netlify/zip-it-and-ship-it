@@ -7,6 +7,7 @@ import { Logger } from '../../../utils/logger.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { getRoutesFromPath, Route } from '../../../utils/routes.js'
 import { RUNTIME } from '../../runtime.js'
+import { NODE_BUNDLER } from '../bundlers/types.js'
 import { createBindingsMethod } from '../parser/bindings.js'
 import { getExports } from '../parser/exports.js'
 import { getImports } from '../parser/imports.js'
@@ -21,6 +22,7 @@ export type ISCValues = {
   routes?: Route[]
   runtimeAPIVersion?: number
   schedule?: string
+  methods?: string[]
 }
 
 interface FindISCDeclarationsOptions {
@@ -61,6 +63,29 @@ export const findISCDeclarationsInPath = async (
   return findISCDeclarations(source, { functionName, featureFlags, logger })
 }
 
+/**
+ * Normalizes method names into arrays of uppercase strings.
+ * (e.g. "get" becomes ["GET"])
+ */
+const normalizeMethods = (input: unknown, name: string): string[] | undefined => {
+  const methods = Array.isArray(input) ? input : [input]
+
+  return methods.map((method) => {
+    if (typeof method !== 'string') {
+      throw new FunctionBundlingUserError(
+        `Could not parse method declaration of function '${name}'. Expecting HTTP Method, got ${method}`,
+        {
+          functionName: name,
+          runtime: RUNTIME.JAVASCRIPT,
+          bundler: NODE_BUNDLER.ESBUILD,
+        },
+      )
+    }
+
+    return method.toUpperCase()
+  })
+}
+
 export const findISCDeclarations = (
   source: string,
   { functionName, featureFlags, logger }: FindISCDeclarationsOptions,
@@ -91,6 +116,10 @@ export const findISCDeclarations = (
 
     if (typeof configExport.schedule === 'string') {
       config.schedule = configExport.schedule
+    }
+
+    if (configExport.method !== undefined) {
+      config.methods = normalizeMethods(configExport.method, functionName)
     }
 
     return config
