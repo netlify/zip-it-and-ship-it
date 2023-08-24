@@ -97,4 +97,16 @@ describe('ESBuild Migration', () => {
       "Cannot find module './languages/FR/regions/PARIS/translations.js'",
     )
   })
+
+  /**
+   * If user code defines `__glob` in global scope, esbuild will rename its `__glob` helper.
+   * Our workaround shouldn't break on this!
+   */
+  testMany('collision with __glob', esbuildConfigs, async (options) => {
+    const fixtureName = 'esbuild-glob'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    await expect(() => zipNode('esbuild-glob', { opts })).rejects.toThrowError('__glob go poof')
+  })
 })
