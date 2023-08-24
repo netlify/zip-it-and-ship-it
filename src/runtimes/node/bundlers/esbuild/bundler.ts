@@ -1,21 +1,18 @@
 import { readFile, writeFile } from 'fs/promises'
 import { basename, dirname, extname, resolve, join } from 'path'
 
-import { build as forkBuild } from '@netlify/esbuild'
-import { build as upstreamBuild, Metafile } from 'esbuild'
+import { build, Metafile } from 'esbuild'
 import { tmpName } from 'tmp-promise'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
-import { Logger } from '../../../../utils/logger.js'
 import { RUNTIME } from '../../../runtime.js'
 import { getFileExtensionForFormat, MODULE_FORMAT } from '../../utils/module_format.js'
 import { NODE_BUNDLER } from '../types.js'
 
 import { getBundlerTarget, getModuleFormat } from './bundler_target.js'
-import { getDynamicImportsPlugin } from './plugin_dynamic_imports.js'
 import { getNativeModulesPlugin } from './plugin_native_modules.js'
 import { getNodeBuiltinPlugin } from './plugin_node_builtin.js'
 
@@ -30,12 +27,10 @@ const RESOLVE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts'
 
 export const bundleJsFile = async function ({
   additionalModulePaths,
-  basePath,
   config,
   externalModules = [],
   featureFlags,
   ignoredModules = [],
-  logger,
   mainFile,
   name,
   srcDir,
@@ -43,12 +38,10 @@ export const bundleJsFile = async function ({
   runtimeAPIVersion,
 }: {
   additionalModulePaths?: string[]
-  basePath?: string
   config: FunctionConfig
   externalModules: string[]
   featureFlags: FeatureFlags
   ignoredModules: string[]
-  logger: Logger
   mainFile: string
   name: string
   srcDir: string
@@ -66,10 +59,6 @@ export const bundleJsFile = async function ({
   // paths of any Node modules with native dependencies.
   const nativeNodeModules = {}
 
-  // To be populated by the dynamic imports plugin with the names of the Node
-  // modules that include imports with dynamic expressions.
-  const nodeModulesWithDynamicImports: Set<string> = new Set()
-
   // To be populated by the dynamic imports plugin with any paths (in a glob
   // format) to be included in the bundle in order to make a dynamic import
   // work at runtime.
@@ -77,20 +66,6 @@ export const bundleJsFile = async function ({
 
   // The list of esbuild plugins to enable for this build.
   const plugins = [getNodeBuiltinPlugin(), getNativeModulesPlugin(nativeNodeModules)]
-
-  if (!featureFlags.zisi_esbuild_upstream) {
-    plugins.push(
-      getDynamicImportsPlugin({
-        basePath,
-        includedPaths: dynamicImportsIncludedPaths,
-        logger: featureFlags.zisi_log_dynamic_imports ? logger : undefined,
-        moduleNames: nodeModulesWithDynamicImports,
-        processImports: config.processDynamicNodeImports !== false,
-        srcDir,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      }) as any,
-    )
-  }
 
   // The version of ECMAScript to use as the build target. This will determine
   // whether certain features are transpiled down or left untransformed.
@@ -127,8 +102,6 @@ let require=___nfyCreateRequire(import.meta.url);
 `
 
   try {
-    const build = featureFlags.zisi_esbuild_upstream ? upstreamBuild : forkBuild
-
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
       banner: moduleFormat === MODULE_FORMAT.ESM ? { js: esmJSBanner } : undefined,
       bundle: true,
@@ -197,7 +170,6 @@ var __glob = (map) => (path) => {
       inputs,
       moduleFormat,
       nativeNodeModules,
-      nodeModulesWithDynamicImports: [...nodeModulesWithDynamicImports],
       outputExtension,
       warnings,
     }

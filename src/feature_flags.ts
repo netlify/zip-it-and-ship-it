@@ -13,10 +13,6 @@ export const defaultFlags = {
   // Should Lambda functions inherit the build Node.js version
   functions_inherit_build_nodejs_version: false,
 
-  // Emit a system log for every path that has been included in the bundle due
-  // to the parsing of a dynamic import.
-  zisi_log_dynamic_imports: false,
-
   // Output pure (i.e. untranspiled) ESM files when the function file has ESM
   // syntax and the parent `package.json` file has `{"type": "module"}`.
   zisi_pure_esm: false,
@@ -33,8 +29,6 @@ export const defaultFlags = {
 
   // Create unique entry file instead of a file that is based on the function name.
   zisi_unique_entry_file: false,
-
-  zisi_esbuild_upstream: false,
 } as const
 
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>

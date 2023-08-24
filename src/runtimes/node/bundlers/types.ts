@@ -1,4 +1,4 @@
-import type { Message } from '@netlify/esbuild'
+import type { Message } from 'esbuild'
 
 import type { FunctionConfig } from '../../../config.js'
 import type { FeatureFlags } from '../../../feature_flags.js'
@@ -64,7 +64,6 @@ export type BundleFunction = (
   mainFile: string
   moduleFormat: ModuleFormat
   nativeNodeModules?: NativeNodeModules
-  nodeModulesWithDynamicImports?: string[]
   srcFiles: string[]
 }>
 

@@ -2,6 +2,9 @@
  * In the migration of our ESBuild fork to upstream esbuild,
  * we need to ensure that all behaviour of the fork continues to work in
  * upstream esbuild.
+ *
+ * This file contains tests for all kinds of dynamic import expressions,
+ * which we used to compare the two version.
  */
 
 import { join } from 'path'
