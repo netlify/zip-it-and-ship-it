@@ -156,11 +156,15 @@ let require=___nfyCreateRequire(import.meta.url);
       outputExtension,
     })
 
-    for (const [filename] of Object.entries(metafile.outputs)) {
-      const content = await readFile(filename, { encoding: 'utf-8' })
+    // workaround for https://github.com/evanw/esbuild/issues/3328
+    await Promise.all(
+      Object.keys(metafile.outputs)
+        .filter((filename) => filename.endsWith('.js'))
+        .map(async (filename) => {
+          const content = await readFile(filename, { encoding: 'utf-8' })
 
-      const updated = content.replace(
-        `
+          const updated = content.replace(
+            `
 var __glob = (map) => (path) => {
   var fn = map[path];
   if (fn)
@@ -168,7 +172,7 @@ var __glob = (map) => (path) => {
   throw new Error("Module not found in bundle: " + path);
 };
       `.trim(),
-        `
+            `
 var __glob = (map) => (path) => {
   var fn = map[path] || map[path + '.js'] || map[path + '.json'] || map[path + '/index.js'] || map[path + '/index.json'];
   if (fn)
@@ -176,10 +180,12 @@ var __glob = (map) => (path) => {
   throw new Error("Module not found in bundle: " + path);
 };
             `.trim(),
-      )
+          )
 
-      await writeFile(filename, updated, { encoding: 'utf-8' })
-    }
+          await writeFile(filename, updated, { encoding: 'utf-8' })
+        }),
+    )
+
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
     const additionalPaths = [...dynamicImportsIncludedPaths, ...includedFilesFromModuleDetection]

@@ -64,6 +64,11 @@ describe('ESBuild Migration', () => {
     const fixtureName = 'webpack-chunks-ts'
     const opts = merge(options, {
       basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          nodeSourcemap: true,
+        },
+      },
     })
     await expect(() => zipNode(fixtureName, { opts })).rejects.toThrowError()
   })
