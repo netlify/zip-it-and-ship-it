@@ -25,6 +25,22 @@ export const ESBUILD_LOG_LIMIT = 10
 // the extensions that esbuild will look for, in this order.
 const RESOLVE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts', '.json']
 
+/**
+ * Our own `includedFiles` syntax is slightly different from what esbuild expects as `externals`.
+ *
+ * Turns !node_modules/test/** into ./node_modules/test/*
+ */
+const includedFilesToEsbuildExternals = (includedFiles: string[]) =>
+  includedFiles
+    // only keep negated patterns
+    .filter((pattern) => pattern.startsWith('!'))
+    // remove the !
+    .map((pattern) => pattern.slice(1))
+    // esbuild expects a relative path for local files
+    .map((pattern) => `./${pattern}`)
+    // esbuild doesn't like **
+    .map((pattern) => pattern.replace(/\*\*/g, '*'))
+
 export const bundleJsFile = async function ({
   additionalModulePaths,
   config,
@@ -53,7 +69,9 @@ export const bundleJsFile = async function ({
   const targetDirectory = await tmpName()
 
   // De-duping external and ignored modules.
-  const external = [...new Set([...externalModules, ...ignoredModules])]
+  const external = [
+    ...new Set([...externalModules, ...ignoredModules, ...includedFilesToEsbuildExternals(config.includedFiles ?? [])]),
+  ]
 
   // To be populated by the native modules plugin with the names, versions and
   // paths of any Node modules with native dependencies.
