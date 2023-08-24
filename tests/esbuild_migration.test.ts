@@ -56,6 +56,19 @@ describe('ESBuild Migration', () => {
   })
 
   /**
+   * This is the same test as above, but with a `.ts` chunk.
+   * It works neither on our fork, nor on upstream.
+   * Issue: https://github.com/evanw/esbuild/issues/3320
+   */
+  testMany('webpack chunks .ts', esbuildConfigs, async (options) => {
+    const fixtureName = 'webpack-chunks-ts'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+    })
+    await expect(() => zipNode(fixtureName, { opts })).rejects.toThrowError()
+  })
+
+  /**
    * This is the same test as above, but with a `.json` chunk.
    */
   testMany('webpack chunks .json', esbuildConfigs, async (options) => {
