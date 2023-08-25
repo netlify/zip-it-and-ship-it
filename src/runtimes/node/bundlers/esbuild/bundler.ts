@@ -176,7 +176,7 @@ var __glob = (map) => (path) => {
 
     const inputs = Object.keys(metafile.inputs).map((path) => resolve(path))
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
-    const additionalPaths = [...includedFilesFromModuleDetection]
+    const additionalPaths = includedFilesFromModuleDetection
 
     return {
       additionalPaths,
