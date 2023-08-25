@@ -6,8 +6,8 @@ import { promisify } from 'util'
 import merge from 'deepmerge'
 import glob from 'glob'
 import semver from 'semver'
+import { dir as getTmpDir } from 'tmp-promise'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { dir as getTmpDir, tmpName } from 'tmp-promise'
 
 import { ARCHIVE_FORMAT } from '../src/archive.js'
 
