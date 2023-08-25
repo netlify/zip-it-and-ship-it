@@ -298,7 +298,7 @@ describe('V2 API', () => {
 
       const { routes } = findISCDeclarations(source, options)
 
-      expect(routes).toEqual([{ pattern: '/products', literal: '/products' }])
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
 
     test('Using a pattern with named groupd', () => {
@@ -316,6 +316,7 @@ describe('V2 API', () => {
         {
           pattern: '/store/:category/products/:product-id',
           expression: '^\\/store(?:\\/([^\\/]+?))\\/products(?:\\/([^\\/]+?))-id\\/?$',
+          methods: [],
         },
       ])
     })
