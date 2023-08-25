@@ -108,7 +108,6 @@ export const findISCDeclarations = (
 
   if (featureFlags.zisi_functions_api_v2 && isV2API) {
     const config: ISCValues = {
-      routes: getRoutesFromPath(configExport.path, functionName),
       runtimeAPIVersion: 2,
     }
 
@@ -121,6 +120,8 @@ export const findISCDeclarations = (
     if (configExport.method !== undefined) {
       config.methods = normalizeMethods(configExport.method, functionName)
     }
+
+    config.routes = getRoutesFromPath(configExport.path, functionName, config.methods ?? [])
 
     return config
   }

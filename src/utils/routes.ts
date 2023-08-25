@@ -3,7 +3,7 @@ import { RUNTIME } from '../runtimes/runtime.js'
 import { FunctionBundlingUserError } from './error.js'
 import { ExtendedURLPattern } from './urlpattern.js'
 
-export type Route = { pattern: string } & ({ literal: string } | { expression: string })
+export type Route = { pattern: string; methods: string[] } & ({ literal: string } | { expression: string })
 
 // Based on https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API.
 const isExpression = (part: string) =>
@@ -17,7 +17,7 @@ const isPathLiteral = (path: string) => {
   return parts.every((part) => !isExpression(part))
 }
 
-export const getRoutesFromPath = (path: unknown, functionName: string): Route[] => {
+export const getRoutesFromPath = (path: unknown, functionName: string, methods: string[]): Route[] => {
   if (!path) {
     return []
   }
@@ -37,7 +37,7 @@ export const getRoutesFromPath = (path: unknown, functionName: string): Route[] 
   }
 
   if (isPathLiteral(path)) {
-    return [{ pattern: path, literal: path }]
+    return [{ pattern: path, literal: path, methods }]
   }
 
   try {
@@ -52,7 +52,7 @@ export const getRoutesFromPath = (path: unknown, functionName: string): Route[] 
     // for both `/foo` and `/foo/`.
     const normalizedRegex = `^${regex}\\/?$`
 
-    return [{ pattern: path, expression: normalizedRegex }]
+    return [{ pattern: path, expression: normalizedRegex, methods }]
   } catch {
     throw new FunctionBundlingUserError(`'${path}' is not a valid path according to the URLPattern specification`, {
       functionName,

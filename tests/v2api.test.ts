@@ -227,7 +227,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     for (const file of files) {
       switch (file.name) {
         case 'with-literal':
-          expect(file.routes).toEqual([{ pattern: '/products', literal: '/products' }])
+          expect(file.routes).toEqual([{ pattern: '/products', literal: '/products', methods: ['GET', 'POST'] }])
 
           break
 
@@ -236,6 +236,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
             {
               pattern: '/products/:id',
               expression: '^\\/products(?:\\/([^\\/]+?))\\/?$',
+              methods: [],
             },
           ])
 
@@ -246,6 +247,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
             {
               pattern: '/numbers/(\\d+)',
               expression: '^\\/numbers(?:\\/(\\d+))\\/?$',
+              methods: [],
             },
           ])
 
