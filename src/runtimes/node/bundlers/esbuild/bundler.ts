@@ -72,9 +72,7 @@ export const bundleJsFile = async function ({
   const excludedFiles = includedFilesToEsbuildExternals(config.includedFiles ?? [])
 
   // De-duping external and ignored modules.
-  const external = [
-    ...new Set([...externalModules, ...ignoredModules, ...excludedFiles]),
-  ]
+  const external = [...new Set([...externalModules, ...ignoredModules, ...excludedFiles])]
 
   // To be populated by the native modules plugin with the names, versions and
   // paths of any Node modules with native dependencies.
