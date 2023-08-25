@@ -1,3 +1,5 @@
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 import { version as nodeVersion } from 'process'
 import { promisify } from 'util'
 
@@ -5,6 +7,7 @@ import merge from 'deepmerge'
 import glob from 'glob'
 import semver from 'semver'
 import { afterEach, describe, expect, test, vi } from 'vitest'
+import { dir as getTmpDir, tmpName } from 'tmp-promise'
 
 import { ARCHIVE_FORMAT } from '../src/archive.js'
 
@@ -214,15 +217,19 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
   })
 
   test('Extracts routes from the `path` in-source configuration property', async () => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+
     const { files } = await zipFixture('v2-api-with-path', {
       fixtureDir: FIXTURES_ESM_DIR,
       length: 3,
       opts: {
         featureFlags: { zisi_functions_api_v2: true },
+        manifest: manifestPath,
       },
     })
 
-    expect.assertions(files.length)
+    expect.assertions(files.length + 1)
 
     for (const file of files) {
       switch (file.name) {
@@ -257,6 +264,10 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
           continue
       }
     }
+
+    const manifestString = await readFile(manifestPath, { encoding: 'utf8' })
+    const manifest = JSON.parse(manifestString)
+    expect(manifest.functions[0].routes[0].methods).toEqual(['GET', 'POST'])
   })
 
   test('Flags invalid values of the `path` in-source configuration property as user errors', async () => {
