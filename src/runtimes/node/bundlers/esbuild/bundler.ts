@@ -131,8 +131,7 @@ let require=___nfyCreateRequire(import.meta.url);
       outdir: targetDirectory,
       outExtension: { '.js': outputExtension },
       platform: 'node',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      plugins: plugins as any,
+      plugins,
       resolveExtensions: RESOLVE_EXTENSIONS,
       sourcemap: Boolean(config.nodeSourcemap),
       sourceRoot,
