@@ -18,7 +18,6 @@ interface FunctionConfig {
   nodeBundler?: NodeBundlerName
   nodeSourcemap?: boolean
   nodeVersion?: string
-  processDynamicNodeImports?: boolean
   rustTargetDirectory?: string
   schedule?: string
   zipGo?: boolean

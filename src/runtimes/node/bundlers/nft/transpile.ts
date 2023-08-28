@@ -1,4 +1,4 @@
-import { build } from '@netlify/esbuild'
+import { build } from 'esbuild'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'

@@ -1,4 +1,4 @@
-import { build } from '@netlify/esbuild'
+import { build } from 'esbuild'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ARCHIVE_FORMAT } from '../src/archive.js'
@@ -11,8 +11,8 @@ import 'source-map-support/register'
 
 vi.mock('../src/utils/shell.js', () => ({ shellUtils: { runCommand: vi.fn() } }))
 
-vi.mock('@netlify/esbuild', async () => {
-  const esbuild = await vi.importActual<any>('@netlify/esbuild')
+vi.mock('esbuild', async () => {
+  const esbuild = await vi.importActual<any>('esbuild')
 
   return {
     ...esbuild,

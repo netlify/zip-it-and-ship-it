@@ -343,7 +343,7 @@ describe('zip-it-and-ship-it', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi'],
     async (options) => {
       await expect(zipNode('invalid-package-json', { opts: options })).rejects.toThrowError(
-        /(invalid json|package.json:1:1: error: expected string but found "{")/i,
+        /(invalid json|package.json:1:1: error: expected string in json but found "{")/i,
       )
     },
   )
@@ -1508,55 +1508,19 @@ describe('zip-it-and-ship-it', () => {
     }
   })
 
-  test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async () => {
+  test('Bundles dynamic imports', async () => {
     const fixtureName = 'node-module-dynamic-import'
-    const { files } = await zipNode(fixtureName, {
+    await zipNode(fixtureName, {
       opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } } },
     })
-
-    expect(files[0].nodeModulesWithDynamicImports).toHaveLength(2)
-    expect(files[0].nodeModulesWithDynamicImports).toContain('test-two')
-    expect(files[0].nodeModulesWithDynamicImports).toContain('test-three')
   })
 
-  test('Returns an empty list of modules with dynamic imports if the modules are missing a `package.json`', async () => {
-    const { files } = await zipNode('node-module-dynamic-import-invalid', {
-      opts: { config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } } },
-    })
-
-    expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
-  })
-
-  test('Leaves dynamic imports untouched when the `processDynamicNodeImports` configuration property is `false`', async () => {
-    const fixtureName = 'node-module-dynamic-import-template-literal'
-    const { files } = await zipNode(fixtureName, {
-      opts: {
-        basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD, processDynamicNodeImports: false } },
-      },
-    })
-    const functionSource = await readFile(`${files[0].unzipPath}/function.js`, 'utf8')
-
-    /* eslint-disable no-template-curly-in-string */
-    expect(functionSource).toMatch('const require1 = require(`./files/${number}.js`);')
-    expect(functionSource).toMatch('const require2 = require(`./files/${number}`);')
-    expect(functionSource).toMatch('const require3 = require(`./files/${parent.child}`);')
-    expect(functionSource).toMatch('const require4 = require(`./files/${arr[0]}`);')
-    expect(functionSource).toMatch('const require5 = require(`./files/${number.length > 0 ? number : "uh-oh"}`);')
-    /* eslint-enable no-template-curly-in-string */
-  })
-
-  test('Adds a runtime shim and includes the files needed for dynamic imports using a template literal', async () => {
-    const systemLog = vi.fn()
+  test('Bundles dynamic imports with template literals', async () => {
     const fixtureName = 'node-module-dynamic-import-template-literal'
     const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
-        featureFlags: {
-          zisi_log_dynamic_imports: true,
-        },
-        systemLog,
       },
     })
 
@@ -1567,28 +1531,6 @@ describe('zip-it-and-ship-it', () => {
     // eslint-disable-next-line unicorn/new-for-builtins
     expect(values).toEqual(Array(expectedLength).fill(true))
     expect(() => func('two')).toThrowError()
-    expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
-
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      'Functions bundling processed dynamic import with expression: require(`./files/${parent.child}`)',
-    )
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      "Functions bundling processed dynamic import with expression: require(`./files/${number.length > 0 ? number : 'uh-oh'}`)",
-    )
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      'Functions bundling processed dynamic import with expression: require(`./files/${number}`)',
-    )
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      'Functions bundling processed dynamic import with expression: require(`./files/${arr[0]}`)',
-    )
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      'Functions bundling processed dynamic import with expression: require(`./files/${number}.js`)',
-    )
   })
 
   test('Leaves dynamic imports untouched when the files required to resolve the expression cannot be packaged at build time', async () => {
@@ -1607,7 +1549,7 @@ describe('zip-it-and-ship-it', () => {
     expect(functionSource).toMatch('const require3 = require(foo(number));')
   })
 
-  test('Adds a runtime shim and includes the files needed for dynamic imports using an expression built with the `+` operator', async () => {
+  test('Bundles dynamic imports with the `+` operator', async () => {
     const fixtureName = 'node-module-dynamic-import-2'
     const { files } = await zipNode(fixtureName, {
       opts: {
@@ -1625,7 +1567,7 @@ describe('zip-it-and-ship-it', () => {
     expect(() => func('fr')).toThrowError()
   })
 
-  test('The dynamic import runtime shim handles files in nested directories', async () => {
+  test('Bundles dynamic imports with nested directories', async () => {
     const fixtureName = 'node-module-dynamic-import-4'
     const { files } = await zipNode(fixtureName, {
       opts: {
@@ -1645,7 +1587,7 @@ describe('zip-it-and-ship-it', () => {
     expect(() => func('fr')).toThrowError()
   })
 
-  test('The dynamic import runtime shim handles files in nested directories when using `archiveFormat: "none"`', async () => {
+  test('Bundles dynamic imports with nested directories when using `archiveFormat: "none"`', async () => {
     const fixtureName = 'node-module-dynamic-import-4'
     const { tmpDir } = await zipNode(fixtureName, {
       opts: {

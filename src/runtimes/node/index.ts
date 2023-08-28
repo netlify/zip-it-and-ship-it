@@ -82,7 +82,6 @@ const zipFunction: ZipFunction = async function ({
     mainFile: finalMainFile = mainFile,
     moduleFormat,
     nativeNodeModules,
-    nodeModulesWithDynamicImports,
     rewrites = new Map(),
     srcFiles,
   } = await bundler.bundle({
@@ -147,7 +146,6 @@ const zipFunction: ZipFunction = async function ({
     inSourceConfig,
     invocationMode,
     nativeNodeModules,
-    nodeModulesWithDynamicImports,
     path: zipPath.path,
     runtimeVersion:
       runtimeAPIVersion === 2 ? getNodeRuntimeForV2(config.nodeVersion) : getNodeRuntime(config.nodeVersion),
