@@ -17,6 +17,7 @@ import { ESBUILD_LOG_LIMIT } from '../src/runtimes/node/bundlers/esbuild/bundler
 import { NODE_BUNDLER } from '../src/runtimes/node/bundlers/types.js'
 import { detectEsModule } from '../src/runtimes/node/utils/detect_es_module.js'
 import { MODULE_FORMAT } from '../src/runtimes/node/utils/module_format.js'
+import { FunctionBundlingUserError } from '../src/utils/error.js'
 import { shellUtils } from '../src/utils/shell.js'
 import type { ZipFunctionsOptions } from '../src/zip.js'
 
@@ -1622,6 +1623,40 @@ describe('zip-it-and-ship-it', () => {
     expect(func('pt')[0]).toEqual(['sim', 'não'])
     expect(func('pt')[1]).toEqual(['sim', 'não'])
     expect(() => func('en')).toThrowError()
+  })
+
+  test('included_files` with multiple glob stars print warning on esbuild and excludes it', async () => {
+    const fixtureName = 'node-module-dynamic-import-2'
+
+    const consoleSpy = vi.spyOn(console, 'log')
+
+    await zipNode(fixtureName, {
+      opts: {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        config: { '*': { includedFiles: ['!lang/**/en.*'], nodeBundler: NODE_BUNDLER.ESBUILD } },
+      },
+    })
+
+    expect(consoleSpy).toHaveBeenCalledOnce()
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Found invalid pattern in includedFiles: !lang/**/en.*. Only one * is allowed when using esbuild. See https://ntl.fyi/esbuild-double-glob for more.',
+    )
+  })
+
+  test('included_files` with multiple glob stars fails on esbuild when flag is enabled', async () => {
+    const fixtureName = 'node-module-dynamic-import-2'
+
+    await expect(
+      zipNode(fixtureName, {
+        opts: {
+          basePath: join(FIXTURES_DIR, fixtureName),
+          config: { '*': { includedFiles: ['!lang/**/en.*'], nodeBundler: NODE_BUNDLER.ESBUILD } },
+          featureFlags: {
+            zisi_esbuild_fail_double_glob: true,
+          },
+        },
+      }),
+    ).rejects.toThrowError(FunctionBundlingUserError)
   })
 
   testMany(
