@@ -1633,7 +1633,7 @@ describe('zip-it-and-ship-it', () => {
     await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { includedFiles: ['!lang/**/en.*'], nodeBundler: NODE_BUNDLER.ESBUILD } },
+        config: { '*': { includedFiles: ['lang/**/de.*', '!lang/**/en.*'], nodeBundler: NODE_BUNDLER.ESBUILD } },
       },
     })
 
