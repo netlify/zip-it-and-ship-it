@@ -38,6 +38,9 @@ const includedFilesToEsbuildExternals = (
   functionName: string,
 ) =>
   includedFiles
+    // only keep negated patterns
+    .filter((pattern) => pattern.startsWith('!'))
+    // warn about invalid patterns
     .filter((pattern) => {
       const containsMultipleStars = pattern.indexOf('*') !== pattern.lastIndexOf('*')
 
@@ -59,8 +62,6 @@ const includedFilesToEsbuildExternals = (
 
       return true
     })
-    // only keep negated patterns
-    .filter((pattern) => pattern.startsWith('!'))
     // remove the !
     .map((pattern) => pattern.slice(1))
     // esbuild expects a relative path for local files
