@@ -10,9 +10,6 @@ export const defaultFlags = {
   // Use NFT as the default bundler.
   traceWithNft: false,
 
-  // Should Lambda functions inherit the build Node.js version
-  functions_inherit_build_nodejs_version: false,
-
   // Output pure (i.e. untranspiled) ESM files when the function file has ESM
   // syntax and the parent `package.json` file has `{"type": "module"}`.
   zisi_pure_esm: false,
