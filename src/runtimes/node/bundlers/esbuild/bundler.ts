@@ -46,7 +46,7 @@ const includedFilesToEsbuildExternals = async (includedFiles: string[], baseDir:
 
   for (const pattern of exclusions) {
     // esbuild expects modules to be passed in as module names, not paths
-    const nodeModulesMatch = pattern.match(/^\.\/node_modules\/(([^/]+)(\/[^/]*)?)*/)
+    const nodeModulesMatch = pattern.match(/^\.\/node_modules\/(([^/]+)(\/[^/*]+)?)*/)
 
     if (nodeModulesMatch !== null) {
       const [, moduleName] = nodeModulesMatch
