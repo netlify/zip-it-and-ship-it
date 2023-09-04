@@ -60,7 +60,7 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath, entryFilename: '' }
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(mainFile, { functionName: name, featureFlags, logger })
+  const inSourceConfig = await findISCDeclarationsInPath(mainFile, { functionName: name, logger })
   const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
 
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
