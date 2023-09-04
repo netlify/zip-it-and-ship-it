@@ -40,7 +40,7 @@ const includedFilesToEsbuildExternals = async (includedFiles: string[], baseDir:
     // esbuild expects relative paths
     .map((pattern) => `./${pattern}`)
     // esbuild treats * the same as glob treats **, so this replacement is safe
-    .map((pattern) => pattern.replace('**', '*').replace(/\*(\\\*)+/, '*'))
+    .map((pattern) => pattern.replace(/\*\*/g, '*').replace(/\*(\\\*)+/g, '*'))
 
   const result: string[] = []
 
