@@ -31,7 +31,7 @@ const RESOLVE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts'
  *
  * Turns !node_modules/test/** into test
  * and !lang/en.* into ./lang/en.*.
- * ESBuild can't handle multiple globs in a single pattern, so we resolve them instead.
+ * esbuild can't handle multiple globs in a single pattern, so we resolve them instead.
  */
 const includedFilesToEsbuildExternals = async (includedFiles: string[], baseDir: string) => {
   const exclusions = includedFiles
