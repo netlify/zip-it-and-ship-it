@@ -39,13 +39,12 @@ const includedFilesToEsbuildExternals = async (includedFiles: string[], baseDir:
     .map((pattern) => pattern.slice(1))
     // esbuild expects relative paths
     .map((pattern) => `./${pattern}`)
-
-  // esbuild treats * the same as glob treats **, so this replacement is safe
-  const singleStar = exclusions.map((pattern) => pattern.replace('**', '*').replace(/\*(\\\*)+/, '*'))
+    // esbuild treats * the same as glob treats **, so this replacement is safe
+    .map((pattern) => pattern.replace('**', '*').replace(/\*(\\\*)+/, '*'))
 
   const result: string[] = []
 
-  for (const pattern of singleStar) {
+  for (const pattern of exclusions) {
     // esbuild expects modules to be passed in as module names, not paths
     const nodeModulesMatch = pattern.match(/^\.\/node_modules\/(([^/]+)(\/[^/]*)?)*/)
 
