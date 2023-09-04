@@ -64,9 +64,6 @@ describe('listFunction', () => {
     test('listFunction does not include runtimeAPIVersion when parseISC false', async () => {
       const mainFile = join(FIXTURES_ESM_DIR, 'v2-api/function.js')
       const func = await listFunction(mainFile, {
-        featureFlags: {
-          zisi_functions_api_v2: true,
-        },
         parseISC: false,
       })
 
@@ -76,9 +73,6 @@ describe('listFunction', () => {
     test('listFunction includes runtimeAPIVersion when parseISC true', async () => {
       const mainFile = join(FIXTURES_ESM_DIR, 'v2-api/function.js')
       const func = await listFunction(mainFile, {
-        featureFlags: {
-          zisi_functions_api_v2: true,
-        },
         parseISC: true,
       })
 

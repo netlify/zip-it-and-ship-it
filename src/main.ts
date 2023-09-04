@@ -45,7 +45,7 @@ interface AugmentedFunctionSource extends FunctionSource {
   inSourceConfig?: ISCValues
 }
 
-const augmentWithISC = async (func: FunctionSource, featureFlags: FeatureFlags): Promise<AugmentedFunctionSource> => {
+const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSource> => {
   // ISC is currently only supported in JavaScript and TypeScript functions
   // and only supports scheduled functions.
   if (func.runtime.name !== RUNTIME.JAVASCRIPT) {
@@ -54,7 +54,6 @@ const augmentWithISC = async (func: FunctionSource, featureFlags: FeatureFlags):
 
   const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, {
     functionName: func.name,
-    featureFlags,
     logger: getLogger(),
   })
 
@@ -77,9 +76,7 @@ export const listFunctions = async function (
   const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
-  const augmentedFunctions = parseISC
-    ? await Promise.all(functions.map((func) => augmentWithISC(func, featureFlags)))
-    : functions
+  const augmentedFunctions = parseISC ? await Promise.all(functions.map((func) => augmentWithISC(func))) : functions
 
   return augmentedFunctions.map(getListedFunction)
 }
@@ -102,7 +99,7 @@ export const listFunction = async function (
     return
   }
 
-  const augmentedFunction = parseISC ? await augmentWithISC(func, featureFlags) : func
+  const augmentedFunction = parseISC ? await augmentWithISC(func) : func
 
   return getListedFunction(augmentedFunction)
 }
@@ -124,9 +121,7 @@ export const listFunctionsFiles = async function (
   const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
-  const augmentedFunctions = parseISC
-    ? await Promise.all(functions.map((func) => augmentWithISC(func, featureFlags)))
-    : functions
+  const augmentedFunctions = parseISC ? await Promise.all(functions.map((func) => augmentWithISC(func))) : functions
   const listedFunctionsFiles = await Promise.all(
     augmentedFunctions.map((func) => getListedFunctionFiles(func, { basePath, featureFlags })),
   )

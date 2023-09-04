@@ -1,6 +1,5 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
-import type { FeatureFlags } from '../../../feature_flags.js'
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { Logger } from '../../../utils/logger.js'
@@ -27,7 +26,6 @@ export type ISCValues = {
 
 interface FindISCDeclarationsOptions {
   functionName: string
-  featureFlags: FeatureFlags
   logger: Logger
 }
 
@@ -52,7 +50,7 @@ const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean
 // the property and `data` its value.
 export const findISCDeclarationsInPath = async (
   sourcePath: string,
-  { functionName, featureFlags, logger }: FindISCDeclarationsOptions,
+  { functionName, logger }: FindISCDeclarationsOptions,
 ): Promise<ISCValues> => {
   const source = await safelyReadSource(sourcePath)
 
@@ -60,7 +58,7 @@ export const findISCDeclarationsInPath = async (
     return {}
   }
 
-  return findISCDeclarations(source, { functionName, featureFlags, logger })
+  return findISCDeclarations(source, { functionName, logger })
 }
 
 /**
@@ -88,7 +86,7 @@ const normalizeMethods = (input: unknown, name: string): string[] | undefined =>
 
 export const findISCDeclarations = (
   source: string,
-  { functionName, featureFlags, logger }: FindISCDeclarationsOptions,
+  { functionName, logger }: FindISCDeclarationsOptions,
 ): ISCValues => {
   const ast = safelyParseSource(source)
 
@@ -106,7 +104,7 @@ export const findISCDeclarations = (
   const { configExport, defaultExport, handlerExports } = getExports(ast.body, getAllBindings)
   const isV2API = handlerExports.length === 0 && defaultExport !== undefined
 
-  if (featureFlags.zisi_functions_api_v2 && isV2API) {
+  if (isV2API) {
     const config: ISCValues = {
       runtimeAPIVersion: 2,
     }
