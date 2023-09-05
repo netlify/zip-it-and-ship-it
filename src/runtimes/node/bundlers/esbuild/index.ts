@@ -63,7 +63,6 @@ const bundle: BundleFunction = async ({
   srcPath,
   stat,
   runtimeAPIVersion,
-  logger,
 }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const {
@@ -86,7 +85,6 @@ const bundle: BundleFunction = async ({
     srcDir,
     srcFile: mainFile,
     runtimeAPIVersion,
-    logger,
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings
   const { srcFiles, includedFiles } = await getSrcFiles({

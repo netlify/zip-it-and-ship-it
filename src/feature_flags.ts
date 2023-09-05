@@ -10,9 +10,6 @@ export const defaultFlags = {
   // Use NFT as the default bundler.
   traceWithNft: false,
 
-  // Should Lambda functions inherit the build Node.js version
-  functions_inherit_build_nodejs_version: false,
-
   // Output pure (i.e. untranspiled) ESM files when the function file has ESM
   // syntax and the parent `package.json` file has `{"type": "module"}`.
   zisi_pure_esm: false,
@@ -23,9 +20,6 @@ export const defaultFlags = {
 
   // Output CJS file extension.
   zisi_output_cjs_extension: false,
-
-  // Inject the compatibility layer required for the v2 runtime API to work.
-  zisi_functions_api_v2: false,
 
   // Create unique entry file instead of a file that is based on the function name.
   zisi_unique_entry_file: false,

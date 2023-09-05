@@ -118,9 +118,6 @@ describe('`stream` helper', () => {
 describe('V2 API', () => {
   const options = {
     functionName: 'func1',
-    featureFlags: {
-      zisi_functions_api_v2: true,
-    },
     logger: getLogger(),
   }
 
