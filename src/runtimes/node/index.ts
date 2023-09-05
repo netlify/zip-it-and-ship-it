@@ -60,7 +60,7 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath, entryFilename: '' }
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(mainFile, { functionName: name, featureFlags, logger })
+  const inSourceConfig = await findISCDeclarationsInPath(mainFile, { functionName: name, logger })
   const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
 
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
@@ -82,7 +82,6 @@ const zipFunction: ZipFunction = async function ({
     mainFile: finalMainFile = mainFile,
     moduleFormat,
     nativeNodeModules,
-    nodeModulesWithDynamicImports,
     rewrites = new Map(),
     srcFiles,
   } = await bundler.bundle({
@@ -147,7 +146,6 @@ const zipFunction: ZipFunction = async function ({
     inSourceConfig,
     invocationMode,
     nativeNodeModules,
-    nodeModulesWithDynamicImports,
     path: zipPath.path,
     runtimeVersion:
       runtimeAPIVersion === 2 ? getNodeRuntimeForV2(config.nodeVersion) : getNodeRuntime(config.nodeVersion),

@@ -1,6 +1,6 @@
 import path from 'path'
 
-import type { Plugin } from '@netlify/esbuild'
+import type { Plugin } from 'esbuild'
 
 import { isNativeModule } from '../../utils/detect_native_module.js'
 import { PackageJson, readPackageJson } from '../../utils/package_json.js'

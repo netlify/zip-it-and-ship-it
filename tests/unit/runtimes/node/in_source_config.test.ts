@@ -118,9 +118,6 @@ describe('`stream` helper', () => {
 describe('V2 API', () => {
   const options = {
     functionName: 'func1',
-    featureFlags: {
-      zisi_functions_api_v2: true,
-    },
     logger: getLogger(),
   }
 
@@ -210,6 +207,36 @@ describe('V2 API', () => {
     })
   })
 
+  describe('`method` property', () => {
+    test('Using an array', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        method: ["GET", "POST"]
+      }`
+
+      const { methods } = findISCDeclarations(source, options)
+
+      expect(methods).toEqual(['GET', 'POST'])
+    })
+
+    test('Using single method', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        method: "GET"
+      }`
+
+      const { methods } = findISCDeclarations(source, options)
+
+      expect(methods).toEqual(['GET'])
+    })
+  })
+
   describe('`path` property', () => {
     test('Missing a leading slash', () => {
       expect.assertions(4)
@@ -268,7 +295,7 @@ describe('V2 API', () => {
 
       const { routes } = findISCDeclarations(source, options)
 
-      expect(routes).toEqual([{ pattern: '/products', literal: '/products' }])
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
 
     test('Using a pattern with named groupd', () => {
@@ -286,6 +313,7 @@ describe('V2 API', () => {
         {
           pattern: '/store/:category/products/:product-id',
           expression: '^\\/store(?:\\/([^\\/]+?))\\/products(?:\\/([^\\/]+?))-id\\/?$',
+          methods: [],
         },
       ])
     })

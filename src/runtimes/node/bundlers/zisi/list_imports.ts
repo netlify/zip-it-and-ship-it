@@ -1,4 +1,4 @@
-import * as esbuild from '@netlify/esbuild'
+import * as esbuild from 'esbuild'
 import isBuiltinModule from 'is-builtin-module'
 import precinct from 'precinct'
 import { tmpName } from 'tmp-promise'

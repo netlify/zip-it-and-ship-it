@@ -171,7 +171,6 @@ describe('zipFunction', () => {
       const mainFile = join(FIXTURES_ESM_DIR, 'v2-api', 'function.js')
       const result = (await zipFunction(mainFile, tmpDir, {
         ...options,
-        featureFlags: { zisi_functions_api_v2: true },
       }))!
 
       expect(result).not.toBeUndefined()
@@ -195,7 +194,6 @@ describe('zipFunction', () => {
       const systemLog = vi.fn()
 
       await zipFunction(mainFile, tmpDir, {
-        featureFlags: { zisi_functions_api_v2: true },
         systemLog,
       })
 
@@ -209,7 +207,6 @@ describe('zipFunction', () => {
       const systemLog = vi.fn()
 
       await zipFunction(mainFile, tmpDir, {
-        featureFlags: { zisi_functions_api_v2: true },
         systemLog,
       })
 

@@ -1,4 +1,4 @@
-import type { Plugin } from '@netlify/esbuild'
+import type { Plugin } from 'esbuild'
 
 export const getNodeBuiltinPlugin = (): Plugin => ({
   name: 'builtin-modules',

@@ -1,0 +1,1 @@
+module.exports.magic_wand = "baguette magique"

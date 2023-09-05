@@ -51,7 +51,6 @@ export interface ZipFunctionResult {
   inSourceConfig?: ISCValues
   invocationMode?: InvocationMode
   nativeNodeModules?: object
-  nodeModulesWithDynamicImports?: string[]
   path: string
   runtimeVersion?: string
   entryFilename: string

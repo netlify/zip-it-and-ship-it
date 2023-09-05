@@ -1,12 +1,12 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
-import type { FeatureFlags } from '../../../feature_flags.js'
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { Logger } from '../../../utils/logger.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { getRoutesFromPath, Route } from '../../../utils/routes.js'
 import { RUNTIME } from '../../runtime.js'
+import { NODE_BUNDLER } from '../bundlers/types.js'
 import { createBindingsMethod } from '../parser/bindings.js'
 import { getExports } from '../parser/exports.js'
 import { getImports } from '../parser/imports.js'
@@ -21,11 +21,11 @@ export type ISCValues = {
   routes?: Route[]
   runtimeAPIVersion?: number
   schedule?: string
+  methods?: string[]
 }
 
 interface FindISCDeclarationsOptions {
   functionName: string
-  featureFlags: FeatureFlags
   logger: Logger
 }
 
@@ -50,7 +50,7 @@ const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean
 // the property and `data` its value.
 export const findISCDeclarationsInPath = async (
   sourcePath: string,
-  { functionName, featureFlags, logger }: FindISCDeclarationsOptions,
+  { functionName, logger }: FindISCDeclarationsOptions,
 ): Promise<ISCValues> => {
   const source = await safelyReadSource(sourcePath)
 
@@ -58,12 +58,35 @@ export const findISCDeclarationsInPath = async (
     return {}
   }
 
-  return findISCDeclarations(source, { functionName, featureFlags, logger })
+  return findISCDeclarations(source, { functionName, logger })
+}
+
+/**
+ * Normalizes method names into arrays of uppercase strings.
+ * (e.g. "get" becomes ["GET"])
+ */
+const normalizeMethods = (input: unknown, name: string): string[] | undefined => {
+  const methods = Array.isArray(input) ? input : [input]
+
+  return methods.map((method) => {
+    if (typeof method !== 'string') {
+      throw new FunctionBundlingUserError(
+        `Could not parse method declaration of function '${name}'. Expecting HTTP Method, got ${method}`,
+        {
+          functionName: name,
+          runtime: RUNTIME.JAVASCRIPT,
+          bundler: NODE_BUNDLER.ESBUILD,
+        },
+      )
+    }
+
+    return method.toUpperCase()
+  })
 }
 
 export const findISCDeclarations = (
   source: string,
-  { functionName, featureFlags, logger }: FindISCDeclarationsOptions,
+  { functionName, logger }: FindISCDeclarationsOptions,
 ): ISCValues => {
   const ast = safelyParseSource(source)
 
@@ -81,9 +104,8 @@ export const findISCDeclarations = (
   const { configExport, defaultExport, handlerExports } = getExports(ast.body, getAllBindings)
   const isV2API = handlerExports.length === 0 && defaultExport !== undefined
 
-  if (featureFlags.zisi_functions_api_v2 && isV2API) {
+  if (isV2API) {
     const config: ISCValues = {
-      routes: getRoutesFromPath(configExport.path, functionName),
       runtimeAPIVersion: 2,
     }
 
@@ -92,6 +114,12 @@ export const findISCDeclarations = (
     if (typeof configExport.schedule === 'string') {
       config.schedule = configExport.schedule
     }
+
+    if (configExport.method !== undefined) {
+      config.methods = normalizeMethods(configExport.method, functionName)
+    }
+
+    config.routes = getRoutesFromPath(configExport.path, functionName, config.methods ?? [])
 
     return config
   }

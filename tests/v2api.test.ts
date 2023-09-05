@@ -1,9 +1,12 @@
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 import { version as nodeVersion } from 'process'
 import { promisify } from 'util'
 
 import merge from 'deepmerge'
 import glob from 'glob'
 import semver from 'semver'
+import { dir as getTmpDir } from 'tmp-promise'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ARCHIVE_FORMAT } from '../src/archive.js'
@@ -27,9 +30,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     async (options) => {
       const { files } = await zipFixture('v2-api', {
         fixtureDir: FIXTURES_ESM_DIR,
-        opts: merge(options, {
-          featureFlags: { zisi_functions_api_v2: true },
-        }),
+        opts: options,
       })
 
       for (const entry of files) {
@@ -55,9 +56,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     async (options) => {
       const { files } = await zipFixture('v2-api-mjs', {
         fixtureDir: FIXTURES_ESM_DIR,
-        opts: merge(options, {
-          featureFlags: { zisi_functions_api_v2: true },
-        }),
+        opts: options,
       })
 
       for (const entry of files) {
@@ -85,7 +84,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
-          featureFlags: { zisi_functions_api_v2: true },
         }),
       })
 
@@ -113,7 +111,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
-          featureFlags: { zisi_functions_api_v2: true },
         }),
       })
 
@@ -141,7 +138,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     const { files } = await zipFixture('v2-api-mjs', {
       fixtureDir: FIXTURES_ESM_DIR,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         config: {
           '*': {
             nodeVersion: '16.0.0',
@@ -157,7 +153,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     const { files } = await zipFixture('v2-api-mjs', {
       fixtureDir: FIXTURES_ESM_DIR,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         config: {
           '*': {
             nodeVersion: 'invalid',
@@ -173,7 +168,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     const { files } = await zipFixture('v2-api-mjs', {
       fixtureDir: FIXTURES_ESM_DIR,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         config: {
           '*': {
             nodeVersion: '19.0.0',
@@ -191,7 +185,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     await zipFixture('v2-api', {
       fixtureDir: FIXTURES_ESM_DIR,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         systemLog,
       },
     })
@@ -205,7 +198,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
     await zipFixture('simple', {
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         systemLog,
       },
     })
@@ -214,20 +206,23 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
   })
 
   test('Extracts routes from the `path` in-source configuration property', async () => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+
     const { files } = await zipFixture('v2-api-with-path', {
       fixtureDir: FIXTURES_ESM_DIR,
       length: 3,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
+        manifest: manifestPath,
       },
     })
 
-    expect.assertions(files.length)
+    expect.assertions(files.length + 1)
 
     for (const file of files) {
       switch (file.name) {
         case 'with-literal':
-          expect(file.routes).toEqual([{ pattern: '/products', literal: '/products' }])
+          expect(file.routes).toEqual([{ pattern: '/products', literal: '/products', methods: ['GET', 'POST'] }])
 
           break
 
@@ -236,6 +231,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
             {
               pattern: '/products/:id',
               expression: '^\\/products(?:\\/([^\\/]+?))\\/?$',
+              methods: [],
             },
           ])
 
@@ -246,6 +242,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
             {
               pattern: '/numbers/(\\d+)',
               expression: '^\\/numbers(?:\\/(\\d+))\\/?$',
+              methods: [],
             },
           ])
 
@@ -255,6 +252,10 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
           continue
       }
     }
+
+    const manifestString = await readFile(manifestPath, { encoding: 'utf8' })
+    const manifest = JSON.parse(manifestString)
+    expect(manifest.functions[0].routes[0].methods).toEqual(['GET', 'POST'])
   })
 
   test('Flags invalid values of the `path` in-source configuration property as user errors', async () => {
@@ -263,9 +264,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     try {
       await zipFixture('v2-api-with-invalid-path', {
         fixtureDir: FIXTURES_ESM_DIR,
-        opts: {
-          featureFlags: { zisi_functions_api_v2: true },
-        },
       })
     } catch (error) {
       const { customErrorInfo } = error
