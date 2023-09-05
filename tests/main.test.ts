@@ -1748,6 +1748,9 @@ describe('zip-it-and-ship-it', () => {
             zipGo: true,
           },
         },
+        featureFlags: {
+          zisi_golang_use_al2: true,
+        },
       },
     })
     const binaryPath = join(FIXTURES_DIR, fixtureName, 'test')
@@ -1759,7 +1762,7 @@ describe('zip-it-and-ship-it', () => {
     expect(func.path.endsWith('.zip')).toBe(true)
 
     const unzippedFunctions = await unzipFiles([func])
-    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'test')
+    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'bootstrap')
 
     await expect(unzippedBinaryPath).toPathExist()
 
@@ -1784,6 +1787,9 @@ describe('zip-it-and-ship-it', () => {
             zipGo: true,
           },
         },
+        featureFlags: {
+          zisi_golang_use_al2: true,
+        },
       },
     })
     const [func] = files
@@ -1796,7 +1802,7 @@ describe('zip-it-and-ship-it', () => {
 
     const unzippedFunctions = await unzipFiles([func])
 
-    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'go-func-1')
+    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'bootstrap')
     const unzippedBinaryContents = await readFile(unzippedBinaryPath, 'utf8')
 
     expect(mockSource).toBe(unzippedBinaryContents)

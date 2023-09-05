@@ -113,6 +113,7 @@ const zipFunction: ZipFunction = async function ({
   srcPath,
   stat,
   isInternal,
+  featureFlags,
 }) {
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
@@ -139,13 +140,18 @@ const zipFunction: ZipFunction = async function ({
     const zipPath = `${destPath}.zip`
     const zipOptions = {
       destPath: zipPath,
-      filename: basename(destPath),
+      filename: featureFlags.zisi_golang_use_al2 ? 'bootstrap' : basename(destPath),
       runtime,
     }
 
     await zipBinary({ ...zipOptions, srcPath: binary.path, stat: binary.stat })
 
-    return { config, path: zipPath, entryFilename: zipOptions.filename }
+    return {
+      config,
+      path: zipPath,
+      entryFilename: zipOptions.filename,
+      goUseAL2Runtime: featureFlags.zisi_golang_use_al2,
+    }
   }
 
   // We don't need to zip the binary, so we can just copy it to the right path.
