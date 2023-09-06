@@ -2765,4 +2765,17 @@ describe('zip-it-and-ship-it', () => {
       expect(handler()).toBe(true)
     }
   })
+
+  testMany('esbuild hides unactionable import.meta warning', ['bundler_esbuild'], async (options) => {
+    const {
+      files: [{ bundlerWarnings }],
+    } = await zipFixture('import-meta-warning', {
+      length: 1,
+      opts: options,
+    })
+    expect(bundlerWarnings).toHaveLength(1)
+    expect((bundlerWarnings?.[0] as any).text).toEqual(
+      `"import.meta" is not available and will be empty, use __dirname instead`,
+    )
+  })
 })
