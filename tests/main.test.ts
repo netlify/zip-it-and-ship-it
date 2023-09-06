@@ -1740,13 +1740,20 @@ describe('zip-it-and-ship-it', () => {
   })
 
   test('Zips Go function binaries if the `zipGo` config property is set', async () => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+
     const fixtureName = 'go-simple'
     const { files } = await zipFixture(fixtureName, {
       opts: {
+        manifest: manifestPath,
         config: {
           '*': {
             zipGo: true,
           },
+        },
+        featureFlags: {
+          zisi_golang_use_al2: true,
         },
       },
     })
@@ -1758,8 +1765,12 @@ describe('zip-it-and-ship-it', () => {
     expect(func.runtime).toBe('go')
     expect(func.path.endsWith('.zip')).toBe(true)
 
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+    expect(manifest.functions[0].runtimeVersion).toEqual('provided.al2')
+
     const unzippedFunctions = await unzipFiles([func])
-    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'test')
+    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'bootstrap')
 
     await expect(unzippedBinaryPath).toPathExist()
 
@@ -1776,13 +1787,20 @@ describe('zip-it-and-ship-it', () => {
       return {} as any
     })
 
+    const { path: manifestTmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(manifestTmpDir, 'manifest.json')
+
     const fixtureName = 'go-source'
     const { files, tmpDir } = await zipFixture(fixtureName, {
       opts: {
+        manifest: manifestPath,
         config: {
           '*': {
             zipGo: true,
           },
+        },
+        featureFlags: {
+          zisi_golang_use_al2: true,
         },
       },
     })
@@ -1791,12 +1809,16 @@ describe('zip-it-and-ship-it', () => {
     expect(func.runtime).toBe('go')
     expect(func.path.endsWith('.zip')).toBe(true)
 
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+    expect(manifest.functions[0].runtimeVersion).toEqual('provided.al2')
+
     // remove the binary before unzipping
     await rm(join(tmpDir, 'go-func-1'), { maxRetries: 10 })
 
     const unzippedFunctions = await unzipFiles([func])
 
-    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'go-func-1')
+    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'bootstrap')
     const unzippedBinaryContents = await readFile(unzippedBinaryPath, 'utf8')
 
     expect(mockSource).toBe(unzippedBinaryContents)
