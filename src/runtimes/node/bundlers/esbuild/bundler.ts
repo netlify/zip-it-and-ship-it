@@ -207,6 +207,17 @@ var __glob = (map) => (path) => {
     const cleanTempFiles = getCleanupFunction([...bundlePaths.keys()])
     const additionalPaths = includedFilesFromModuleDetection
 
+    const updatedWarnings = warnings.map((warning) => {
+      if (warning.id === 'empty-import-meta') {
+        return {
+          ...warning,
+          text: `"import.meta" is not available and will be empty, use __dirname instead`,
+        }
+      }
+
+      return warning
+    })
+
     return {
       additionalPaths,
       bundlePaths,
@@ -215,7 +226,7 @@ var __glob = (map) => (path) => {
       moduleFormat,
       nativeNodeModules,
       outputExtension,
-      warnings,
+      warnings: updatedWarnings,
     }
   } catch (error) {
     throw FunctionBundlingUserError.addCustomErrorInfo(error, {
