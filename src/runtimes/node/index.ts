@@ -134,6 +134,11 @@ const zipFunction: ZipFunction = async function ({
     invocationMode = INVOCATION_MODE.Stream
   }
 
+  // If this is a background function, set the right `invocationMode` value.
+  if (name.endsWith('-background')) {
+    invocationMode = INVOCATION_MODE.Background
+  }
+
   return {
     bundler: bundlerName,
     bundlerWarnings,

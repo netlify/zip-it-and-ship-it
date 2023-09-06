@@ -2280,6 +2280,21 @@ describe('zip-it-and-ship-it', () => {
   )
 
   testMany(
+    'Sets `invocationMode: "background"` on functions with a `-background` suffix in the filename',
+    [...allBundleConfigs, 'bundler_none'],
+    async (options) => {
+      const { files } = await zipFixture('background', {
+        opts: options,
+        length: 3,
+      })
+
+      files.forEach((result) => {
+        expect(result.invocationMode).toBe('background')
+      })
+    },
+  )
+
+  testMany(
     'Throws error when `schedule` helper is used but cron expression not found',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
