@@ -9,7 +9,6 @@ export type FunctionResult = Omit<FunctionArchive, 'runtime'> & {
   runtime: RuntimeName
   schedule?: string
   runtimeAPIVersion?: number
-  goUseAL2Runtime?: boolean
 }
 
 // Takes the result of zipping a function and formats it for output.
@@ -21,7 +20,6 @@ export const formatZipResult = (archive: FunctionArchive) => {
     runtime: archive.runtime.name,
     schedule: archive.inSourceConfig?.schedule ?? archive?.config?.schedule,
     runtimeAPIVersion: archive.inSourceConfig?.runtimeAPIVersion,
-    goUseAL2Runtime: archive.goUseAL2Runtime,
   }
 
   return removeUndefined(functionResult)

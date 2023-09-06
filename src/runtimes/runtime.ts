@@ -54,7 +54,6 @@ export interface ZipFunctionResult {
   path: string
   runtimeVersion?: string
   entryFilename: string
-  goUseAL2Runtime?: boolean
 }
 
 export type ZipFunction = (

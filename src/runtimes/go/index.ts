@@ -150,7 +150,7 @@ const zipFunction: ZipFunction = async function ({
       config,
       path: zipPath,
       entryFilename: zipOptions.filename,
-      goUseAL2Runtime: featureFlags.zisi_golang_use_al2,
+      runtimeVersion: featureFlags.zisi_golang_use_al2 ? 'provided.al2' : undefined,
     }
   }
 
