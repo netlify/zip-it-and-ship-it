@@ -5,6 +5,7 @@ import type { Runtime, ZipFunctionResult } from './runtimes/runtime.js'
 import { ObjectValues } from './types/utils.js'
 
 export const INVOCATION_MODE = {
+  Background: 'background',
   Buffer: 'buffer',
   Stream: 'stream',
 } as const
