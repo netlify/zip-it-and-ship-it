@@ -55,4 +55,18 @@ describe('CLI', () => {
     expect(exitCode).toBe(1)
     expect(stderr).toMatch('Not enough non-option arguments')
   })
+
+  test('--config', async () => {
+    const tmpDir = await tmpName({ prefix: 'zip-it-bin-test' })
+    const { stdout } = await exec([
+      join(FIXTURES_DIR, 'simple'),
+      tmpDir,
+      '--config',
+      '{ "*": { "nodeBundler": "esbuild" } }',
+    ])
+    const zipped = JSON.parse(stdout)
+
+    expect(zipped).toHaveLength(1)
+    expect(zipped[0].config.nodeBundler).toBe('esbuild')
+  })
 })

@@ -53,6 +53,7 @@ const OPTIONS = {
     default: {},
     describe:
       'An object matching glob-like expressions to objects containing configuration properties. Whenever a function name matches one of the expressions, it inherits the configuration properties',
+    coerce: (config: string) => (typeof config === 'string' ? JSON.parse(config) : config),
   },
   manifest: {
     string: true,
