@@ -112,8 +112,10 @@ const shouldTranspile = (
   esmPaths: Set<string>,
   reasons: NodeFileTraceReasons,
 ): boolean => {
-  if (cache.has(path)) {
-    return cache.get(path) as boolean
+  const cached = cache.get(path)
+
+  if (typeof cached === 'boolean') {
+    return cached
   }
 
   const reason = reasons.get(path)
@@ -137,6 +139,13 @@ const shouldTranspile = (
 
     return isESM
   }
+
+  // This is called recursively, so it's possible that another iteration will
+  // also try to answer the question of whether this path needs transpiling.
+  // Assuming, for the sake of this iteration, that the answer is yes, just
+  // to avoid an infinite loop. We'll rewrite the map entry with the correct
+  // value before the iteration ends.
+  cache.set(path, true)
 
   // The path should be transpiled if every parent will also be transpiled, or
   // if there is no parent.

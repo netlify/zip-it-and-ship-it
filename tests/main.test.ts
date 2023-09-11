@@ -2774,6 +2774,28 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
+  testMany('All ESM bundlers can handle import loops', ['bundler_esbuild', 'bundler_nft'], async (options) => {
+    const fixtureName = 'node-esm-import-loop'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          nodeVersion: 'nodejs16.x',
+        },
+      },
+    })
+    const { files, tmpDir } = await zipFixture(`${fixtureName}/functions`, {
+      length: 1,
+      opts,
+    })
+
+    await unzipFiles(files)
+
+    const func = await importFunctionFile(join(tmpDir, 'func1', 'func1.js'))
+
+    expect(func.handler()).toBe(true)
+  })
+
   testMany('Outputs correct entryFilename', ['bundler_esbuild', 'bundler_nft', 'bundler_default'], async (options) => {
     const { files } = await zipFixture('node-mts-extension', {
       length: 3,
