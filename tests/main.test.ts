@@ -2791,7 +2791,7 @@ describe('zip-it-and-ship-it', () => {
 
     await unzipFiles(files)
 
-    const func = await importFunctionFile(join(tmpDir, 'func1.js'))
+    const func = await importFunctionFile(join(tmpDir, 'func1', 'func1.js'))
 
     expect(func.handler()).toBe(true)
   })
