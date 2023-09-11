@@ -1,6 +1,6 @@
 import { env } from 'process'
 
-export const defaultFlags: Record<string, boolean> = {
+export const defaultFlags = {
   // Build Rust functions from source.
   buildRustSource: Boolean(env.NETLIFY_EXPERIMENTAL_BUILD_RUST_SOURCE),
 
@@ -18,18 +18,20 @@ export const defaultFlags: Record<string, boolean> = {
   // `.mjs` extension.
   zisi_pure_esm_mjs: false,
 
-  // Load configuration from per-function JSON files.
-  project_deploy_configuration_api_use_per_function_configuration_files: false,
-
-  // Output CJS file extension
+  // Output CJS file extension.
   zisi_output_cjs_extension: false,
 
-  // Do not allow ___netlify-entry-point as function or file name
-  zisi_disallow_new_entry_name: false,
-}
+  // Create unique entry file instead of a file that is based on the function name.
+  zisi_unique_entry_file: false,
 
-export type FeatureFlag = keyof typeof defaultFlags
-export type FeatureFlags = Record<FeatureFlag, boolean>
+  // If multiple glob stars are in includedFiles, fail the build instead of warning.
+  zisi_esbuild_fail_double_glob: false,
+
+  // Bundle for the provided.AL2 runtime for Go functions.
+  zisi_golang_use_al2: false,
+} as const
+
+export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>
 
 // List of supported flags and their default value.
 

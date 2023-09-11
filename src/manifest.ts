@@ -2,17 +2,22 @@ import { promises as fs } from 'fs'
 import { resolve } from 'path'
 import { arch, platform } from 'process'
 
-import { FunctionResult } from './utils/format_result.js'
+import type { InvocationMode } from './function.js'
+import type { FunctionResult } from './utils/format_result.js'
+import type { Route } from './utils/routes.js'
 
 interface ManifestFunction {
+  invocationMode?: InvocationMode
   mainFile: string
   name: string
   path: string
+  routes?: Route[]
   runtime: string
+  runtimeVersion?: string
   schedule?: string
   displayName?: string
   bundler?: string
-  isInternal?: boolean
+  generator?: string
 }
 
 export interface Manifest {
@@ -28,7 +33,7 @@ export interface Manifest {
 const MANIFEST_VERSION = 1
 
 export const createManifest = async ({ functions, path }: { functions: FunctionResult[]; path: string }) => {
-  const formattedFunctions = functions.map(formatFunctionForManifest)
+  const formattedFunctions = functions.map((func) => formatFunctionForManifest(func))
   const payload: Manifest = {
     functions: formattedFunctions,
     system: { arch, platform },
@@ -40,21 +45,34 @@ export const createManifest = async ({ functions, path }: { functions: FunctionR
 }
 
 const formatFunctionForManifest = ({
+  bundler,
+  displayName,
+  generator,
+  invocationMode,
   mainFile,
   name,
   path,
+  routes,
   runtime,
+  runtimeVersion,
   schedule,
-  displayName,
-  bundler,
-  isInternal,
-}: FunctionResult): ManifestFunction => ({
-  mainFile,
-  name,
-  path: resolve(path),
-  runtime,
-  schedule,
-  displayName,
-  bundler,
-  isInternal,
-})
+}: FunctionResult): ManifestFunction => {
+  const manifestFunction: ManifestFunction = {
+    bundler,
+    displayName,
+    generator,
+    invocationMode,
+    mainFile,
+    name,
+    runtimeVersion,
+    path: resolve(path),
+    runtime,
+    schedule,
+  }
+
+  if (routes?.length !== 0) {
+    manifestFunction.routes = routes
+  }
+
+  return manifestFunction
+}

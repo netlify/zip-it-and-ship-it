@@ -1,17 +1,19 @@
 import { Buffer } from 'buffer'
 import { createWriteStream, Stats, readlinkSync } from 'fs'
 import { Writable } from 'stream'
-import { promisify } from 'util'
 
 import archiver, { Archiver } from 'archiver'
-import endOfStream from 'end-of-stream'
+
+import { ObjectValues } from './types/utils.js'
 
 export { Archiver as ZipArchive } from 'archiver'
 
-// TODO make enum
-export type ArchiveFormat = 'none' | 'zip'
+export const ARCHIVE_FORMAT = {
+  NONE: 'none',
+  ZIP: 'zip',
+} as const
 
-const pEndOfStream = promisify(endOfStream)
+export type ArchiveFormat = ObjectValues<typeof ARCHIVE_FORMAT>
 
 // Start zipping files
 export const startZip = function (destPath: string): { archive: Archiver; output: Writable } {
@@ -47,6 +49,12 @@ export const addZipContent = function (archive: Archiver, content: Buffer | stri
 
 // End zipping files
 export const endZip = async function (archive: Archiver, output: Writable): Promise<void> {
-  archive.finalize()
-  await pEndOfStream(output)
+  const result = new Promise<void>((resolve, reject) => {
+    output.on('error', (error) => reject(error))
+    output.on('finish', () => resolve())
+  })
+
+  await archive.finalize()
+
+  return result
 }

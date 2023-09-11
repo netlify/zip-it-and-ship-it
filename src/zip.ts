@@ -4,22 +4,21 @@ import { resolve } from 'path'
 import isPathInside from 'is-path-inside'
 import pMap from 'p-map'
 
-import { ArchiveFormat } from './archive.js'
+import { ArchiveFormat, ARCHIVE_FORMAT } from './archive.js'
 import { Config } from './config.js'
 import { FeatureFlags, getFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import { createManifest } from './manifest.js'
 import { getFunctionsFromPaths } from './runtimes/index.js'
-import { ModuleFormat } from './runtimes/node/utils/module_format.js'
+import { MODULE_FORMAT } from './runtimes/node/utils/module_format.js'
 import { addArchiveSize } from './utils/archive_size.js'
 import { RuntimeCache } from './utils/cache.js'
 import { formatZipResult } from './utils/format_result.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
 import { getLogger, LogFunction } from './utils/logger.js'
 import { nonNullable } from './utils/non_nullable.js'
-import { endTimer, startTimer } from './utils/timer.js'
 
-interface ZipFunctionOptions {
+export interface ZipFunctionOptions {
   archiveFormat?: ArchiveFormat
   basePath?: string
   config?: Config
@@ -40,9 +39,8 @@ export type ZipFunctionsOptions = ZipFunctionOptions & {
 
 const DEFAULT_PARALLEL_LIMIT = 5
 
-// TODO: now that we have types, do we still need runtime validation?
 const validateArchiveFormat = (archiveFormat: ArchiveFormat) => {
-  if (!['none', 'zip'].includes(archiveFormat)) {
+  if (!Object.values(ARCHIVE_FORMAT).includes(archiveFormat)) {
     throw new Error(`Invalid archive format: ${archiveFormat}`)
   }
 }
@@ -53,7 +51,7 @@ export const zipFunctions = async function (
   relativeSrcFolders: string | string[],
   destFolder: string,
   {
-    archiveFormat = 'zip',
+    archiveFormat = ARCHIVE_FORMAT.ZIP,
     basePath,
     config = {},
     configFileDirectories,
@@ -90,10 +88,9 @@ export const zipFunctions = async function (
 
         // If there's a `nodeModuleFormat` configuration property set to `esm`,
         // extend the feature flags with `zisi_pure_esm_mjs` enabled.
-        ...(func.config.nodeModuleFormat === ModuleFormat.ESM ? { zisi_pure_esm_mjs: true } : {}),
+        ...(func.config.nodeModuleFormat === MODULE_FORMAT.ESM ? { zisi_pure_esm_mjs: true } : {}),
       }
 
-      const startIntervalTime = startTimer()
       const zipResult = await func.runtime.zipFunction({
         archiveFormat,
         basePath,
@@ -103,6 +100,8 @@ export const zipFunctions = async function (
         extension: func.extension,
         featureFlags: functionFlags,
         filename: func.filename,
+        isInternal: Boolean(internalFunctionsPath && isPathInside(func.srcPath, internalFunctionsPath)),
+        logger,
         mainFile: func.mainFile,
         name: func.name,
         repositoryRoot,
@@ -110,17 +109,7 @@ export const zipFunctions = async function (
         srcDir: func.srcDir,
         srcPath: func.srcPath,
         stat: func.stat,
-        isInternal: Boolean(internalFunctionsPath && isPathInside(func.srcPath, internalFunctionsPath)),
       })
-      const durationNs = endTimer(startIntervalTime)
-      const logObject = {
-        name: func.name,
-        config: func.config,
-        featureFlags: functionFlags,
-        durationNs,
-      }
-
-      logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
 
       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
     },
@@ -143,12 +132,11 @@ export const zipFunctions = async function (
   return formattedResults
 }
 
-// eslint-disable-next-line max-statements
 export const zipFunction = async function (
   relativeSrcPath: string,
   destFolder: string,
   {
-    archiveFormat = 'zip',
+    archiveFormat = ARCHIVE_FORMAT.ZIP,
     basePath,
     config: inputConfig = {},
     featureFlags: inputFeatureFlags,
@@ -189,9 +177,8 @@ export const zipFunction = async function (
 
     // If there's a `nodeModuleFormat` configuration property set to `esm`,
     // extend the feature flags with `zisi_pure_esm_mjs` enabled.
-    ...(config.nodeModuleFormat === ModuleFormat.ESM ? { zisi_pure_esm_mjs: true } : {}),
+    ...(config.nodeModuleFormat === MODULE_FORMAT.ESM ? { zisi_pure_esm_mjs: true } : {}),
   }
-  const startIntervalTime = startTimer()
   const zipResult = await runtime.zipFunction({
     archiveFormat,
     basePath,
@@ -201,6 +188,8 @@ export const zipFunction = async function (
     extension,
     featureFlags: functionFlags,
     filename,
+    isInternal: Boolean(internalFunctionsPath && isPathInside(srcPath, internalFunctionsPath)),
+    logger,
     mainFile,
     name,
     repositoryRoot,
@@ -208,17 +197,7 @@ export const zipFunction = async function (
     srcDir,
     srcPath,
     stat: stats,
-    isInternal: Boolean(internalFunctionsPath && isPathInside(srcPath, internalFunctionsPath)),
   })
-  const durationNs = endTimer(startIntervalTime)
-  const logObject = {
-    name,
-    config,
-    featureFlags: functionFlags,
-    durationNs,
-  }
-
-  logger.system(`Function details: ${JSON.stringify(logObject, null, 2)}`)
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })
 }

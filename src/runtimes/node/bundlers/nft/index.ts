@@ -1,4 +1,4 @@
-import { basename, dirname, join, normalize, resolve } from 'path'
+import { basename, dirname, join, normalize, resolve, extname } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
@@ -6,16 +6,17 @@ import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
 import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import type { RuntimeCache } from '../../../../utils/cache.js'
-import { cachedReadFile } from '../../../../utils/fs.js'
+import { cachedReadFile, getPathWithExtension } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
+import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions } from '../../utils/module_format.js'
+import { getNodeSupportMatrix } from '../../utils/node_version.js'
+import { getModuleFormat as getTSModuleFormat } from '../../utils/tsconfig.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
-
-// Paths that will be excluded from the tracing process.
-const ignore = ['node_modules/aws-sdk/**']
+import { transpile } from './transpile.js'
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -28,6 +29,7 @@ const bundle: BundleFunction = async ({
   name,
   pluginsModulesPath,
   repositoryRoot = basePath,
+  runtimeAPIVersion,
 }) => {
   const { includedFiles = [], includedFilesBasePath } = config
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
@@ -35,6 +37,8 @@ const bundle: BundleFunction = async ({
     includedFilesBasePath || basePath,
   )
   const {
+    aliases,
+    mainFile: normalizedMainFile,
     moduleFormat,
     paths: dependencyPaths,
     rewrites,
@@ -46,6 +50,8 @@ const bundle: BundleFunction = async ({
     mainFile,
     pluginsModulesPath,
     name,
+    repositoryRoot,
+    runtimeAPIVersion,
   })
   const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
   const filteredIncludedPaths = [...filterExcludedPaths(dependencyPaths, excludePatterns), ...includedPaths]
@@ -55,20 +61,28 @@ const bundle: BundleFunction = async ({
   const srcFiles = [...filteredIncludedPaths].sort()
 
   return {
+    aliases,
     basePath: getBasePath(dirnames),
     includedFiles: includedPaths,
     inputs: dependencyPaths,
-    mainFile,
+    mainFile: normalizedMainFile,
     moduleFormat,
     rewrites,
     srcFiles,
   }
 }
 
-const ignoreFunction = (path: string) => {
-  const shouldIgnore = ignore.some((expression) => minimatch(path, expression))
+const getIgnoreFunction = (config: FunctionConfig) => {
+  const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
-  return shouldIgnore
+  // Paths that will be excluded from the tracing process.
+  const ignore = nodeSupport.awsSDKV3 ? ['node_modules/@aws-sdk/**'] : ['node_modules/aws-sdk/**']
+
+  return (path: string) => {
+    const shouldIgnore = ignore.some((expression) => minimatch(path, expression))
+
+    return shouldIgnore
+  }
 }
 
 const traceFilesAndTranspile = async function ({
@@ -79,6 +93,8 @@ const traceFilesAndTranspile = async function ({
   mainFile,
   pluginsModulesPath,
   name,
+  repositoryRoot,
+  runtimeAPIVersion,
 }: {
   basePath?: string
   cache: RuntimeCache
@@ -87,7 +103,14 @@ const traceFilesAndTranspile = async function ({
   mainFile: string
   pluginsModulesPath?: string
   name: string
+  repositoryRoot?: string
+  runtimeAPIVersion: number
 }) {
+  const isTypeScript = tsExtensions.has(extname(mainFile))
+  const tsFormat = isTypeScript ? getTSModuleFormat(mainFile, repositoryRoot) : MODULE_FORMAT.COMMONJS
+  const tsAliases = new Map<string, string>()
+  const tsRewrites = new Map<string, string>()
+
   const {
     fileList: dependencyPaths,
     esmFileList,
@@ -97,12 +120,25 @@ const traceFilesAndTranspile = async function ({
     fileIOConcurrency: 2048,
     base: basePath,
     cache: cache.nftCache,
-    ignore: ignoreFunction,
+    ignore: getIgnoreFunction(config),
     readFile: async (path: string) => {
       try {
-        const source = await cachedReadFile(cache.fileCache, path)
+        const extension = extname(path)
 
-        return source
+        if (tsExtensions.has(extension)) {
+          const transpiledSource = await transpile({ config, name, format: tsFormat, path })
+          const newPath = getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
+
+          // Overriding the contents of the `.ts` file.
+          tsRewrites.set(path, transpiledSource)
+
+          // Rewriting the `.ts` path to `.js` in the bundle.
+          tsAliases.set(path, newPath)
+
+          return transpiledSource
+        }
+
+        return await cachedReadFile(cache.fileCache, path)
       } catch (error) {
         if (error.code === 'ENOENT' || error.code === 'EISDIR') {
           return null
@@ -131,6 +167,17 @@ const traceFilesAndTranspile = async function ({
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )
+
+  if (isTypeScript) {
+    return {
+      aliases: tsAliases,
+      mainFile: getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
+      moduleFormat: tsFormat,
+      paths: normalizedDependencyPaths,
+      rewrites: tsRewrites,
+    }
+  }
+
   const { moduleFormat, rewrites } = await processESM({
     basePath,
     cache,
@@ -140,9 +187,11 @@ const traceFilesAndTranspile = async function ({
     mainFile,
     reasons,
     name,
+    runtimeAPIVersion,
   })
 
   return {
+    mainFile,
     moduleFormat,
     paths: normalizedDependencyPaths,
     rewrites,
@@ -155,7 +204,10 @@ const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mai
     includedFiles,
     includedFilesBasePath,
   )
-  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], { base: basePath, ignore: ignoreFunction })
+  const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
+    base: basePath,
+    ignore: getIgnoreFunction(config),
+  })
   const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
     basePath ? resolve(basePath, path) : resolve(path),
   )

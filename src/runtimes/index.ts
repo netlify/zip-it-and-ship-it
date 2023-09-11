@@ -50,7 +50,7 @@ const findFunctionsInRuntime = async function ({
 
   // Augmenting the function objects with additional information.
   const augmentedFunctions: FunctionTupleWithoutConfig[] = functions.map((func) => {
-    if (featureFlags.zisi_disallow_new_entry_name && func.name === ENTRY_FILE_NAME) {
+    if (func.name === ENTRY_FILE_NAME) {
       throw new FunctionBundlingUserError(
         `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a function name.`,
         {
@@ -120,7 +120,7 @@ export const getFunctionsFromPaths = async (
     }
   }, Promise.resolve({ functions: [], remainingPaths: paths } as { functions: FunctionTupleWithoutConfig[]; remainingPaths: string[] }))
   const functionConfigs = await Promise.all(
-    functions.map(([, func]) => getConfigForFunction({ config, configFileDirectories, func, featureFlags })),
+    functions.map(([, func]) => getConfigForFunction({ config, configFileDirectories, func })),
   )
   const functionsWithConfig: FunctionTuple[] = functions.map(([name, func], index) => [
     name,
@@ -150,7 +150,6 @@ export const getFunctionFromPath = async (
         config,
         configFileDirectories,
         func: { ...func, runtime },
-        featureFlags,
       })
 
       return {

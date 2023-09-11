@@ -6,16 +6,11 @@ import { copyFile } from 'cp-file'
 import { SourceFile } from '../../function.js'
 import type { RuntimeCache } from '../../utils/cache.js'
 import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
+import getInternalValue from '../../utils/get_internal_value.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
-import {
-  FindFunctionInPathFunction,
-  FindFunctionsInPathsFunction,
-  Runtime,
-  RuntimeType,
-  ZipFunction,
-} from '../runtime.js'
+import { FindFunctionInPathFunction, FindFunctionsInPathsFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.js'
 
 import { build } from './builder.js'
 
@@ -52,7 +47,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({ cac
 const findFunctionInPath: FindFunctionInPathFunction = async function ({ cache, path }) {
   const runtime = await detectBinaryRuntime({ path })
 
-  if (runtime === RuntimeType.GO) {
+  if (runtime === RUNTIME.GO) {
     return processBinary({ cache, path })
   }
 
@@ -118,6 +113,7 @@ const zipFunction: ZipFunction = async function ({
   srcPath,
   stat,
   isInternal,
+  featureFlags,
 }) {
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
@@ -144,13 +140,18 @@ const zipFunction: ZipFunction = async function ({
     const zipPath = `${destPath}.zip`
     const zipOptions = {
       destPath: zipPath,
-      filename: basename(destPath),
+      filename: featureFlags.zisi_golang_use_al2 ? 'bootstrap' : basename(destPath),
       runtime,
     }
 
     await zipBinary({ ...zipOptions, srcPath: binary.path, stat: binary.stat })
 
-    return { config, path: zipPath }
+    return {
+      config,
+      path: zipPath,
+      entryFilename: zipOptions.filename,
+      runtimeVersion: featureFlags.zisi_golang_use_al2 ? 'provided.al2' : undefined,
+    }
   }
 
   // We don't need to zip the binary, so we can just copy it to the right path.
@@ -163,11 +164,12 @@ const zipFunction: ZipFunction = async function ({
   return {
     config,
     path: destPath,
+    entryFilename: '',
     displayName: config?.name,
-    isInternal,
+    generator: config?.generator || getInternalValue(isInternal),
   }
 }
 
-const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RuntimeType.GO, zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RUNTIME.GO, zipFunction }
 
 export default runtime

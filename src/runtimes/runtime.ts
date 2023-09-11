@@ -1,17 +1,21 @@
 import type { ArchiveFormat } from '../archive.js'
 import type { FunctionConfig } from '../config.js'
 import type { FeatureFlags } from '../feature_flags.js'
-import type { FunctionSource, SourceFile } from '../function.js'
+import type { FunctionSource, InvocationMode, SourceFile } from '../function.js'
+import { ObjectValues } from '../types/utils.js'
 import type { RuntimeCache } from '../utils/cache.js'
+import { Logger } from '../utils/logger.js'
 
-import type { NodeBundlerType } from './node/bundlers/types.js'
+import type { NodeBundlerName } from './node/bundlers/types.js'
 import type { ISCValues } from './node/in_source_config/index.js'
 
-export const enum RuntimeType {
-  GO = 'go',
-  JAVASCRIPT = 'js',
-  RUST = 'rs',
-}
+export const RUNTIME = {
+  GO: 'go',
+  JAVASCRIPT: 'js',
+  RUST: 'rs',
+} as const
+
+export type RuntimeName = ObjectValues<typeof RUNTIME>
 
 export type FindFunctionsInPathsFunction = (args: {
   cache: RuntimeCache
@@ -31,22 +35,25 @@ export type GetSrcFilesFunction = (
     config: FunctionConfig
     featureFlags: FeatureFlags
     repositoryRoot?: string
+    runtimeAPIVersion: number
   } & FunctionSource,
 ) => Promise<string[]>
 
 export interface ZipFunctionResult {
-  bundler?: NodeBundlerType
+  bundler?: NodeBundlerName
   bundlerErrors?: object[]
   bundlerWarnings?: object[]
   config: FunctionConfig
+  displayName?: string
+  generator?: string
   inputs?: string[]
   includedFiles?: string[]
   inSourceConfig?: ISCValues
+  invocationMode?: InvocationMode
   nativeNodeModules?: object
-  nodeModulesWithDynamicImports?: string[]
   path: string
-  isInternal?: boolean
-  displayName?: string
+  runtimeVersion?: string
+  entryFilename: string
 }
 
 export type ZipFunction = (
@@ -57,8 +64,10 @@ export type ZipFunction = (
     config: FunctionConfig
     destFolder: string
     featureFlags: FeatureFlags
+    generator?: string
+    isInternal: boolean
+    logger: Logger
     repositoryRoot?: string
-    isInternal?: boolean
   } & FunctionSource,
 ) => Promise<ZipFunctionResult>
 
@@ -66,6 +75,6 @@ export interface Runtime {
   findFunctionsInPaths: FindFunctionsInPathsFunction
   findFunctionInPath: FindFunctionInPathFunction
   getSrcFiles?: GetSrcFilesFunction
-  name: RuntimeType
+  name: RuntimeName
   zipFunction: ZipFunction
 }

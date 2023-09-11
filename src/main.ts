@@ -5,23 +5,28 @@ import { FeatureFlags, getFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import { getFunctionFromPath, getFunctionsFromPaths } from './runtimes/index.js'
 import { findISCDeclarationsInPath, ISCValues } from './runtimes/node/in_source_config/index.js'
-import { GetSrcFilesFunction, RuntimeType } from './runtimes/runtime.js'
+import { GetSrcFilesFunction, RuntimeName, RUNTIME } from './runtimes/runtime.js'
 import { RuntimeCache } from './utils/cache.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
+import { getLogger } from './utils/logger.js'
 
-export { zipFunction, zipFunctions } from './zip.js'
+export { Config, FunctionConfig } from './config.js'
+export { zipFunction, zipFunctions, ZipFunctionOptions, ZipFunctionsOptions } from './zip.js'
 
-export { NodeBundlerType } from './runtimes/node/bundlers/types.js'
-export { RuntimeType } from './runtimes/runtime.js'
-export { ModuleFormat } from './runtimes/node/utils/module_format.js'
+export { ArchiveFormat, ARCHIVE_FORMAT } from './archive.js'
+export { NodeBundlerName, NODE_BUNDLER } from './runtimes/node/bundlers/types.js'
+export { RuntimeName, RUNTIME } from './runtimes/runtime.js'
+export { ModuleFormat, MODULE_FORMAT } from './runtimes/node/utils/module_format.js'
 
 export interface ListedFunction {
   name: string
   mainFile: string
-  runtime: RuntimeType
+  runtime: RuntimeName
   extension: string
+  runtimeAPIVersion?: number
   schedule?: string
   displayName?: string
+  generator?: string
 }
 
 type ListedFunctionFile = ListedFunction & {
@@ -43,11 +48,14 @@ interface AugmentedFunctionSource extends FunctionSource {
 const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSource> => {
   // ISC is currently only supported in JavaScript and TypeScript functions
   // and only supports scheduled functions.
-  if (func.runtime.name !== RuntimeType.JAVASCRIPT) {
+  if (func.runtime.name !== RUNTIME.JAVASCRIPT) {
     return func
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, func.name)
+  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, {
+    functionName: func.name,
+    logger: getLogger(),
+  })
 
   return { ...func, inSourceConfig }
 }
@@ -68,7 +76,7 @@ export const listFunctions = async function (
   const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
-  const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions
+  const augmentedFunctions = parseISC ? await Promise.all(functions.map((func) => augmentWithISC(func))) : functions
 
   return augmentedFunctions.map(getListedFunction)
 }
@@ -106,14 +114,14 @@ export const listFunctionsFiles = async function (
     featureFlags: inputFeatureFlags,
     parseISC = false,
   }: ListFunctionsOptions = {},
-) {
+): Promise<ListedFunctionFile[]> {
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
   const paths = await listFunctionsDirectories(srcFolders)
   const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
-  const augmentedFunctions = parseISC ? await Promise.all(functions.map(augmentWithISC)) : functions
+  const augmentedFunctions = parseISC ? await Promise.all(functions.map((func) => augmentWithISC(func))) : functions
   const listedFunctionsFiles = await Promise.all(
     augmentedFunctions.map((func) => getListedFunctionFiles(func, { basePath, featureFlags })),
   )
@@ -122,19 +130,21 @@ export const listFunctionsFiles = async function (
 }
 
 const getListedFunction = function ({
-  runtime,
-  name,
-  mainFile,
-  extension,
   config,
+  extension,
   inSourceConfig,
+  mainFile,
+  name,
+  runtime,
 }: AugmentedFunctionSource): ListedFunction {
   return {
-    name,
     displayName: config.name,
-    mainFile,
-    runtime: runtime.name,
     extension,
+    generator: config.generator,
+    mainFile,
+    name,
+    runtime: runtime.name,
+    runtimeAPIVersion: inSourceConfig ? inSourceConfig?.runtimeAPIVersion ?? 1 : undefined,
     schedule: inSourceConfig?.schedule ?? config.schedule,
   }
 }
@@ -143,7 +153,11 @@ const getListedFunctionFiles = async function (
   func: AugmentedFunctionSource,
   options: { basePath?: string; featureFlags: FeatureFlags },
 ): Promise<ListedFunctionFile[]> {
-  const srcFiles = await getSrcFiles({ ...func, ...options })
+  const srcFiles = await getSrcFiles({
+    ...func,
+    ...options,
+    runtimeAPIVersion: func.inSourceConfig?.runtimeAPIVersion ?? 1,
+  })
 
   return srcFiles.map((srcFile) => ({ ...getListedFunction(func), srcFile, extension: extname(srcFile) }))
 }

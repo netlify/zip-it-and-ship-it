@@ -5,10 +5,8 @@ import isPathInside from 'is-path-inside'
 // @ts-expect-error Typescript cannot find definition
 import mergeOptions from 'merge-options'
 
-import type { FeatureFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
-import type { NodeBundlerType } from './runtimes/node/bundlers/types.js'
-import type { NodeVersionString } from './runtimes/node/index.js'
+import type { NodeBundlerName } from './runtimes/node/bundlers/types.js'
 import type { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { minimatch } from './utils/matching.js'
 
@@ -17,14 +15,14 @@ interface FunctionConfig {
   includedFiles?: string[]
   includedFilesBasePath?: string
   ignoredNodeModules?: string[]
-  nodeBundler?: NodeBundlerType
+  nodeBundler?: NodeBundlerName
   nodeSourcemap?: boolean
-  nodeVersion?: NodeVersionString
-  processDynamicNodeImports?: boolean
+  nodeVersion?: string
   rustTargetDirectory?: string
   schedule?: string
   zipGo?: boolean
   name?: string
+  generator?: string
 
   // Temporary configuration property, only meant to be used by the deploy
   // configuration API. Once we start emitting ESM files for all ESM functions,
@@ -46,20 +44,16 @@ const getConfigForFunction = async ({
   config,
   configFileDirectories,
   func,
-  featureFlags,
 }: {
   config?: Config
   configFileDirectories?: string[]
   func: FunctionWithoutConfig
-  featureFlags: FeatureFlags
 }): Promise<FunctionConfig> => {
   const fromConfig = getFromMainConfig({ config, func })
 
   // We try to read from a function config file if the function directory is
   // inside one of `configFileDirectories`.
-  const shouldReadConfigFile =
-    featureFlags.project_deploy_configuration_api_use_per_function_configuration_files &&
-    configFileDirectories?.some((directory) => isPathInside(func.mainFile, directory))
+  const shouldReadConfigFile = configFileDirectories?.some((directory) => isPathInside(func.mainFile, directory))
 
   if (!shouldReadConfigFile) {
     return fromConfig

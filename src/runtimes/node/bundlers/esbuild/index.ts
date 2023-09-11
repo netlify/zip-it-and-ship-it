@@ -41,7 +41,7 @@ const getExternalAndIgnoredModules = async ({ config, srcDir }: { config: Functi
   const { externalNodeModules: externalModulesFromConfig = [], ignoredNodeModules: ignoredModulesFromConfig = [] } =
     config
   const { externalModules: externalModulesFromSpecialCases, ignoredModules: ignoredModulesFromSpecialCases } =
-    await getExternalAndIgnoredModulesFromSpecialCases({ srcDir })
+    await getExternalAndIgnoredModulesFromSpecialCases({ config, srcDir })
   const externalModules = [...new Set([...externalModulesFromConfig, ...externalModulesFromSpecialCases])]
   const ignoredModules = [...ignoredModulesFromConfig, ...ignoredModulesFromSpecialCases]
 
@@ -62,6 +62,7 @@ const bundle: BundleFunction = async ({
   srcDir,
   srcPath,
   stat,
+  runtimeAPIVersion,
 }) => {
   const { externalModules, ignoredModules } = await getExternalAndIgnoredModules({ config, srcDir })
   const {
@@ -71,12 +72,10 @@ const bundle: BundleFunction = async ({
     inputs,
     moduleFormat,
     nativeNodeModules = {},
-    nodeModulesWithDynamicImports,
     outputExtension,
     warnings,
   } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
-    basePath,
     config,
     externalModules,
     featureFlags,
@@ -85,6 +84,7 @@ const bundle: BundleFunction = async ({
     name,
     srcDir,
     srcFile: mainFile,
+    runtimeAPIVersion,
   })
   const bundlerWarnings = warnings.length === 0 ? undefined : warnings
   const { srcFiles, includedFiles } = await getSrcFiles({
@@ -129,7 +129,6 @@ const bundle: BundleFunction = async ({
     mainFile: normalizedMainFile,
     moduleFormat,
     nativeNodeModules,
-    nodeModulesWithDynamicImports,
     srcFiles: [...supportingSrcFiles, ...bundlePaths.keys()],
   }
 }

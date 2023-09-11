@@ -9,7 +9,7 @@ import type { RuntimeCache } from '../../utils/cache.js'
 import { FunctionBundlingUserError } from '../../utils/error.js'
 import { cachedLstat, cachedReadFile } from '../../utils/fs.js'
 import { shellUtils } from '../../utils/shell.js'
-import { RuntimeType } from '../runtime.js'
+import { RUNTIME } from '../runtime.js'
 
 import { CargoManifest } from './cargo_manifest.js'
 import { BUILD_TARGET, MANIFEST_NAME } from './constants.js'
@@ -30,7 +30,7 @@ export const build = async ({
   try {
     await installToolchainOnce()
   } catch (error) {
-    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: RuntimeType.RUST })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: RUNTIME.RUST })
   }
 
   const targetDirectory = await getTargetDirectory({ config, name })
@@ -80,7 +80,7 @@ const cargoBuild = async ({
         'There is no Rust toolchain installed. Visit https://ntl.fyi/missing-rust-toolchain for more information.'
     }
 
-    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: RuntimeType.RUST })
+    throw FunctionBundlingUserError.addCustomErrorInfo(error, { functionName, runtime: RUNTIME.RUST })
   }
 }
 

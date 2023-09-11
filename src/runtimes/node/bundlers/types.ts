@@ -1,18 +1,22 @@
-import type { Message } from '@netlify/esbuild'
+import type { Message } from 'esbuild'
 
 import type { FunctionConfig } from '../../../config.js'
-import type { FeatureFlag, FeatureFlags } from '../../../feature_flags.js'
+import type { FeatureFlags } from '../../../feature_flags.js'
 import type { FunctionSource } from '../../../function.js'
+import { ObjectValues } from '../../../types/utils.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
+import { Logger } from '../../../utils/logger.js'
 import type { ModuleFormat } from '../utils/module_format.js'
 
-export const enum NodeBundlerType {
-  ESBUILD = 'esbuild',
-  ESBUILD_ZISI = 'esbuild_zisi',
-  NFT = 'nft',
-  ZISI = 'zisi',
-  NONE = 'none',
-}
+export const NODE_BUNDLER = {
+  ESBUILD: 'esbuild',
+  ESBUILD_ZISI: 'esbuild_zisi',
+  NFT: 'nft',
+  ZISI: 'zisi',
+  NONE: 'none',
+} as const
+
+export type NodeBundlerName = ObjectValues<typeof NODE_BUNDLER>
 
 // TODO: Create a generic warning type
 type BundlerWarning = Message
@@ -26,9 +30,11 @@ export type BundleFunction = (
     basePath?: string
     cache: RuntimeCache
     config: FunctionConfig
-    featureFlags: Record<FeatureFlag, boolean>
+    featureFlags: FeatureFlags
+    logger: Logger
     pluginsModulesPath?: string
     repositoryRoot?: string
+    runtimeAPIVersion: number
   } & FunctionSource,
 ) => Promise<{
   // Aliases are used to change the path that a file should take inside the
@@ -58,7 +64,6 @@ export type BundleFunction = (
   mainFile: string
   moduleFormat: ModuleFormat
   nativeNodeModules?: NativeNodeModules
-  nodeModulesWithDynamicImports?: string[]
   srcFiles: string[]
 }>
 

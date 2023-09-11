@@ -6,6 +6,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    complexity: 'off',
     'import/extensions': ['error', 'ignorePackages'],
     'max-lines': 'off',
     'n/no-missing-import': 'off',
@@ -34,6 +35,7 @@ module.exports = {
         'import/no-namespace': 'off',
         // https://github.com/typescript-eslint/typescript-eslint/issues/2483
         'max-lines': 'off',
+        'max-statements': 'off',
         'no-shadow': 'off',
         '@typescript-eslint/no-shadow': 'error',
       },
@@ -51,5 +53,5 @@ module.exports = {
       },
     },
   ],
-  ignorePatterns: ['tests/fixtures/**/*'],
+  ignorePatterns: ['tests/fixtures/**/*', 'tests/fixtures-esm/**/*'],
 }

@@ -1,6 +1,6 @@
 import path from 'path'
 
-import type { Plugin } from '@netlify/esbuild'
+import type { Plugin } from 'esbuild'
 
 import { isNativeModule } from '../../utils/detect_native_module.js'
 import { PackageJson, readPackageJson } from '../../utils/package_json.js'
@@ -32,7 +32,6 @@ export const getNativeModulesPlugin = (externalizedModules: NativeNodeModules): 
   setup(build) {
     const cache: NativeModuleCache = {}
 
-    // eslint-disable-next-line max-statements
     build.onResolve({ filter: packageFilter }, async (args) => {
       const pkg = packageName.exec(args.path)
 

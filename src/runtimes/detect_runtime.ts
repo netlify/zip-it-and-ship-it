@@ -2,7 +2,7 @@ import { readFile } from 'fs/promises'
 
 import { detect, Runtime as BinaryRuntime, Arch, Platform, BinaryInfo } from '@netlify/binary-info'
 
-import { RuntimeType } from './runtime.js'
+import { RuntimeName, RUNTIME } from './runtime.js'
 
 const isValidFunctionBinary = (info: BinaryInfo) => info.arch === Arch.Amd64 && info.platform === Platform.Linux
 
@@ -19,7 +19,7 @@ The binary needs to be built for Linux/Amd64, but it was built for ${Platform[bi
 }
 
 // Try to guess the runtime by inspecting the binary file.
-export const detectBinaryRuntime = async function ({ path }: { path: string }): Promise<RuntimeType | undefined> {
+export const detectBinaryRuntime = async function ({ path }: { path: string }): Promise<RuntimeName | undefined> {
   try {
     const fileContents = await readFile(path)
     const binaryInfo = detect(fileContents)
@@ -30,9 +30,9 @@ export const detectBinaryRuntime = async function ({ path }: { path: string }): 
 
     switch (binaryInfo.runtime) {
       case BinaryRuntime.Go:
-        return RuntimeType.GO
+        return RUNTIME.GO
       case BinaryRuntime.Rust:
-        return RuntimeType.RUST
+        return RUNTIME.RUST
       default:
         return undefined
     }

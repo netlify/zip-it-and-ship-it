@@ -4,98 +4,96 @@ import { describe, expect, test } from 'vitest'
 
 import { listFunctions } from '../src/main.js'
 
-import { FIXTURES_DIR, normalizeFiles } from './helpers/main.js'
+import { FIXTURES_DIR, FIXTURES_ESM_DIR, normalizeFiles } from './helpers/main.js'
 
 describe('listFunctions', () => {
-  test('Can list function main files with listFunctions()', async () => {
-    const fixtureDir = `${FIXTURES_DIR}/list`
-    const functions = await listFunctions(fixtureDir)
-    expect(functions).toEqual(
-      [
-        { schedule: undefined, name: 'test', mainFile: 'test.zip', runtime: 'js', extension: '.zip' },
-        { schedule: undefined, name: 'test', mainFile: 'test.js', runtime: 'js', extension: '.js' },
-        { schedule: undefined, name: 'five', mainFile: 'five/index.ts', runtime: 'js', extension: '.ts' },
-        { schedule: undefined, name: 'four', mainFile: 'four.js/four.js.js', runtime: 'js', extension: '.js' },
-        { schedule: undefined, name: 'one', mainFile: 'one/index.js', runtime: 'js', extension: '.js' },
-        { schedule: undefined, name: 'two', mainFile: 'two/two.js', runtime: 'js', extension: '.js' },
-        { schedule: undefined, name: 'test', mainFile: 'test', runtime: 'go', extension: '' },
-      ].map(normalizeFiles.bind(null, fixtureDir)),
-    )
-  })
+  describe('v1', () => {
+    test('Can list function main files with listFunctions()', async () => {
+      const fixtureDir = `${FIXTURES_DIR}/list`
+      const functions = await listFunctions(fixtureDir)
 
-  test('Can list function main files from multiple source directories with listFunctions()', async () => {
-    const fixtureDir = `${FIXTURES_DIR}/multiple-src-directories`
-    const functions = await listFunctions([
-      join(fixtureDir, '.netlify', 'internal-functions'),
-      join(fixtureDir, 'netlify', 'functions'),
-    ])
-
-    expect(functions).toEqual(
-      [
-        {
-          schedule: undefined,
-          name: 'function',
-          mainFile: '.netlify/internal-functions/function.js',
-          runtime: 'js',
-          extension: '.js',
-        },
-        {
-          schedule: undefined,
-          name: 'function_internal',
-          mainFile: '.netlify/internal-functions/function_internal.js',
-          runtime: 'js',
-          extension: '.js',
-        },
-        {
-          schedule: undefined,
-          name: 'function',
-          mainFile: 'netlify/functions/function.js',
-          runtime: 'js',
-          extension: '.js',
-        },
-        {
-          schedule: undefined,
-          name: 'function_user',
-          mainFile: 'netlify/functions/function_user.js',
-          runtime: 'js',
-          extension: '.js',
-        },
-      ].map(normalizeFiles.bind(null, fixtureDir)),
-    )
-  })
-
-  test('listFunctions surfaces schedule config property', async () => {
-    const functions = await listFunctions(join(FIXTURES_DIR, 'many-functions'), {
-      config: {
-        five: {
-          schedule: '@daily',
-        },
-      },
+      expect(functions.map((file) => normalizeFiles(fixtureDir, file))).toMatchSnapshot()
     })
-    const five = functions.find((func) => func.name === 'five')
-    expect(five?.schedule).toBe('@daily')
-  })
 
-  test('listFunctions includes in-source config declarations', async () => {
-    const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
-      parseISC: true,
+    test('Can list function main files from multiple source directories with listFunctions()', async () => {
+      const fixtureDir = `${FIXTURES_DIR}/multiple-src-directories`
+      const functions = await listFunctions([
+        join(fixtureDir, '.netlify', 'internal-functions'),
+        join(fixtureDir, 'netlify', 'functions'),
+      ])
+
+      expect(functions.map((file) => normalizeFiles(fixtureDir, file))).toMatchSnapshot()
     })
-    const FUNCTIONS_COUNT = 13
-    expect(functions.length).toBe(FUNCTIONS_COUNT)
-    functions.forEach((func) => {
-      expect(func.schedule).toBe('@daily')
+
+    test('listFunctions surfaces schedule config property', async () => {
+      const functions = await listFunctions(join(FIXTURES_DIR, 'many-functions'), {
+        config: {
+          five: {
+            schedule: '@daily',
+          },
+        },
+      })
+      const five = functions.find((func) => func.name === 'five')
+      expect(five?.schedule).toBe('@daily')
+    })
+
+    test('listFunctions includes in-source config declarations', async () => {
+      const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
+        parseISC: true,
+      })
+      const FUNCTIONS_COUNT = 13
+      expect(functions.length).toBe(FUNCTIONS_COUNT)
+      functions.forEach((func) => {
+        expect(func.schedule).toBe('@daily')
+      })
+    })
+
+    test('listFunctions includes json configured functions with configured properties', async () => {
+      const dir = join(FIXTURES_DIR, 'json-config/.netlify/functions-internal/')
+      const [func] = await listFunctions([dir], {
+        configFileDirectories: [dir],
+      })
+
+      expect(func.displayName).toBe('A Display Name')
+      expect(func.generator).toBe('@netlify/mock-plugin@1.0.0')
+    })
+
+    test('listFunctions does not include runtimeAPIVersion when parseISC is false', async () => {
+      const dir = join(FIXTURES_DIR, 'list')
+      const [func] = await listFunctions([dir], {
+        parseISC: false,
+      })
+
+      expect(func.runtimeAPIVersion).toBeUndefined()
+    })
+
+    test('listFunctions includes runtimeAPIVersion when parseISC is true', async () => {
+      const dir = join(FIXTURES_DIR, 'list')
+      const [func] = await listFunctions([dir], {
+        parseISC: true,
+      })
+
+      expect(func.runtimeAPIVersion).toBe(1)
     })
   })
 
-  test('listFunctions includes json configured functions with a name and returns it as a displayName', async () => {
-    const dir = join(FIXTURES_DIR, 'json-config/.netlify/functions-internal/')
-    const [func] = await listFunctions([dir], {
-      configFileDirectories: [dir],
-      featureFlags: {
-        project_deploy_configuration_api_use_per_function_configuration_files: true,
-      },
+  describe('v2', () => {
+    test('listFunctions does not include runtimeAPIVersion when parseISC is false', async () => {
+      const dir = join(FIXTURES_ESM_DIR, 'v2-api')
+      const [func] = await listFunctions([dir], {
+        parseISC: false,
+      })
+
+      expect(func.runtimeAPIVersion).toBeUndefined()
     })
 
-    expect(func.displayName).toBe('A Display Name')
+    test('listFunctions includes runtimeAPIVersion when parseISC is true', async () => {
+      const dir = join(FIXTURES_ESM_DIR, 'v2-api')
+      const [func] = await listFunctions([dir], {
+        parseISC: true,
+      })
+
+      expect(func.runtimeAPIVersion).toBe(2)
+    })
   })
 })

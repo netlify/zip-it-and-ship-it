@@ -2,22 +2,51 @@ import { basename, extname, resolve } from 'path'
 
 import type { FeatureFlags } from '../../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
-import { RuntimeType } from '../../runtime.js'
+import { RUNTIME } from '../../runtime.js'
 
-import { getFileExtensionForFormat, ModuleFileExtension, ModuleFormat } from './module_format.js'
+import {
+  getFileExtensionForFormat,
+  ModuleFileExtension,
+  ModuleFormat,
+  MODULE_FILE_EXTENSION,
+  MODULE_FORMAT,
+} from './module_format.js'
 import { normalizeFilePath } from './normalize_path.js'
 
 export const ENTRY_FILE_NAME = '___netlify-entry-point'
+export const BOOTSTRAP_FILE_NAME = '___netlify-bootstrap.mjs'
 
 export interface EntryFile {
   contents: string
   filename: string
 }
 
-const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
+const getEntryFileContents = (
+  mainPath: string,
+  moduleFormat: string,
+  featureFlags: FeatureFlags,
+  runtimeAPIVersion: number,
+) => {
   const importPath = `.${mainPath.startsWith('/') ? mainPath : `/${mainPath}`}`
 
-  if (moduleFormat === ModuleFormat.COMMONJS) {
+  if (runtimeAPIVersion === 2) {
+    return [
+      `import * as func from '${importPath}'`,
+      `import * as bootstrap from './${BOOTSTRAP_FILE_NAME}'`,
+
+      // See https://esbuild.github.io/content-types/#default-interop.
+      'const funcModule = typeof func.default === "function" ? func : func.default',
+
+      `export const handler = bootstrap.getLambdaHandler(funcModule)`,
+    ].join(';')
+  }
+
+  if (featureFlags.zisi_unique_entry_file) {
+    // we use dynamic import because we do not know if the user code is cjs or esm
+    return [`const { handler } = await import('${importPath}')`, 'export { handler }'].join(';')
+  }
+
+  if (moduleFormat === MODULE_FORMAT.COMMONJS) {
     return `module.exports = require('${importPath}')`
   }
 
@@ -25,21 +54,29 @@ const getEntryFileContents = (mainPath: string, moduleFormat: string) => {
 }
 
 // They are in the order that AWS Lambda will try to find the entry point
-const POSSIBLE_LAMBDA_ENTRY_EXTENSIONS = [ModuleFileExtension.JS, ModuleFileExtension.MJS, ModuleFileExtension.CJS]
+const POSSIBLE_LAMBDA_ENTRY_EXTENSIONS = [
+  MODULE_FILE_EXTENSION.JS,
+  MODULE_FILE_EXTENSION.MJS,
+  MODULE_FILE_EXTENSION.CJS,
+]
 
 // checks if the file is considered a entry-file in AWS Lambda
 export const isNamedLikeEntryFile = (
   file: string,
   {
     basePath,
+    featureFlags,
     filename,
+    runtimeAPIVersion,
   }: {
     basePath: string
+    featureFlags: FeatureFlags
     filename: string
+    runtimeAPIVersion: number
   },
 ) =>
   POSSIBLE_LAMBDA_ENTRY_EXTENSIONS.some((extension) => {
-    const entryFilename = getEntryFileName({ extension, filename })
+    const entryFilename = getEntryFileName({ extension, featureFlags, filename, runtimeAPIVersion })
     const entryFilePath = resolve(basePath, entryFilename)
 
     return entryFilePath === file
@@ -54,28 +91,40 @@ export const conflictsWithEntryFile = (
     featureFlags,
     filename,
     mainFile,
+    runtimeAPIVersion,
   }: {
     basePath: string
     extension: string
     featureFlags: FeatureFlags
     filename: string
     mainFile: string
+    runtimeAPIVersion: number
   },
 ) => {
   let hasConflict = false
 
   srcFiles.forEach((srcFile) => {
-    if (featureFlags.zisi_disallow_new_entry_name && srcFile.includes(ENTRY_FILE_NAME)) {
+    if (srcFile.includes(ENTRY_FILE_NAME)) {
       throw new FunctionBundlingUserError(
         `'${ENTRY_FILE_NAME}' is a reserved word and cannot be used as a file or directory name.`,
         {
           functionName: basename(filename, extension),
-          runtime: RuntimeType.JAVASCRIPT,
+          runtime: RUNTIME.JAVASCRIPT,
         },
       )
     }
 
-    if (!hasConflict && isNamedLikeEntryFile(srcFile, { basePath, filename }) && srcFile !== mainFile) {
+    // If we're generating a unique entry file, we know we don't have a conflict
+    // at this point.
+    if (featureFlags.zisi_unique_entry_file || runtimeAPIVersion === 2) {
+      return
+    }
+
+    if (
+      !hasConflict &&
+      isNamedLikeEntryFile(srcFile, { basePath, featureFlags, filename, runtimeAPIVersion }) &&
+      srcFile !== mainFile
+    ) {
       hasConflict = true
     }
   })
@@ -86,8 +135,23 @@ export const conflictsWithEntryFile = (
 // Returns the name for the AWS Lambda entry file
 // We do set the handler in AWS Lambda to `<func-name>.handler` and because of
 // this it considers `<func-name>.(c|m)?js` as possible entry-points
-const getEntryFileName = ({ extension, filename }: { extension: ModuleFileExtension; filename: string }) =>
-  `${basename(filename, extname(filename))}${extension}`
+const getEntryFileName = ({
+  extension,
+  featureFlags,
+  filename,
+  runtimeAPIVersion,
+}: {
+  extension: ModuleFileExtension
+  featureFlags: FeatureFlags
+  filename: string
+  runtimeAPIVersion: number
+}) => {
+  if (featureFlags.zisi_unique_entry_file || runtimeAPIVersion === 2) {
+    return `${ENTRY_FILE_NAME}.mjs`
+  }
+
+  return `${basename(filename, extname(filename))}${extension}`
+}
 
 export const getEntryFile = ({
   commonPrefix,
@@ -96,6 +160,7 @@ export const getEntryFile = ({
   mainFile,
   moduleFormat,
   userNamespace,
+  runtimeAPIVersion,
 }: {
   commonPrefix: string
   featureFlags: FeatureFlags
@@ -103,11 +168,12 @@ export const getEntryFile = ({
   mainFile: string
   moduleFormat: ModuleFormat
   userNamespace: string
+  runtimeAPIVersion: number
 }): EntryFile => {
   const mainPath = normalizeFilePath({ commonPrefix, path: mainFile, userNamespace })
-  const extension = getFileExtensionForFormat(moduleFormat, featureFlags)
-  const entryFilename = getEntryFileName({ extension, filename })
-  const contents = getEntryFileContents(mainPath, moduleFormat)
+  const extension = getFileExtensionForFormat(moduleFormat, featureFlags, runtimeAPIVersion)
+  const entryFilename = getEntryFileName({ extension, featureFlags, filename, runtimeAPIVersion })
+  const contents = getEntryFileContents(mainPath, moduleFormat, featureFlags, runtimeAPIVersion)
 
   return {
     contents,

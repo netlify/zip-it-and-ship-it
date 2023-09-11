@@ -5,16 +5,11 @@ import { FeatureFlags } from '../../feature_flags.js'
 import { SourceFile } from '../../function.js'
 import type { RuntimeCache } from '../../utils/cache.js'
 import { cachedLstat, cachedReaddir } from '../../utils/fs.js'
+import getInternalValue from '../../utils/get_internal_value.js'
 import { nonNullable } from '../../utils/non_nullable.js'
 import { zipBinary } from '../../zip_binary.js'
 import { detectBinaryRuntime } from '../detect_runtime.js'
-import {
-  FindFunctionsInPathsFunction,
-  FindFunctionInPathFunction,
-  Runtime,
-  ZipFunction,
-  RuntimeType,
-} from '../runtime.js'
+import { FindFunctionsInPathsFunction, FindFunctionInPathFunction, Runtime, ZipFunction, RUNTIME } from '../runtime.js'
 
 import { build } from './builder.js'
 import { MANIFEST_NAME } from './constants.js'
@@ -63,7 +58,7 @@ const findFunctionsInPaths: FindFunctionsInPathsFunction = async function ({
 const findFunctionInPath: FindFunctionInPathFunction = async function ({ cache, featureFlags, path }) {
   const runtime = await detectBinaryRuntime({ path })
 
-  if (runtime === RuntimeType.RUST) {
+  if (runtime === RUNTIME.RUST) {
     return processBinary({ cache, path })
   }
 
@@ -161,11 +156,12 @@ const zipFunction: ZipFunction = async function ({
   return {
     config,
     path: destPath,
+    entryFilename: '',
     displayName: config?.name,
-    isInternal,
+    generator: config?.generator || getInternalValue(isInternal),
   }
 }
 
-const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RuntimeType.RUST, zipFunction }
+const runtime: Runtime = { findFunctionsInPaths, findFunctionInPath, name: RUNTIME.RUST, zipFunction }
 
 export default runtime

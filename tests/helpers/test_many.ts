@@ -1,49 +1,37 @@
 import { env } from 'process'
 
-import throat from 'throat'
 import { TestAPI, describe, test } from 'vitest'
 
 import type { Config } from '../../src/config'
 import type { FeatureFlags } from '../../src/feature_flags'
-import { NodeBundlerType } from '../../src/main'
-
-import { getBundlerNameFromConfig } from './main'
-
-const getRateLimitedTestFunction = (originalTestFunction: TestAPI): TestAPI => {
-  const rateLimit = env.ZISI_TEST_RATE_LIMIT ? Number.parseInt(env.ZISI_TEST_RATE_LIMIT) : null
-
-  if (rateLimit === null) {
-    return originalTestFunction
-  }
-
-  // @ts-expect-error throat types cannot handle TestAPI
-  return throat(rateLimit, originalTestFunction) as TestAPI
-}
+import { NodeBundlerName, NODE_BUNDLER } from '../../src/main'
 
 interface TestRunnerOptions {
   config: Config
-  getCurrentBundlerName: () => NodeBundlerType | undefined
+  featureFlags?: FeatureFlags
 }
 type TestRunner = (opts: TestRunnerOptions, variation: string) => Promise<void> | void
+type ChainableTestAPI = TestAPI['skip']
 
 type TestMany<M> = (title: string, variations: M[], runner: TestRunner) => void
 interface TestManyAPI<M> {
-  (title: string, variations: M[], runner: TestRunner): void
+  (title: string, variations: readonly M[], runner: TestRunner): void
   fails: TestMany<M>
   only: TestMany<M>
   concurrent: TestMany<M>
   skip: TestMany<M>
   todo: TestMany<M>
+  skipIf: (condition: any) => TestMany<M>
+  runIf: (condition: any) => TestMany<M>
 }
 
 export const makeTestMany = <M extends string>(
   testAPI: TestAPI,
   matrix: Record<M, () => { config: Config; featureFlags?: FeatureFlags }>,
-  getCurrentBundlerName: (config: Config) => NodeBundlerType | undefined,
 ): TestManyAPI<M | `todo:${M}`> => {
   const filteredVariations = env.ZISI_FILTER_VARIATIONS ? env.ZISI_FILTER_VARIATIONS.split(',') : []
 
-  const testBundlers = (title: string, variations: M[], runner: TestRunner, testFn: TestAPI = testAPI) => {
+  const testBundlers = (title: string, variations: M[], runner: TestRunner, testFn: ChainableTestAPI = testAPI) => {
     describe(title, () => {
       variations.forEach((name) => {
         if (filteredVariations.length !== 0 && !filteredVariations.includes(name)) {
@@ -61,39 +49,42 @@ export const makeTestMany = <M extends string>(
         }
 
         const variation = matrix[name]()
-        ;(variation as TestRunnerOptions).getCurrentBundlerName = getCurrentBundlerName.bind(null, variation.config)
 
-        const rateLimitedTestFn = getRateLimitedTestFunction(testFn)
-
-        rateLimitedTestFn(name, runner.bind(null, variation, name))
+        testFn(name, runner.bind(null, variation, name))
       })
     })
   }
 
-  const testFns = ['fails', 'only', 'concurrent', 'skip', 'todo']
+  const testFns = ['fails', 'only', 'concurrent', 'skip', 'todo'] as const
 
   testFns.forEach((fn) => {
     testBundlers[fn] = ((...args) => testBundlers(...args, testAPI[fn])) as TestMany<M>
   })
 
+  const ifFns = ['skipIf', 'runIf'] as const
+
+  ifFns.forEach((fn) => {
+    testBundlers[fn] = (condition: any) => ((...args) => testBundlers(...args, testAPI[fn](condition))) as TestMany<M>
+  })
+
   return testBundlers as TestManyAPI<M | `todo:${M}`>
 }
 
-export const getNodeBundlerString = (variation: string): NodeBundlerType => {
+export const getNodeBundlerString = (variation: string): NodeBundlerName => {
   switch (variation) {
     case 'bundler_esbuild':
     case 'bundler_esbuild_zisi':
-      return NodeBundlerType.ESBUILD
+      return NODE_BUNDLER.ESBUILD
 
     case 'bundler_nft':
     case 'bundler_default_nft':
-      return NodeBundlerType.NFT
+      return NODE_BUNDLER.NFT
 
     case 'bundler_none':
-      return NodeBundlerType.NONE
+      return NODE_BUNDLER.NONE
 
     default:
-      return NodeBundlerType.ZISI
+      return NODE_BUNDLER.ZISI
   }
 }
 
@@ -107,28 +98,24 @@ export const allBundleConfigs = [
 ] as const
 
 // Convenience method for running a test for multiple variations.
-export const testMany = makeTestMany(
-  test,
-  {
-    bundler_default: () => ({
-      config: { '*': { nodeBundler: undefined } },
-    }),
-    bundler_default_nft: () => ({
-      config: { '*': { nodeBundler: undefined } },
-      featureFlags: { traceWithNft: true },
-    }),
-    bundler_esbuild: () => ({
-      config: { '*': { nodeBundler: NodeBundlerType.ESBUILD } },
-    }),
-    bundler_esbuild_zisi: () => ({
-      config: { '*': { nodeBundler: NodeBundlerType.ESBUILD_ZISI } },
-    }),
-    bundler_nft: () => ({
-      config: { '*': { nodeBundler: NodeBundlerType.NFT } },
-    }),
-    bundler_none: () => ({
-      config: { '*': { nodeBundler: NodeBundlerType.NONE } },
-    }),
-  },
-  getBundlerNameFromConfig,
-)
+export const testMany = makeTestMany(test, {
+  bundler_default: () => ({
+    config: { '*': { nodeBundler: undefined } },
+  }),
+  bundler_default_nft: () => ({
+    config: { '*': { nodeBundler: undefined } },
+    featureFlags: { traceWithNft: true },
+  }),
+  bundler_esbuild: () => ({
+    config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
+  }),
+  bundler_esbuild_zisi: () => ({
+    config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD_ZISI } },
+  }),
+  bundler_nft: () => ({
+    config: { '*': { nodeBundler: NODE_BUNDLER.NFT } },
+  }),
+  bundler_none: () => ({
+    config: { '*': { nodeBundler: NODE_BUNDLER.NONE } },
+  }),
+})

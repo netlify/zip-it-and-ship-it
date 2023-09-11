@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>netlify/renovate-config:esm"],
+  "ignorePresets": [":prHourlyLimit2"],
+  "ignorePaths": ["benchmarks/fixtures/", "tests/fixtures"],
+  "lockFileMaintenance": { "enabled": true },
+  "semanticCommits": "enabled",
+  "dependencyDashboard": true,
+  "automerge": false,
+  "postUpdateOptions": ["npmDedupe"],
+  "packageRules": [
+    {
+      "matchFiles": ["package.json"],
+      "extends": [":pinDevDependencies"]
+    }
+  ]
+}

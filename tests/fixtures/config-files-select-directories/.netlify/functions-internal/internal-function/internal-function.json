@@ -1,6 +1,8 @@
 {
   "config": {
-    "includedFiles": ["blog/*.md"]
+    "includedFiles": ["blog/*.md"],
+    "name": "Internal Function",
+    "generator": "@netlify/mock-plugin@1.0.0"
   },
   "version": 1
 }

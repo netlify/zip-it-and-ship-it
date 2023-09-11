@@ -6,7 +6,7 @@ import type { FunctionConfig } from '../../../../config.js'
 import { FeatureFlags } from '../../../../feature_flags.js'
 import type { RuntimeCache } from '../../../../utils/cache.js'
 import { cachedReadFile } from '../../../../utils/fs.js'
-import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
+import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
 
@@ -58,6 +58,7 @@ export const processESM = async ({
   mainFile,
   reasons,
   name,
+  runtimeAPIVersion,
 }: {
   basePath: string | undefined
   cache: RuntimeCache
@@ -67,38 +68,37 @@ export const processESM = async ({
   mainFile: string
   reasons: NodeFileTraceReasons
   name: string
+  runtimeAPIVersion: number
 }): Promise<{ rewrites?: Map<string, string>; moduleFormat: ModuleFormat }> => {
   const extension = extname(mainFile)
 
   // If this is a .mjs file and we want to output pure ESM files, we don't need
   // to transpile anything.
-  if (extension === ModuleFileExtension.MJS && featureFlags.zisi_pure_esm_mjs) {
+  if (extension === MODULE_FILE_EXTENSION.MJS && (featureFlags.zisi_pure_esm_mjs || runtimeAPIVersion === 2)) {
     return {
-      moduleFormat: ModuleFormat.ESM,
+      moduleFormat: MODULE_FORMAT.ESM,
     }
   }
 
-  const entrypointIsESM = isEntrypointESM({ basePath, esmPaths, mainFile })
-
-  if (!entrypointIsESM) {
+  if (!isEntrypointESM({ basePath, esmPaths, mainFile })) {
     return {
-      moduleFormat: ModuleFormat.COMMONJS,
+      moduleFormat: MODULE_FORMAT.COMMONJS,
     }
   }
 
   const packageJson = await getPackageJsonIfAvailable(dirname(mainFile))
   const nodeSupport = getNodeSupportMatrix(config.nodeVersion)
 
-  if (featureFlags.zisi_pure_esm && packageJson.type === 'module' && nodeSupport.esm) {
+  if ((featureFlags.zisi_pure_esm || runtimeAPIVersion === 2) && packageJson.type === 'module' && nodeSupport.esm) {
     return {
-      moduleFormat: ModuleFormat.ESM,
+      moduleFormat: MODULE_FORMAT.ESM,
     }
   }
 
   const rewrites = await transpileESM({ basePath, cache, config, esmPaths, reasons, name })
 
   return {
-    moduleFormat: ModuleFormat.COMMONJS,
+    moduleFormat: MODULE_FORMAT.COMMONJS,
     rewrites,
   }
 }
@@ -188,7 +188,12 @@ const transpileESM = async ({
   await Promise.all(
     pathsToTranspile.map(async (path) => {
       const absolutePath = resolvePath(path, basePath)
-      const transpiled = await transpile(absolutePath, config, name)
+      const transpiled = await transpile({
+        config,
+        format: MODULE_FORMAT.COMMONJS,
+        name,
+        path: absolutePath,
+      })
 
       rewrites.set(absolutePath, transpiled)
     }),

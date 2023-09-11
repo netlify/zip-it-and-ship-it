@@ -1,67 +1,70 @@
 import { FeatureFlags } from '../../../../feature_flags.js'
-import { ModuleFileExtension, ModuleFormat } from '../../utils/module_format.js'
-import {
-  DEFAULT_NODE_VERSION,
-  getNodeSupportMatrix,
-  NodeVersionString,
-  ShortNodeVersionString,
-} from '../../utils/node_version.js'
+import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/module_format.js'
+import { DEFAULT_NODE_VERSION, getNodeSupportMatrix, parseVersion } from '../../utils/node_version.js'
 import { getClosestPackageJson } from '../../utils/package_json.js'
 
 const versionMap = {
-  '8.x': 'node8',
-  '10.x': 'node10',
-  '12.x': 'node12',
-  '14.x': 'node14',
-  '16.x': 'node16',
-  '18.x': 'node18',
+  14: 'node14',
+  16: 'node16',
+  18: 'node18',
 } as const
 
 type VersionValues = (typeof versionMap)[keyof typeof versionMap]
 
-const getBundlerTarget = (suppliedVersion?: NodeVersionString): VersionValues => {
-  const version = normalizeVersion(suppliedVersion)
+const getBundlerTarget = (suppliedVersion?: string): VersionValues => {
+  const version = parseVersion(suppliedVersion)
 
   if (version && version in versionMap) {
-    return versionMap[version]
+    return versionMap[version as keyof typeof versionMap]
   }
 
-  return versionMap[`${DEFAULT_NODE_VERSION}.x`]
+  return versionMap[DEFAULT_NODE_VERSION]
 }
 
-const getModuleFormat = async (
-  srcDir: string,
-  featureFlags: FeatureFlags,
-  extension: string,
-  configVersion?: string,
-): Promise<{ includedFiles: string[]; moduleFormat: ModuleFormat }> => {
-  if (extension === ModuleFileExtension.MJS && featureFlags.zisi_pure_esm_mjs) {
+const getModuleFormat = async ({
+  srcDir,
+  featureFlags,
+  extension,
+  runtimeAPIVersion,
+  configVersion,
+}: {
+  srcDir: string
+  featureFlags: FeatureFlags
+  extension: string
+  runtimeAPIVersion: number
+  configVersion?: string
+}): Promise<{ includedFiles: string[]; moduleFormat: ModuleFormat }> => {
+  if (extension === MODULE_FILE_EXTENSION.MJS && (runtimeAPIVersion === 2 || featureFlags.zisi_pure_esm_mjs)) {
     return {
       includedFiles: [],
-      moduleFormat: ModuleFormat.ESM,
+      moduleFormat: MODULE_FORMAT.ESM,
     }
   }
 
-  const packageJsonFile = await getClosestPackageJson(srcDir)
-  const nodeSupport = getNodeSupportMatrix(configVersion)
+  if (runtimeAPIVersion === 2 || featureFlags.zisi_pure_esm) {
+    const nodeSupport = getNodeSupportMatrix(configVersion)
 
-  if (featureFlags.zisi_pure_esm && packageJsonFile?.contents.type === 'module' && nodeSupport.esm) {
-    return {
-      includedFiles: [packageJsonFile.path],
-      moduleFormat: ModuleFormat.ESM,
+    if (extension.includes('ts') && nodeSupport.esm) {
+      return {
+        includedFiles: [],
+        moduleFormat: MODULE_FORMAT.ESM,
+      }
+    }
+
+    const packageJsonFile = await getClosestPackageJson(srcDir)
+
+    if (packageJsonFile?.contents.type === 'module' && nodeSupport.esm) {
+      return {
+        includedFiles: [packageJsonFile.path],
+        moduleFormat: MODULE_FORMAT.ESM,
+      }
     }
   }
 
   return {
     includedFiles: [],
-    moduleFormat: ModuleFormat.COMMONJS,
+    moduleFormat: MODULE_FORMAT.COMMONJS,
   }
-}
-
-const normalizeVersion = (version?: NodeVersionString): ShortNodeVersionString | undefined => {
-  const match = version && (version.match(/^nodejs(.*)$/) as [string, ShortNodeVersionString])
-
-  return match ? match[1] : (version as ShortNodeVersionString)
 }
 
 export { getBundlerTarget, getModuleFormat }

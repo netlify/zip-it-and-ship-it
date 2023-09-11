@@ -2,26 +2,28 @@ import { join } from 'path'
 
 import { copyFile } from 'cp-file'
 
-import { GetSrcFilesFunction, Runtime, RuntimeType, ZipFunction } from '../runtime.js'
+import { INVOCATION_MODE } from '../../function.js'
+import getInternalValue from '../../utils/get_internal_value.js'
+import { GetSrcFilesFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.js'
 
 import { getBundler, getBundlerName } from './bundlers/index.js'
-import { NodeBundlerType } from './bundlers/types.js'
+import { NODE_BUNDLER } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
+import { getNodeRuntime, getNodeRuntimeForV2 } from './utils/node_runtime.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
 import { zipNodeJs } from './utils/zip.js'
 
-export { NodeVersionString } from './utils/node_version.js'
-
 // A proxy for the `getSrcFiles` that calls `getSrcFiles` on the bundler
 const getSrcFilesWithBundler: GetSrcFilesFunction = async (parameters) => {
-  const { config, extension, featureFlags, mainFile, srcDir } = parameters
+  const { config, extension, featureFlags, mainFile, runtimeAPIVersion, srcDir } = parameters
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
     config,
     extension,
     featureFlags,
     mainFile,
+    runtimeAPIVersion,
   })
   const bundler = getBundler(bundlerName)
   const result = await bundler.getSrcFiles({ ...parameters, pluginsModulesPath })
@@ -38,6 +40,8 @@ const zipFunction: ZipFunction = async function ({
   extension,
   featureFlags,
   filename,
+  isInternal,
+  logger,
   mainFile,
   name,
   repositoryRoot,
@@ -45,17 +49,7 @@ const zipFunction: ZipFunction = async function ({
   srcDir,
   srcPath,
   stat,
-  isInternal,
 }) {
-  const pluginsModulesPath = await getPluginsModulesPath(srcDir)
-  const bundlerName = await getBundlerName({
-    config,
-    extension,
-    featureFlags,
-    mainFile,
-  })
-  const bundler = getBundler(bundlerName)
-
   // If the file is a zip, we assume the function is bundled and ready to go.
   // We simply copy it to the destination path with no further processing.
   if (extension === '.zip') {
@@ -63,9 +57,21 @@ const zipFunction: ZipFunction = async function ({
 
     await copyFile(srcPath, destPath)
 
-    return { config, path: destPath }
+    return { config, path: destPath, entryFilename: '' }
   }
 
+  const inSourceConfig = await findISCDeclarationsInPath(mainFile, { functionName: name, logger })
+  const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
+
+  const pluginsModulesPath = await getPluginsModulesPath(srcDir)
+  const bundlerName = await getBundlerName({
+    config,
+    extension,
+    featureFlags,
+    mainFile,
+    runtimeAPIVersion,
+  })
+  const bundler = getBundler(bundlerName)
   const {
     aliases = new Map(),
     cleanupFunction,
@@ -76,8 +82,7 @@ const zipFunction: ZipFunction = async function ({
     mainFile: finalMainFile = mainFile,
     moduleFormat,
     nativeNodeModules,
-    nodeModulesWithDynamicImports,
-    rewrites,
+    rewrites = new Map(),
     srcFiles,
   } = await bundler.bundle({
     basePath,
@@ -86,17 +91,17 @@ const zipFunction: ZipFunction = async function ({
     extension,
     featureFlags,
     filename,
+    logger,
     mainFile,
     name,
     pluginsModulesPath,
     repositoryRoot,
     runtime,
+    runtimeAPIVersion,
     srcDir,
     srcPath,
     stat,
   })
-
-  const inSourceConfig = await findISCDeclarationsInPath(mainFile, name)
 
   createPluginsModulesPathAliases(srcFiles, pluginsModulesPath, aliases, finalBasePath)
 
@@ -111,40 +116,60 @@ const zipFunction: ZipFunction = async function ({
     filename,
     mainFile: finalMainFile,
     moduleFormat,
+    name,
+    repositoryRoot,
     rewrites,
+    runtimeAPIVersion,
     srcFiles,
   })
 
   await cleanupFunction?.()
 
+  // Getting the invocation mode from ISC, in case the function is using the
+  // `stream` helper.
+  let { invocationMode } = inSourceConfig
+
+  // If we're using the V2 API, force the invocation to "stream".
+  if (runtimeAPIVersion === 2) {
+    invocationMode = INVOCATION_MODE.Stream
+  }
+
+  // If this is a background function, set the right `invocationMode` value.
+  if (name.endsWith('-background')) {
+    invocationMode = INVOCATION_MODE.Background
+  }
+
   return {
     bundler: bundlerName,
     bundlerWarnings,
     config,
+    displayName: config?.name,
+    entryFilename: zipPath.entryFilename,
+    generator: config?.generator || getInternalValue(isInternal),
     inputs,
     includedFiles,
     inSourceConfig,
+    invocationMode,
     nativeNodeModules,
-    nodeModulesWithDynamicImports,
-    path: zipPath,
-    displayName: config?.name,
-    isInternal,
+    path: zipPath.path,
+    runtimeVersion:
+      runtimeAPIVersion === 2 ? getNodeRuntimeForV2(config.nodeVersion) : getNodeRuntime(config.nodeVersion),
   }
 }
 
 const zipWithFunctionWithFallback: ZipFunction = async ({ config = {}, ...parameters }) => {
   // If a specific JS bundler version is specified, we'll use it.
-  if (config.nodeBundler !== NodeBundlerType.ESBUILD_ZISI) {
+  if (config.nodeBundler !== NODE_BUNDLER.ESBUILD_ZISI) {
     return zipFunction({ ...parameters, config })
   }
 
   // Otherwise, we'll try to bundle with esbuild and, if that fails, fallback
   // to zisi.
   try {
-    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: NodeBundlerType.ESBUILD } })
+    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: NODE_BUNDLER.ESBUILD } })
   } catch (esbuildError) {
     try {
-      const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: NodeBundlerType.ZISI } })
+      const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: NODE_BUNDLER.ZISI } })
 
       return { ...data, bundlerErrors: esbuildError.errors }
     } catch {
@@ -157,7 +182,7 @@ const runtime: Runtime = {
   findFunctionsInPaths,
   findFunctionInPath,
   getSrcFiles: getSrcFilesWithBundler,
-  name: RuntimeType.JAVASCRIPT,
+  name: RUNTIME.JAVASCRIPT,
   zipFunction: zipWithFunctionWithFallback,
 }
 
