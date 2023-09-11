@@ -11,16 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checking out zip-it-and-ship-it
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: zip-it-and-ship-it
       - name: Checking out test site
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: netlify/next-runtime
           path: test-site
       - name: Checking out netlify-cli
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: netlify/cli
           path: netlify-cli
