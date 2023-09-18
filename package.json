@@ -88,7 +88,7 @@
     "yargs": "^17.0.0"
   },
   "devDependencies": {
-    "@babel/types": "7.22.17",
+    "@babel/types": "7.22.19",
     "@netlify/eslint-config-node": "7.0.1",
     "@skn0tt/lambda-local": "2.0.3",
     "@types/archiver": "5.3.2",
