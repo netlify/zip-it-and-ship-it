@@ -1,15 +1,32 @@
 import { promises as fs } from 'fs'
 import { basename } from 'path'
 
+import type { FeatureFlags } from '../../feature_flags.js'
 import { FunctionBundlingUserError } from '../../utils/error.js'
 import { shellUtils } from '../../utils/shell.js'
 import { RUNTIME } from '../runtime.js'
 
-export const build = async ({ destPath, mainFile, srcDir }: { destPath: string; mainFile: string; srcDir: string }) => {
+export const build = async ({
+  destPath,
+  mainFile,
+  srcDir,
+  featureFlags,
+}: {
+  destPath: string
+  mainFile: string
+  srcDir: string
+  featureFlags: FeatureFlags
+}) => {
   const functionName = basename(srcDir)
 
   try {
-    await shellUtils.runCommand('go', ['build', '-o', destPath, '-ldflags', '-s -w'], {
+    const args = ['build', '-o', destPath, '-ldflags', '-s -w']
+
+    if (featureFlags.zisi_golang_use_al2) {
+      args.push('-tags', 'lambda.norpc')
+    }
+
+    await shellUtils.runCommand('go', args, {
       cwd: srcDir,
       env: {
         CGO_ENABLED: '0',

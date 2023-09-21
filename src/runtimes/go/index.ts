@@ -126,7 +126,7 @@ const zipFunction: ZipFunction = async function ({
   // If we're building a Go function from source, we call the build method and
   // update `binary` to point to the newly-created binary.
   if (isSource) {
-    const { stat: binaryStat } = await build({ destPath, mainFile, srcDir })
+    const { stat: binaryStat } = await build({ destPath, mainFile, srcDir, featureFlags })
 
     binary = {
       path: destPath,
