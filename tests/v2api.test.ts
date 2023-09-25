@@ -205,7 +205,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     expect(systemLog).not.toHaveBeenCalled()
   })
 
-  test.only('Extracts routes from the `path` in-source configuration property', async () => {
+  test('Extracts routes from the `path` in-source configuration property', async () => {
     const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
     const manifestPath = join(tmpDir, 'manifest.json')
 

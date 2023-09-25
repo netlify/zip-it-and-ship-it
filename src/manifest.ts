@@ -7,7 +7,7 @@ import type { FunctionResult } from './utils/format_result.js'
 import type { Route } from './utils/routes.js'
 
 interface ManifestFunction {
-  buildData?: Record <string, unknown>
+  buildData?: Record<string, unknown>
   invocationMode?: InvocationMode
   mainFile: string
   name: string
