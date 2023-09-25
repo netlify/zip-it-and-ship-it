@@ -217,7 +217,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       },
     })
 
-    expect.assertions(files.length + 1)
+    expect.assertions(files.length + 2)
 
     for (const file of files) {
       switch (file.name) {
@@ -256,6 +256,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     const manifestString = await readFile(manifestPath, { encoding: 'utf8' })
     const manifest = JSON.parse(manifestString)
     expect(manifest.functions[0].routes[0].methods).toEqual(['GET', 'POST'])
+    expect(manifest.functions[0].buildData.runtimeAPIVersion).toEqual(2)
   })
 
   test('Flags invalid values of the `path` in-source configuration property as user errors', async () => {
