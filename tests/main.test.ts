@@ -2824,7 +2824,7 @@ describe('zip-it-and-ship-it', () => {
     )
   })
 
-  testMany.only('only includes files once in a zip', [...allBundleConfigs], async (options) => {
+  testMany('only includes files once in a zip', [...allBundleConfigs], async (options) => {
     const { files } = await zipFixture('local-require', {
       length: 1,
       opts: merge(options, {
