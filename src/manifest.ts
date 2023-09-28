@@ -7,6 +7,7 @@ import type { FunctionResult } from './utils/format_result.js'
 import type { Route } from './utils/routes.js'
 
 interface ManifestFunction {
+  buildData?: Record<string, unknown>
   invocationMode?: InvocationMode
   mainFile: string
   name: string
@@ -55,6 +56,7 @@ const formatFunctionForManifest = ({
   routes,
   runtime,
   runtimeVersion,
+  runtimeAPIVersion,
   schedule,
 }: FunctionResult): ManifestFunction => {
   const manifestFunction: ManifestFunction = {
@@ -62,6 +64,7 @@ const formatFunctionForManifest = ({
     displayName,
     generator,
     invocationMode,
+    buildData: { runtimeAPIVersion },
     mainFile,
     name,
     runtimeVersion,
