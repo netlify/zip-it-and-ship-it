@@ -2,6 +2,7 @@ import { mkdir, readFile, chmod, symlink, writeFile, rm } from 'fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'path'
 import { arch, platform, version as nodeVersion } from 'process'
 
+import AdmZip from 'adm-zip'
 import cpy from 'cpy'
 import merge from 'deepmerge'
 import { execa, execaNode } from 'execa'
@@ -2821,5 +2822,26 @@ describe('zip-it-and-ship-it', () => {
     expect((bundlerWarnings?.[0] as any).text).toEqual(
       `"import.meta" is not available and will be empty, use __dirname instead`,
     )
+  })
+
+  testMany('only includes files once in a zip', [...allBundleConfigs], async (options) => {
+    const { files } = await zipFixture('local-require', {
+      length: 1,
+      opts: merge(options, {
+        basePath: join(FIXTURES_DIR, 'local-require'),
+        config: {
+          '*': {
+            includedFiles: ['function/file.js'],
+            ...options.config['*'],
+          },
+        },
+      }),
+    })
+
+    const zip = new AdmZip(files[0].path)
+
+    const fileNames: string[] = zip.getEntries().map((entry) => entry.entryName)
+    const duplicates = fileNames.filter((item, index) => fileNames.indexOf(item) !== index)
+    expect(duplicates).toHaveLength(0)
   })
 })

@@ -224,7 +224,8 @@ const createZipArchive = async function ({
     }
   }
 
-  const srcFilesInfos = await Promise.all(srcFiles.map((file) => addStat(cache, file)))
+  const deduplicatedSrcFiles = [...new Set(srcFiles)]
+  const srcFilesInfos = await Promise.all(deduplicatedSrcFiles.map((file) => addStat(cache, file)))
 
   // We ensure this is not async, so that the archive's checksum is
   // deterministic. Otherwise it depends on the order the files were added.
