@@ -34,6 +34,8 @@ jobs:
             zip-it-and-ship-it/package-lock.json
             test-site/package-lock.json
             netlify-cli/package-lock.json
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli
