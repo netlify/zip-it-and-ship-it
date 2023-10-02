@@ -86,8 +86,10 @@ const getIgnoreFunction = (config: FunctionConfig) => {
   }
 }
 
-// Returns the module format that should be used when transpiling a TypeScript
-// file.
+/**
+ * Returns the module format that should be used when transpiling a TypeScript
+ * file.
+ */
 const getTSModuleFormat = async (mainFile: string, repositoryRoot?: string): Promise<ModuleFormat> => {
   const fromTsConfig = getModuleFormatFromTsConfig(mainFile, repositoryRoot)
 
