@@ -10,9 +10,10 @@ import { cachedReadFile, getPathWithExtension } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions } from '../../utils/module_format.js'
+import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions, ModuleFormat } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
-import { getModuleFormat as getTSModuleFormat } from '../../utils/tsconfig.js'
+import { getClosestPackageJson } from '../../utils/package_json.js'
+import { getModuleFormat as getModuleFormatFromTsConfig } from '../../utils/tsconfig.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
@@ -85,6 +86,33 @@ const getIgnoreFunction = (config: FunctionConfig) => {
   }
 }
 
+/**
+ * Returns the module format that should be used when transpiling a TypeScript
+ * file.
+ */
+const getTSModuleFormat = async (mainFile: string, repositoryRoot?: string): Promise<ModuleFormat> => {
+  const fromTsConfig = getModuleFormatFromTsConfig(mainFile, repositoryRoot)
+
+  // If we can infer the module type from a `tsconfig.json` file, use that.
+  if (fromTsConfig !== undefined) {
+    return fromTsConfig
+  }
+
+  // At this point, we need to infer the module type from the `type` field in
+  // the closest `package.json`.
+  try {
+    const packageJSON = await getClosestPackageJson(dirname(mainFile), repositoryRoot)
+
+    if (packageJSON?.contents.type === 'module') {
+      return MODULE_FORMAT.ESM
+    }
+  } catch {
+    // no-op
+  }
+
+  return MODULE_FORMAT.COMMONJS
+}
+
 const traceFilesAndTranspile = async function ({
   basePath,
   cache,
@@ -107,7 +135,7 @@ const traceFilesAndTranspile = async function ({
   runtimeAPIVersion: number
 }) {
   const isTypeScript = tsExtensions.has(extname(mainFile))
-  const tsFormat = isTypeScript ? getTSModuleFormat(mainFile, repositoryRoot) : MODULE_FORMAT.COMMONJS
+  const tsFormat = isTypeScript ? await getTSModuleFormat(mainFile, repositoryRoot) : MODULE_FORMAT.COMMONJS
   const tsAliases = new Map<string, string>()
   const tsRewrites = new Map<string, string>()
 
