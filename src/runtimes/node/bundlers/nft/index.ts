@@ -97,7 +97,7 @@ const getTSModuleFormat = async (mainFile: string, repositoryRoot?: string): Pro
   }
 
   // At this point, we need to infer the module type from the `type` field in
-  // the closes `package.json`.
+  // the closest `package.json`.
   try {
     const packageJSON = await getClosestPackageJson(dirname(mainFile), repositoryRoot)
 
