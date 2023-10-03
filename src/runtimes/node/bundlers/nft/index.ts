@@ -13,7 +13,7 @@ import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/includ
 import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions, ModuleFormat } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getClosestPackageJson } from '../../utils/package_json.js'
-import { getModuleFormat as getModuleFormatFromTsConfig } from '../../utils/tsconfig.js'
+import { getModuleFormat as getModuleFormatFromTsConfig, getTSConfigForV2Function } from '../../utils/tsconfig.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
@@ -113,6 +113,42 @@ const getTSModuleFormat = async (mainFile: string, repositoryRoot?: string): Pro
   return MODULE_FORMAT.COMMONJS
 }
 
+const getTypeScriptTransformer = async (runtimeAPIVersion: number, mainFile: string, repositoryRoot?: string) => {
+  const isTypeScript = tsExtensions.has(extname(mainFile))
+
+  if (!isTypeScript) {
+    return
+  }
+
+  const aliases = new Map<string, string>()
+  const rewrites = new Map<string, string>()
+
+  // For functions using the V2 API, the format is always ESM. We also need to
+  // guarantee certain options in a `tsconfig.json` file, so we get a patched
+  // version of any user-defined file and return it, so that we can pass it on
+  // to esbuild.
+  if (runtimeAPIVersion === 2) {
+    const tsConfig = getTSConfigForV2Function(dirname(mainFile), repositoryRoot)
+
+    return {
+      aliases,
+      format: MODULE_FORMAT.ESM,
+      rewrites,
+      tsConfig,
+    }
+  }
+
+  // For functions using the V1 API, the format is inferred from the settings
+  // in `tsconfig.json` and `package.json`.
+  const format = await getTSModuleFormat(mainFile, repositoryRoot)
+
+  return {
+    aliases,
+    format,
+    rewrites,
+  }
+}
+
 const traceFilesAndTranspile = async function ({
   basePath,
   cache,
@@ -134,10 +170,7 @@ const traceFilesAndTranspile = async function ({
   repositoryRoot?: string
   runtimeAPIVersion: number
 }) {
-  const isTypeScript = tsExtensions.has(extname(mainFile))
-  const tsFormat = isTypeScript ? await getTSModuleFormat(mainFile, repositoryRoot) : MODULE_FORMAT.COMMONJS
-  const tsAliases = new Map<string, string>()
-  const tsRewrites = new Map<string, string>()
+  const tsTransformer = await getTypeScriptTransformer(runtimeAPIVersion, mainFile, repositoryRoot)
 
   const {
     fileList: dependencyPaths,
@@ -154,14 +187,20 @@ const traceFilesAndTranspile = async function ({
         const extension = extname(path)
 
         if (tsExtensions.has(extension)) {
-          const transpiledSource = await transpile({ config, name, format: tsFormat, path })
+          const transpiledSource = await transpile({
+            config,
+            name,
+            format: tsTransformer?.format,
+            path,
+            tsConfig: tsTransformer?.tsConfig,
+          })
           const newPath = getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
           // Overriding the contents of the `.ts` file.
-          tsRewrites.set(path, transpiledSource)
+          tsTransformer?.rewrites.set(path, transpiledSource)
 
           // Rewriting the `.ts` path to `.js` in the bundle.
-          tsAliases.set(path, newPath)
+          tsTransformer?.aliases.set(path, newPath)
 
           return transpiledSource
         }
@@ -196,13 +235,13 @@ const traceFilesAndTranspile = async function ({
     basePath ? resolve(basePath, path) : resolve(path),
   )
 
-  if (isTypeScript) {
+  if (tsTransformer) {
     return {
-      aliases: tsAliases,
+      aliases: tsTransformer.aliases,
       mainFile: getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
-      moduleFormat: tsFormat,
+      moduleFormat: tsTransformer.format,
       paths: normalizedDependencyPaths,
-      rewrites: tsRewrites,
+      rewrites: tsTransformer.rewrites,
     }
   }
 
