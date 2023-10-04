@@ -67,6 +67,7 @@ describe('listFunctions', () => {
     test('listFunctions includes runtimeAPIVersion when parseISC is true', async () => {
       const dir = join(FIXTURES_DIR, 'list')
       const [func] = await listFunctions([dir], {
+        basePath: dir,
         parseISC: true,
       })
 
@@ -78,6 +79,7 @@ describe('listFunctions', () => {
     test('listFunctions does not include runtimeAPIVersion when parseISC is false', async () => {
       const dir = join(FIXTURES_ESM_DIR, 'v2-api')
       const [func] = await listFunctions([dir], {
+        basePath: dir,
         parseISC: false,
       })
 
@@ -87,6 +89,7 @@ describe('listFunctions', () => {
     test('listFunctions includes runtimeAPIVersion when parseISC is true', async () => {
       const fixtureDir = join(FIXTURES_ESM_DIR, 'v2-api-ts-aliases')
       const [func] = await listFunctions([fixtureDir], {
+        basePath: fixtureDir,
         parseISC: true,
       })
 

@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`listFunction > V2 API > listFunction includes metadata properties when parseISC true 1`] = `
+{
+  "extension": ".ts",
+  "inputModuleFormat": "esm",
+  "mainFile": "<BASE DIRECTORY>/v2-api-ts-aliases/function.ts",
+  "name": "function",
+  "runtime": "js",
+  "runtimeAPIVersion": 2,
+  "tsConfig": {
+    "config": {
+      "compilerOptions": {
+        "baseUrl": "./",
+        "paths": {
+          "@lib/*": [
+            "super-long-and-awkward-name/*",
+          ],
+        },
+      },
+    },
+    "path": "<BASE DIRECTORY>/v2-api-ts-aliases/tsconfig.json",
+  },
+}
+`;
