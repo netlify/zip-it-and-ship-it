@@ -1,10 +1,9 @@
-import { build, BuildOptions } from 'esbuild'
+import { build } from 'esbuild'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { RUNTIME } from '../../../runtime.js'
 import { ModuleFormat, MODULE_FORMAT } from '../../utils/module_format.js'
-import rewriteImportsPlugin from '../../utils/plugin_rewrite_imports.js'
 import type { TsConfig } from '../../utils/tsconfig.js'
 import { getBundlerTarget } from '../esbuild/bundler_target.js'
 import { NODE_BUNDLER } from '../types.js'
@@ -49,24 +48,20 @@ interface TranspileTSOptions {
   format?: ModuleFormat
   name: string
   path: string
-  rewriteImportPaths?: boolean
 }
 
-export const transpileTS = async ({ config, format, name, path, rewriteImportPaths = false }: TranspileTSOptions) => {
+export const transpileTS = async ({ config, format, name, path }: TranspileTSOptions) => {
   // The version of ECMAScript to use as the build target. This will determine
   // whether certain features are transpiled down or left untransformed.
   const nodeTarget = getBundlerTarget(config.nodeVersion)
 
-  const rewriteOptions: BuildOptions = rewriteImportPaths
-    ? { bundle: true, packages: 'external', plugins: [rewriteImportsPlugin] }
-    : { bundle: false }
-
   try {
     const transpiled = await build({
-      ...rewriteOptions,
+      bundle: true,
       entryPoints: [path],
       format,
       logLevel: 'error',
+      packages: 'external',
       platform: 'node',
       sourcemap: Boolean(config.nodeSourcemap),
       target: [nodeTarget],

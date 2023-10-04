@@ -97,7 +97,7 @@ export const zipCheckFunctions = async function (
     ? fixture.map((srcFolder) => `${fixtureDir}/${srcFolder}`)
     : `${fixtureDir}/${fixture}`
 
-  let basePath
+  let basePath: string | undefined
 
   if (!opts.basePath && typeof fixture === 'string') {
     basePath = resolve(fixtureDir, fixture)
