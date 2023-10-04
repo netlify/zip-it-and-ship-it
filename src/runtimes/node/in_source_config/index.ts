@@ -87,7 +87,7 @@ export const parseFileAtPath = async (
     return {}
   }
 
-  return parseFile(source, { functionName, logger })
+  return parse(source, { functionName, logger })
 }
 
 /**
@@ -95,10 +95,7 @@ export const parseFileAtPath = async (
  * series of data points, such as in-source configuration properties and
  * other metadata.
  */
-export const parseFile = (
-  source: string,
-  { functionName, logger }: FindISCDeclarationsOptions,
-): StaticAnalysisResult => {
+export const parse = (source: string, { functionName, logger }: FindISCDeclarationsOptions): StaticAnalysisResult => {
   const ast = safelyParseSource(source)
 
   if (ast === null) {

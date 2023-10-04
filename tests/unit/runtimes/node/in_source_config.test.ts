@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 
-import { findISCDeclarations } from '../../../../src/runtimes/node/in_source_config/index.js'
+import { parse } from '../../../../src/runtimes/node/in_source_config/index.js'
 import { getLogger } from '../../../../src/utils/logger.js'
 
 describe('`schedule` helper', () => {
@@ -11,9 +11,9 @@ describe('`schedule` helper', () => {
 
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'cjs', schedule: '@daily', runtimeAPIVersion: 1 })
   })
 
   test('CommonJS file with `schedule` helper renamed locally', () => {
@@ -21,9 +21,9 @@ describe('`schedule` helper', () => {
 
     exports.handler = somethingElse("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'cjs', schedule: '@daily', runtimeAPIVersion: 1 })
   })
 
   test('CommonJS file importing from a package other than "@netlify/functions"', () => {
@@ -31,9 +31,9 @@ describe('`schedule` helper', () => {
 
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'cjs', runtimeAPIVersion: 1 })
   })
 
   test.todo('CommonJS file with `schedule` helper exported from a variable', () => {
@@ -43,9 +43,9 @@ describe('`schedule` helper', () => {
 
     exports.handler = handler`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'cjs', schedule: '@daily', runtimeAPIVersion: 1 })
   })
 
   test('ESM file with `schedule` helper', () => {
@@ -53,9 +53,9 @@ describe('`schedule` helper', () => {
 
     export const handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'esm', schedule: '@daily', runtimeAPIVersion: 1 })
   })
 
   test('ESM file with `schedule` helper renamed locally', () => {
@@ -63,9 +63,9 @@ describe('`schedule` helper', () => {
 
     export const handler = somethingElse("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'esm', schedule: '@daily', runtimeAPIVersion: 1 })
   })
 
   test('ESM file importing from a package other than "@netlify/functions"', () => {
@@ -73,9 +73,9 @@ describe('`schedule` helper', () => {
 
     export const handler = schedule("@daily", () => {})`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
   })
 
   test('ESM file with `handler` exported from a variable', () => {
@@ -85,9 +85,9 @@ describe('`schedule` helper', () => {
     
     export { handler }`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ schedule: '@daily', runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'esm', schedule: '@daily', runtimeAPIVersion: 1 })
   })
 })
 
@@ -99,9 +99,9 @@ describe('`stream` helper', () => {
 
     exports.handler = stream(() => {})`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ invocationMode: 'stream', runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'esm', invocationMode: 'stream', runtimeAPIVersion: 1 })
   })
 
   test('CommonJS file importing from a package other than "@netlify/functions"', () => {
@@ -109,9 +109,9 @@ describe('`stream` helper', () => {
 
     exports.handler = stream(() => {})`
 
-    const isc = findISCDeclarations(source, options)
+    const isc = parse(source, options)
 
-    expect(isc).toEqual({ runtimeAPIVersion: 1 })
+    expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
   })
 })
 
@@ -129,11 +129,11 @@ describe('V2 API', () => {
 
       const systemLog = vi.fn()
 
-      const isc = findISCDeclarations(source, { ...options, logger: getLogger(systemLog) })
+      const isc = parse(source, { ...options, logger: getLogger(systemLog) })
 
       expect(systemLog).toHaveBeenCalledOnce()
       expect(systemLog).toHaveBeenCalledWith('detected v2 function')
-      expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
+      expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], runtimeAPIVersion: 2 })
     })
 
     test('ESM file with a default export and a `handler` export', () => {
@@ -143,9 +143,9 @@ describe('V2 API', () => {
   
       export const handler = function () { return { statusCode: 200, body: "Hello!" } }`
 
-      const isc = findISCDeclarations(source, options)
+      const isc = parse(source, options)
 
-      expect(isc).toEqual({ runtimeAPIVersion: 1 })
+      expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
     })
 
     test('ESM file with no default export and a `handler` export', () => {
@@ -153,9 +153,9 @@ describe('V2 API', () => {
       
       export { handler }`
 
-      const isc = findISCDeclarations(source, options)
+      const isc = parse(source, options)
 
-      expect(isc).toEqual({ runtimeAPIVersion: 1 })
+      expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
     })
 
     test('TypeScript file with a default export and no `handler` export', () => {
@@ -163,9 +163,9 @@ describe('V2 API', () => {
         return new Response("Hello!")
       }`
 
-      const isc = findISCDeclarations(source, options)
+      const isc = parse(source, options)
 
-      expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2 })
+      expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], runtimeAPIVersion: 2 })
     })
 
     test('CommonJS file with a default export and a `handler` export', () => {
@@ -175,9 +175,9 @@ describe('V2 API', () => {
   
       exports.handler = async () => ({ statusCode: 200, body: "Hello!" })`
 
-      const isc = findISCDeclarations(source, options)
+      const isc = parse(source, options)
 
-      expect(isc).toEqual({ runtimeAPIVersion: 1 })
+      expect(isc).toEqual({ inputModuleFormat: 'cjs', runtimeAPIVersion: 1 })
     })
 
     test('CommonJS file with a default export and no `handler` export', () => {
@@ -185,9 +185,9 @@ describe('V2 API', () => {
         return new Response("Hello!")
       }`
 
-      const isc = findISCDeclarations(source, options)
+      const isc = parse(source, options)
 
-      expect(isc).toEqual({ runtimeAPIVersion: 1 })
+      expect(isc).toEqual({ inputModuleFormat: 'cjs', runtimeAPIVersion: 1 })
     })
   })
 
@@ -201,9 +201,9 @@ describe('V2 API', () => {
         schedule: "@daily"
       }`
 
-      const isc = findISCDeclarations(source, options)
+      const isc = parse(source, options)
 
-      expect(isc).toEqual({ routes: [], runtimeAPIVersion: 2, schedule: '@daily' })
+      expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], runtimeAPIVersion: 2, schedule: '@daily' })
     })
   })
 
@@ -217,7 +217,7 @@ describe('V2 API', () => {
         method: ["GET", "POST"]
       }`
 
-      const { methods } = findISCDeclarations(source, options)
+      const { methods } = parse(source, options)
 
       expect(methods).toEqual(['GET', 'POST'])
     })
@@ -231,7 +231,7 @@ describe('V2 API', () => {
         method: "GET"
       }`
 
-      const { methods } = findISCDeclarations(source, options)
+      const { methods } = parse(source, options)
 
       expect(methods).toEqual(['GET'])
     })
@@ -250,7 +250,7 @@ describe('V2 API', () => {
           path: "missing-slash"
         }`
 
-        findISCDeclarations(source, options)
+        parse(source, options)
       } catch (error) {
         const { customErrorInfo, message } = error
 
@@ -273,7 +273,7 @@ describe('V2 API', () => {
           path: "/products("
         }`
 
-        findISCDeclarations(source, options)
+        parse(source, options)
       } catch (error) {
         const { customErrorInfo, message } = error
 
@@ -293,7 +293,7 @@ describe('V2 API', () => {
         path: "/products"
       }`
 
-      const { routes } = findISCDeclarations(source, options)
+      const { routes } = parse(source, options)
 
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
@@ -307,7 +307,7 @@ describe('V2 API', () => {
         path: "/store/:category/products/:product-id"
       }`
 
-      const { routes } = findISCDeclarations(source, options)
+      const { routes } = parse(source, options)
 
       expect(routes).toEqual([
         {
