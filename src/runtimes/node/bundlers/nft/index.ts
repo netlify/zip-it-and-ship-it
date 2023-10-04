@@ -128,6 +128,7 @@ const getTypeScriptTransformer = async (runtimeAPIVersion: number, mainFile: str
     return {
       aliases,
       format: MODULE_FORMAT.ESM,
+      rewriteImportPaths: true,
       rewrites,
     }
   }
@@ -186,6 +187,7 @@ const traceFilesAndTranspile = async function ({
             name,
             format: tsTransformer?.format,
             path,
+            rewriteImportPaths: tsTransformer?.rewriteImportPaths,
           })
           const newPath = getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
