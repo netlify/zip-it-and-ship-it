@@ -1,6 +1,7 @@
 import { RUNTIME } from '../runtimes/runtime.js'
 
 import { FunctionBundlingUserError } from './error.js'
+import { nonNullable } from './non_nullable.js'
 import { ExtendedURLPattern } from './urlpattern.js'
 
 export type Route = { pattern: string; methods: string[] } & ({ literal: string } | { expression: string })
@@ -17,9 +18,9 @@ const isPathLiteral = (path: string) => {
   return parts.every((part) => !isExpression(part))
 }
 
-export const getRoutesFromPath = (path: unknown, functionName: string, methods: string[]): Route[] => {
+const getRoute = (path: unknown, functionName: string, methods: string[]): Route | undefined => {
   if (!path) {
-    return []
+    return
   }
 
   if (typeof path !== 'string') {
@@ -37,7 +38,7 @@ export const getRoutesFromPath = (path: unknown, functionName: string, methods: 
   }
 
   if (isPathLiteral(path)) {
-    return [{ pattern: path, literal: path, methods }]
+    return { pattern: path, literal: path, methods }
   }
 
   try {
@@ -52,11 +53,22 @@ export const getRoutesFromPath = (path: unknown, functionName: string, methods: 
     // for both `/foo` and `/foo/`.
     const normalizedRegex = `^${regex}\\/?$`
 
-    return [{ pattern: path, expression: normalizedRegex, methods }]
+    return { pattern: path, expression: normalizedRegex, methods }
   } catch {
     throw new FunctionBundlingUserError(`'${path}' is not a valid path according to the URLPattern specification`, {
       functionName,
       runtime: RUNTIME.JAVASCRIPT,
     })
   }
+}
+
+export const getRoutes = (input: unknown, functionName: string, methods: string[]): Route[] => {
+  if (!input) {
+    return []
+  }
+
+  const paths = Array.isArray(input) ? input : [input]
+  const routes = paths.map((path) => getRoute(path, functionName, methods ?? [])).filter(nonNullable)
+
+  return routes
 }

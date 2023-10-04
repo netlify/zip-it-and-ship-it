@@ -262,7 +262,7 @@ describe('V2 API', () => {
     })
 
     test('With an invalid pattern', () => {
-      expect.assertions(4)
+      expect.assertions(8)
 
       try {
         const source = `export default async () => {
@@ -271,6 +271,25 @@ describe('V2 API', () => {
     
         export const config = {
           path: "/products("
+        }`
+
+        findISCDeclarations(source, options)
+      } catch (error) {
+        const { customErrorInfo, message } = error
+
+        expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
+        expect(customErrorInfo.type).toBe('functionsBundling')
+        expect(customErrorInfo.location.functionName).toBe('func1')
+        expect(customErrorInfo.location.runtime).toBe('js')
+      }
+
+      try {
+        const source = `export default async () => {
+          return new Response("Hello!")
+        }
+    
+        export const config = {
+          path: ["/store", "/products("]
         }`
 
         findISCDeclarations(source, options)
@@ -298,7 +317,7 @@ describe('V2 API', () => {
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
 
-    test('Using a pattern with named groupd', () => {
+    test('Using a pattern with named group', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
@@ -315,6 +334,27 @@ describe('V2 API', () => {
           expression: '^\\/store(?:\\/([^\\/]+?))\\/products(?:\\/([^\\/]+?))-id\\/?$',
           methods: [],
         },
+      ])
+    })
+
+    test('Using multiple paths', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: ["/store/:category/products/:product-id", "/super-awesome-campaign"]
+      }`
+
+      const { routes } = findISCDeclarations(source, options)
+
+      expect(routes).toEqual([
+        {
+          pattern: '/store/:category/products/:product-id',
+          expression: '^\\/store(?:\\/([^\\/]+?))\\/products(?:\\/([^\\/]+?))-id\\/?$',
+          methods: [],
+        },
+        { pattern: '/super-awesome-campaign', literal: '/super-awesome-campaign', methods: [] },
       ])
     })
   })

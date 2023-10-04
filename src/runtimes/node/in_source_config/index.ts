@@ -4,7 +4,7 @@ import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { Logger } from '../../../utils/logger.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
-import { getRoutesFromPath, Route } from '../../../utils/routes.js'
+import { getRoutes, Route } from '../../../utils/routes.js'
 import { RUNTIME } from '../../runtime.js'
 import { NODE_BUNDLER } from '../bundlers/types.js'
 import { createBindingsMethod } from '../parser/bindings.js'
@@ -119,7 +119,7 @@ export const findISCDeclarations = (
       config.methods = normalizeMethods(configExport.method, functionName)
     }
 
-    config.routes = getRoutesFromPath(configExport.path, functionName, config.methods ?? [])
+    config.routes = getRoutes(configExport.path, functionName, config.methods ?? [])
 
     return config
   }
