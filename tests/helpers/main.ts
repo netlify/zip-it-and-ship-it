@@ -91,13 +91,19 @@ export const zipFixture = async function (
 
 export const zipCheckFunctions = async function (
   fixture: string[] | string,
-  { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts }: ZipOptions & { tmpDir: string },
+  { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts = {} }: ZipOptions & { tmpDir: string },
 ): Promise<ZipReturn> {
   const srcFolders = Array.isArray(fixture)
     ? fixture.map((srcFolder) => `${fixtureDir}/${srcFolder}`)
     : `${fixtureDir}/${fixture}`
 
-  const files = await zipFunctions(srcFolders, tmpDir, opts)
+  let basePath: string | undefined
+
+  if (!opts.basePath && typeof fixture === 'string') {
+    basePath = resolve(fixtureDir, fixture)
+  }
+
+  const files = await zipFunctions(srcFolders, tmpDir, { basePath, ...opts })
 
   if (!Array.isArray(files)) {
     throw new TypeError(`Expected 'zipFunctions' to return an array, found ${typeof files}`)

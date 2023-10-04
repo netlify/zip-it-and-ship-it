@@ -1,3 +1,3 @@
-const requirePackageName = require('require-package-name')
+const mod = require('fake-module')
 
-module.exports = typeof requirePackageName === 'function'
+module.exports = typeof mod === 'function'

@@ -134,6 +134,72 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     },
   )
 
+  testMany(
+    'Handles a TypeScript function that imports both CJS and ESM modules',
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+    async (options) => {
+      const { files, tmpDir } = await zipFixture('v2-api-mixed-modules', {
+        fixtureDir: FIXTURES_ESM_DIR,
+        opts: merge(options, {
+          archiveFormat: ARCHIVE_FORMAT.NONE,
+        }),
+      })
+
+      for (const entry of files) {
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+        expect(entry.runtimeAPIVersion).toBe(2)
+      }
+
+      const [{ name: archive, entryFilename }] = files
+
+      const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+      const { body: bodyStream, statusCode } = await invokeLambda(func)
+      const body = await readAsBuffer(bodyStream)
+
+      expect(JSON.parse(body)).toEqual({
+        cjs: { foo: '🌭', type: 'cjs' },
+        esm: { foo: '🌭', type: 'esm' },
+        helper1: 'helper1',
+        helper2: 'helper2',
+        helper3: 'helper3',
+        helper4: 'helper4',
+        helper5: 'helper5',
+      })
+      expect(statusCode).toBe(200)
+    },
+  )
+
+  testMany('Handles a TypeScript function that uses path aliases', ['bundler_default'], async (options) => {
+    const { files, tmpDir } = await zipFixture('v2-api-ts-aliases', {
+      fixtureDir: FIXTURES_ESM_DIR,
+      opts: merge(options, {
+        archiveFormat: ARCHIVE_FORMAT.NONE,
+      }),
+    })
+
+    for (const entry of files) {
+      expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+      expect(entry.runtimeAPIVersion).toBe(2)
+    }
+
+    const [{ name: archive, entryFilename }] = files
+
+    const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+    const { body: bodyStream, statusCode } = await invokeLambda(func)
+    const body = await readAsBuffer(bodyStream)
+
+    expect(JSON.parse(body)).toEqual({
+      cjs: { foo: '🌭', type: 'cjs' },
+      esm: { foo: '🌭', type: 'esm' },
+      helper1: 'helper1',
+      helper2: 'helper2',
+      helper3: 'helper3',
+      helper4: 'helper4',
+      helper5: 'helper5',
+    })
+    expect(statusCode).toBe(200)
+  })
+
   test('Returns Node.js 18 if older version is set', async () => {
     const { files } = await zipFixture('v2-api-mjs', {
       fixtureDir: FIXTURES_ESM_DIR,
