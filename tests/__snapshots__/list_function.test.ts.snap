@@ -2,12 +2,16 @@
 
 exports[`listFunction > V2 API > listFunction includes metadata properties when parseISC true 1`] = `
 {
+  "displayName": undefined,
   "extension": ".ts",
+  "generator": undefined,
   "inputModuleFormat": "esm",
-  "mainFile": "<BASE DIRECTORY>/v2-api-ts-aliases/function.ts",
+  "mainFile": "v2-api-ts-aliases/function.ts",
   "name": "function",
   "runtime": "js",
   "runtimeAPIVersion": 2,
+  "schedule": undefined,
+  "srcFile": undefined,
   "tsConfig": {
     "config": {
       "compilerOptions": {
@@ -19,7 +23,7 @@ exports[`listFunction > V2 API > listFunction includes metadata properties when 
         },
       },
     },
-    "path": "<BASE DIRECTORY>/v2-api-ts-aliases/tsconfig.json",
+    "path": "v2-api-ts-aliases/tsconfig.json",
   },
 }
 `;
