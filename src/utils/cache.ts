@@ -13,18 +13,25 @@ interface NFTCache {
 export class RuntimeCache {
   // Cache for fs.readFile() calls
   fileCache: FileCache
+
   // Cache for fs.lstat() calls
   lstatCache: LstatCache
+
   // Cache fs.readdir() calls
   readdirCache: ReaddirCache
+
   // NFT cache, which should not be used in zisi and only supplied to NFT
   // this cache shares the file cache with zisi
   nftCache: NFTCache
+
+  // Used by `get-tsconfig` for caching the retrieval of `tsconfig.json` files
+  tsConfigCache: Map<string, unknown>
 
   constructor() {
     this.fileCache = new Map()
     this.lstatCache = new Map()
     this.readdirCache = new Map()
+    this.tsConfigCache = new Map()
 
     this.nftCache = Object.create(null)
     this.nftCache.fileCache = this.fileCache

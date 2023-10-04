@@ -1,6 +1,8 @@
 import { dirname, relative } from 'path'
 
-import { getTsconfig, TsConfigJson } from 'get-tsconfig'
+import { getTsconfig, TsConfigResult } from 'get-tsconfig'
+
+import type { RuntimeCache } from '../../../utils/cache.js'
 
 import { MODULE_FORMAT } from './module_format.js'
 
@@ -13,8 +15,12 @@ const esmModuleValues = new Set(['es6', 'es2015', 'es2020', 'es2022', 'esnext', 
  * contents as an object. If a boundary is set, we'll stop traversing the file
  * system once that path is reached.
  */
-const getTSConfigInProject = (path: string, boundary?: string): TsConfigJson | undefined => {
-  const file = getTsconfig(path)
+export const getTSConfigInProject = (
+  path: string,
+  boundary?: string,
+  cache?: RuntimeCache,
+): TsConfigResult | undefined => {
+  const file = getTsconfig(path, undefined, cache?.tsConfigCache)
 
   if (!file) {
     return
@@ -26,7 +32,7 @@ const getTSConfigInProject = (path: string, boundary?: string): TsConfigJson | u
     return
   }
 
-  return file.config
+  return file
 }
 
 /**
@@ -35,13 +41,13 @@ const getTSConfigInProject = (path: string, boundary?: string): TsConfigJson | u
  * or if no `module` property is defined, the function returns `undefined`.
  */
 export const getModuleFormat = (path: string, boundary?: string) => {
-  const config = getTSConfigInProject(path, boundary)
+  const file = getTSConfigInProject(path, boundary)
 
-  if (!config) {
+  if (!file) {
     return
   }
 
-  const moduleProp = config.compilerOptions?.module
+  const moduleProp = file.config.compilerOptions?.module
 
   if (!moduleProp) {
     return

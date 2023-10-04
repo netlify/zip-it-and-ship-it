@@ -8,21 +8,37 @@ import type {
 } from '@babel/types'
 
 import type { ISCExport } from '../in_source_config/index.js'
+import { ModuleFormat, MODULE_FORMAT } from '../utils/module_format.js'
 
 import type { BindingMethod } from './bindings.js'
 import { isModuleExports } from './helpers.js'
 
-// Finds and returns the following types of exports in an AST:
-// 1. Named `handler` function exports
-// 2. Default function export
-// 3. Named `config` object export
-export const getExports = (nodes: Statement[], getAllBindings: BindingMethod) => {
+/**
+ * Traverses a list of nodes and returns:
+ *
+ * 1. Named `config` object export
+ * 2. Default function export
+ * 3. Named `handler` function exports
+ * 4. The module format syntax used in the file: if any `import` or `export`
+ *    declarations are found, this is ESM; if not, this is CJS
+ */
+export const traverseNodes = (nodes: Statement[], getAllBindings: BindingMethod) => {
   const handlerExports: ISCExport[] = []
 
   let configExport: Record<string, unknown> = {}
   let defaultExport: ExportDefaultDeclaration | undefined
+  let inputModuleFormat: ModuleFormat = MODULE_FORMAT.COMMONJS
 
   nodes.forEach((node) => {
+    if (
+      node.type === 'ImportDeclaration' ||
+      node.type === 'ExportNamedDeclaration' ||
+      node.type === 'ExportDefaultDeclaration' ||
+      node.type === 'ExportAllDeclaration'
+    ) {
+      inputModuleFormat = MODULE_FORMAT.ESM
+    }
+
     const esmExports = getMainExportFromESM(node, getAllBindings)
 
     if (esmExports.length !== 0) {
@@ -52,7 +68,7 @@ export const getExports = (nodes: Statement[], getAllBindings: BindingMethod) =>
     }
   })
 
-  return { configExport, defaultExport, handlerExports }
+  return { configExport, defaultExport, handlerExports, inputModuleFormat }
 }
 
 // Finds the main handler export in a CJS AST.

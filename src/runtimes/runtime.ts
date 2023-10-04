@@ -7,7 +7,7 @@ import type { RuntimeCache } from '../utils/cache.js'
 import { Logger } from '../utils/logger.js'
 
 import type { NodeBundlerName } from './node/bundlers/types.js'
-import type { ISCValues } from './node/in_source_config/index.js'
+import type { StaticAnalysisResult } from './node/in_source_config/index.js'
 
 export const RUNTIME = {
   GO: 'go',
@@ -48,11 +48,11 @@ export interface ZipFunctionResult {
   generator?: string
   inputs?: string[]
   includedFiles?: string[]
-  inSourceConfig?: ISCValues
   invocationMode?: InvocationMode
   nativeNodeModules?: object
   path: string
   runtimeVersion?: string
+  staticAnalysisResult?: StaticAnalysisResult
   entryFilename: string
 }
 
