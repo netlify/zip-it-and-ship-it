@@ -156,7 +156,15 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       const { body: bodyStream, statusCode } = await invokeLambda(func)
       const body = await readAsBuffer(bodyStream)
 
-      expect(body).toBe('{"cjs":{"foo":"🌭","type":"cjs"},"esm":{"foo":"🌭","type":"esm"}}')
+      expect(JSON.parse(body)).toEqual({
+        cjs: { foo: '🌭', type: 'cjs' },
+        esm: { foo: '🌭', type: 'esm' },
+        helper1: 'helper1',
+        helper2: 'helper2',
+        helper3: 'helper3',
+        helper4: 'helper4',
+        helper5: 'helper5',
+      })
       expect(statusCode).toBe(200)
     },
   )

@@ -9,25 +9,6 @@ export type { TsConfigJson as TsConfig } from 'get-tsconfig'
 const esmModuleValues = new Set(['es6', 'es2015', 'es2020', 'es2022', 'esnext', 'node16', 'nodenext'])
 
 /**
- * Returns a `tsconfig.json` file optimized for functionsc using the V2 API.
- * If a user-defined file is found, that file is loaded and extended with a
- * set of configuration properties that the user can't override.
- */
-export const getTSConfigForV2Function = (path: string, boundary?: string): TsConfigJson => {
-  const userConfig = getTSConfigInProject(path, boundary) || {}
-
-  return {
-    ...userConfig,
-    compilerOptions: {
-      ...userConfig.compilerOptions,
-      module: 'es2022',
-      moduleResolution: 'node',
-      esModuleInterop: true,
-    },
-  }
-}
-
-/**
  * Looks for a `tsconfig.json` file applicable to a given path and returns the
  * contents as an object. If a boundary is set, we'll stop traversing the file
  * system once that path is reached.

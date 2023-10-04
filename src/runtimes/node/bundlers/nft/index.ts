@@ -13,11 +13,11 @@ import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/includ
 import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions, ModuleFormat } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getClosestPackageJson } from '../../utils/package_json.js'
-import { getModuleFormat as getModuleFormatFromTsConfig, getTSConfigForV2Function } from '../../utils/tsconfig.js'
+import { getModuleFormat as getModuleFormatFromTsConfig } from '../../utils/tsconfig.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
-import { transpile } from './transpile.js'
+import { transpileTS } from './transpile.js'
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -123,18 +123,12 @@ const getTypeScriptTransformer = async (runtimeAPIVersion: number, mainFile: str
   const aliases = new Map<string, string>()
   const rewrites = new Map<string, string>()
 
-  // For functions using the V2 API, the format is always ESM. We also need to
-  // guarantee certain options in a `tsconfig.json` file, so we get a patched
-  // version of any user-defined file and return it, so that we can pass it on
-  // to esbuild.
+  // For functions using the V2 API, the format is always ESM.
   if (runtimeAPIVersion === 2) {
-    const tsConfig = getTSConfigForV2Function(dirname(mainFile), repositoryRoot)
-
     return {
       aliases,
       format: MODULE_FORMAT.ESM,
       rewrites,
-      tsConfig,
     }
   }
 
@@ -187,12 +181,11 @@ const traceFilesAndTranspile = async function ({
         const extension = extname(path)
 
         if (tsExtensions.has(extension)) {
-          const transpiledSource = await transpile({
+          const transpiledSource = await transpileTS({
             config,
             name,
             format: tsTransformer?.format,
             path,
-            tsConfig: tsTransformer?.tsConfig,
           })
           const newPath = getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
