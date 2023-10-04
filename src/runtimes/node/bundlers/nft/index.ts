@@ -127,6 +127,7 @@ const getTypeScriptTransformer = async (runtimeAPIVersion: number, mainFile: str
   if (runtimeAPIVersion === 2) {
     return {
       aliases,
+      bundle: true,
       format: MODULE_FORMAT.ESM,
       rewrites,
     }
@@ -182,6 +183,7 @@ const traceFilesAndTranspile = async function ({
 
         if (tsExtensions.has(extension)) {
           const transpiledSource = await transpileTS({
+            bundle: tsTransformer?.bundle,
             config,
             name,
             format: tsTransformer?.format,
