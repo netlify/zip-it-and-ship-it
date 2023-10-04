@@ -1,5 +1,5 @@
 import { mkdir, rm } from 'fs/promises'
-import { dirname, resolve, join, basename, relative } from 'path'
+import { dirname, resolve, join, basename } from 'path'
 import { env, platform } from 'process'
 import { fileURLToPath } from 'url'
 
@@ -197,17 +197,12 @@ export const importFunctionFile = async function <T = any>(functionPath: string)
 
 export const normalizeFiles = function (
   fixtureDir: string,
-  {
-    mainFile,
-    srcFile,
-    ...rest
-  }: ListedFunction & {
+  func: ListedFunction & {
     srcFile?: string
   },
 ) {
-  return {
-    mainFile: relative(fixtureDir, mainFile).replace(/\\/g, '/'),
-    srcFile: srcFile ? relative(fixtureDir, srcFile).replace(/\\/g, '/') : undefined,
-    ...rest,
-  }
+  const output = JSON.stringify(func)
+  const normalizedOutput = output.replace(new RegExp(fixtureDir, 'g'), '<BASE DIRECTORY>')
+
+  return JSON.parse(normalizedOutput)
 }

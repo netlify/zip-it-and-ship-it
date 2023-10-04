@@ -6,7 +6,7 @@ import type { RuntimeCache } from '../../../utils/cache.js'
 
 import { MODULE_FORMAT } from './module_format.js'
 
-export type { TsConfigJson as TsConfig } from 'get-tsconfig'
+export type { TsConfigResult as TSConfig } from 'get-tsconfig'
 
 const esmModuleValues = new Set(['es6', 'es2015', 'es2020', 'es2022', 'esnext', 'node16', 'nodenext'])
 
