@@ -19,10 +19,6 @@ const isPathLiteral = (path: string) => {
 }
 
 const getRoute = (path: unknown, functionName: string, methods: string[]): Route | undefined => {
-  if (!path) {
-    return
-  }
-
   if (typeof path !== 'string') {
     throw new FunctionBundlingUserError(`'path' property must be a string, found '${typeof path}'`, {
       functionName,
