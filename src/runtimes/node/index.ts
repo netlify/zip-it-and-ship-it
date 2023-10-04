@@ -9,7 +9,7 @@ import { GetSrcFilesFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.j
 import { getBundler, getBundlerName } from './bundlers/index.js'
 import { NODE_BUNDLER } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
-import { parseFileAtPath } from './in_source_config/index.js'
+import { parseFile } from './in_source_config/index.js'
 import { getNodeRuntime, getNodeRuntimeForV2 } from './utils/node_runtime.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
 import { zipNodeJs } from './utils/zip.js'
@@ -60,7 +60,7 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath, entryFilename: '' }
   }
 
-  const staticAnalysisResult = await parseFileAtPath(mainFile, { functionName: name, logger })
+  const staticAnalysisResult = await parseFile(mainFile, { functionName: name, logger })
   const runtimeAPIVersion = staticAnalysisResult.runtimeAPIVersion === 2 ? 2 : 1
 
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)

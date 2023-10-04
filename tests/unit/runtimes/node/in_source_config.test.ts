@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 
-import { parse } from '../../../../src/runtimes/node/in_source_config/index.js'
+import { parseSource } from '../../../../src/runtimes/node/in_source_config/index.js'
 import { getLogger } from '../../../../src/utils/logger.js'
 
 describe('`schedule` helper', () => {
@@ -11,7 +11,7 @@ describe('`schedule` helper', () => {
 
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'cjs', schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -21,7 +21,7 @@ describe('`schedule` helper', () => {
 
     exports.handler = somethingElse("@daily", () => {})`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'cjs', schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -31,7 +31,7 @@ describe('`schedule` helper', () => {
 
     exports.handler = schedule("@daily", () => {})`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'cjs', runtimeAPIVersion: 1 })
   })
@@ -43,7 +43,7 @@ describe('`schedule` helper', () => {
 
     exports.handler = handler`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'cjs', schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -53,7 +53,7 @@ describe('`schedule` helper', () => {
 
     export const handler = schedule("@daily", () => {})`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'esm', schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -63,7 +63,7 @@ describe('`schedule` helper', () => {
 
     export const handler = somethingElse("@daily", () => {})`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'esm', schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -73,7 +73,7 @@ describe('`schedule` helper', () => {
 
     export const handler = schedule("@daily", () => {})`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
   })
@@ -85,7 +85,7 @@ describe('`schedule` helper', () => {
     
     export { handler }`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'esm', schedule: '@daily', runtimeAPIVersion: 1 })
   })
@@ -99,7 +99,7 @@ describe('`stream` helper', () => {
 
     exports.handler = stream(() => {})`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'esm', invocationMode: 'stream', runtimeAPIVersion: 1 })
   })
@@ -109,7 +109,7 @@ describe('`stream` helper', () => {
 
     exports.handler = stream(() => {})`
 
-    const isc = parse(source, options)
+    const isc = parseSource(source, options)
 
     expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
   })
@@ -129,7 +129,7 @@ describe('V2 API', () => {
 
       const systemLog = vi.fn()
 
-      const isc = parse(source, { ...options, logger: getLogger(systemLog) })
+      const isc = parseSource(source, { ...options, logger: getLogger(systemLog) })
 
       expect(systemLog).toHaveBeenCalledOnce()
       expect(systemLog).toHaveBeenCalledWith('detected v2 function')
@@ -143,7 +143,7 @@ describe('V2 API', () => {
   
       export const handler = function () { return { statusCode: 200, body: "Hello!" } }`
 
-      const isc = parse(source, options)
+      const isc = parseSource(source, options)
 
       expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
     })
@@ -153,7 +153,7 @@ describe('V2 API', () => {
       
       export { handler }`
 
-      const isc = parse(source, options)
+      const isc = parseSource(source, options)
 
       expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
     })
@@ -163,7 +163,7 @@ describe('V2 API', () => {
         return new Response("Hello!")
       }`
 
-      const isc = parse(source, options)
+      const isc = parseSource(source, options)
 
       expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], runtimeAPIVersion: 2 })
     })
@@ -175,7 +175,7 @@ describe('V2 API', () => {
   
       exports.handler = async () => ({ statusCode: 200, body: "Hello!" })`
 
-      const isc = parse(source, options)
+      const isc = parseSource(source, options)
 
       expect(isc).toEqual({ inputModuleFormat: 'cjs', runtimeAPIVersion: 1 })
     })
@@ -185,7 +185,7 @@ describe('V2 API', () => {
         return new Response("Hello!")
       }`
 
-      const isc = parse(source, options)
+      const isc = parseSource(source, options)
 
       expect(isc).toEqual({ inputModuleFormat: 'cjs', runtimeAPIVersion: 1 })
     })
@@ -201,7 +201,7 @@ describe('V2 API', () => {
         schedule: "@daily"
       }`
 
-      const isc = parse(source, options)
+      const isc = parseSource(source, options)
 
       expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], runtimeAPIVersion: 2, schedule: '@daily' })
     })
@@ -217,7 +217,7 @@ describe('V2 API', () => {
         method: ["GET", "POST"]
       }`
 
-      const { methods } = parse(source, options)
+      const { methods } = parseSource(source, options)
 
       expect(methods).toEqual(['GET', 'POST'])
     })
@@ -231,7 +231,7 @@ describe('V2 API', () => {
         method: "GET"
       }`
 
-      const { methods } = parse(source, options)
+      const { methods } = parseSource(source, options)
 
       expect(methods).toEqual(['GET'])
     })
@@ -250,7 +250,7 @@ describe('V2 API', () => {
           path: "missing-slash"
         }`
 
-        parse(source, options)
+        parseSource(source, options)
       } catch (error) {
         const { customErrorInfo, message } = error
 
@@ -273,7 +273,7 @@ describe('V2 API', () => {
           path: "/products("
         }`
 
-        parse(source, options)
+        parseSource(source, options)
       } catch (error) {
         const { customErrorInfo, message } = error
 
@@ -293,7 +293,7 @@ describe('V2 API', () => {
         path: "/products"
       }`
 
-      const { routes } = parse(source, options)
+      const { routes } = parseSource(source, options)
 
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
@@ -307,7 +307,7 @@ describe('V2 API', () => {
         path: "/store/:category/products/:product-id"
       }`
 
-      const { routes } = parse(source, options)
+      const { routes } = parseSource(source, options)
 
       expect(routes).toEqual([
         {

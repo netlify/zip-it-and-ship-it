@@ -77,7 +77,7 @@ const normalizeMethods = (input: unknown, name: string): string[] | undefined =>
  * Loads a file at a given path, parses it into an AST, and returns a series of
  * data points, such as in-source configuration properties and other metadata.
  */
-export const parseFileAtPath = async (
+export const parseFile = async (
   sourcePath: string,
   { functionName, logger }: FindISCDeclarationsOptions,
 ): Promise<StaticAnalysisResult> => {
@@ -87,7 +87,7 @@ export const parseFileAtPath = async (
     return {}
   }
 
-  return parse(source, { functionName, logger })
+  return parseSource(source, { functionName, logger })
 }
 
 /**
@@ -95,7 +95,10 @@ export const parseFileAtPath = async (
  * series of data points, such as in-source configuration properties and
  * other metadata.
  */
-export const parse = (source: string, { functionName, logger }: FindISCDeclarationsOptions): StaticAnalysisResult => {
+export const parseSource = (
+  source: string,
+  { functionName, logger }: FindISCDeclarationsOptions,
+): StaticAnalysisResult => {
   const ast = safelyParseSource(source)
 
   if (ast === null) {

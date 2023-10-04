@@ -4,7 +4,7 @@ import { Config } from './config.js'
 import { FeatureFlags, getFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import { getFunctionFromPath, getFunctionsFromPaths } from './runtimes/index.js'
-import { parseFileAtPath, StaticAnalysisResult } from './runtimes/node/in_source_config/index.js'
+import { parseFile, StaticAnalysisResult } from './runtimes/node/in_source_config/index.js'
 import { ModuleFormat, tsExtensions } from './runtimes/node/utils/module_format.js'
 import { getTSConfigInProject, TSConfig } from './runtimes/node/utils/tsconfig.js'
 import { GetSrcFilesFunction, RuntimeName, RUNTIME } from './runtimes/runtime.js'
@@ -59,7 +59,7 @@ const augmentWithStaticAnalysis = async (
     return func
   }
 
-  const staticAnalysisResult = await parseFileAtPath(func.mainFile, {
+  const staticAnalysisResult = await parseFile(func.mainFile, {
     functionName: func.name,
     logger: getLogger(),
   })
