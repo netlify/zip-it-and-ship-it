@@ -4,6 +4,7 @@ import type {
   ExportSpecifier,
   Expression,
   ObjectExpression,
+  PatternLike,
   Statement,
 } from '@babel/types'
 
@@ -11,6 +12,8 @@ import type { ISCExport } from '../in_source_config/index.js'
 
 import type { BindingMethod } from './bindings.js'
 import { isModuleExports } from './helpers.js'
+
+type PrimitiveResult = string | number | boolean | Record<string, unknown> | undefined | null | PrimitiveResult[]
 
 // Finds and returns the following types of exports in an AST:
 // 1. Named `handler` function exports
@@ -131,50 +134,58 @@ const parseConfigExport = (node: Statement) => {
   }
 }
 
-// Takes an object expression node and returns the object resulting from the
-// subtree. The following types are accepted as values, and any others will
-// be ignored and excluded from the resulting object:
-//
-// - boolean
-// - number
-// - object
-// - string
-// - array of strings
+/**
+ * Takes an object expression node and returns the object resulting from the
+ * subtree. Only values supported by the `parsePrimitive` method are returned,
+ * and any others will be ignored and excluded from the resulting object.
+ */
 const parseObject = (node: ObjectExpression) =>
   node.properties.reduce((acc, property): Record<string, unknown> => {
     if (property.type !== 'ObjectProperty' || property.key.type !== 'Identifier') {
       return acc
     }
 
-    if (
-      property.value.type === 'BooleanLiteral' ||
-      property.value.type === 'NumericLiteral' ||
-      property.value.type === 'StringLiteral'
-    ) {
-      return {
-        ...acc,
-        [property.key.name]: property.value.value,
-      }
+    return {
+      ...acc,
+      [property.key.name]: parsePrimitive(property.value),
     }
-
-    if (property.value.type === 'ArrayExpression') {
-      return {
-        ...acc,
-        [property.key.name]: property.value.elements.flatMap((element) =>
-          element?.type === 'StringLiteral' ? [element.value] : [],
-        ),
-      }
-    }
-
-    if (property.value.type === 'ObjectExpression') {
-      return {
-        ...acc,
-        [property.key.name]: parseObject(property.value),
-      }
-    }
-
-    return acc
   }, {} as Record<string, unknown>)
+
+/**
+ * Takes an expression and, if it matches a JavaScript primitive type, returns
+ * the corresponding value. If not, `undefined` is returned.
+ * Currently, the following primitive types are supported:
+ *
+ * - boolean
+ * - number
+ * - object
+ * - string
+ * - array
+ * - null
+ */
+const parsePrimitive = (exp: Expression | PatternLike): PrimitiveResult => {
+  if (exp.type === 'BooleanLiteral' || exp.type === 'NumericLiteral' || exp.type === 'StringLiteral') {
+    return exp.value
+  }
+
+  if (exp.type === 'ArrayExpression') {
+    return exp.elements.map((element) => {
+      if (element === null || element.type === 'SpreadElement') {
+        return
+      }
+
+      return parsePrimitive(element)
+    })
+  }
+
+  if (exp.type === 'ObjectExpression') {
+    return parseObject(exp)
+  }
+
+  if (exp.type === 'NullLiteral') {
+    return null
+  }
+}
 
 // Tries to resolve the export from a binding (variable)
 // for example `let handler; handler = () => {}; export { handler }` would

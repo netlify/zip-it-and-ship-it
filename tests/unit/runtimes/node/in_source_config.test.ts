@@ -238,50 +238,169 @@ describe('V2 API', () => {
   })
 
   describe('`path` property', () => {
-    test('Missing a leading slash', () => {
-      expect.assertions(4)
+    describe('Thows an error when invalid values are supplied', () => {
+      test('Missing a leading slash', () => {
+        expect.assertions(4)
 
-      try {
-        const source = `export default async () => {
-          return new Response("Hello!")
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: "missing-slash"
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must start with a '/'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
         }
-    
-        export const config = {
-          path: "missing-slash"
-        }`
+      })
 
-        findISCDeclarations(source, options)
-      } catch (error) {
-        const { customErrorInfo, message } = error
+      test('An invalid pattern', () => {
+        expect.assertions(4)
 
-        expect(message).toBe(`'path' property must start with a '/'`)
-        expect(customErrorInfo.type).toBe('functionsBundling')
-        expect(customErrorInfo.location.functionName).toBe('func1')
-        expect(customErrorInfo.location.runtime).toBe('js')
-      }
-    })
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: "/products("
+          }`
 
-    test('With an invalid pattern', () => {
-      expect.assertions(4)
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
 
-      try {
-        const source = `export default async () => {
-          return new Response("Hello!")
+          expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
         }
-    
-        export const config = {
-          path: "/products("
-        }`
+      })
 
-        findISCDeclarations(source, options)
-      } catch (error) {
-        const { customErrorInfo, message } = error
+      test('A non-string value', () => {
+        expect.assertions(4)
 
-        expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
-        expect(customErrorInfo.type).toBe('functionsBundling')
-        expect(customErrorInfo.location.functionName).toBe('func1')
-        expect(customErrorInfo.location.runtime).toBe('js')
-      }
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: {
+              url: "/products"
+            }
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must be a string, found '{"url":"/products"}'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
+
+      test('An invalid pattern in a group', () => {
+        expect.assertions(4)
+
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: ["/store", "/products("]
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
+
+      test('A non-string value in a group', () => {
+        expect.assertions(4)
+
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: ["/store", 42]
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must be a string, found '42'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
+
+      test('A `null` value in a group', () => {
+        expect.assertions(4)
+
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: ["/store", null]
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must be a string, found 'null'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
+
+      test('An `undefined` value in a group', () => {
+        expect.assertions(4)
+
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: ["/store", undefined]
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must be a string, found 'undefined'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
     })
 
     test('Using a literal pattern', () => {
@@ -298,7 +417,7 @@ describe('V2 API', () => {
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
 
-    test('Using a pattern with named groupd', () => {
+    test('Using a pattern with named group', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
@@ -316,6 +435,50 @@ describe('V2 API', () => {
           methods: [],
         },
       ])
+    })
+
+    test('Using multiple paths', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: [
+          "/store/:category/products/:product-id",
+          "/product/:product-id",
+          "/super-awesome-campaign"
+        ]
+      }`
+
+      const { routes } = findISCDeclarations(source, options)
+
+      expect(routes).toEqual([
+        {
+          pattern: '/store/:category/products/:product-id',
+          expression: '^\\/store(?:\\/([^\\/]+?))\\/products(?:\\/([^\\/]+?))-id\\/?$',
+          methods: [],
+        },
+        {
+          pattern: '/product/:product-id',
+          expression: '^\\/product(?:\\/([^\\/]+?))-id\\/?$',
+          methods: [],
+        },
+        { pattern: '/super-awesome-campaign', literal: '/super-awesome-campaign', methods: [] },
+      ])
+    })
+
+    test('De-duplicates paths', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: ["/products", "/products"]
+      }`
+
+      const { routes } = findISCDeclarations(source, options)
+
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
   })
 })
