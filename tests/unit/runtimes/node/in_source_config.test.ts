@@ -238,30 +238,30 @@ describe('V2 API', () => {
   })
 
   describe('`path` property', () => {
-    test('Missing a leading slash', () => {
-      expect.assertions(4)
-
-      try {
-        const source = `export default async () => {
-          return new Response("Hello!")
-        }
-    
-        export const config = {
-          path: "missing-slash"
-        }`
-
-        findISCDeclarations(source, options)
-      } catch (error) {
-        const { customErrorInfo, message } = error
-
-        expect(message).toBe(`'path' property must start with a '/'`)
-        expect(customErrorInfo.type).toBe('functionsBundling')
-        expect(customErrorInfo.location.functionName).toBe('func1')
-        expect(customErrorInfo.location.runtime).toBe('js')
-      }
-    })
-
     describe('Thows an error when invalid values are supplied', () => {
+      test('Missing a leading slash', () => {
+        expect.assertions(4)
+
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: "missing-slash"
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must start with a '/'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
+
       test('An invalid pattern', () => {
         expect.assertions(4)
 
@@ -397,7 +397,11 @@ describe('V2 API', () => {
       }
   
       export const config = {
-        path: ["/store/:category/products/:product-id", "/super-awesome-campaign"]
+        path: [
+          "/store/:category/products/:product-id",
+          "/product/:product-id",
+          "/super-awesome-campaign"
+        ]
       }`
 
       const { routes } = findISCDeclarations(source, options)
@@ -408,8 +412,27 @@ describe('V2 API', () => {
           expression: '^\\/store(?:\\/([^\\/]+?))\\/products(?:\\/([^\\/]+?))-id\\/?$',
           methods: [],
         },
+        {
+          pattern: '/product/:product-id',
+          expression: '^\\/product(?:\\/([^\\/]+?))-id\\/?$',
+          methods: [],
+        },
         { pattern: '/super-awesome-campaign', literal: '/super-awesome-campaign', methods: [] },
       ])
+    })
+
+    test('De-duplicates paths', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: ["/products", "/products"]
+      }`
+
+      const { routes } = findISCDeclarations(source, options)
+
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
   })
 })

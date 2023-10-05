@@ -18,6 +18,10 @@ const isPathLiteral = (path: string) => {
   return parts.every((part) => !isExpression(part))
 }
 
+/**
+ * Takes an element from a `path` declaration and returns a Route element that
+ * represents it.
+ */
 const getRoute = (path: unknown, functionName: string, methods: string[]): Route | undefined => {
   if (typeof path !== 'string') {
     throw new FunctionBundlingUserError(`'path' property must be a string, found '${typeof path}'`, {
@@ -58,12 +62,16 @@ const getRoute = (path: unknown, functionName: string, methods: string[]): Route
   }
 }
 
+/**
+ * Takes a `path` declaration, normalizes it into an array, and processes the
+ * individual elements to obtain an array of `Route` expressions.
+ */
 export const getRoutes = (input: unknown, functionName: string, methods: string[]): Route[] => {
   if (!input) {
     return []
   }
 
-  const paths = Array.isArray(input) ? input : [input]
+  const paths = [...new Set(Array.isArray(input) ? input : [input])]
   const routes = paths.map((path) => getRoute(path, functionName, methods ?? [])).filter(nonNullable)
 
   return routes
