@@ -13,7 +13,7 @@ import type { ISCExport } from '../in_source_config/index.js'
 import type { BindingMethod } from './bindings.js'
 import { isModuleExports } from './helpers.js'
 
-type PrimitiveResult = string | number | boolean | Record<string, unknown> | undefined | PrimitiveResult[]
+type PrimitiveResult = string | number | boolean | Record<string, unknown> | undefined | null | PrimitiveResult[]
 
 // Finds and returns the following types of exports in an AST:
 // 1. Named `handler` function exports
@@ -161,6 +161,7 @@ const parseObject = (node: ObjectExpression) =>
  * - object
  * - string
  * - array
+ * - null
  */
 const parsePrimitive = (exp: Expression | PatternLike): PrimitiveResult => {
   if (exp.type === 'BooleanLiteral' || exp.type === 'NumericLiteral' || exp.type === 'StringLiteral') {
@@ -179,6 +180,10 @@ const parsePrimitive = (exp: Expression | PatternLike): PrimitiveResult => {
 
   if (exp.type === 'ObjectExpression') {
     return parseObject(exp)
+  }
+
+  if (exp.type === 'NullLiteral') {
+    return null
   }
 }
 

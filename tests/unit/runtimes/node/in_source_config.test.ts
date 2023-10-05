@@ -303,7 +303,7 @@ describe('V2 API', () => {
         } catch (error) {
           const { customErrorInfo, message } = error
 
-          expect(message).toBe(`'path' property must be a string, found 'object'`)
+          expect(message).toBe(`'path' property must be a string, found '{"url":"/products"}'`)
           expect(customErrorInfo.type).toBe('functionsBundling')
           expect(customErrorInfo.location.functionName).toBe('func1')
           expect(customErrorInfo.location.runtime).toBe('js')
@@ -349,7 +349,53 @@ describe('V2 API', () => {
         } catch (error) {
           const { customErrorInfo, message } = error
 
-          expect(message).toBe(`'path' property must be a string, found 'number'`)
+          expect(message).toBe(`'path' property must be a string, found '42'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
+
+      test('A `null` value in a group', () => {
+        expect.assertions(4)
+
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: ["/store", null]
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must be a string, found 'null'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
+
+      test('An `undefined` value in a group', () => {
+        expect.assertions(4)
+
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: ["/store", undefined]
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must be a string, found 'undefined'`)
           expect(customErrorInfo.type).toBe('functionsBundling')
           expect(customErrorInfo.location.functionName).toBe('func1')
           expect(customErrorInfo.location.runtime).toBe('js')
