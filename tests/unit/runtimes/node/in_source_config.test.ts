@@ -261,46 +261,100 @@ describe('V2 API', () => {
       }
     })
 
-    test('With an invalid pattern', () => {
-      expect.assertions(8)
+    describe('Thows an error when invalid values are supplied', () => {
+      test('An invalid pattern', () => {
+        expect.assertions(4)
 
-      try {
-        const source = `export default async () => {
-          return new Response("Hello!")
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: "/products("
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
         }
-    
-        export const config = {
-          path: "/products("
-        }`
+      })
 
-        findISCDeclarations(source, options)
-      } catch (error) {
-        const { customErrorInfo, message } = error
+      test('A non-string value', () => {
+        expect.assertions(4)
 
-        expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
-        expect(customErrorInfo.type).toBe('functionsBundling')
-        expect(customErrorInfo.location.functionName).toBe('func1')
-        expect(customErrorInfo.location.runtime).toBe('js')
-      }
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: {
+              url: "/products"
+            }
+          }`
 
-      try {
-        const source = `export default async () => {
-          return new Response("Hello!")
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must be a string, found 'object'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
         }
-    
-        export const config = {
-          path: ["/store", "/products("]
-        }`
+      })
 
-        findISCDeclarations(source, options)
-      } catch (error) {
-        const { customErrorInfo, message } = error
+      test('An invalid pattern in a group', () => {
+        expect.assertions(4)
 
-        expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
-        expect(customErrorInfo.type).toBe('functionsBundling')
-        expect(customErrorInfo.location.functionName).toBe('func1')
-        expect(customErrorInfo.location.runtime).toBe('js')
-      }
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: ["/store", "/products("]
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'/products(' is not a valid path according to the URLPattern specification`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
+
+      test('A non-string value in a group', () => {
+        expect.assertions(4)
+
+        try {
+          const source = `export default async () => {
+            return new Response("Hello!")
+          }
+      
+          export const config = {
+            path: ["/store", 42]
+          }`
+
+          findISCDeclarations(source, options)
+        } catch (error) {
+          const { customErrorInfo, message } = error
+
+          expect(message).toBe(`'path' property must be a string, found 'number'`)
+          expect(customErrorInfo.type).toBe('functionsBundling')
+          expect(customErrorInfo.location.functionName).toBe('func1')
+          expect(customErrorInfo.location.runtime).toBe('js')
+        }
+      })
     })
 
     test('Using a literal pattern', () => {
