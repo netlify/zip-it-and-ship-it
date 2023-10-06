@@ -89,13 +89,22 @@ const getIgnoreFunction = (config: FunctionConfig) => {
  * Returns the module format that should be used when transpiling a TypeScript
  * file.
  */
-const getTSModuleFormat = async (mainFile: string, repositoryRoot?: string): Promise<ModuleFormat> => {
-  if (extname(mainFile) === MODULE_FILE_EXTENSION.MTS) {
-    return MODULE_FORMAT.ESM
-  }
+const getTSModuleFormat = async (
+  mainFile: string,
+  runtimeAPIVersion: number,
+  repositoryRoot?: string,
+): Promise<ModuleFormat> => {
+  // TODO: This check should go away. We should always respect the format from
+  // the extension. We'll do this at a later stage, after we roll out the V2
+  // API with no side-effects on V1 functions.
+  if (runtimeAPIVersion === 2) {
+    if (extname(mainFile) === MODULE_FILE_EXTENSION.MTS) {
+      return MODULE_FORMAT.ESM
+    }
 
-  if (extname(mainFile) === MODULE_FILE_EXTENSION.CTS) {
-    return MODULE_FORMAT.COMMONJS
+    if (extname(mainFile) === MODULE_FILE_EXTENSION.CTS) {
+      return MODULE_FORMAT.COMMONJS
+    }
   }
 
   // At this point, we need to infer the module type from the `type` field in
@@ -132,7 +141,7 @@ const getTypeScriptTransformer = async (
     return
   }
 
-  const format = await getTSModuleFormat(mainFile, repositoryRoot)
+  const format = await getTSModuleFormat(mainFile, runtimeAPIVersion, repositoryRoot)
   const aliases = new Map<string, string>()
   const rewrites = new Map<string, string>()
   const transformer = {
