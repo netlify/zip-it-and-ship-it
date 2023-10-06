@@ -206,8 +206,8 @@ const traceFilesAndTranspile = async function ({
 
           // If this is the main file, the final path of the compiled file may
           // have been set by the transformer. It's fine to do this, since the
-          // only place this file will be imported is our entry file, and we'll
-          // know the right path to use.
+          // only place where this file will be imported from is our entry file
+          // and we'll know the right path to use.
           const newPath =
             isMainFile && tsTransformer?.newMainFile
               ? tsTransformer.newMainFile
