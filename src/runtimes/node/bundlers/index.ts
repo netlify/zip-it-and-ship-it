@@ -44,11 +44,17 @@ export const getBundlerName = async ({
   mainFile: string
   runtimeAPIVersion: number
 }): Promise<NodeBundlerName> => {
+  // For V2 functions, we force the bundler to NFT. The only exception is when
+  // a `none` override was provided.
+  if (runtimeAPIVersion === 2) {
+    return nodeBundler === NODE_BUNDLER.NONE ? NODE_BUNDLER.NONE : NODE_BUNDLER.NFT
+  }
+
   if (nodeBundler) {
     return nodeBundler
   }
 
-  return await getDefaultBundler({ extension, featureFlags, mainFile, runtimeAPIVersion })
+  return await getDefaultBundler({ extension, featureFlags, mainFile })
 }
 
 const ESBUILD_EXTENSIONS = new Set(['.mjs', '.ts', '.tsx', '.cts', '.mts'])
@@ -59,17 +65,11 @@ const getDefaultBundler = async ({
   extension,
   featureFlags,
   mainFile,
-  runtimeAPIVersion,
 }: {
   extension: string
   mainFile: string
   featureFlags: FeatureFlags
-  runtimeAPIVersion: number
 }): Promise<NodeBundlerName> => {
-  if (runtimeAPIVersion === 2) {
-    return NODE_BUNDLER.NFT
-  }
-
   if (extension === MODULE_FILE_EXTENSION.MJS && featureFlags.zisi_pure_esm_mjs) {
     return NODE_BUNDLER.NFT
   }
