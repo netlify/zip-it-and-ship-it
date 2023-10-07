@@ -187,7 +187,7 @@ describe('V2 API', () => {
 
       const isc = parseSource(source, options)
 
-      expect(isc).toEqual({ inputModuleFormat: 'cjs', runtimeAPIVersion: 1 })
+      expect(isc).toEqual({ inputModuleFormat: 'cjs', routes: [], runtimeAPIVersion: 2 })
     })
   })
 
@@ -403,18 +403,34 @@ describe('V2 API', () => {
       })
     })
 
-    test('Using a literal pattern', () => {
-      const source = `export default async () => {
-        return new Response("Hello!")
-      }
-  
-      export const config = {
-        path: "/products"
-      }`
+    describe('Using a literal pattern', () => {
+      test('ESM', () => {
+        const source = `export default async () => {
+          return new Response("Hello!")
+        }
+    
+        export const config = {
+          path: "/products"
+        }`
 
-      const { routes } = parseSource(source, options)
+        const { routes } = parseSource(source, options)
 
-      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
+        expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
+      })
+
+      test('CJS', () => {
+        const source = `exports.default = async () => {
+          return new Response("Hello!")
+        }
+    
+        exports.config = {
+          path: "/products"
+        }`
+
+        const { routes } = parseSource(source, options)
+
+        expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
+      })
     })
 
     test('Using a pattern with named group', () => {

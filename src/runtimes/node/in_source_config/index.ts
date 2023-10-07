@@ -112,8 +112,8 @@ export const parseSource = (
   let scheduleFound = false
 
   const getAllBindings = createBindingsMethod(ast.body)
-  const { configExport, defaultExport, handlerExports, inputModuleFormat } = traverseNodes(ast.body, getAllBindings)
-  const isV2API = handlerExports.length === 0 && defaultExport !== undefined
+  const { configExport, handlerExports, hasDefaultExport, inputModuleFormat } = traverseNodes(ast.body, getAllBindings)
+  const isV2API = handlerExports.length === 0 && hasDefaultExport
 
   if (isV2API) {
     const result: StaticAnalysisResult = {
@@ -193,5 +193,9 @@ export type ISCExportWithCallExpression = {
   args: ISCHandlerArg[]
   local: string
 }
+export type ISCExportWithObject = {
+  type: 'object-expression'
+  object: Record<string, unknown>
+}
 export type ISCExportOther = { type: 'other' }
-export type ISCExport = ISCExportWithCallExpression | ISCExportOther
+export type ISCExport = ISCExportWithCallExpression | ISCExportWithObject | ISCExportOther
