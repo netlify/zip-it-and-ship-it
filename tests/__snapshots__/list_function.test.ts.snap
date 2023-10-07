@@ -6,24 +6,12 @@ exports[`listFunction > V2 API > listFunction includes metadata properties when 
   "extension": ".ts",
   "generator": undefined,
   "inputModuleFormat": "esm",
-  "mainFile": "v2-api-ts-aliases/function.ts",
+  "mainFile": "v2-api-esm-ts-aliases/function.ts",
   "name": "function",
   "runtime": "js",
   "runtimeAPIVersion": 2,
   "schedule": undefined,
   "srcFile": undefined,
-  "tsConfig": {
-    "config": {
-      "compilerOptions": {
-        "baseUrl": "./",
-        "paths": {
-          "@lib/*": [
-            "super-long-and-awkward-name/*",
-          ],
-        },
-      },
-    },
-    "path": "v2-api-ts-aliases/tsconfig.json",
-  },
+  "tsConfig": undefined,
 }
 `;

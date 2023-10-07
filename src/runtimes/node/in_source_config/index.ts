@@ -131,7 +131,7 @@ export const parseSource = (
       result.methods = normalizeMethods(configExport.method, functionName)
     }
 
-    config.routes = getRoutes(configExport.path, functionName, config.methods ?? [])
+    result.routes = getRoutes(configExport.path, functionName, result.methods ?? [])
 
     return result
   }

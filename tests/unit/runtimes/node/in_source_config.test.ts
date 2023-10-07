@@ -299,7 +299,7 @@ describe('V2 API', () => {
             }
           }`
 
-          findISCDeclarations(source, options)
+          parseSource(source, options)
         } catch (error) {
           const { customErrorInfo, message } = error
 
@@ -322,7 +322,7 @@ describe('V2 API', () => {
             path: ["/store", "/products("]
           }`
 
-          findISCDeclarations(source, options)
+          parseSource(source, options)
         } catch (error) {
           const { customErrorInfo, message } = error
 
@@ -345,7 +345,7 @@ describe('V2 API', () => {
             path: ["/store", 42]
           }`
 
-          findISCDeclarations(source, options)
+          parseSource(source, options)
         } catch (error) {
           const { customErrorInfo, message } = error
 
@@ -368,7 +368,7 @@ describe('V2 API', () => {
             path: ["/store", null]
           }`
 
-          findISCDeclarations(source, options)
+          parseSource(source, options)
         } catch (error) {
           const { customErrorInfo, message } = error
 
@@ -391,7 +391,7 @@ describe('V2 API', () => {
             path: ["/store", undefined]
           }`
 
-          findISCDeclarations(source, options)
+          parseSource(source, options)
         } catch (error) {
           const { customErrorInfo, message } = error
 
@@ -450,7 +450,7 @@ describe('V2 API', () => {
         ]
       }`
 
-      const { routes } = findISCDeclarations(source, options)
+      const { routes } = parseSource(source, options)
 
       expect(routes).toEqual([
         {
@@ -476,7 +476,7 @@ describe('V2 API', () => {
         path: ["/products", "/products"]
       }`
 
-      const { routes } = findISCDeclarations(source, options)
+      const { routes } = parseSource(source, options)
 
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })

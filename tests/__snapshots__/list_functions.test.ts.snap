@@ -12,19 +12,7 @@ exports[`listFunctions > V2 API > listFunctions includes runtimeAPIVersion when 
   "runtimeAPIVersion": 2,
   "schedule": undefined,
   "srcFile": undefined,
-  "tsConfig": {
-    "config": {
-      "compilerOptions": {
-        "baseUrl": "./",
-        "paths": {
-          "@lib/*": [
-            "super-long-and-awkward-name/*",
-          ],
-        },
-      },
-    },
-    "path": "tsconfig.json",
-  },
+  "tsConfig": undefined,
 }
 `;
 

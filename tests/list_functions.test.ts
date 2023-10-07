@@ -87,7 +87,7 @@ describe('listFunctions', () => {
     })
 
     test('listFunctions includes runtimeAPIVersion when parseISC is true', async () => {
-      const fixtureDir = join(FIXTURES_ESM_DIR, 'v2-api-ts-aliases')
+      const fixtureDir = join(FIXTURES_ESM_DIR, 'v2-api-esm-ts-aliases')
       const [func] = await listFunctions([fixtureDir], {
         basePath: fixtureDir,
         parseISC: true,

@@ -73,7 +73,7 @@ describe('listFunction', () => {
 
     test('listFunction includes metadata properties when parseISC true', async () => {
       const basePath = resolve(FIXTURES_ESM_DIR)
-      const mainFile = join(basePath, 'v2-api-ts-aliases/function.ts')
+      const mainFile = join(basePath, 'v2-api-esm-ts-aliases/function.ts')
       const func = await listFunction(mainFile, {
         basePath,
         parseISC: true,
