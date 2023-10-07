@@ -12,8 +12,10 @@ export type ModuleFormat = ObjectValues<typeof MODULE_FORMAT>
 
 export const MODULE_FILE_EXTENSION = {
   CJS: '.cjs',
+  CTS: '.cts',
   JS: '.js',
   MJS: '.mjs',
+  MTS: '.mts',
 } as const
 
 export type ModuleFileExtension = ObjectValues<typeof MODULE_FILE_EXTENSION>

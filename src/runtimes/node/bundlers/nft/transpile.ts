@@ -1,3 +1,5 @@
+import { resolve } from 'path'
+
 import { build, BuildOptions } from 'esbuild'
 
 import type { FunctionConfig } from '../../../../config.js'
@@ -61,13 +63,15 @@ export const transpileTS = async ({ bundle = false, config, format, name, path }
       entryPoints: [path],
       format,
       logLevel: 'error',
+      metafile: true,
       platform: 'node',
       sourcemap: Boolean(config.nodeSourcemap),
       target: [nodeTarget],
       write: false,
     })
+    const bundledPaths = bundle ? Object.keys(transpiled.metafile.inputs).map((inputPath) => resolve(inputPath)) : []
 
-    return transpiled.outputFiles[0].text
+    return { bundledPaths, transpiled: transpiled.outputFiles[0].text }
   } catch (error) {
     throw FunctionBundlingUserError.addCustomErrorInfo(error, {
       functionName: name,
