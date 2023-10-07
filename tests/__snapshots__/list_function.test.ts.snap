@@ -12,6 +12,5 @@ exports[`listFunction > V2 API > listFunction includes metadata properties when 
   "runtimeAPIVersion": 2,
   "schedule": undefined,
   "srcFile": undefined,
-  "tsConfig": undefined,
 }
 `;

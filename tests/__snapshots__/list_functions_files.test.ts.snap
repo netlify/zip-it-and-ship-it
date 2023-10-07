@@ -13,7 +13,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -26,7 +25,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -39,7 +37,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -52,7 +49,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function_internal.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -65,7 +61,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -78,7 +73,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -91,7 +85,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -104,7 +97,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -117,7 +109,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -130,7 +121,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function_user.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -143,7 +133,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -156,7 +145,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -174,7 +162,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -187,7 +174,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -200,7 +186,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -213,7 +198,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function_internal.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -226,7 +210,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -239,7 +222,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -252,7 +234,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -265,7 +246,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -278,7 +258,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -291,7 +270,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function_user.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -304,7 +282,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -317,7 +294,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -335,7 +311,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -348,7 +323,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function_internal.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -361,7 +335,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -374,7 +347,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function_user.js",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -392,7 +364,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -405,7 +376,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function_internal.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -418,7 +388,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -431,7 +400,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function_user.js",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -449,7 +417,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -462,7 +429,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -475,7 +441,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -488,7 +453,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function_internal.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -501,7 +465,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -514,7 +477,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -527,7 +489,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -540,7 +501,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -553,7 +513,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -566,7 +525,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function_user.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -579,7 +537,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -592,7 +549,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "node_modules/test/package.json",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -610,7 +566,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -623,7 +578,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": ".netlify/internal-functions/function_internal.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -636,7 +590,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -649,7 +602,6 @@ exports[`listFunctionsFiles > Can list all function files from multiple source d
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "netlify/functions/function_user.js",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -667,7 +619,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.zip",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -680,7 +631,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -693,7 +643,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "five/index.ts",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -706,7 +655,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "four.js/four.js.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -719,7 +667,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "one/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -732,7 +679,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/three.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -745,7 +691,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/two.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -758,7 +703,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -776,7 +720,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.zip",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -789,7 +732,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -802,7 +744,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "five/index.ts",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -815,7 +756,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "four.js/four.js.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -828,7 +768,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "one/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -841,7 +780,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/two.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -854,7 +792,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/three.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -867,7 +804,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -885,7 +821,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.zip",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -898,7 +833,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -911,7 +845,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "five/index.ts",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -924,7 +857,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "four.js/four.js.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -937,7 +869,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "one/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -950,7 +881,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/two.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -963,7 +893,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -981,7 +910,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.zip",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -994,7 +922,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1007,7 +934,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "five/index.ts",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1020,7 +946,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "four.js/four.js.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1033,7 +958,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "one/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1046,7 +970,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/two.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1059,7 +982,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -1077,7 +999,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.zip",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1090,7 +1011,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1103,7 +1023,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "five/index.ts",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1116,7 +1035,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "five/util.ts",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1129,7 +1047,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "four.js/four.js.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1142,7 +1059,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "one/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1155,7 +1071,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/two.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1168,7 +1083,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/three.json",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1181,7 +1095,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test",
-    "tsConfig": undefined,
   },
 ]
 `;
@@ -1199,7 +1112,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.zip",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1212,7 +1124,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1225,7 +1136,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "five/index.ts",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1238,7 +1148,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "four.js/four.js.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1251,7 +1160,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "one/index.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1264,7 +1172,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "two/two.js",
-    "tsConfig": undefined,
   },
   {
     "displayName": undefined,
@@ -1277,7 +1184,6 @@ exports[`listFunctionsFiles > Can list all function files with listFunctionsFile
     "runtimeAPIVersion": undefined,
     "schedule": undefined,
     "srcFile": "test",
-    "tsConfig": undefined,
   },
 ]
 `;

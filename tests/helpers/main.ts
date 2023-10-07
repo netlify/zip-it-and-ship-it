@@ -202,7 +202,6 @@ export const normalizeFiles = function (
   {
     mainFile,
     srcFile,
-    tsConfig,
     ...rest
   }: ListedFunction & {
     srcFile?: string
@@ -212,6 +211,5 @@ export const normalizeFiles = function (
     ...rest,
     mainFile: normalizedRelative(fixtureDir, mainFile),
     srcFile: srcFile ? normalizedRelative(fixtureDir, srcFile) : undefined,
-    tsConfig: tsConfig ? { ...tsConfig, path: normalizedRelative(fixtureDir, tsConfig.path) } : undefined,
   }
 }
