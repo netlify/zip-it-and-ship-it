@@ -12,16 +12,16 @@ import type { ISCExport } from '../in_source_config/index.js'
 import { ModuleFormat, MODULE_FORMAT } from '../utils/module_format.js'
 
 import type { BindingMethod } from './bindings.js'
-import { isModuleExports } from './helpers.js'
+import { isESMImportExport, isModuleExports } from './helpers.js'
 
 type PrimitiveResult = string | number | boolean | Record<string, unknown> | undefined | null | PrimitiveResult[]
 
 /**
  * Traverses a list of nodes and returns:
  *
- * 1. Named `config` object export
- * 2. Default function export
- * 3. Named `handler` function exports
+ * 1. Named `config` object export (ESM or CJS)
+ * 2. Whether there is a default export (ESM or CJS)
+ * 3. Named `handler` function exports (ESM or CJS)
  * 4. The module format syntax used in the file: if any `import` or `export`
  *    declarations are found, this is ESM; if not, this is CJS
  */
@@ -33,12 +33,7 @@ export const traverseNodes = (nodes: Statement[], getAllBindings: BindingMethod)
   let inputModuleFormat: ModuleFormat = MODULE_FORMAT.COMMONJS
 
   nodes.forEach((node) => {
-    if (
-      node.type === 'ImportDeclaration' ||
-      node.type === 'ExportNamedDeclaration' ||
-      node.type === 'ExportDefaultDeclaration' ||
-      node.type === 'ExportAllDeclaration'
-    ) {
+    if (isESMImportExport(node)) {
       inputModuleFormat = MODULE_FORMAT.ESM
     }
 
