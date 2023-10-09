@@ -1,6 +1,6 @@
 import { dirname, extname, resolve } from 'path'
 
-import { build, BuildOptions } from 'esbuild'
+import { build } from 'esbuild'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
@@ -14,7 +14,6 @@ import { NODE_BUNDLER } from '../types.js'
 
 type Transformer = {
   aliases: Map<string, string>
-  bundle?: boolean
   bundledPaths?: string[]
   format: ModuleFormat
   newMainFile?: string
@@ -88,7 +87,6 @@ export const getTransformer = async (
 
     return {
       ...transformer,
-      bundle: true,
       bundledPaths: [],
       newMainFile,
     }
@@ -109,26 +107,17 @@ export const transform = async ({ bundle = false, config, format, name, path }: 
   // The version of ECMAScript to use as the build target. This will determine
   // whether certain features are transpiled down or left untransformed.
   const nodeTarget = getBundlerTarget(config.nodeVersion)
-  const bundleOptions: BuildOptions = {
-    bundle: false,
-  }
-
-  if (bundle) {
-    bundleOptions.bundle = true
-    bundleOptions.packages = 'external'
-
-    if (format === MODULE_FORMAT.ESM) {
-      bundleOptions.banner = { js: CJS_SHIM }
-    }
-  }
+  const banner = format === MODULE_FORMAT.ESM ? { js: CJS_SHIM } : undefined
 
   try {
     const transpiled = await build({
-      ...bundleOptions,
+      banner,
+      bundle: true,
       entryPoints: [path],
       format,
       logLevel: 'error',
       metafile: true,
+      packages: 'external',
       platform: 'node',
       sourcemap: Boolean(config.nodeSourcemap),
       target: [nodeTarget],

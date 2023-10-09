@@ -130,7 +130,6 @@ const traceFilesAndTranspile = async function ({
         // between ESM and CJS works) and when we want to transpile TypeScript.
         if (transformer && isMainFile) {
           const { bundledPaths, transpiled } = await transform({
-            bundle: transformer?.bundle,
             config,
             name,
             format: transformer?.format,
