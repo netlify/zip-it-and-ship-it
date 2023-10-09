@@ -10,6 +10,7 @@ import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension, safeUnlink } from '../../../../utils/fs.js'
 import { glob } from '../../../../utils/matching.js'
 import { RUNTIME } from '../../../runtime.js'
+import { CJS_SHIM } from '../../utils/esm_cjs_compat.js'
 import { getFileExtensionForFormat, MODULE_FORMAT } from '../../utils/module_format.js'
 import { NODE_BUNDLER } from '../types.js'
 
@@ -135,20 +136,9 @@ export const bundleJsFile = async function ({
   // The extension of the output file.
   const outputExtension = getFileExtensionForFormat(moduleFormat, featureFlags, runtimeAPIVersion)
 
-  // We add this banner so that calls to require() still work in ESM modules, especially when importing node built-ins
-  // We have to do this until this is fixed in esbuild: https://github.com/evanw/esbuild/pull/2067
-  const esmJSBanner = `
-import {createRequire as ___nfyCreateRequire} from "module";
-import {fileURLToPath as ___nfyFileURLToPath} from "url";
-import {dirname as ___nfyPathDirname} from "path";
-let __filename=___nfyFileURLToPath(import.meta.url);
-let __dirname=___nfyPathDirname(___nfyFileURLToPath(import.meta.url));
-let require=___nfyCreateRequire(import.meta.url);
-`
-
   try {
     const { metafile = { inputs: {}, outputs: {} }, warnings } = await build({
-      banner: moduleFormat === MODULE_FORMAT.ESM ? { js: esmJSBanner } : undefined,
+      banner: moduleFormat === MODULE_FORMAT.ESM ? { js: CJS_SHIM } : undefined,
       bundle: true,
       entryPoints: [srcFile],
       external,

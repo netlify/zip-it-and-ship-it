@@ -35,7 +35,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
       for (const entry of files) {
         expect(entry.bundler).toBe('nft')
-        expect(entry.jsModuleFormat).toBe('cjs')
+        expect(entry.outputModuleFormat).toBe('cjs')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -63,7 +63,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
       for (const entry of files) {
         expect(entry.bundler).toBe('nft')
-        expect(entry.jsModuleFormat).toBe('esm')
+        expect(entry.outputModuleFormat).toBe('esm')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -93,7 +93,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
       for (const entry of files) {
         expect(entry.bundler).toBe('nft')
-        expect(entry.jsModuleFormat).toBe('cjs')
+        expect(entry.outputModuleFormat).toBe('cjs')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -122,7 +122,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
       for (const entry of files) {
         expect(entry.bundler).toBe('nft')
-        expect(entry.jsModuleFormat).toBe('cjs')
+        expect(entry.outputModuleFormat).toBe('cjs')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -159,7 +159,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       const [entry] = files
 
       expect(entry.bundler).toBe('nft')
-      expect(entry.jsModuleFormat).toBe('esm')
+      expect(entry.outputModuleFormat).toBe('esm')
       expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
       expect(entry.runtimeAPIVersion).toBe(2)
 
@@ -177,6 +177,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         'lib/helper3.ts',
         'lib/helper4.js',
         'lib/helper5.mjs',
+        'lib/helper6.js',
       ]
 
       for (const relativePath of expectedInputs) {
@@ -221,7 +222,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       const [entry] = files
 
       expect(entry.bundler).toBe('nft')
-      expect(entry.jsModuleFormat).toBe('cjs')
+      expect(entry.outputModuleFormat).toBe('cjs')
       expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
       expect(entry.runtimeAPIVersion).toBe(2)
 
@@ -276,7 +277,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
     for (const entry of files) {
       expect(entry.bundler).toBe('nft')
-      expect(entry.jsModuleFormat).toBe('cjs')
+      expect(entry.outputModuleFormat).toBe('cjs')
       expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
       expect(entry.runtimeAPIVersion).toBe(2)
     }
@@ -309,7 +310,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
     for (const entry of files) {
       expect(entry.bundler).toBe('nft')
-      expect(entry.jsModuleFormat).toBe('esm')
+      expect(entry.outputModuleFormat).toBe('esm')
       expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
       expect(entry.runtimeAPIVersion).toBe(2)
     }

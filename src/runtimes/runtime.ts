@@ -50,7 +50,7 @@ export interface ZipFunctionResult {
   inputs?: string[]
   includedFiles?: string[]
   invocationMode?: InvocationMode
-  jsModuleFormat?: ModuleFormat
+  outputModuleFormat?: ModuleFormat
   nativeNodeModules?: object
   path: string
   runtimeVersion?: string

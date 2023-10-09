@@ -140,7 +140,7 @@ const zipFunction: ZipFunction = async function ({
     invocationMode = INVOCATION_MODE.Background
   }
 
-  const jsModuleFormat =
+  const outputModuleFormat =
     extname(finalMainFile) === MODULE_FILE_EXTENSION.MJS ? MODULE_FORMAT.ESM : MODULE_FORMAT.COMMONJS
 
   return {
@@ -154,7 +154,7 @@ const zipFunction: ZipFunction = async function ({
     includedFiles,
     staticAnalysisResult,
     invocationMode,
-    jsModuleFormat,
+    outputModuleFormat,
     nativeNodeModules,
     path: zipPath.path,
     runtimeVersion:
