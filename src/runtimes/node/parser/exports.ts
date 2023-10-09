@@ -9,60 +9,87 @@ import type {
 } from '@babel/types'
 
 import type { ISCExport } from '../in_source_config/index.js'
+import { ModuleFormat, MODULE_FORMAT } from '../utils/module_format.js'
 
 import type { BindingMethod } from './bindings.js'
-import { isModuleExports } from './helpers.js'
+import { isESMImportExport, isModuleExports } from './helpers.js'
 
 type PrimitiveResult = string | number | boolean | Record<string, unknown> | undefined | null | PrimitiveResult[]
 
-// Finds and returns the following types of exports in an AST:
-// 1. Named `handler` function exports
-// 2. Default function export
-// 3. Named `config` object export
-export const getExports = (nodes: Statement[], getAllBindings: BindingMethod) => {
+/**
+ * Traverses a list of nodes and returns:
+ *
+ * 1. Named `config` object export (ESM or CJS)
+ * 2. Whether there is a default export (ESM or CJS)
+ * 3. Named `handler` function exports (ESM or CJS)
+ * 4. The module format syntax used in the file: if any `import` or `export`
+ *    declarations are found, this is ESM; if not, this is CJS
+ */
+export const traverseNodes = (nodes: Statement[], getAllBindings: BindingMethod) => {
   const handlerExports: ISCExport[] = []
 
   let configExport: Record<string, unknown> = {}
-  let defaultExport: ExportDefaultDeclaration | undefined
+  let hasDefaultExport = false
+  let inputModuleFormat: ModuleFormat = MODULE_FORMAT.COMMONJS
 
   nodes.forEach((node) => {
-    const esmExports = getMainExportFromESM(node, getAllBindings)
+    if (isESMImportExport(node)) {
+      inputModuleFormat = MODULE_FORMAT.ESM
+    }
 
-    if (esmExports.length !== 0) {
-      handlerExports.push(...esmExports)
+    const esmHandlerExports = getNamedESMExport(node, 'handler', getAllBindings)
+
+    if (esmHandlerExports.length !== 0) {
+      handlerExports.push(...esmHandlerExports)
 
       return
     }
 
-    const cjsExports = getMainExportFromCJS(node)
+    const cjsHandlerExports = getCJSExports(node, 'handler')
 
-    if (cjsExports.length !== 0) {
-      handlerExports.push(...cjsExports)
-
-      return
-    }
-
-    if (isDefaultExport(node)) {
-      defaultExport = node
+    if (cjsHandlerExports.length !== 0) {
+      handlerExports.push(...cjsHandlerExports)
 
       return
     }
 
-    const config = parseConfigExport(node)
+    if (isESMDefaultExport(node)) {
+      hasDefaultExport = true
 
-    if (config !== undefined) {
-      configExport = config
+      return
+    }
+
+    const cjsDefaultExports = getCJSExports(node, 'default')
+
+    if (cjsDefaultExports.length !== 0) {
+      hasDefaultExport = true
+
+      return
+    }
+
+    const esmConfig = parseConfigESMExport(node)
+
+    if (esmConfig !== undefined) {
+      configExport = esmConfig
+
+      return
+    }
+
+    const cjsConfigExports = getCJSExports(node, 'config')
+
+    if (cjsConfigExports.length !== 0 && cjsConfigExports[0].type === 'object-expression') {
+      configExport = cjsConfigExports[0].object
     }
   })
 
-  return { configExport, defaultExport, handlerExports }
+  return { configExport, handlerExports, hasDefaultExport, inputModuleFormat }
 }
 
 // Finds the main handler export in a CJS AST.
-const getMainExportFromCJS = (node: Statement) => {
+const getCJSExports = (node: Statement, name: string) => {
   const handlerPaths = [
-    ['module', 'exports', 'handler'],
-    ['exports', 'handler'],
+    ['module', 'exports', name],
+    ['exports', name],
   ]
 
   return handlerPaths.flatMap((handlerPath) => {
@@ -74,8 +101,12 @@ const getMainExportFromCJS = (node: Statement) => {
   })
 }
 
-// Finds the main handler export in an ESM AST.
-const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) => {
+/**
+ * Finds a named ESM export with a given name. It's capable of finding exports
+ * with a variable declaration (`export const foo = "bar"`), but also resolve
+ * bindings and find things like `const baz = "1"; export { baz as foo }`.
+ */
+const getNamedESMExport = (node: Statement, name: string, getAllBindings: BindingMethod) => {
   if (node.type !== 'ExportNamedDeclaration' || node.exportKind !== 'value') {
     return []
   }
@@ -83,7 +114,7 @@ const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) =>
   const { declaration, specifiers } = node
 
   if (specifiers?.length > 0) {
-    return getExportsFromBindings(specifiers, getAllBindings)
+    return getExportsFromBindings(specifiers, name, getAllBindings)
   }
 
   if (declaration?.type !== 'VariableDeclaration') {
@@ -93,7 +124,7 @@ const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) =>
   const handlerDeclaration = declaration.declarations.find((childDeclaration) => {
     const { id, type } = childDeclaration
 
-    return type === 'VariableDeclarator' && id.type === 'Identifier' && id.name === 'handler'
+    return type === 'VariableDeclarator' && id.type === 'Identifier' && id.name === name
   })
 
   const exports = getExportsFromExpression(handlerDeclaration?.init)
@@ -101,27 +132,33 @@ const getMainExportFromESM = (node: Statement, getAllBindings: BindingMethod) =>
   return exports
 }
 
-// Check if the Node is an ExportSpecifier that has a named export called `handler`
-// either with Identifier `export { handler }`
-// or with StringLiteral `export { x as "handler" }`
-const isHandlerExport = (node: ExportNamedDeclaration['specifiers'][number]): node is ExportSpecifier => {
+/**
+ * Check if the node is an `ExportSpecifier` that has a named export with
+ * the given name, either as:
+ * - `export { handler }`, or
+ * - `export { x as "handler" }`
+ */
+const isNamedExport = (node: ExportNamedDeclaration['specifiers'][number], name: string): node is ExportSpecifier => {
   const { type, exported } = node
 
   return (
     type === 'ExportSpecifier' &&
-    ((exported.type === 'Identifier' && exported.name === 'handler') ||
-      (exported.type === 'StringLiteral' && exported.value === 'handler'))
+    ((exported.type === 'Identifier' && exported.name === name) ||
+      (exported.type === 'StringLiteral' && exported.value === name))
   )
 }
 
 // Returns whether a given node is a default export declaration.
-const isDefaultExport = (node: Statement): node is ExportDefaultDeclaration => node.type === 'ExportDefaultDeclaration'
+const isESMDefaultExport = (node: Statement): node is ExportDefaultDeclaration =>
+  node.type === 'ExportDefaultDeclaration'
 
-// Finds a `config` named export that maps to an object variable declaration,
-// like:
-//
-// export const config = { prop1: "value 1" }
-const parseConfigExport = (node: Statement) => {
+/**
+ * Finds a `config` named CJS export that maps to an object variable
+ * declaration, like:
+ *
+ * `export const config = { prop1: "value 1" }`
+ */
+const parseConfigESMExport = (node: Statement) => {
   if (
     node.type === 'ExportNamedDeclaration' &&
     node.declaration?.type === 'VariableDeclaration' &&
@@ -187,13 +224,20 @@ const parsePrimitive = (exp: Expression | PatternLike): PrimitiveResult => {
   }
 }
 
-// Tries to resolve the export from a binding (variable)
-// for example `let handler; handler = () => {}; export { handler }` would
-// resolve correctly to the handler function
-const getExportsFromBindings = (specifiers: ExportNamedDeclaration['specifiers'], getAllBindings: BindingMethod) => {
-  const specifier = specifiers.find(isHandlerExport)
+/**
+ * Tries to resolve the export with a given name from a binding (variable).
+ * For example, the following would resolve correctly to the handler function:
+ *
+ * `let handler; handler = () => {}; export { handler }`
+ */
+const getExportsFromBindings = (
+  specifiers: ExportNamedDeclaration['specifiers'],
+  name: string,
+  getAllBindings: BindingMethod,
+) => {
+  const specifier = specifiers.find((node) => isNamedExport(node, name))
 
-  if (!specifier) {
+  if (!specifier || specifier.type !== 'ExportSpecifier') {
     return []
   }
 
@@ -213,6 +257,12 @@ const getExportsFromExpression = (node: Expression | undefined | null): ISCExpor
       }
 
       return [{ args, local: callee.name, type: 'call-expression' }]
+    }
+
+    case 'ObjectExpression': {
+      const object = parseObject(node)
+
+      return [{ object, type: 'object-expression' }]
     }
 
     default: {

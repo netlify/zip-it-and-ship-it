@@ -9,7 +9,7 @@ import { GetSrcFilesFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.j
 import { getBundler, getBundlerName } from './bundlers/index.js'
 import { NODE_BUNDLER } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
-import { findISCDeclarationsInPath } from './in_source_config/index.js'
+import { parseFile } from './in_source_config/index.js'
 import { MODULE_FORMAT, MODULE_FILE_EXTENSION } from './utils/module_format.js'
 import { getNodeRuntime, getNodeRuntimeForV2 } from './utils/node_runtime.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
@@ -61,8 +61,8 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath, entryFilename: '' }
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(mainFile, { functionName: name, logger })
-  const runtimeAPIVersion = inSourceConfig.runtimeAPIVersion === 2 ? 2 : 1
+  const staticAnalysisResult = await parseFile(mainFile, { functionName: name, logger })
+  const runtimeAPIVersion = staticAnalysisResult.runtimeAPIVersion === 2 ? 2 : 1
 
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
   const bundlerName = await getBundlerName({
@@ -128,7 +128,7 @@ const zipFunction: ZipFunction = async function ({
 
   // Getting the invocation mode from ISC, in case the function is using the
   // `stream` helper.
-  let { invocationMode } = inSourceConfig
+  let { invocationMode } = staticAnalysisResult
 
   // If we're using the V2 API, force the invocation to "stream".
   if (runtimeAPIVersion === 2) {
@@ -152,7 +152,7 @@ const zipFunction: ZipFunction = async function ({
     generator: config?.generator || getInternalValue(isInternal),
     inputs,
     includedFiles,
-    inSourceConfig,
+    staticAnalysisResult,
     invocationMode,
     outputModuleFormat,
     nativeNodeModules,

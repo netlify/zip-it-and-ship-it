@@ -4,7 +4,8 @@ import { Config } from './config.js'
 import { FeatureFlags, getFlags } from './feature_flags.js'
 import { FunctionSource } from './function.js'
 import { getFunctionFromPath, getFunctionsFromPaths } from './runtimes/index.js'
-import { findISCDeclarationsInPath, ISCValues } from './runtimes/node/in_source_config/index.js'
+import { parseFile, StaticAnalysisResult } from './runtimes/node/in_source_config/index.js'
+import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { GetSrcFilesFunction, RuntimeName, RUNTIME } from './runtimes/runtime.js'
 import { RuntimeCache } from './utils/cache.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
@@ -27,6 +28,7 @@ export interface ListedFunction {
   schedule?: string
   displayName?: string
   generator?: string
+  inputModuleFormat?: ModuleFormat
 }
 
 type ListedFunctionFile = ListedFunction & {
@@ -42,33 +44,34 @@ interface ListFunctionsOptions {
 }
 
 interface AugmentedFunctionSource extends FunctionSource {
-  inSourceConfig?: ISCValues
+  staticAnalysisResult?: StaticAnalysisResult
 }
 
-const augmentWithISC = async (func: FunctionSource): Promise<AugmentedFunctionSource> => {
-  // ISC is currently only supported in JavaScript and TypeScript functions
-  // and only supports scheduled functions.
+const augmentWithStaticAnalysis = async (func: FunctionSource): Promise<AugmentedFunctionSource> => {
   if (func.runtime.name !== RUNTIME.JAVASCRIPT) {
     return func
   }
 
-  const inSourceConfig = await findISCDeclarationsInPath(func.mainFile, {
+  const staticAnalysisResult = await parseFile(func.mainFile, {
     functionName: func.name,
     logger: getLogger(),
   })
 
-  return { ...func, inSourceConfig }
+  return { ...func, staticAnalysisResult }
+}
+
+interface ListFunctionsOptions {
+  basePath?: string
+  config?: Config
+  configFileDirectories?: string[]
+  featureFlags?: FeatureFlags
+  parseISC?: boolean
 }
 
 // List all Netlify Functions main entry files for a specific directory
 export const listFunctions = async function (
   relativeSrcFolders: string | string[],
-  {
-    featureFlags: inputFeatureFlags,
-    config,
-    configFileDirectories,
-    parseISC = false,
-  }: { featureFlags?: FeatureFlags; config?: Config; configFileDirectories?: string[]; parseISC?: boolean } = {},
+  { featureFlags: inputFeatureFlags, config, configFileDirectories, parseISC = false }: ListFunctionsOptions = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
   const srcFolders = resolveFunctionsDirectories(relativeSrcFolders)
@@ -76,20 +79,25 @@ export const listFunctions = async function (
   const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
-  const augmentedFunctions = parseISC ? await Promise.all(functions.map((func) => augmentWithISC(func))) : functions
+  const augmentedFunctions = parseISC
+    ? await Promise.all(functions.map((func) => augmentWithStaticAnalysis(func)))
+    : functions
 
   return augmentedFunctions.map(getListedFunction)
+}
+
+interface ListFunctionOptions {
+  basePath?: string
+  config?: Config
+  configFileDirectories?: string[]
+  featureFlags?: FeatureFlags
+  parseISC?: boolean
 }
 
 // Finds a function at a specific path.
 export const listFunction = async function (
   path: string,
-  {
-    featureFlags: inputFeatureFlags,
-    config,
-    configFileDirectories,
-    parseISC = false,
-  }: { featureFlags?: FeatureFlags; config?: Config; configFileDirectories?: string[]; parseISC?: boolean } = {},
+  { featureFlags: inputFeatureFlags, config, configFileDirectories, parseISC = false }: ListFunctionOptions = {},
 ) {
   const featureFlags = getFlags(inputFeatureFlags)
   const cache = new RuntimeCache()
@@ -99,7 +107,7 @@ export const listFunction = async function (
     return
   }
 
-  const augmentedFunction = parseISC ? await augmentWithISC(func) : func
+  const augmentedFunction = parseISC ? await augmentWithStaticAnalysis(func) : func
 
   return getListedFunction(augmentedFunction)
 }
@@ -121,7 +129,9 @@ export const listFunctionsFiles = async function (
   const cache = new RuntimeCache()
   const functionsMap = await getFunctionsFromPaths(paths, { cache, config, configFileDirectories, featureFlags })
   const functions = [...functionsMap.values()]
-  const augmentedFunctions = parseISC ? await Promise.all(functions.map((func) => augmentWithISC(func))) : functions
+  const augmentedFunctions = parseISC
+    ? await Promise.all(functions.map((func) => augmentWithStaticAnalysis(func)))
+    : functions
   const listedFunctionsFiles = await Promise.all(
     augmentedFunctions.map((func) => getListedFunctionFiles(func, { basePath, featureFlags })),
   )
@@ -132,7 +142,7 @@ export const listFunctionsFiles = async function (
 const getListedFunction = function ({
   config,
   extension,
-  inSourceConfig,
+  staticAnalysisResult,
   mainFile,
   name,
   runtime,
@@ -144,8 +154,9 @@ const getListedFunction = function ({
     mainFile,
     name,
     runtime: runtime.name,
-    runtimeAPIVersion: inSourceConfig ? inSourceConfig?.runtimeAPIVersion ?? 1 : undefined,
-    schedule: inSourceConfig?.schedule ?? config.schedule,
+    runtimeAPIVersion: staticAnalysisResult ? staticAnalysisResult?.runtimeAPIVersion ?? 1 : undefined,
+    schedule: staticAnalysisResult?.schedule ?? config.schedule,
+    inputModuleFormat: staticAnalysisResult?.inputModuleFormat,
   }
 }
 
@@ -156,7 +167,7 @@ const getListedFunctionFiles = async function (
   const srcFiles = await getSrcFiles({
     ...func,
     ...options,
-    runtimeAPIVersion: func.inSourceConfig?.runtimeAPIVersion ?? 1,
+    runtimeAPIVersion: func.staticAnalysisResult?.runtimeAPIVersion ?? 1,
   })
 
   return srcFiles.map((srcFile) => ({ ...getListedFunction(func), srcFile, extension: extname(srcFile) }))

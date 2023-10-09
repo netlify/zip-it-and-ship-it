@@ -8,20 +8,25 @@ import { getRoutes, Route } from '../../../utils/routes.js'
 import { RUNTIME } from '../../runtime.js'
 import { NODE_BUNDLER } from '../bundlers/types.js'
 import { createBindingsMethod } from '../parser/bindings.js'
-import { getExports } from '../parser/exports.js'
+import { traverseNodes } from '../parser/exports.js'
 import { getImports } from '../parser/imports.js'
 import { safelyParseSource, safelyReadSource } from '../parser/index.js'
+import type { ModuleFormat } from '../utils/module_format.js'
 
 import { parse as parseSchedule } from './properties/schedule.js'
 
 export const IN_SOURCE_CONFIG_MODULE = '@netlify/functions'
 
 export type ISCValues = {
-  invocationMode?: InvocationMode
   routes?: Route[]
-  runtimeAPIVersion?: number
   schedule?: string
   methods?: string[]
+}
+
+export interface StaticAnalysisResult extends ISCValues {
+  inputModuleFormat?: ModuleFormat
+  invocationMode?: InvocationMode
+  runtimeAPIVersion?: number
 }
 
 interface FindISCDeclarationsOptions {
@@ -43,22 +48,6 @@ const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean
       { functionName, runtime: RUNTIME.JAVASCRIPT },
     )
   }
-}
-
-// Parses a JS/TS file and looks for in-source config declarations. It returns
-// an array of all declarations found, with `property` indicating the name of
-// the property and `data` its value.
-export const findISCDeclarationsInPath = async (
-  sourcePath: string,
-  { functionName, logger }: FindISCDeclarationsOptions,
-): Promise<ISCValues> => {
-  const source = await safelyReadSource(sourcePath)
-
-  if (source === null) {
-    return {}
-  }
-
-  return findISCDeclarations(source, { functionName, logger })
 }
 
 /**
@@ -84,10 +73,32 @@ const normalizeMethods = (input: unknown, name: string): string[] | undefined =>
   })
 }
 
-export const findISCDeclarations = (
+/**
+ * Loads a file at a given path, parses it into an AST, and returns a series of
+ * data points, such as in-source configuration properties and other metadata.
+ */
+export const parseFile = async (
+  sourcePath: string,
+  { functionName, logger }: FindISCDeclarationsOptions,
+): Promise<StaticAnalysisResult> => {
+  const source = await safelyReadSource(sourcePath)
+
+  if (source === null) {
+    return {}
+  }
+
+  return parseSource(source, { functionName, logger })
+}
+
+/**
+ * Takes a JS/TS source as a string, parses it into an AST, and returns a
+ * series of data points, such as in-source configuration properties and
+ * other metadata.
+ */
+export const parseSource = (
   source: string,
   { functionName, logger }: FindISCDeclarationsOptions,
-): ISCValues => {
+): StaticAnalysisResult => {
   const ast = safelyParseSource(source)
 
   if (ast === null) {
@@ -101,27 +112,28 @@ export const findISCDeclarations = (
   let scheduleFound = false
 
   const getAllBindings = createBindingsMethod(ast.body)
-  const { configExport, defaultExport, handlerExports } = getExports(ast.body, getAllBindings)
-  const isV2API = handlerExports.length === 0 && defaultExport !== undefined
+  const { configExport, handlerExports, hasDefaultExport, inputModuleFormat } = traverseNodes(ast.body, getAllBindings)
+  const isV2API = handlerExports.length === 0 && hasDefaultExport
 
   if (isV2API) {
-    const config: ISCValues = {
+    const result: StaticAnalysisResult = {
+      inputModuleFormat,
       runtimeAPIVersion: 2,
     }
 
     logger.system('detected v2 function')
 
     if (typeof configExport.schedule === 'string') {
-      config.schedule = configExport.schedule
+      result.schedule = configExport.schedule
     }
 
     if (configExport.method !== undefined) {
-      config.methods = normalizeMethods(configExport.method, functionName)
+      result.methods = normalizeMethods(configExport.method, functionName)
     }
 
-    config.routes = getRoutes(configExport.path, functionName, config.methods ?? [])
+    result.routes = getRoutes(configExport.path, functionName, result.methods ?? [])
 
-    return config
+    return result
   }
 
   const iscExports = handlerExports
@@ -171,7 +183,7 @@ export const findISCDeclarations = (
 
   const mergedExports: ISCValues = iscExports.reduce((acc, obj) => ({ ...acc, ...obj }), {})
 
-  return { ...mergedExports, runtimeAPIVersion: 1 }
+  return { ...mergedExports, inputModuleFormat, runtimeAPIVersion: 1 }
 }
 
 export type ISCHandlerArg = ArgumentPlaceholder | Expression | SpreadElement | JSXNamespacedName
@@ -181,5 +193,9 @@ export type ISCExportWithCallExpression = {
   args: ISCHandlerArg[]
   local: string
 }
+export type ISCExportWithObject = {
+  type: 'object-expression'
+  object: Record<string, unknown>
+}
 export type ISCExportOther = { type: 'other' }
-export type ISCExport = ISCExportWithCallExpression | ISCExportOther
+export type ISCExport = ISCExportWithCallExpression | ISCExportWithObject | ISCExportOther
