@@ -6,7 +6,7 @@ import { name as helper3 } from './lib/helper3'
 import { name as helper4 } from './lib/helper4.js'
 import { name as helper5 } from './lib/helper5.mjs'
 
-export default async (req: Request) => {
+export default async () => {
   // We're in CJS, so importing a ESM package must use a dynamic import.
   const { default: esm } = await import('esm-module')
 
