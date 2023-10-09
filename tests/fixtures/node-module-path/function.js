@@ -1,3 +1,3 @@
-const packageJson = require('require-package-name/package.json')
+const packageJson = require('fake-module/package.json')
 
 module.exports = typeof packageJson === 'object'

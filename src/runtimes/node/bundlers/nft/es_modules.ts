@@ -10,7 +10,7 @@ import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
 
-import { transpile } from './transpile.js'
+import { transpileESMToCJS } from './transpile.js'
 
 const getPatchedESMPackages = async (packages: string[], cache: RuntimeCache) => {
   const patchedPackages = await Promise.all(packages.map((path) => patchESMPackage(path, cache)))
@@ -191,9 +191,8 @@ const transpileESM = async ({
   await Promise.all(
     pathsToTranspile.map(async (path) => {
       const absolutePath = resolvePath(path, basePath)
-      const transpiled = await transpile({
+      const transpiled = await transpileESMToCJS({
         config,
-        format: MODULE_FORMAT.COMMONJS,
         name,
         path: absolutePath,
       })
