@@ -62,9 +62,7 @@ jobs:
           ${{ secrets.NETLIFY_TOKEN }} --cwd demos/default --functions .netlify/functions > .netlify-deploy-log.json
         working-directory: test-site
       - name: Parsing deploy result
-        run: |
-          node -e "console.log('deploy_log_url=' + require('./.netlify-deploy-log.json').logs)" >> $GITHUB_ENV
-          node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
+        run: node scripts/parse_deploy_result.mjs ./.netlify-deploy-log.json >> $GITHUB_ENV
         working-directory: test-site
       - name: Cypress run
         uses: cypress-io/github-action@v5
