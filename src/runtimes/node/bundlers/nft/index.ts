@@ -14,8 +14,8 @@ import { MODULE_FILE_EXTENSION } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
-import { bundle as bundleWithEsbuild, getBundler } from './bundler.js'
 import { processESM } from './es_modules.js'
+import { transform, getTransformer } from './transformer.js'
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -110,7 +110,7 @@ const traceFilesAndTranspile = async function ({
   repositoryRoot?: string
   runtimeAPIVersion: number
 }) {
-  const bundler = await getBundler(runtimeAPIVersion, mainFile, repositoryRoot)
+  const transformer = await getTransformer(runtimeAPIVersion, mainFile, repositoryRoot)
   const {
     fileList: dependencyPaths,
     esmFileList,
@@ -125,13 +125,15 @@ const traceFilesAndTranspile = async function ({
       try {
         const isMainFile = path === mainFile
 
-        // If there is a bundler defined and this is the main file, we bundle.
-        if (bundler && isMainFile) {
-          const { bundledPaths, transpiled } = await bundleWithEsbuild({
-            bundleLocalImports: bundler?.bundle,
+        // If there is a transformer set and this is the main file, transform.
+        // We do this when we want to bundle local imports (so that importing
+        // between ESM and CJS works) and when we want to transpile TypeScript.
+        if (transformer && isMainFile) {
+          const { bundledPaths, transpiled } = await transform({
+            bundle: transformer?.bundle,
             config,
             name,
-            format: bundler?.format,
+            format: transformer?.format,
             path,
           })
 
@@ -139,17 +141,17 @@ const traceFilesAndTranspile = async function ({
           // have been set by the transformer. It's fine to do this, since the
           // only place where this file will be imported from is our entry file
           // and we'll know the right path to use.
-          const newPath = bundler?.newMainFile ?? getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
+          const newPath = transformer?.newMainFile ?? getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
           // Overriding the contents of the `.ts` file.
-          bundler?.rewrites.set(path, transpiled)
+          transformer?.rewrites.set(path, transpiled)
 
           // Rewriting the `.ts` path to `.js` in the bundle.
-          bundler?.aliases.set(path, newPath)
+          transformer?.aliases.set(path, newPath)
 
           // Registering the input files that were bundled into the transpiled
           // file.
-          bundler?.bundledPaths?.push(...bundledPaths)
+          transformer?.bundledPaths?.push(...bundledPaths)
 
           return transpiled
         }
@@ -182,13 +184,13 @@ const traceFilesAndTranspile = async function ({
   })
   const normalizedTracedPaths = [...dependencyPaths].map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
 
-  if (bundler) {
+  if (transformer) {
     return {
-      aliases: bundler.aliases,
-      bundledPaths: bundler.bundledPaths,
-      mainFile: bundler.newMainFile ?? getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
-      moduleFormat: bundler.format,
-      rewrites: bundler.rewrites,
+      aliases: transformer.aliases,
+      bundledPaths: transformer.bundledPaths,
+      mainFile: transformer.newMainFile ?? getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
+      moduleFormat: transformer.format,
+      rewrites: transformer.rewrites,
       tracedPaths: normalizedTracedPaths,
     }
   }

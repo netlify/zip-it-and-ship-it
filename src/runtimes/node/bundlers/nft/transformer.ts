@@ -12,7 +12,7 @@ import { getClosestPackageJson } from '../../utils/package_json.js'
 import { getBundlerTarget } from '../esbuild/bundler_target.js'
 import { NODE_BUNDLER } from '../types.js'
 
-type TypeScriptTransformer = {
+type Transformer = {
   aliases: Map<string, string>
   bundle?: boolean
   bundledPaths?: string[]
@@ -59,11 +59,11 @@ const getModuleFormat = async (
   return MODULE_FORMAT.COMMONJS
 }
 
-export const getBundler = async (
+export const getTransformer = async (
   runtimeAPIVersion: number,
   mainFile: string,
   repositoryRoot?: string,
-): Promise<TypeScriptTransformer | undefined> => {
+): Promise<Transformer | undefined> => {
   const isTypeScript = tsExtensions.has(extname(mainFile))
 
   if (runtimeAPIVersion === 1 && !isTypeScript) {
@@ -97,15 +97,15 @@ export const getBundler = async (
   return transformer
 }
 
-interface TranspileTSOptions {
-  bundleLocalImports?: boolean
+interface TransformOptions {
+  bundle?: boolean
   config: FunctionConfig
   format?: ModuleFormat
   name: string
   path: string
 }
 
-export const bundle = async ({ bundleLocalImports = false, config, format, name, path }: TranspileTSOptions) => {
+export const transform = async ({ bundle = false, config, format, name, path }: TransformOptions) => {
   // The version of ECMAScript to use as the build target. This will determine
   // whether certain features are transpiled down or left untransformed.
   const nodeTarget = getBundlerTarget(config.nodeVersion)
@@ -113,7 +113,7 @@ export const bundle = async ({ bundleLocalImports = false, config, format, name,
     bundle: false,
   }
 
-  if (bundleLocalImports) {
+  if (bundle) {
     bundleOptions.bundle = true
     bundleOptions.packages = 'external'
 
@@ -134,9 +134,7 @@ export const bundle = async ({ bundleLocalImports = false, config, format, name,
       target: [nodeTarget],
       write: false,
     })
-    const bundledPaths = bundleLocalImports
-      ? Object.keys(transpiled.metafile.inputs).map((inputPath) => resolve(inputPath))
-      : []
+    const bundledPaths = bundle ? Object.keys(transpiled.metafile.inputs).map((inputPath) => resolve(inputPath)) : []
 
     return { bundledPaths, transpiled: transpiled.outputFiles[0].text }
   } catch (error) {
