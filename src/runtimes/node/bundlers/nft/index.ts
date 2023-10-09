@@ -38,10 +38,11 @@ const bundle: BundleFunction = async ({
   )
   const {
     aliases,
+    bundledPaths = [],
     mainFile: normalizedMainFile,
     moduleFormat,
-    paths: dependencyPaths,
     rewrites,
+    tracedPaths,
   } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
     cache,
@@ -54,17 +55,21 @@ const bundle: BundleFunction = async ({
     runtimeAPIVersion,
   })
   const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
-  const filteredIncludedPaths = [...filterExcludedPaths(dependencyPaths, excludePatterns), ...includedPaths]
+  const filteredIncludedPaths = [...filterExcludedPaths(tracedPaths, excludePatterns), ...includedPaths]
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
 
   // Sorting the array to make the checksum deterministic.
   const srcFiles = [...filteredIncludedPaths].sort()
 
+  // The inputs are the union of any traced paths (included as files in the end
+  // result) and any bundled paths (merged together in the bundle).
+  const inputs = bundledPaths.length === 0 ? tracedPaths : [...new Set([...tracedPaths, ...bundledPaths])]
+
   return {
     aliases,
     basePath: getBasePath(dirnames),
     includedFiles: includedPaths,
-    inputs: dependencyPaths,
+    inputs,
     mainFile: normalizedMainFile,
     moduleFormat,
     rewrites,
@@ -125,6 +130,7 @@ const getTSModuleFormat = async (
 type TypeScriptTransformer = {
   aliases: Map<string, string>
   bundle?: boolean
+  bundledPaths?: string[]
   format: ModuleFormat
   newMainFile?: string
   rewrites: Map<string, string>
@@ -160,6 +166,7 @@ const getTypeScriptTransformer = async (
     return {
       ...transformer,
       bundle: true,
+      bundledPaths: [],
       newMainFile,
     }
   }
@@ -204,7 +211,7 @@ const traceFilesAndTranspile = async function ({
         const extension = extname(path)
 
         if (tsExtensions.has(extension)) {
-          const transpiledSource = await transpileTS({
+          const { bundledPaths, transpiled } = await transpileTS({
             bundle: tsTransformer?.bundle,
             config,
             name,
@@ -223,12 +230,16 @@ const traceFilesAndTranspile = async function ({
               : getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
           // Overriding the contents of the `.ts` file.
-          tsTransformer?.rewrites.set(path, transpiledSource)
+          tsTransformer?.rewrites.set(path, transpiled)
 
           // Rewriting the `.ts` path to `.js` in the bundle.
           tsTransformer?.aliases.set(path, newPath)
 
-          return transpiledSource
+          // Registering the input files that were bundled into the transpiled
+          // file.
+          tsTransformer?.bundledPaths?.push(...bundledPaths)
+
+          return transpiled
         }
 
         return await cachedReadFile(cache.fileCache, path)
@@ -257,17 +268,16 @@ const traceFilesAndTranspile = async function ({
       }
     },
   })
-  const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
-    basePath ? resolve(basePath, path) : resolve(path),
-  )
+  const normalizedTracedPaths = [...dependencyPaths].map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
 
   if (tsTransformer) {
     return {
       aliases: tsTransformer.aliases,
+      bundledPaths: tsTransformer.bundledPaths,
       mainFile: tsTransformer.newMainFile ?? getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
       moduleFormat: tsTransformer.format,
-      paths: normalizedDependencyPaths,
       rewrites: tsTransformer.rewrites,
+      tracedPaths: normalizedTracedPaths,
     }
   }
 
@@ -286,8 +296,8 @@ const traceFilesAndTranspile = async function ({
   return {
     mainFile,
     moduleFormat,
-    paths: normalizedDependencyPaths,
     rewrites,
+    tracedPaths: normalizedTracedPaths,
   }
 }
 

@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { extname, join } from 'path'
 
 import { copyFile } from 'cp-file'
 
@@ -10,6 +10,7 @@ import { getBundler, getBundlerName } from './bundlers/index.js'
 import { NODE_BUNDLER } from './bundlers/types.js'
 import { findFunctionsInPaths, findFunctionInPath } from './finder.js'
 import { findISCDeclarationsInPath } from './in_source_config/index.js'
+import { MODULE_FORMAT, MODULE_FILE_EXTENSION } from './utils/module_format.js'
 import { getNodeRuntime, getNodeRuntimeForV2 } from './utils/node_runtime.js'
 import { createAliases as createPluginsModulesPathAliases, getPluginsModulesPath } from './utils/plugin_modules_path.js'
 import { zipNodeJs } from './utils/zip.js'
@@ -139,6 +140,9 @@ const zipFunction: ZipFunction = async function ({
     invocationMode = INVOCATION_MODE.Background
   }
 
+  const outputModuleFormat =
+    extname(finalMainFile) === MODULE_FILE_EXTENSION.MJS ? MODULE_FORMAT.ESM : MODULE_FORMAT.COMMONJS
+
   return {
     bundler: bundlerName,
     bundlerWarnings,
@@ -150,6 +154,7 @@ const zipFunction: ZipFunction = async function ({
     includedFiles,
     inSourceConfig,
     invocationMode,
+    outputModuleFormat,
     nativeNodeModules,
     path: zipPath.path,
     runtimeVersion:

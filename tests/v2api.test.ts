@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises'
-import { join } from 'path'
+import { join, resolve } from 'path'
 import { version as nodeVersion } from 'process'
 import { promisify } from 'util'
 
@@ -34,6 +34,8 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('cjs')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -60,6 +62,8 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('esm')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -88,6 +92,8 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('cjs')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -115,6 +121,8 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('cjs')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -138,16 +146,44 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     'Handles an ESM TypeScript function that imports both CJS and ESM modules',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('v2-api-esm-mixed-modules', {
+      const fixtureName = 'v2-api-esm-mixed-modules'
+      const { files, tmpDir } = await zipFixture(fixtureName, {
         fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
         }),
       })
 
-      for (const entry of files) {
-        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
-        expect(entry.runtimeAPIVersion).toBe(2)
+      expect(files.length).toBe(1)
+
+      const [entry] = files
+
+      expect(entry.bundler).toBe('nft')
+      expect(entry.outputModuleFormat).toBe('esm')
+      expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+      expect(entry.runtimeAPIVersion).toBe(2)
+
+      const expectedInputs = [
+        'package.json',
+        'function.ts',
+        'node_modules/cjs-module/package.json',
+        'node_modules/cjs-module/index.js',
+        'node_modules/esm-module/package.json',
+        'node_modules/esm-module/index.js',
+        'node_modules/esm-module/foo.js',
+        'node_modules/cjs-module/foo.js',
+        'lib/helper1.ts',
+        'lib/helper2.ts',
+        'lib/helper3.ts',
+        'lib/helper4.js',
+        'lib/helper5.mjs',
+        'lib/helper6.js',
+      ]
+
+      for (const relativePath of expectedInputs) {
+        const absolutePath = resolve(FIXTURES_ESM_DIR, fixtureName, relativePath)
+
+        expect(entry.inputs?.includes(absolutePath)).toBeTruthy()
       }
 
       const [{ name: archive, entryFilename }] = files
@@ -173,16 +209,43 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     'Handles a CJS TypeScript function that imports CJS modules',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
-      const { files, tmpDir } = await zipFixture('v2-api-cjs-modules', {
+      const fixtureName = 'v2-api-cjs-modules'
+      const { files, tmpDir } = await zipFixture(fixtureName, {
         fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
         }),
       })
 
-      for (const entry of files) {
-        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
-        expect(entry.runtimeAPIVersion).toBe(2)
+      expect(files.length).toBe(1)
+
+      const [entry] = files
+
+      expect(entry.bundler).toBe('nft')
+      expect(entry.outputModuleFormat).toBe('cjs')
+      expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+      expect(entry.runtimeAPIVersion).toBe(2)
+
+      const expectedInputs = [
+        'package.json',
+        'function.ts',
+        'node_modules/cjs-module/package.json',
+        'node_modules/cjs-module/index.js',
+        'node_modules/esm-module/package.json',
+        'node_modules/esm-module/index.js',
+        'node_modules/esm-module/foo.js',
+        'node_modules/cjs-module/foo.js',
+        'lib/helper1.ts',
+        'lib/helper2.ts',
+        'lib/helper3.ts',
+        'lib/helper4.js',
+        'lib/helper5.mjs',
+      ]
+
+      for (const relativePath of expectedInputs) {
+        const absolutePath = resolve(FIXTURES_ESM_DIR, fixtureName, relativePath)
+
+        expect(entry.inputs?.includes(absolutePath)).toBeTruthy()
       }
 
       const [{ name: archive, entryFilename }] = files
@@ -213,6 +276,8 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     })
 
     for (const entry of files) {
+      expect(entry.bundler).toBe('nft')
+      expect(entry.outputModuleFormat).toBe('cjs')
       expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
       expect(entry.runtimeAPIVersion).toBe(2)
     }
@@ -244,6 +309,8 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     })
 
     for (const entry of files) {
+      expect(entry.bundler).toBe('nft')
+      expect(entry.outputModuleFormat).toBe('esm')
       expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
       expect(entry.runtimeAPIVersion).toBe(2)
     }
