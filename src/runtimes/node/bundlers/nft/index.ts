@@ -1,4 +1,4 @@
-import { basename, dirname, join, normalize, resolve } from 'path'
+import { basename, dirname, extname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
@@ -10,7 +10,7 @@ import { cachedReadFile, getPathWithExtension } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import { MODULE_FILE_EXTENSION } from '../../utils/module_format.js'
+import { MODULE_FILE_EXTENSION, tsExtensions } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
@@ -110,7 +110,9 @@ const traceFilesAndTranspile = async function ({
   repositoryRoot?: string
   runtimeAPIVersion: number
 }) {
-  const transformer = await getTransformer(runtimeAPIVersion, mainFile, repositoryRoot)
+  const isTSFunction = tsExtensions.has(extname(mainFile))
+  const transformer =
+    runtimeAPIVersion === 2 || isTSFunction ? await getTransformer(runtimeAPIVersion, mainFile, repositoryRoot) : null
   const {
     fileList: dependencyPaths,
     esmFileList,
@@ -125,11 +127,13 @@ const traceFilesAndTranspile = async function ({
       try {
         const isMainFile = path === mainFile
 
-        // If there is a transformer set and this is the main file, transform.
-        // We do this when we want to bundle local imports (so that importing
-        // between ESM and CJS works) and when we want to transpile TypeScript.
-        if (transformer && isMainFile) {
+        // Transform this file if this is the main file and we're processing a
+        // V2 functions (which always bundle local imports), or if this path is
+        // a TypeScript file (which should only happen for V1 TS functions that
+        // set the bundler to "nft").
+        if ((isMainFile && transformer) || tsExtensions.has(extname(path))) {
           const { bundledPaths, transpiled } = await transform({
+            bundle: transformer?.bundle,
             config,
             name,
             format: transformer?.format,

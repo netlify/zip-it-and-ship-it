@@ -1,19 +1,20 @@
 import { dirname, extname, resolve } from 'path'
 
-import { build } from 'esbuild'
+import { build, BuildOptions } from 'esbuild'
 
 import type { FunctionConfig } from '../../../../config.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { getPathWithExtension } from '../../../../utils/fs.js'
 import { RUNTIME } from '../../../runtime.js'
 import { CJS_SHIM } from '../../utils/esm_cjs_compat.js'
-import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions, ModuleFormat } from '../../utils/module_format.js'
+import { MODULE_FORMAT, MODULE_FILE_EXTENSION, ModuleFormat } from '../../utils/module_format.js'
 import { getClosestPackageJson } from '../../utils/package_json.js'
 import { getBundlerTarget } from '../esbuild/bundler_target.js'
 import { NODE_BUNDLER } from '../types.js'
 
 type Transformer = {
   aliases: Map<string, string>
+  bundle?: boolean
   bundledPaths?: string[]
   format: ModuleFormat
   newMainFile?: string
@@ -63,12 +64,6 @@ export const getTransformer = async (
   mainFile: string,
   repositoryRoot?: string,
 ): Promise<Transformer | undefined> => {
-  const isTypeScript = tsExtensions.has(extname(mainFile))
-
-  if (runtimeAPIVersion === 1 && !isTypeScript) {
-    return
-  }
-
   const format = await getModuleFormat(mainFile, runtimeAPIVersion, repositoryRoot)
   const aliases = new Map<string, string>()
   const rewrites = new Map<string, string>()
@@ -87,6 +82,7 @@ export const getTransformer = async (
 
     return {
       ...transformer,
+      bundle: true,
       bundledPaths: [],
       newMainFile,
     }
@@ -107,17 +103,26 @@ export const transform = async ({ bundle = false, config, format, name, path }: 
   // The version of ECMAScript to use as the build target. This will determine
   // whether certain features are transpiled down or left untransformed.
   const nodeTarget = getBundlerTarget(config.nodeVersion)
-  const banner = format === MODULE_FORMAT.ESM ? { js: CJS_SHIM } : undefined
+  const bundleOptions: BuildOptions = {
+    bundle: false,
+  }
+
+  if (bundle) {
+    bundleOptions.bundle = true
+    bundleOptions.packages = 'external'
+
+    if (format === MODULE_FORMAT.ESM) {
+      bundleOptions.banner = { js: CJS_SHIM }
+    }
+  }
 
   try {
     const transpiled = await build({
-      banner,
-      bundle: true,
+      ...bundleOptions,
       entryPoints: [path],
       format,
       logLevel: 'error',
       metafile: true,
-      packages: 'external',
       platform: 'node',
       sourcemap: Boolean(config.nodeSourcemap),
       target: [nodeTarget],
