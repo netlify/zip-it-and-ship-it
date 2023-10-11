@@ -126,12 +126,19 @@ const zipFunction: ZipFunction = async function ({
   // If we're building a Go function from source, we call the build method and
   // update `binary` to point to the newly-created binary.
   if (isSource) {
-    const { stat: binaryStat } = await build({ destPath, mainFile, srcDir })
+    const { stat: binaryStat } = await build({ destPath, mainFile, srcDir, featureFlags })
 
     binary = {
       path: destPath,
       stat: binaryStat,
     }
+  }
+
+  const result = {
+    config,
+    displayName: config?.name,
+    generator: config?.generator || getInternalValue(isInternal),
+    runtimeVersion: featureFlags.zisi_golang_use_al2 ? 'provided.al2' : undefined,
   }
 
   // If `zipGo` is enabled, we create a zip archive with the Go binary and the
@@ -147,10 +154,9 @@ const zipFunction: ZipFunction = async function ({
     await zipBinary({ ...zipOptions, srcPath: binary.path, stat: binary.stat })
 
     return {
-      config,
+      ...result,
       path: zipPath,
       entryFilename: zipOptions.filename,
-      runtimeVersion: featureFlags.zisi_golang_use_al2 ? 'provided.al2' : undefined,
     }
   }
 
@@ -162,11 +168,9 @@ const zipFunction: ZipFunction = async function ({
   }
 
   return {
-    config,
+    ...result,
     path: destPath,
     entryFilename: '',
-    displayName: config?.name,
-    generator: config?.generator || getInternalValue(isInternal),
   }
 }
 

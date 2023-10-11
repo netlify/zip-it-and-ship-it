@@ -1,6 +1,6 @@
-import type { Expression, Statement, VariableDeclaration } from '@babel/types'
+import type { Declaration, Expression, Statement, VariableDeclaration } from '@babel/types'
 
-type Bindings = Map<string, Expression>
+type Bindings = Map<string, Expression | Declaration>
 
 const getBindingFromVariableDeclaration = function (node: VariableDeclaration, bindings: Bindings): void {
   node.declarations.forEach((declaration) => {
@@ -11,7 +11,9 @@ const getBindingFromVariableDeclaration = function (node: VariableDeclaration, b
 }
 
 const getBindingsFromNode = function (node: Statement, bindings: Bindings): void {
-  if (node.type === 'VariableDeclaration') {
+  if (node.type === 'FunctionDeclaration' && node.id?.name) {
+    bindings.set(node.id.name, node)
+  } else if (node.type === 'VariableDeclaration') {
     // A variable was created, so create it and store the potential value
     getBindingFromVariableDeclaration(node, bindings)
   } else if (

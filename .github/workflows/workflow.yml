@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -42,7 +42,7 @@ jobs:
         if: "${{ matrix.os == 'macOS-latest' }}"
       - run: git config --global core.symlinks true
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Node.js ${{ matrix.node }}
         uses: actions/setup-node@v3
         with:

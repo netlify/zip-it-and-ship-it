@@ -38,14 +38,11 @@ describe('listFunctions', () => {
     })
 
     test('listFunctions includes in-source config declarations', async () => {
-      const functions = await listFunctions(join(FIXTURES_DIR, 'in-source-config', 'functions'), {
+      const fixtureDir = `${FIXTURES_DIR}/in-source-config/functions`
+      const functions = await listFunctions(fixtureDir, {
         parseISC: true,
       })
-      const FUNCTIONS_COUNT = 13
-      expect(functions.length).toBe(FUNCTIONS_COUNT)
-      functions.forEach((func) => {
-        expect(func.schedule).toBe('@daily')
-      })
+      expect(functions.map((file) => normalizeFiles(fixtureDir, file))).toMatchSnapshot()
     })
 
     test('listFunctions includes json configured functions with configured properties', async () => {
@@ -70,6 +67,7 @@ describe('listFunctions', () => {
     test('listFunctions includes runtimeAPIVersion when parseISC is true', async () => {
       const dir = join(FIXTURES_DIR, 'list')
       const [func] = await listFunctions([dir], {
+        basePath: dir,
         parseISC: true,
       })
 
@@ -77,10 +75,11 @@ describe('listFunctions', () => {
     })
   })
 
-  describe('v2', () => {
+  describe('V2 API', () => {
     test('listFunctions does not include runtimeAPIVersion when parseISC is false', async () => {
       const dir = join(FIXTURES_ESM_DIR, 'v2-api')
       const [func] = await listFunctions([dir], {
+        basePath: dir,
         parseISC: false,
       })
 
@@ -88,12 +87,13 @@ describe('listFunctions', () => {
     })
 
     test('listFunctions includes runtimeAPIVersion when parseISC is true', async () => {
-      const dir = join(FIXTURES_ESM_DIR, 'v2-api')
-      const [func] = await listFunctions([dir], {
+      const fixtureDir = join(FIXTURES_ESM_DIR, 'v2-api-esm-ts-aliases')
+      const [func] = await listFunctions([fixtureDir], {
+        basePath: fixtureDir,
         parseISC: true,
       })
 
-      expect(func.runtimeAPIVersion).toBe(2)
+      expect(normalizeFiles(fixtureDir, func)).toMatchSnapshot()
     })
   })
 })

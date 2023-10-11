@@ -1,4 +1,4 @@
-import { basename, dirname, join, normalize, resolve, extname } from 'path'
+import { basename, dirname, extname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
@@ -10,13 +10,12 @@ import { cachedReadFile, getPathWithExtension } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions, ModuleFormat } from '../../utils/module_format.js'
+import { MODULE_FILE_EXTENSION, tsExtensions } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
-import { getClosestPackageJson } from '../../utils/package_json.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
-import { transpileTS } from './transpile.js'
+import { transform, getTransformer } from './transformer.js'
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -90,90 +89,6 @@ const getIgnoreFunction = (config: FunctionConfig) => {
   }
 }
 
-/**
- * Returns the module format that should be used when transpiling a TypeScript
- * file.
- */
-const getTSModuleFormat = async (
-  mainFile: string,
-  runtimeAPIVersion: number,
-  repositoryRoot?: string,
-): Promise<ModuleFormat> => {
-  // TODO: This check should go away. We should always respect the format from
-  // the extension. We'll do this at a later stage, after we roll out the V2
-  // API with no side-effects on V1 functions.
-  if (runtimeAPIVersion === 2) {
-    if (extname(mainFile) === MODULE_FILE_EXTENSION.MTS) {
-      return MODULE_FORMAT.ESM
-    }
-
-    if (extname(mainFile) === MODULE_FILE_EXTENSION.CTS) {
-      return MODULE_FORMAT.COMMONJS
-    }
-  }
-
-  // At this point, we need to infer the module type from the `type` field in
-  // the closest `package.json`.
-  try {
-    const packageJSON = await getClosestPackageJson(dirname(mainFile), repositoryRoot)
-
-    if (packageJSON?.contents.type === 'module') {
-      return MODULE_FORMAT.ESM
-    }
-  } catch {
-    // no-op
-  }
-
-  return MODULE_FORMAT.COMMONJS
-}
-
-type TypeScriptTransformer = {
-  aliases: Map<string, string>
-  bundle?: boolean
-  bundledPaths?: string[]
-  format: ModuleFormat
-  newMainFile?: string
-  rewrites: Map<string, string>
-}
-
-const getTypeScriptTransformer = async (
-  runtimeAPIVersion: number,
-  mainFile: string,
-  repositoryRoot?: string,
-): Promise<TypeScriptTransformer | undefined> => {
-  const isTypeScript = tsExtensions.has(extname(mainFile))
-
-  if (!isTypeScript) {
-    return
-  }
-
-  const format = await getTSModuleFormat(mainFile, runtimeAPIVersion, repositoryRoot)
-  const aliases = new Map<string, string>()
-  const rewrites = new Map<string, string>()
-  const transformer = {
-    aliases,
-    format,
-    rewrites,
-  }
-
-  if (runtimeAPIVersion === 2) {
-    // For V2 functions, we want to emit a main file with an unambiguous
-    // extension (i.e. `.cjs` or `.mjs`), so that the file is loaded with
-    // the correct format regardless of what is set in `package.json`.
-    const newExtension = format === MODULE_FORMAT.COMMONJS ? MODULE_FILE_EXTENSION.CJS : MODULE_FILE_EXTENSION.MJS
-    const newMainFile = getPathWithExtension(mainFile, newExtension)
-
-    return {
-      ...transformer,
-      bundle: true,
-      bundledPaths: [],
-      newMainFile,
-    }
-  }
-
-  return transformer
-}
-
 const traceFilesAndTranspile = async function ({
   basePath,
   cache,
@@ -195,7 +110,9 @@ const traceFilesAndTranspile = async function ({
   repositoryRoot?: string
   runtimeAPIVersion: number
 }) {
-  const tsTransformer = await getTypeScriptTransformer(runtimeAPIVersion, mainFile, repositoryRoot)
+  const isTSFunction = tsExtensions.has(extname(mainFile))
+  const transformer =
+    runtimeAPIVersion === 2 || isTSFunction ? await getTransformer(runtimeAPIVersion, mainFile, repositoryRoot) : null
   const {
     fileList: dependencyPaths,
     esmFileList,
@@ -208,36 +125,36 @@ const traceFilesAndTranspile = async function ({
     ignore: getIgnoreFunction(config),
     readFile: async (path: string) => {
       try {
-        const extension = extname(path)
+        const isMainFile = path === mainFile
 
-        if (tsExtensions.has(extension)) {
-          const { bundledPaths, transpiled } = await transpileTS({
-            bundle: tsTransformer?.bundle,
+        // Transform this file if this is the main file and we're processing a
+        // V2 functions (which always bundle local imports), or if this path is
+        // a TypeScript file (which should only happen for V1 TS functions that
+        // set the bundler to "nft").
+        if ((isMainFile && transformer) || tsExtensions.has(extname(path))) {
+          const { bundledPaths, transpiled } = await transform({
+            bundle: transformer?.bundle,
             config,
             name,
-            format: tsTransformer?.format,
+            format: transformer?.format,
             path,
           })
-          const isMainFile = path === mainFile
 
           // If this is the main file, the final path of the compiled file may
           // have been set by the transformer. It's fine to do this, since the
           // only place where this file will be imported from is our entry file
           // and we'll know the right path to use.
-          const newPath =
-            isMainFile && tsTransformer?.newMainFile
-              ? tsTransformer.newMainFile
-              : getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
+          const newPath = transformer?.newMainFile ?? getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
           // Overriding the contents of the `.ts` file.
-          tsTransformer?.rewrites.set(path, transpiled)
+          transformer?.rewrites.set(path, transpiled)
 
           // Rewriting the `.ts` path to `.js` in the bundle.
-          tsTransformer?.aliases.set(path, newPath)
+          transformer?.aliases.set(path, newPath)
 
           // Registering the input files that were bundled into the transpiled
           // file.
-          tsTransformer?.bundledPaths?.push(...bundledPaths)
+          transformer?.bundledPaths?.push(...bundledPaths)
 
           return transpiled
         }
@@ -270,13 +187,13 @@ const traceFilesAndTranspile = async function ({
   })
   const normalizedTracedPaths = [...dependencyPaths].map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
 
-  if (tsTransformer) {
+  if (transformer) {
     return {
-      aliases: tsTransformer.aliases,
-      bundledPaths: tsTransformer.bundledPaths,
-      mainFile: tsTransformer.newMainFile ?? getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
-      moduleFormat: tsTransformer.format,
-      rewrites: tsTransformer.rewrites,
+      aliases: transformer.aliases,
+      bundledPaths: transformer.bundledPaths,
+      mainFile: transformer.newMainFile ?? getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
+      moduleFormat: transformer.format,
+      rewrites: transformer.rewrites,
       tracedPaths: normalizedTracedPaths,
     }
   }

@@ -195,6 +195,8 @@ export const importFunctionFile = async function <T = any>(functionPath: string)
   return result.default === undefined ? result : result.default
 }
 
+const normalizedRelative = (from: string, to: string) => relative(from, to).replace(/\\/g, '/')
+
 export const normalizeFiles = function (
   fixtureDir: string,
   {
@@ -206,8 +208,8 @@ export const normalizeFiles = function (
   },
 ) {
   return {
-    mainFile: relative(fixtureDir, mainFile).replace(/\\/g, '/'),
-    srcFile: srcFile ? relative(fixtureDir, srcFile).replace(/\\/g, '/') : undefined,
     ...rest,
+    mainFile: normalizedRelative(fixtureDir, mainFile),
+    srcFile: srcFile ? normalizedRelative(fixtureDir, srcFile) : undefined,
   }
 }

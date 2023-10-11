@@ -35,7 +35,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
       for (const entry of files) {
         expect(entry.bundler).toBe('nft')
-        expect(entry.outputModuleFormat).toBe('cjs')
+        expect(entry.outputModuleFormat).toBe('esm')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -93,7 +93,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
       for (const entry of files) {
         expect(entry.bundler).toBe('nft')
-        expect(entry.outputModuleFormat).toBe('cjs')
+        expect(entry.outputModuleFormat).toBe('esm')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -143,127 +143,121 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
   )
 
   testMany(
-    'Handles an ESM TypeScript function that imports both CJS and ESM modules',
+    'Handles an ESM function that imports both CJS and ESM modules',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const fixtureName = 'v2-api-esm-mixed-modules'
       const { files, tmpDir } = await zipFixture(fixtureName, {
+        length: 2,
         fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
         }),
       })
 
-      expect(files.length).toBe(1)
+      for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('esm')
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+        expect(entry.runtimeAPIVersion).toBe(2)
 
-      const [entry] = files
+        const expectedInputs = [
+          'package.json',
+          entry.name === 'function-js' ? 'function-js.js' : 'function-ts.ts',
+          'node_modules/cjs-module/package.json',
+          'node_modules/cjs-module/index.js',
+          'node_modules/esm-module/package.json',
+          'node_modules/esm-module/index.js',
+          'node_modules/esm-module/foo.js',
+          'node_modules/cjs-module/foo.js',
+          'lib/helper1.ts',
+          'lib/helper2.ts',
+          'lib/helper3.ts',
+          'lib/helper4.js',
+          'lib/helper5.mjs',
+          'lib/helper6.js',
+        ]
+          .map((relativePath) => resolve(FIXTURES_ESM_DIR, fixtureName, relativePath))
+          .sort()
 
-      expect(entry.bundler).toBe('nft')
-      expect(entry.outputModuleFormat).toBe('esm')
-      expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
-      expect(entry.runtimeAPIVersion).toBe(2)
+        expect(entry.inputs?.sort()).toEqual(expectedInputs)
 
-      const expectedInputs = [
-        'package.json',
-        'function.ts',
-        'node_modules/cjs-module/package.json',
-        'node_modules/cjs-module/index.js',
-        'node_modules/esm-module/package.json',
-        'node_modules/esm-module/index.js',
-        'node_modules/esm-module/foo.js',
-        'node_modules/cjs-module/foo.js',
-        'lib/helper1.ts',
-        'lib/helper2.ts',
-        'lib/helper3.ts',
-        'lib/helper4.js',
-        'lib/helper5.mjs',
-        'lib/helper6.js',
-      ]
+        const [{ name: archive, entryFilename }] = files
 
-      for (const relativePath of expectedInputs) {
-        const absolutePath = resolve(FIXTURES_ESM_DIR, fixtureName, relativePath)
+        const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+        const { body: bodyStream, statusCode } = await invokeLambda(func)
+        const body = await readAsBuffer(bodyStream)
 
-        expect(entry.inputs?.includes(absolutePath)).toBeTruthy()
+        expect(JSON.parse(body)).toEqual({
+          cjs: { foo: '🌭', type: 'cjs' },
+          esm: { foo: '🌭', type: 'esm' },
+          helper1: 'helper1',
+          helper2: 'helper2',
+          helper3: 'helper3',
+          helper4: 'helper4',
+          helper5: 'helper5',
+        })
+        expect(statusCode).toBe(200)
       }
-
-      const [{ name: archive, entryFilename }] = files
-
-      const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
-      const { body: bodyStream, statusCode } = await invokeLambda(func)
-      const body = await readAsBuffer(bodyStream)
-
-      expect(JSON.parse(body)).toEqual({
-        cjs: { foo: '🌭', type: 'cjs' },
-        esm: { foo: '🌭', type: 'esm' },
-        helper1: 'helper1',
-        helper2: 'helper2',
-        helper3: 'helper3',
-        helper4: 'helper4',
-        helper5: 'helper5',
-      })
-      expect(statusCode).toBe(200)
     },
   )
 
   testMany(
-    'Handles a CJS TypeScript function that imports CJS modules',
+    'Handles a CJS function that imports CJS and ESM modules',
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
     async (options) => {
       const fixtureName = 'v2-api-cjs-modules'
       const { files, tmpDir } = await zipFixture(fixtureName, {
+        length: 2,
         fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
         }),
       })
 
-      expect(files.length).toBe(1)
+      for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('cjs')
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+        expect(entry.runtimeAPIVersion).toBe(2)
 
-      const [entry] = files
+        const expectedInputs = [
+          'package.json',
+          entry.name === 'function-ts' ? 'function-ts.ts' : 'function-js.js',
+          'node_modules/cjs-module/package.json',
+          'node_modules/cjs-module/index.js',
+          'node_modules/esm-module/package.json',
+          'node_modules/esm-module/index.js',
+          'node_modules/esm-module/foo.js',
+          'node_modules/cjs-module/foo.js',
+          'lib/helper1.ts',
+          'lib/helper2.ts',
+          'lib/helper3.ts',
+          'lib/helper4.js',
+          'lib/helper5.mjs',
+        ]
+          .map((relativePath) => resolve(FIXTURES_ESM_DIR, fixtureName, relativePath))
+          .sort()
 
-      expect(entry.bundler).toBe('nft')
-      expect(entry.outputModuleFormat).toBe('cjs')
-      expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
-      expect(entry.runtimeAPIVersion).toBe(2)
+        expect(entry.inputs?.sort()).toEqual(expectedInputs)
 
-      const expectedInputs = [
-        'package.json',
-        'function.ts',
-        'node_modules/cjs-module/package.json',
-        'node_modules/cjs-module/index.js',
-        'node_modules/esm-module/package.json',
-        'node_modules/esm-module/index.js',
-        'node_modules/esm-module/foo.js',
-        'node_modules/cjs-module/foo.js',
-        'lib/helper1.ts',
-        'lib/helper2.ts',
-        'lib/helper3.ts',
-        'lib/helper4.js',
-        'lib/helper5.mjs',
-      ]
+        const [{ name: archive, entryFilename }] = files
 
-      for (const relativePath of expectedInputs) {
-        const absolutePath = resolve(FIXTURES_ESM_DIR, fixtureName, relativePath)
+        const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+        const { body: bodyStream, statusCode } = await invokeLambda(func)
+        const body = await readAsBuffer(bodyStream)
 
-        expect(entry.inputs?.includes(absolutePath)).toBeTruthy()
+        expect(JSON.parse(body)).toEqual({
+          cjs: { foo: '🌭', type: 'cjs' },
+          esm: { foo: '🌭', type: 'esm' },
+          helper1: 'helper1',
+          helper2: 'helper2',
+          helper3: 'helper3',
+          helper4: 'helper4',
+          helper5: 'helper5',
+        })
+        expect(statusCode).toBe(200)
       }
-
-      const [{ name: archive, entryFilename }] = files
-
-      const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
-      const { body: bodyStream, statusCode } = await invokeLambda(func)
-      const body = await readAsBuffer(bodyStream)
-
-      expect(JSON.parse(body)).toEqual({
-        cjs: { foo: '🌭', type: 'cjs' },
-        esm: { foo: '🌭', type: 'esm' },
-        helper1: 'helper1',
-        helper2: 'helper2',
-        helper3: 'helper3',
-        helper4: 'helper4',
-        helper5: 'helper5',
-      })
-      expect(statusCode).toBe(200)
     },
   )
 
