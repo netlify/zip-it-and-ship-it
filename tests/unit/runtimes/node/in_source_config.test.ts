@@ -82,7 +82,7 @@ describe('`schedule` helper', () => {
     const source = `import { schedule } from "@netlify/functions"
 
     const handler = schedule("@daily", () => {})
-    
+
     export { handler }`
 
     const isc = parseSource(source, options)
@@ -140,7 +140,7 @@ describe('V2 API', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
-  
+
       export const handler = function () { return { statusCode: 200, body: "Hello!" } }`
 
       const isc = parseSource(source, options)
@@ -150,11 +150,58 @@ describe('V2 API', () => {
 
     test('ESM file with no default export and a `handler` export', () => {
       const source = `const handler = async () => ({ statusCode: 200, body: "Hello" })
-      
+
       export { handler }`
 
       const isc = parseSource(source, options)
 
+      expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
+    })
+
+    test('ESM file with default exporting a function', () => {
+      const source = `
+      const handler = async () => ({ statusCode: 200, body: "Hello" })
+      export default handler;`
+
+      const isc = parseSource(source, options)
+      expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], runtimeAPIVersion: 2 })
+    })
+
+    test('ESM file with default export of variable and separate handler export', () => {
+      const source = `
+      const foo = 'foo'
+      export default foo;
+      export const handler = () => ({ statusCode: 200, body: "Hello" })`
+
+      const isc = parseSource(source, options)
+      expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
+    })
+
+    test('ESM file with default export wrapped in a literal from an arrow function', () => {
+      const source = `
+      const handler = async () => ({ statusCode: 200, body: "Hello" })
+      export const config = { schedule: "@daily" }
+      export { handler as default };`
+
+      const isc = parseSource(source, options)
+      expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], schedule: '@daily', runtimeAPIVersion: 2 })
+    })
+
+    test('ESM file with default export wrapped in a literal from a function', () => {
+      const source = `
+      async function handler(){ return { statusCode: 200, body: "Hello" }}
+      export { handler as default };`
+
+      const isc = parseSource(source, options)
+      expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], runtimeAPIVersion: 2 })
+    })
+
+    test('ESM file with default export exporting a constant', () => {
+      const source = `
+      const foo = "bar"
+      export { foo as default };`
+
+      const isc = parseSource(source, options)
       expect(isc).toEqual({ inputModuleFormat: 'esm', runtimeAPIVersion: 1 })
     })
 
@@ -172,7 +219,7 @@ describe('V2 API', () => {
       const source = `exports.default = async () => {
         return new Response("Hello!")
       }
-  
+
       exports.handler = async () => ({ statusCode: 200, body: "Hello!" })`
 
       const isc = parseSource(source, options)
@@ -196,7 +243,7 @@ describe('V2 API', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
-  
+
       export const config = {
         schedule: "@daily"
       }`
@@ -212,7 +259,7 @@ describe('V2 API', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
-  
+
       export const config = {
         method: ["GET", "POST"]
       }`
@@ -226,7 +273,7 @@ describe('V2 API', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
-  
+
       export const config = {
         method: "GET"
       }`
@@ -246,7 +293,7 @@ describe('V2 API', () => {
           const source = `export default async () => {
             return new Response("Hello!")
           }
-      
+
           export const config = {
             path: "missing-slash"
           }`
@@ -269,7 +316,7 @@ describe('V2 API', () => {
           const source = `export default async () => {
             return new Response("Hello!")
           }
-      
+
           export const config = {
             path: "/products("
           }`
@@ -292,7 +339,7 @@ describe('V2 API', () => {
           const source = `export default async () => {
             return new Response("Hello!")
           }
-      
+
           export const config = {
             path: {
               url: "/products"
@@ -317,7 +364,7 @@ describe('V2 API', () => {
           const source = `export default async () => {
             return new Response("Hello!")
           }
-      
+
           export const config = {
             path: ["/store", "/products("]
           }`
@@ -340,7 +387,7 @@ describe('V2 API', () => {
           const source = `export default async () => {
             return new Response("Hello!")
           }
-      
+
           export const config = {
             path: ["/store", 42]
           }`
@@ -363,7 +410,7 @@ describe('V2 API', () => {
           const source = `export default async () => {
             return new Response("Hello!")
           }
-      
+
           export const config = {
             path: ["/store", null]
           }`
@@ -386,7 +433,7 @@ describe('V2 API', () => {
           const source = `export default async () => {
             return new Response("Hello!")
           }
-      
+
           export const config = {
             path: ["/store", undefined]
           }`
@@ -408,7 +455,7 @@ describe('V2 API', () => {
         const source = `export default async () => {
           return new Response("Hello!")
         }
-    
+
         export const config = {
           path: "/products"
         }`
@@ -422,7 +469,7 @@ describe('V2 API', () => {
         const source = `exports.default = async () => {
           return new Response("Hello!")
         }
-    
+
         exports.config = {
           path: "/products"
         }`
@@ -437,7 +484,7 @@ describe('V2 API', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
-  
+
       export const config = {
         path: "/store/:category/products/:product-id"
       }`
@@ -457,7 +504,7 @@ describe('V2 API', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
-  
+
       export const config = {
         path: [
           "/store/:category/products/:product-id",
@@ -487,7 +534,7 @@ describe('V2 API', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }
-  
+
       export const config = {
         path: ["/products", "/products"]
       }`

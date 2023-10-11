@@ -198,4 +198,5 @@ export type ISCExportWithObject = {
   object: Record<string, unknown>
 }
 export type ISCExportOther = { type: 'other' }
-export type ISCExport = ISCExportWithCallExpression | ISCExportWithObject | ISCExportOther
+export type ISCDefaultExport = { type: 'default' }
+export type ISCExport = ISCExportWithCallExpression | ISCExportWithObject | ISCExportOther | ISCDefaultExport

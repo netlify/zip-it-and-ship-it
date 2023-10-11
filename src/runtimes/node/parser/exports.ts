@@ -1,4 +1,5 @@
 import type {
+  Declaration,
   ExportDefaultDeclaration,
   ExportNamedDeclaration,
   ExportSpecifier,
@@ -40,6 +41,11 @@ export const traverseNodes = (nodes: Statement[], getAllBindings: BindingMethod)
     const esmHandlerExports = getNamedESMExport(node, 'handler', getAllBindings)
 
     if (esmHandlerExports.length !== 0) {
+      if (esmHandlerExports.some(({ type }) => type === 'default')) {
+        hasDefaultExport = true
+
+        return
+      }
       handlerExports.push(...esmHandlerExports)
 
       return
@@ -130,6 +136,16 @@ const getNamedESMExport = (node: Statement, name: string, getAllBindings: Bindin
   const exports = getExportsFromExpression(handlerDeclaration?.init)
 
   return exports
+}
+
+/**
+ * Check if the node is an `ExportSpecifier` that has a identifier with a default export:
+ * - `export { x as default }`
+ */
+const isDefaultExport = (node: ExportNamedDeclaration['specifiers'][number]): node is ExportSpecifier => {
+  const { type, exported } = node
+
+  return type === 'ExportSpecifier' && exported.type === 'Identifier' && exported.name === 'default'
 }
 
 /**
@@ -234,7 +250,17 @@ const getExportsFromBindings = (
   specifiers: ExportNamedDeclaration['specifiers'],
   name: string,
   getAllBindings: BindingMethod,
-) => {
+): ISCExport[] => {
+  const defaultExport = specifiers.find((node) => isDefaultExport(node))
+
+  if (defaultExport && defaultExport.type === 'ExportSpecifier') {
+    const binding = getAllBindings().get(defaultExport.local.name)
+
+    if (binding?.type === 'ArrowFunctionExpression' || binding?.type === 'FunctionDeclaration') {
+      return [{ type: 'default' }]
+    }
+  }
+
   const specifier = specifiers.find((node) => isNamedExport(node, name))
 
   if (!specifier || specifier.type !== 'ExportSpecifier') {
@@ -242,12 +268,13 @@ const getExportsFromBindings = (
   }
 
   const binding = getAllBindings().get(specifier.local.name)
+
   const exports = getExportsFromExpression(binding)
 
   return exports
 }
 
-const getExportsFromExpression = (node: Expression | undefined | null): ISCExport[] => {
+const getExportsFromExpression = (node: Expression | Declaration | undefined | null): ISCExport[] => {
   switch (node?.type) {
     case 'CallExpression': {
       const { arguments: args, callee } = node
