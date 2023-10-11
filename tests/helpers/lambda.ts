@@ -1,4 +1,4 @@
-import { execute } from '@skn0tt/lambda-local'
+import { execute } from 'lambda-local'
 
 interface LambdaResponse {
   statusCode: number
