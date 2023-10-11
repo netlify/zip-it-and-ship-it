@@ -134,6 +134,8 @@ const zipFunction: ZipFunction = async function ({
     }
   }
 
+  const runtimeVersion = featureFlags.zisi_golang_use_al2 ? 'provided.al2' : undefined;
+
   // If `zipGo` is enabled, we create a zip archive with the Go binary and the
   // toolchain file.
   if (config.zipGo) {
@@ -150,7 +152,7 @@ const zipFunction: ZipFunction = async function ({
       config,
       path: zipPath,
       entryFilename: zipOptions.filename,
-      runtimeVersion: featureFlags.zisi_golang_use_al2 ? 'provided.al2' : undefined,
+      runtimeVersion,
     }
   }
 
@@ -167,6 +169,7 @@ const zipFunction: ZipFunction = async function ({
     entryFilename: '',
     displayName: config?.name,
     generator: config?.generator || getInternalValue(isInternal),
+    runtimeVersion,
   }
 }
 
