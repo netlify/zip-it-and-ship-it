@@ -175,13 +175,13 @@ describe('zipFunction', () => {
 
       expect(result).not.toBeUndefined()
 
-      const bundlerUsed = variation === 'bundler_default' ? NODE_BUNDLER.NFT : getNodeBundlerString(variation)
+      const expectedBundle = variation === 'bundler_none' ? NODE_BUNDLER.NONE : NODE_BUNDLER.NFT
       const expectedConfig = options.config['*']
-      expectedConfig.nodeBundler = bundlerUsed
+      expectedConfig.nodeBundler = variation === 'bundler_default' ? NODE_BUNDLER.NFT : getNodeBundlerString(variation)
 
       expect(result.name).toBe('function')
       expect(result.runtime).toBe('js')
-      expect(result.bundler).toBe(bundlerUsed)
+      expect(result.bundler).toBe(expectedBundle)
       expect(result.mainFile).toBe(mainFile)
       expect(result.config).toEqual(bundler === undefined ? {} : expectedConfig)
       expect(result.runtimeAPIVersion).toEqual(2)

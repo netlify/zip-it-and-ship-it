@@ -1,10 +1,10 @@
-import { join } from 'path'
+import { join, resolve } from 'path'
 
 import { describe, expect, test } from 'vitest'
 
 import { listFunction } from '../src/main.js'
 
-import { FIXTURES_DIR, FIXTURES_ESM_DIR } from './helpers/main.js'
+import { FIXTURES_DIR, FIXTURES_ESM_DIR, normalizeFiles } from './helpers/main.js'
 
 describe('listFunction', () => {
   describe('v1', () => {
@@ -34,6 +34,7 @@ describe('listFunction', () => {
 
       expect(func).toEqual({
         extension: '.js',
+        inputModuleFormat: 'cjs',
         mainFile,
         name: 'cron_cjs',
         runtime: 'js',
@@ -60,8 +61,8 @@ describe('listFunction', () => {
       })
     })
   })
-  describe('v2', () => {
-    test('listFunction does not include runtimeAPIVersion when parseISC false', async () => {
+  describe('V2 API', () => {
+    test('listFunction does not include metadata properties when parseISC false', async () => {
       const mainFile = join(FIXTURES_ESM_DIR, 'v2-api/function.js')
       const func = await listFunction(mainFile, {
         parseISC: false,
@@ -70,13 +71,21 @@ describe('listFunction', () => {
       expect(func?.runtimeAPIVersion).toBeUndefined()
     })
 
-    test('listFunction includes runtimeAPIVersion when parseISC true', async () => {
-      const mainFile = join(FIXTURES_ESM_DIR, 'v2-api/function.js')
+    test('listFunction includes metadata properties when parseISC true', async () => {
+      const basePath = resolve(FIXTURES_ESM_DIR)
+      const mainFile = join(basePath, 'v2-api-esm-ts-aliases/function.ts')
       const func = await listFunction(mainFile, {
+        basePath,
         parseISC: true,
       })
 
-      expect(func?.runtimeAPIVersion).toBe(2)
+      if (!func) {
+        throw new Error('Function is not defined')
+      }
+
+      const normalizedFunc = normalizeFiles(basePath, func)
+
+      expect(normalizedFunc).toMatchSnapshot()
     })
   })
 })

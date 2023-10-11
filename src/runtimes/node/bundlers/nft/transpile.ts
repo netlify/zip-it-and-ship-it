@@ -3,18 +3,17 @@ import { build } from 'esbuild'
 import type { FunctionConfig } from '../../../../config.js'
 import { FunctionBundlingUserError } from '../../../../utils/error.js'
 import { RUNTIME } from '../../../runtime.js'
-import { ModuleFormat } from '../../utils/module_format.js'
+import { MODULE_FORMAT } from '../../utils/module_format.js'
 import { getBundlerTarget } from '../esbuild/bundler_target.js'
 import { NODE_BUNDLER } from '../types.js'
 
-interface TranspileOptions {
+interface TranspileESMToCJSOptions {
   config: FunctionConfig
-  format?: ModuleFormat
   name: string
   path: string
 }
 
-export const transpile = async ({ config, format, name, path }: TranspileOptions) => {
+export const transpileESMToCJS = async ({ config, name, path }: TranspileESMToCJSOptions) => {
   // The version of ECMAScript to use as the build target. This will determine
   // whether certain features are transpiled down or left untransformed.
   const nodeTarget = getBundlerTarget(config.nodeVersion)
@@ -23,7 +22,7 @@ export const transpile = async ({ config, format, name, path }: TranspileOptions
     const transpiled = await build({
       bundle: false,
       entryPoints: [path],
-      format,
+      format: MODULE_FORMAT.COMMONJS,
       logLevel: 'error',
       platform: 'node',
       sourcemap: Boolean(config.nodeSourcemap),

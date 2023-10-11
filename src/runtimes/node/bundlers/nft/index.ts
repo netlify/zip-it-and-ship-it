@@ -1,4 +1,4 @@
-import { basename, dirname, join, normalize, resolve, extname } from 'path'
+import { basename, dirname, extname, join, normalize, resolve } from 'path'
 
 import { nodeFileTrace } from '@vercel/nft'
 import resolveDependency from '@vercel/nft/out/resolve-dependency.js'
@@ -10,13 +10,12 @@ import { cachedReadFile, getPathWithExtension } from '../../../../utils/fs.js'
 import { minimatch } from '../../../../utils/matching.js'
 import { getBasePath } from '../../utils/base_path.js'
 import { filterExcludedPaths, getPathsOfIncludedFiles } from '../../utils/included_files.js'
-import { MODULE_FORMAT, MODULE_FILE_EXTENSION, tsExtensions } from '../../utils/module_format.js'
+import { MODULE_FILE_EXTENSION, tsExtensions } from '../../utils/module_format.js'
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
-import { getModuleFormat as getTSModuleFormat } from '../../utils/tsconfig.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
-import { transpile } from './transpile.js'
+import { transform, getTransformer } from './transformer.js'
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
 
@@ -38,10 +37,11 @@ const bundle: BundleFunction = async ({
   )
   const {
     aliases,
+    bundledPaths = [],
     mainFile: normalizedMainFile,
     moduleFormat,
-    paths: dependencyPaths,
     rewrites,
+    tracedPaths,
   } = await traceFilesAndTranspile({
     basePath: repositoryRoot,
     cache,
@@ -54,17 +54,21 @@ const bundle: BundleFunction = async ({
     runtimeAPIVersion,
   })
   const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)
-  const filteredIncludedPaths = [...filterExcludedPaths(dependencyPaths, excludePatterns), ...includedPaths]
+  const filteredIncludedPaths = [...filterExcludedPaths(tracedPaths, excludePatterns), ...includedPaths]
   const dirnames = filteredIncludedPaths.map((filePath) => normalize(dirname(filePath))).sort()
 
   // Sorting the array to make the checksum deterministic.
   const srcFiles = [...filteredIncludedPaths].sort()
 
+  // The inputs are the union of any traced paths (included as files in the end
+  // result) and any bundled paths (merged together in the bundle).
+  const inputs = bundledPaths.length === 0 ? tracedPaths : [...new Set([...tracedPaths, ...bundledPaths])]
+
   return {
     aliases,
     basePath: getBasePath(dirnames),
     includedFiles: includedPaths,
-    inputs: dependencyPaths,
+    inputs,
     mainFile: normalizedMainFile,
     moduleFormat,
     rewrites,
@@ -106,11 +110,9 @@ const traceFilesAndTranspile = async function ({
   repositoryRoot?: string
   runtimeAPIVersion: number
 }) {
-  const isTypeScript = tsExtensions.has(extname(mainFile))
-  const tsFormat = isTypeScript ? getTSModuleFormat(mainFile, repositoryRoot) : MODULE_FORMAT.COMMONJS
-  const tsAliases = new Map<string, string>()
-  const tsRewrites = new Map<string, string>()
-
+  const isTSFunction = tsExtensions.has(extname(mainFile))
+  const transformer =
+    runtimeAPIVersion === 2 || isTSFunction ? await getTransformer(runtimeAPIVersion, mainFile, repositoryRoot) : null
   const {
     fileList: dependencyPaths,
     esmFileList,
@@ -123,19 +125,38 @@ const traceFilesAndTranspile = async function ({
     ignore: getIgnoreFunction(config),
     readFile: async (path: string) => {
       try {
-        const extension = extname(path)
+        const isMainFile = path === mainFile
 
-        if (tsExtensions.has(extension)) {
-          const transpiledSource = await transpile({ config, name, format: tsFormat, path })
-          const newPath = getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
+        // Transform this file if this is the main file and we're processing a
+        // V2 functions (which always bundle local imports), or if this path is
+        // a TypeScript file (which should only happen for V1 TS functions that
+        // set the bundler to "nft").
+        if ((isMainFile && transformer) || tsExtensions.has(extname(path))) {
+          const { bundledPaths, transpiled } = await transform({
+            bundle: transformer?.bundle,
+            config,
+            name,
+            format: transformer?.format,
+            path,
+          })
+
+          // If this is the main file, the final path of the compiled file may
+          // have been set by the transformer. It's fine to do this, since the
+          // only place where this file will be imported from is our entry file
+          // and we'll know the right path to use.
+          const newPath = transformer?.newMainFile ?? getPathWithExtension(path, MODULE_FILE_EXTENSION.JS)
 
           // Overriding the contents of the `.ts` file.
-          tsRewrites.set(path, transpiledSource)
+          transformer?.rewrites.set(path, transpiled)
 
           // Rewriting the `.ts` path to `.js` in the bundle.
-          tsAliases.set(path, newPath)
+          transformer?.aliases.set(path, newPath)
 
-          return transpiledSource
+          // Registering the input files that were bundled into the transpiled
+          // file.
+          transformer?.bundledPaths?.push(...bundledPaths)
+
+          return transpiled
         }
 
         return await cachedReadFile(cache.fileCache, path)
@@ -164,17 +185,16 @@ const traceFilesAndTranspile = async function ({
       }
     },
   })
-  const normalizedDependencyPaths = [...dependencyPaths].map((path) =>
-    basePath ? resolve(basePath, path) : resolve(path),
-  )
+  const normalizedTracedPaths = [...dependencyPaths].map((path) => (basePath ? resolve(basePath, path) : resolve(path)))
 
-  if (isTypeScript) {
+  if (transformer) {
     return {
-      aliases: tsAliases,
-      mainFile: getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
-      moduleFormat: tsFormat,
-      paths: normalizedDependencyPaths,
-      rewrites: tsRewrites,
+      aliases: transformer.aliases,
+      bundledPaths: transformer.bundledPaths,
+      mainFile: transformer.newMainFile ?? getPathWithExtension(mainFile, MODULE_FILE_EXTENSION.JS),
+      moduleFormat: transformer.format,
+      rewrites: transformer.rewrites,
+      tracedPaths: normalizedTracedPaths,
     }
   }
 
@@ -193,8 +213,8 @@ const traceFilesAndTranspile = async function ({
   return {
     mainFile,
     moduleFormat,
-    paths: normalizedDependencyPaths,
     rewrites,
+    tracedPaths: normalizedTracedPaths,
   }
 }
 

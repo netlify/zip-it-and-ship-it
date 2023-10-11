@@ -10,6 +10,7 @@ node_modules
 /build
 .vscode
 !tests/fixtures/**/node_modules
+!tests/fixtures-esm/**/node_modules
 benchmarks/fixtures/*/package*.json
 benchmarks/output
 .delta.*

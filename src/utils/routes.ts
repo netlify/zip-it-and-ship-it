@@ -1,6 +1,7 @@
 import { RUNTIME } from '../runtimes/runtime.js'
 
 import { FunctionBundlingUserError } from './error.js'
+import { nonNullable } from './non_nullable.js'
 import { ExtendedURLPattern } from './urlpattern.js'
 
 export type Route = { pattern: string; methods: string[] } & ({ literal: string } | { expression: string })
@@ -17,13 +18,13 @@ const isPathLiteral = (path: string) => {
   return parts.every((part) => !isExpression(part))
 }
 
-export const getRoutesFromPath = (path: unknown, functionName: string, methods: string[]): Route[] => {
-  if (!path) {
-    return []
-  }
-
+/**
+ * Takes an element from a `path` declaration and returns a Route element that
+ * represents it.
+ */
+const getRoute = (path: unknown, functionName: string, methods: string[]): Route | undefined => {
   if (typeof path !== 'string') {
-    throw new FunctionBundlingUserError(`'path' property must be a string, found '${typeof path}'`, {
+    throw new FunctionBundlingUserError(`'path' property must be a string, found '${JSON.stringify(path)}'`, {
       functionName,
       runtime: RUNTIME.JAVASCRIPT,
     })
@@ -37,7 +38,7 @@ export const getRoutesFromPath = (path: unknown, functionName: string, methods: 
   }
 
   if (isPathLiteral(path)) {
-    return [{ pattern: path, literal: path, methods }]
+    return { pattern: path, literal: path, methods }
   }
 
   try {
@@ -52,11 +53,26 @@ export const getRoutesFromPath = (path: unknown, functionName: string, methods: 
     // for both `/foo` and `/foo/`.
     const normalizedRegex = `^${regex}\\/?$`
 
-    return [{ pattern: path, expression: normalizedRegex, methods }]
+    return { pattern: path, expression: normalizedRegex, methods }
   } catch {
     throw new FunctionBundlingUserError(`'${path}' is not a valid path according to the URLPattern specification`, {
       functionName,
       runtime: RUNTIME.JAVASCRIPT,
     })
   }
+}
+
+/**
+ * Takes a `path` declaration, normalizes it into an array, and processes the
+ * individual elements to obtain an array of `Route` expressions.
+ */
+export const getRoutes = (input: unknown, functionName: string, methods: string[]): Route[] => {
+  if (!input) {
+    return []
+  }
+
+  const paths = [...new Set(Array.isArray(input) ? input : [input])]
+  const routes = paths.map((path) => getRoute(path, functionName, methods ?? [])).filter(nonNullable)
+
+  return routes
 }

@@ -2,6 +2,7 @@ import { mkdir, readFile, chmod, symlink, writeFile, rm } from 'fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'path'
 import { arch, platform, version as nodeVersion } from 'process'
 
+import AdmZip from 'adm-zip'
 import cpy from 'cpy'
 import merge from 'deepmerge'
 import { execa, execaNode } from 'execa'
@@ -1281,10 +1282,10 @@ describe('zip-it-and-ship-it', () => {
     async (options) => {
       const fixtureName = 'included_files'
       const opts = merge(options, {
+        basePath: join(FIXTURES_DIR, fixtureName),
         config: {
           '*': {
             includedFiles: ['content/*', '!content/post3.md', 'something.md'],
-            includedFilesBasePath: join(FIXTURES_DIR, fixtureName),
           },
         },
       })
@@ -2774,6 +2775,28 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
+  testMany('All ESM bundlers can handle import loops', ['bundler_esbuild', 'bundler_nft'], async (options) => {
+    const fixtureName = 'node-esm-import-loop'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          nodeVersion: 'nodejs16.x',
+        },
+      },
+    })
+    const { files, tmpDir } = await zipFixture(`${fixtureName}/functions`, {
+      length: 1,
+      opts,
+    })
+
+    await unzipFiles(files)
+
+    const func = await importFunctionFile(join(tmpDir, 'func1', 'func1.js'))
+
+    expect(func.handler()).toBe(true)
+  })
+
   testMany('Outputs correct entryFilename', ['bundler_esbuild', 'bundler_nft', 'bundler_default'], async (options) => {
     const { files } = await zipFixture('node-mts-extension', {
       length: 3,
@@ -2799,5 +2822,26 @@ describe('zip-it-and-ship-it', () => {
     expect((bundlerWarnings?.[0] as any).text).toEqual(
       `"import.meta" is not available and will be empty, use __dirname instead`,
     )
+  })
+
+  testMany('only includes files once in a zip', [...allBundleConfigs], async (options) => {
+    const { files } = await zipFixture('local-require', {
+      length: 1,
+      opts: merge(options, {
+        basePath: join(FIXTURES_DIR, 'local-require'),
+        config: {
+          '*': {
+            includedFiles: ['function/file.js'],
+            ...options.config['*'],
+          },
+        },
+      }),
+    })
+
+    const zip = new AdmZip(files[0].path)
+
+    const fileNames: string[] = zip.getEntries().map((entry) => entry.entryName)
+    const duplicates = fileNames.filter((item, index) => fileNames.indexOf(item) !== index)
+    expect(duplicates).toHaveLength(0)
   })
 })

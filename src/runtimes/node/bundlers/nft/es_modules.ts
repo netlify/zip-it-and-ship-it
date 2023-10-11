@@ -10,7 +10,7 @@ import { ModuleFormat, MODULE_FILE_EXTENSION, MODULE_FORMAT } from '../../utils/
 import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import { getPackageJsonIfAvailable, PackageJson } from '../../utils/package_json.js'
 
-import { transpile } from './transpile.js'
+import { transpileESMToCJS } from './transpile.js'
 
 const getPatchedESMPackages = async (packages: string[], cache: RuntimeCache) => {
   const patchedPackages = await Promise.all(packages.map((path) => patchESMPackage(path, cache)))
@@ -112,8 +112,10 @@ const shouldTranspile = (
   esmPaths: Set<string>,
   reasons: NodeFileTraceReasons,
 ): boolean => {
-  if (cache.has(path)) {
-    return cache.get(path) as boolean
+  const cached = cache.get(path)
+
+  if (typeof cached === 'boolean') {
+    return cached
   }
 
   const reason = reasons.get(path)
@@ -137,6 +139,13 @@ const shouldTranspile = (
 
     return isESM
   }
+
+  // This is called recursively, so it's possible that another iteration will
+  // also try to answer the question of whether this path needs transpiling.
+  // Assuming, for the sake of this iteration, that the answer is yes, just
+  // to avoid an infinite loop. We'll rewrite the map entry with the correct
+  // value before the iteration ends.
+  cache.set(path, true)
 
   // The path should be transpiled if every parent will also be transpiled, or
   // if there is no parent.
@@ -182,9 +191,8 @@ const transpileESM = async ({
   await Promise.all(
     pathsToTranspile.map(async (path) => {
       const absolutePath = resolvePath(path, basePath)
-      const transpiled = await transpile({
+      const transpiled = await transpileESMToCJS({
         config,
-        format: MODULE_FORMAT.COMMONJS,
         name,
         path: absolutePath,
       })

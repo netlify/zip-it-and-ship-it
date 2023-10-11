@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@lib/*": ["super-long-and-awkward-name/*"]
+    }
+  }
+}
