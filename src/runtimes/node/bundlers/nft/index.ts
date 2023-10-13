@@ -55,7 +55,6 @@ const bundle: BundleFunction = async ({
     includedFiles,
     includedFilesBasePath || basePath,
   )
-
   const {
     aliases,
     bundledPaths = [],
