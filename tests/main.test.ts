@@ -575,6 +575,44 @@ describe('zip-it-and-ship-it', () => {
     expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function', 'function.js'))
   })
 
+  testMany(
+    'Includes side files when the function is in a subdirectory',
+    [...allBundleConfigs],
+    async (options, variant) => {
+      const shouldIncludeFiles = variant === 'bundler_default' || variant === 'bundler_default_nft'
+      const { files } = await zipFixture('directory-side-files', { length: 2, opts: options })
+      const unzippedFunctions = await unzipFiles(files)
+      const [funcV1, funcV2] = unzippedFunctions
+      const expectedBundler = {
+        bundler_default: 'zisi',
+        bundler_esbuild: 'esbuild',
+        bundler_esbuild_zisi: 'esbuild',
+        bundler_default_nft: 'nft',
+        bundler_nft: 'nft',
+      }
+
+      expect(funcV1.bundler).toBe(expectedBundler[variant])
+      expect(funcV1.runtimeAPIVersion).toBe(1)
+
+      if (shouldIncludeFiles) {
+        await expect(`${funcV1.unzipPath}/robots.txt`).toPathExist()
+        await expect(`${funcV1.unzipPath}/sub-dir/sub-file.js`).toPathExist()
+      } else {
+        await expect(`${funcV1.unzipPath}/robots.txt`).not.toPathExist()
+        await expect(`${funcV1.unzipPath}/sub-dir/sub-file.js`).not.toPathExist()
+      }
+
+      await expect(`${funcV1.unzipPath}/Desktop.ini`).not.toPathExist()
+      await expect(`${funcV1.unzipPath}/node_modules`).not.toPathExist()
+
+      expect(funcV2.bundler).toBe('nft')
+      expect(funcV2.runtimeAPIVersion).toBe(2)
+      await expect(`${funcV2.unzipPath}/robots.txt`).not.toPathExist()
+      await expect(`${funcV2.unzipPath}/Desktop.ini`).not.toPathExist()
+      await expect(`${funcV2.unzipPath}/node_modules`).not.toPathExist()
+    },
+  )
+
   testMany('Can target a directory with an index.js file', [...allBundleConfigs], async (options) => {
     const fixtureName = 'index-handler'
     const { files } = await zipFixture(fixtureName, {
@@ -2386,11 +2424,11 @@ describe('zip-it-and-ship-it', () => {
 
       expect(func1Entry.displayName).toBe('Internal Function')
       expect(func1Entry.generator).toBe('@netlify/mock-plugin@1.0.0')
-      expect(func1Entry.config.includedFiles).toEqual(['blog/*.md'])
-      expect(func2Entry.config.includedFiles).toEqual(['blog/*.md'])
+      expect(func1Entry.config.includedFiles?.includes('blog/*.md')).toBeTruthy()
+      expect(func2Entry.config.includedFiles?.includes('blog/*.md')).toBeTruthy()
       expect(func2Entry.generator).toBeUndefined()
-      expect(func3Entry.config.includedFiles).toBe(undefined)
-      expect(func4Entry.config.includedFiles).toBe(undefined)
+      expect(func3Entry.config.includedFiles?.includes('blog/*.md')).toBeFalsy()
+      expect(func4Entry.config.includedFiles?.includes('blog/*.md')).toBeFalsy()
 
       const functionPaths = [
         join(func1Entry.unzipPath, 'internal-function.js'),

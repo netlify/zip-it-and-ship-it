@@ -15,6 +15,7 @@ import { getNodeSupportMatrix } from '../../utils/node_version.js'
 import type { GetSrcFilesFunction, BundleFunction } from '../types.js'
 
 import { processESM } from './es_modules.js'
+import { getSideFiles } from './side_files.js'
 import { transform, getTransformer } from './transformer.js'
 
 const appearsToBeModuleName = (name: string) => !name.startsWith('.')
@@ -29,8 +30,27 @@ const bundle: BundleFunction = async ({
   pluginsModulesPath,
   repositoryRoot = basePath,
   runtimeAPIVersion,
+  srcPath,
+  stat,
 }) => {
-  const { includedFiles = [], includedFilesBasePath } = config
+  const { includedFiles = [], includedFilesBasePath, nodeBundler } = config
+
+  // In the legacy `zisi` bundler, functions defined in a sub-directory had any
+  // side files automatically added to the bundle. We replicate this behavior
+  // here when all the following conditions are met:
+  //
+  // 1. The `traceWithNft` flag is enabled, meaning we're in the process of
+  //    replacing the legacy bundler with NFT
+  // 2. No bundler configuration was supplied, meaning the default option is
+  //    being used
+  // 3. The function uses the V1 syntax, since we don't want to extend this
+  //    behavior to V2 functions
+  if (featureFlags.traceWithNft && nodeBundler === undefined && runtimeAPIVersion === 1) {
+    const sideFiles = await getSideFiles(srcPath, stat)
+
+    includedFiles.push(...sideFiles)
+  }
+
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
     includedFilesBasePath || basePath,
