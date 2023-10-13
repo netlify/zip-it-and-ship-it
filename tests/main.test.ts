@@ -577,14 +577,21 @@ describe('zip-it-and-ship-it', () => {
 
   testMany(
     'Includes side files when the function is in a subdirectory',
-    ['bundler_default', 'bundler_default_nft'],
-    async (options, bundler) => {
-      const shouldIncludeFiles = bundler === 'bundler_default' || bundler === 'bundler_default_nft'
+    [...allBundleConfigs],
+    async (options, variant) => {
+      const shouldIncludeFiles = variant === 'bundler_default' || variant === 'bundler_default_nft'
       const { files } = await zipFixture('directory-side-files', { length: 2, opts: options })
       const unzippedFunctions = await unzipFiles(files)
       const [funcV1, funcV2] = unzippedFunctions
+      const expectedBundler = {
+        bundler_default: 'zisi',
+        bundler_esbuild: 'esbuild',
+        bundler_esbuild_zisi: 'esbuild',
+        bundler_default_nft: 'nft',
+        bundler_nft: 'nft',
+      }
 
-      expect(funcV1.bundler).toBe(bundler === 'bundler_default' ? 'zisi' : 'nft')
+      expect(funcV1.bundler).toBe(expectedBundler[variant])
       expect(funcV1.runtimeAPIVersion).toBe(1)
 
       if (shouldIncludeFiles) {
