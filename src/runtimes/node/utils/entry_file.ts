@@ -37,6 +37,7 @@ const getEntryFileContents = (
       // See https://esbuild.github.io/content-types/#default-interop.
       'const funcModule = typeof func.default === "function" ? func : func.default',
 
+      `global.Netlify = bootstrap.getNetlifyGlobal()`,
       `export const handler = bootstrap.getLambdaHandler(funcModule)`,
     ].join(';')
   }
