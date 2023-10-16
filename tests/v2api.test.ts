@@ -467,4 +467,37 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       expect(customErrorInfo.location.runtime).toBe('js')
     }
   })
+
+  testMany(
+    'Retrieves the process environment through the Netlify.env helper',
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+    async (options) => {
+      const { files, tmpDir } = await zipFixture('v2-api-environment-variables', {
+        fixtureDir: FIXTURES_ESM_DIR,
+        opts: merge(options, {
+          archiveFormat: ARCHIVE_FORMAT.NONE,
+        }),
+      })
+
+      vi.stubEnv('foo', 'foo!')
+
+      const [{ name: archive, entryFilename }] = files
+      const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+      const { body: bodyStream, statusCode } = await invokeLambda(func)
+      const body = await readAsBuffer(bodyStream)
+
+      const parsed = JSON.parse(body)
+
+      expect(parsed).toMatchObject({
+        text: 'Foo bar!',
+        foo: true,
+        env: expect.objectContaining({
+          foo: 'foo!',
+        }),
+      })
+      // bar got set and deleted again
+      expect(parsed).not.toHaveProperty('bar')
+      expect(statusCode).toBe(200)
+    },
+  )
 })
