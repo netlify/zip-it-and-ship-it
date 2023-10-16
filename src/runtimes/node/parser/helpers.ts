@@ -27,6 +27,12 @@ const isDotExpression = (node: Expression, expression: string[]): boolean => {
   return node.object.type === 'Identifier' && object[0] === node.object.name && property === node.property.name
 }
 
+export const isESMImportExport = (node: Statement) =>
+  node.type === 'ImportDeclaration' ||
+  node.type === 'ExportNamedDeclaration' ||
+  node.type === 'ExportDefaultDeclaration' ||
+  node.type === 'ExportAllDeclaration'
+
 export const isImport = (node: Statement, importPath: string): node is ImportDeclaration =>
   node.type === 'ImportDeclaration' && node.source.value === importPath
 

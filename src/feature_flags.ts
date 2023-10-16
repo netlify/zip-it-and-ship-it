@@ -10,13 +10,6 @@ export const defaultFlags = {
   // Use NFT as the default bundler.
   traceWithNft: false,
 
-  // Should Lambda functions inherit the build Node.js version
-  functions_inherit_build_nodejs_version: false,
-
-  // Emit a system log for every path that has been included in the bundle due
-  // to the parsing of a dynamic import.
-  zisi_log_dynamic_imports: false,
-
   // Output pure (i.e. untranspiled) ESM files when the function file has ESM
   // syntax and the parent `package.json` file has `{"type": "module"}`.
   zisi_pure_esm: false,
@@ -28,11 +21,14 @@ export const defaultFlags = {
   // Output CJS file extension.
   zisi_output_cjs_extension: false,
 
-  // Inject the compatibility layer required for the v2 runtime API to work.
-  zisi_functions_api_v2: false,
-
   // Create unique entry file instead of a file that is based on the function name.
   zisi_unique_entry_file: false,
+
+  // If multiple glob stars are in includedFiles, fail the build instead of warning.
+  zisi_esbuild_fail_double_glob: false,
+
+  // Bundle for the provided.AL2 runtime for Go functions.
+  zisi_golang_use_al2: false,
 } as const
 
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>

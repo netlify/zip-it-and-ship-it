@@ -2,6 +2,7 @@ import { mkdir, readFile, chmod, symlink, writeFile, rm } from 'fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'path'
 import { arch, platform, version as nodeVersion } from 'process'
 
+import AdmZip from 'adm-zip'
 import cpy from 'cpy'
 import merge from 'deepmerge'
 import { execa, execaNode } from 'execa'
@@ -343,7 +344,7 @@ describe('zip-it-and-ship-it', () => {
     ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi'],
     async (options) => {
       await expect(zipNode('invalid-package-json', { opts: options })).rejects.toThrowError(
-        /(invalid json|package.json:1:1: error: expected string but found "{")/i,
+        /(invalid json|package.json:1:1: error: expected string in json but found "{")/i,
       )
     },
   )
@@ -573,6 +574,44 @@ describe('zip-it-and-ship-it', () => {
 
     expect(files[0].mainFile).toBe(join(FIXTURES_DIR, fixtureName, 'function', 'function.js'))
   })
+
+  testMany(
+    'Includes side files when the function is in a subdirectory',
+    [...allBundleConfigs],
+    async (options, variant) => {
+      const shouldIncludeFiles = variant === 'bundler_default' || variant === 'bundler_default_nft'
+      const { files } = await zipFixture('directory-side-files', { length: 2, opts: options })
+      const unzippedFunctions = await unzipFiles(files)
+      const [funcV1, funcV2] = unzippedFunctions
+      const expectedBundler = {
+        bundler_default: 'zisi',
+        bundler_esbuild: 'esbuild',
+        bundler_esbuild_zisi: 'esbuild',
+        bundler_default_nft: 'nft',
+        bundler_nft: 'nft',
+      }
+
+      expect(funcV1.bundler).toBe(expectedBundler[variant])
+      expect(funcV1.runtimeAPIVersion).toBe(1)
+
+      if (shouldIncludeFiles) {
+        await expect(`${funcV1.unzipPath}/robots.txt`).toPathExist()
+        await expect(`${funcV1.unzipPath}/sub-dir/sub-file.js`).toPathExist()
+      } else {
+        await expect(`${funcV1.unzipPath}/robots.txt`).not.toPathExist()
+        await expect(`${funcV1.unzipPath}/sub-dir/sub-file.js`).not.toPathExist()
+      }
+
+      await expect(`${funcV1.unzipPath}/Desktop.ini`).not.toPathExist()
+      await expect(`${funcV1.unzipPath}/node_modules`).not.toPathExist()
+
+      expect(funcV2.bundler).toBe('nft')
+      expect(funcV2.runtimeAPIVersion).toBe(2)
+      await expect(`${funcV2.unzipPath}/robots.txt`).not.toPathExist()
+      await expect(`${funcV2.unzipPath}/Desktop.ini`).not.toPathExist()
+      await expect(`${funcV2.unzipPath}/node_modules`).not.toPathExist()
+    },
+  )
 
   testMany('Can target a directory with an index.js file', [...allBundleConfigs], async (options) => {
     const fixtureName = 'index-handler'
@@ -1281,10 +1320,10 @@ describe('zip-it-and-ship-it', () => {
     async (options) => {
       const fixtureName = 'included_files'
       const opts = merge(options, {
+        basePath: join(FIXTURES_DIR, fixtureName),
         config: {
           '*': {
             includedFiles: ['content/*', '!content/post3.md', 'something.md'],
-            includedFilesBasePath: join(FIXTURES_DIR, fixtureName),
           },
         },
       })
@@ -1508,55 +1547,19 @@ describe('zip-it-and-ship-it', () => {
     }
   })
 
-  test('Returns a list of all modules with dynamic imports in a `nodeModulesWithDynamicImports` property', async () => {
+  test('Bundles dynamic imports', async () => {
     const fixtureName = 'node-module-dynamic-import'
-    const { files } = await zipNode(fixtureName, {
+    await zipNode(fixtureName, {
       opts: { basePath: join(FIXTURES_DIR, fixtureName), config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } } },
     })
-
-    expect(files[0].nodeModulesWithDynamicImports).toHaveLength(2)
-    expect(files[0].nodeModulesWithDynamicImports).toContain('test-two')
-    expect(files[0].nodeModulesWithDynamicImports).toContain('test-three')
   })
 
-  test('Returns an empty list of modules with dynamic imports if the modules are missing a `package.json`', async () => {
-    const { files } = await zipNode('node-module-dynamic-import-invalid', {
-      opts: { config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } } },
-    })
-
-    expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
-  })
-
-  test('Leaves dynamic imports untouched when the `processDynamicNodeImports` configuration property is `false`', async () => {
-    const fixtureName = 'node-module-dynamic-import-template-literal'
-    const { files } = await zipNode(fixtureName, {
-      opts: {
-        basePath: join(FIXTURES_DIR, fixtureName),
-        config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD, processDynamicNodeImports: false } },
-      },
-    })
-    const functionSource = await readFile(`${files[0].unzipPath}/function.js`, 'utf8')
-
-    /* eslint-disable no-template-curly-in-string */
-    expect(functionSource).toMatch('const require1 = require(`./files/${number}.js`);')
-    expect(functionSource).toMatch('const require2 = require(`./files/${number}`);')
-    expect(functionSource).toMatch('const require3 = require(`./files/${parent.child}`);')
-    expect(functionSource).toMatch('const require4 = require(`./files/${arr[0]}`);')
-    expect(functionSource).toMatch('const require5 = require(`./files/${number.length > 0 ? number : "uh-oh"}`);')
-    /* eslint-enable no-template-curly-in-string */
-  })
-
-  test('Adds a runtime shim and includes the files needed for dynamic imports using a template literal', async () => {
-    const systemLog = vi.fn()
+  test('Bundles dynamic imports with template literals', async () => {
     const fixtureName = 'node-module-dynamic-import-template-literal'
     const { files } = await zipNode(fixtureName, {
       opts: {
         basePath: join(FIXTURES_DIR, fixtureName),
         config: { '*': { nodeBundler: NODE_BUNDLER.ESBUILD } },
-        featureFlags: {
-          zisi_log_dynamic_imports: true,
-        },
-        systemLog,
       },
     })
 
@@ -1567,28 +1570,6 @@ describe('zip-it-and-ship-it', () => {
     // eslint-disable-next-line unicorn/new-for-builtins
     expect(values).toEqual(Array(expectedLength).fill(true))
     expect(() => func('two')).toThrowError()
-    expect(files[0].nodeModulesWithDynamicImports).toHaveLength(0)
-
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      'Functions bundling processed dynamic import with expression: require(`./files/${parent.child}`)',
-    )
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      "Functions bundling processed dynamic import with expression: require(`./files/${number.length > 0 ? number : 'uh-oh'}`)",
-    )
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      'Functions bundling processed dynamic import with expression: require(`./files/${number}`)',
-    )
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      'Functions bundling processed dynamic import with expression: require(`./files/${arr[0]}`)',
-    )
-    expect(systemLog).toHaveBeenCalledWith(
-      // eslint-disable-next-line no-template-curly-in-string
-      'Functions bundling processed dynamic import with expression: require(`./files/${number}.js`)',
-    )
   })
 
   test('Leaves dynamic imports untouched when the files required to resolve the expression cannot be packaged at build time', async () => {
@@ -1607,7 +1588,7 @@ describe('zip-it-and-ship-it', () => {
     expect(functionSource).toMatch('const require3 = require(foo(number));')
   })
 
-  test('Adds a runtime shim and includes the files needed for dynamic imports using an expression built with the `+` operator', async () => {
+  test('Bundles dynamic imports with the `+` operator', async () => {
     const fixtureName = 'node-module-dynamic-import-2'
     const { files } = await zipNode(fixtureName, {
       opts: {
@@ -1625,7 +1606,7 @@ describe('zip-it-and-ship-it', () => {
     expect(() => func('fr')).toThrowError()
   })
 
-  test('The dynamic import runtime shim handles files in nested directories', async () => {
+  test('Bundles dynamic imports with nested directories', async () => {
     const fixtureName = 'node-module-dynamic-import-4'
     const { files } = await zipNode(fixtureName, {
       opts: {
@@ -1645,7 +1626,7 @@ describe('zip-it-and-ship-it', () => {
     expect(() => func('fr')).toThrowError()
   })
 
-  test('The dynamic import runtime shim handles files in nested directories when using `archiveFormat: "none"`', async () => {
+  test('Bundles dynamic imports with nested directories when using `archiveFormat: "none"`', async () => {
     const fixtureName = 'node-module-dynamic-import-4'
     const { tmpDir } = await zipNode(fixtureName, {
       opts: {
@@ -1680,6 +1661,34 @@ describe('zip-it-and-ship-it', () => {
     expect(func('pt')[0]).toEqual(['sim', 'não'])
     expect(func('pt')[1]).toEqual(['sim', 'não'])
     expect(() => func('en')).toThrowError()
+  })
+
+  test('included_files` with multiple glob stars are correctly resolved before passing to esbuild', async () => {
+    const fixtureName = 'node-module-dynamic-import-2'
+
+    const { files } = await zipNode(fixtureName, {
+      opts: {
+        basePath: join(FIXTURES_DIR, fixtureName),
+        config: { '*': { includedFiles: ['!**/en.*'], nodeBundler: NODE_BUNDLER.ESBUILD } },
+      },
+    })
+
+    const func = await importFunctionFile(`${files[0].unzipPath}/function.js`)
+
+    expect(() => func('en')).toThrowError()
+  })
+
+  test('included_files` with node_modules pattern is correctly transformed into module name', async () => {
+    const fixtureName = 'node-module-dynamic-import'
+
+    await expect(
+      zipNode(fixtureName, {
+        opts: {
+          basePath: join(FIXTURES_DIR, fixtureName),
+          config: { '*': { includedFiles: ['!node_modules/@org/*'], nodeBundler: NODE_BUNDLER.ESBUILD } },
+        },
+      }),
+    ).rejects.toThrowError("Cannot find module '@org/test'")
   })
 
   testMany(
@@ -1770,13 +1779,20 @@ describe('zip-it-and-ship-it', () => {
   })
 
   test('Zips Go function binaries if the `zipGo` config property is set', async () => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+
     const fixtureName = 'go-simple'
     const { files } = await zipFixture(fixtureName, {
       opts: {
+        manifest: manifestPath,
         config: {
           '*': {
             zipGo: true,
           },
+        },
+        featureFlags: {
+          zisi_golang_use_al2: true,
         },
       },
     })
@@ -1788,8 +1804,12 @@ describe('zip-it-and-ship-it', () => {
     expect(func.runtime).toBe('go')
     expect(func.path.endsWith('.zip')).toBe(true)
 
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+    expect(manifest.functions[0].runtimeVersion).toEqual('provided.al2')
+
     const unzippedFunctions = await unzipFiles([func])
-    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'test')
+    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'bootstrap')
 
     await expect(unzippedBinaryPath).toPathExist()
 
@@ -1806,13 +1826,20 @@ describe('zip-it-and-ship-it', () => {
       return {} as any
     })
 
+    const { path: manifestTmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(manifestTmpDir, 'manifest.json')
+
     const fixtureName = 'go-source'
     const { files, tmpDir } = await zipFixture(fixtureName, {
       opts: {
+        manifest: manifestPath,
         config: {
           '*': {
             zipGo: true,
           },
+        },
+        featureFlags: {
+          zisi_golang_use_al2: true,
         },
       },
     })
@@ -1821,12 +1848,16 @@ describe('zip-it-and-ship-it', () => {
     expect(func.runtime).toBe('go')
     expect(func.path.endsWith('.zip')).toBe(true)
 
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+    expect(manifest.functions[0].runtimeVersion).toEqual('provided.al2')
+
     // remove the binary before unzipping
     await rm(join(tmpDir, 'go-func-1'), { maxRetries: 10 })
 
     const unzippedFunctions = await unzipFiles([func])
 
-    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'go-func-1')
+    const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'bootstrap')
     const unzippedBinaryContents = await readFile(unzippedBinaryPath, 'utf8')
 
     expect(mockSource).toBe(unzippedBinaryContents)
@@ -2310,6 +2341,21 @@ describe('zip-it-and-ship-it', () => {
   )
 
   testMany(
+    'Sets `invocationMode: "background"` on functions with a `-background` suffix in the filename',
+    [...allBundleConfigs, 'bundler_none'],
+    async (options) => {
+      const { files } = await zipFixture('background', {
+        opts: options,
+        length: 3,
+      })
+
+      files.forEach((result) => {
+        expect(result.invocationMode).toBe('background')
+      })
+    },
+  )
+
+  testMany(
     'Throws error when `schedule` helper is used but cron expression not found',
     [...allBundleConfigs, 'bundler_none'],
     async (options) => {
@@ -2378,11 +2424,11 @@ describe('zip-it-and-ship-it', () => {
 
       expect(func1Entry.displayName).toBe('Internal Function')
       expect(func1Entry.generator).toBe('@netlify/mock-plugin@1.0.0')
-      expect(func1Entry.config.includedFiles).toEqual(['blog/*.md'])
-      expect(func2Entry.config.includedFiles).toEqual(['blog/*.md'])
+      expect(func1Entry.config.includedFiles?.includes('blog/*.md')).toBeTruthy()
+      expect(func2Entry.config.includedFiles?.includes('blog/*.md')).toBeTruthy()
       expect(func2Entry.generator).toBeUndefined()
-      expect(func3Entry.config.includedFiles).toBe(undefined)
-      expect(func4Entry.config.includedFiles).toBe(undefined)
+      expect(func3Entry.config.includedFiles?.includes('blog/*.md')).toBeFalsy()
+      expect(func4Entry.config.includedFiles?.includes('blog/*.md')).toBeFalsy()
 
       const functionPaths = [
         join(func1Entry.unzipPath, 'internal-function.js'),
@@ -2759,6 +2805,28 @@ describe('zip-it-and-ship-it', () => {
     },
   )
 
+  testMany('All ESM bundlers can handle import loops', ['bundler_esbuild', 'bundler_nft'], async (options) => {
+    const fixtureName = 'node-esm-import-loop'
+    const opts = merge(options, {
+      basePath: join(FIXTURES_DIR, fixtureName),
+      config: {
+        '*': {
+          nodeVersion: 'nodejs16.x',
+        },
+      },
+    })
+    const { files, tmpDir } = await zipFixture(`${fixtureName}/functions`, {
+      length: 1,
+      opts,
+    })
+
+    await unzipFiles(files)
+
+    const func = await importFunctionFile(join(tmpDir, 'func1', 'func1.js'))
+
+    expect(func.handler()).toBe(true)
+  })
+
   testMany('Outputs correct entryFilename', ['bundler_esbuild', 'bundler_nft', 'bundler_default'], async (options) => {
     const { files } = await zipFixture('node-mts-extension', {
       length: 3,
@@ -2771,5 +2839,39 @@ describe('zip-it-and-ship-it', () => {
       const { handler } = await importFunctionFile(`${unzipPath}/${entryFilename}`)
       expect(handler()).toBe(true)
     }
+  })
+
+  testMany('esbuild hides unactionable import.meta warning', ['bundler_esbuild'], async (options) => {
+    const {
+      files: [{ bundlerWarnings }],
+    } = await zipFixture('import-meta-warning', {
+      length: 1,
+      opts: options,
+    })
+    expect(bundlerWarnings).toHaveLength(1)
+    expect((bundlerWarnings?.[0] as any).text).toEqual(
+      `"import.meta" is not available and will be empty, use __dirname instead`,
+    )
+  })
+
+  testMany('only includes files once in a zip', [...allBundleConfigs], async (options) => {
+    const { files } = await zipFixture('local-require', {
+      length: 1,
+      opts: merge(options, {
+        basePath: join(FIXTURES_DIR, 'local-require'),
+        config: {
+          '*': {
+            includedFiles: ['function/file.js'],
+            ...options.config['*'],
+          },
+        },
+      }),
+    })
+
+    const zip = new AdmZip(files[0].path)
+
+    const fileNames: string[] = zip.getEntries().map((entry) => entry.entryName)
+    const duplicates = fileNames.filter((item, index) => fileNames.indexOf(item) !== index)
+    expect(duplicates).toHaveLength(0)
   })
 })

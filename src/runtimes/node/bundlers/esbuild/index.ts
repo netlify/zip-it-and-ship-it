@@ -54,7 +54,6 @@ const bundle: BundleFunction = async ({
   extension,
   featureFlags,
   filename,
-  logger,
   mainFile,
   name,
   pluginsModulesPath,
@@ -73,17 +72,14 @@ const bundle: BundleFunction = async ({
     inputs,
     moduleFormat,
     nativeNodeModules = {},
-    nodeModulesWithDynamicImports,
     outputExtension,
     warnings,
   } = await bundleJsFile({
     additionalModulePaths: pluginsModulesPath ? [pluginsModulesPath] : [],
-    basePath,
     config,
     externalModules,
     featureFlags,
     ignoredModules,
-    logger,
     mainFile,
     name,
     srcDir,
@@ -133,7 +129,6 @@ const bundle: BundleFunction = async ({
     mainFile: normalizedMainFile,
     moduleFormat,
     nativeNodeModules,
-    nodeModulesWithDynamicImports,
     srcFiles: [...supportingSrcFiles, ...bundlePaths.keys()],
   }
 }

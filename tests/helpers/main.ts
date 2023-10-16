@@ -91,16 +91,27 @@ export const zipFixture = async function (
 
 export const zipCheckFunctions = async function (
   fixture: string[] | string,
-  { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts }: ZipOptions & { tmpDir: string },
+  { length = 1, fixtureDir = FIXTURES_DIR, tmpDir, opts = {} }: ZipOptions & { tmpDir: string },
 ): Promise<ZipReturn> {
   const srcFolders = Array.isArray(fixture)
     ? fixture.map((srcFolder) => `${fixtureDir}/${srcFolder}`)
     : `${fixtureDir}/${fixture}`
 
-  const files = await zipFunctions(srcFolders, tmpDir, opts)
+  let basePath: string | undefined
 
-  expect(Array.isArray(files)).toBe(true)
-  expect(files).toHaveLength(length)
+  if (!opts.basePath && typeof fixture === 'string') {
+    basePath = resolve(fixtureDir, fixture)
+  }
+
+  const files = await zipFunctions(srcFolders, tmpDir, { basePath, ...opts })
+
+  if (!Array.isArray(files)) {
+    throw new TypeError(`Expected 'zipFunctions' to return an array, found ${typeof files}`)
+  }
+
+  if (files.length !== length) {
+    throw new Error(`Expected 'zipFunctions' to return ${length} items, found ${files.length}`)
+  }
 
   return { files, tmpDir }
 }
@@ -184,6 +195,8 @@ export const importFunctionFile = async function <T = any>(functionPath: string)
   return result.default === undefined ? result : result.default
 }
 
+const normalizedRelative = (from: string, to: string) => relative(from, to).replace(/\\/g, '/')
+
 export const normalizeFiles = function (
   fixtureDir: string,
   {
@@ -195,8 +208,8 @@ export const normalizeFiles = function (
   },
 ) {
   return {
-    mainFile: relative(fixtureDir, mainFile).replace(/\\/g, '/'),
-    srcFile: srcFile ? relative(fixtureDir, srcFile).replace(/\\/g, '/') : undefined,
     ...rest,
+    mainFile: normalizedRelative(fixtureDir, mainFile),
+    srcFile: srcFile ? normalizedRelative(fixtureDir, srcFile) : undefined,
   }
 }

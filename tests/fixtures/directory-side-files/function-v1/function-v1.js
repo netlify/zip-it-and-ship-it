@@ -1,0 +1,3 @@
+exports.handler = () => ({
+  body: "Hello"
+})

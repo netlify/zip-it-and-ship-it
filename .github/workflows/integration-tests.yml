@@ -11,16 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checking out zip-it-and-ship-it
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: zip-it-and-ship-it
       - name: Checking out test site
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: netlify/next-runtime
           path: test-site
       - name: Checking out netlify-cli
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: netlify/cli
           path: netlify-cli
@@ -34,6 +34,8 @@ jobs:
             zip-it-and-ship-it/package-lock.json
             test-site/package-lock.json
             netlify-cli/package-lock.json
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
       - name: Installing netlify-cli
         run: npm ci
         working-directory: netlify-cli
@@ -57,13 +59,14 @@ jobs:
       - name: Building and deploying site
         run:
           $GITHUB_WORKSPACE/netlify-cli/bin/run.mjs deploy --build --json --site ${{ secrets.NETLIFY_SITE_ID }} --auth
-          ${{ secrets.NETLIFY_TOKEN }} --functions .netlify/functions > .netlify-deploy-log.json
-        working-directory: test-site/demos/default
+          ${{ secrets.NETLIFY_TOKEN }} --cwd demos/default --functions .netlify/functions > .netlify-deploy-log.json
+        working-directory: test-site
       - name: Parsing deploy result
         run: |
+          cat ./.netlify-deploy-log.json
           node -e "console.log('deploy_log_url=' + require('./.netlify-deploy-log.json').logs)" >> $GITHUB_ENV
-          node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENV
-        working-directory: test-site/demos/default
+          node -e "console.log('deploy_url=' + require('./.netlify-deploy-log.json').deploy_url)" >> $GITHUB_ENVrun: node scripts/parse_deploy_result.mjs ./.netlify-deploy-log.json >> $GITHUB_ENV
+        working-directory: test-site
       - name: Cypress run
         uses: cypress-io/github-action@v5
         with:

@@ -1,3 +1,5 @@
+import babelTypes from '@babel/types'
+
 import type { BindingMethod } from '../../parser/bindings.js'
 import type { ISCHandlerArg } from '../index.js'
 
@@ -7,7 +9,7 @@ export const parse = ({ args }: { args: ISCHandlerArg[] }, getAllBindings: Bindi
   if (expression.type === 'Identifier') {
     const binding = getAllBindings().get(expression.name)
 
-    if (binding) {
+    if (binding && babelTypes.isExpression(binding)) {
       expression = binding
     }
   }

@@ -1,9 +1,12 @@
+import { readFile } from 'fs/promises'
+import { join, resolve } from 'path'
 import { version as nodeVersion } from 'process'
 import { promisify } from 'util'
 
 import merge from 'deepmerge'
 import glob from 'glob'
 import semver from 'semver'
+import { dir as getTmpDir } from 'tmp-promise'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ARCHIVE_FORMAT } from '../src/archive.js'
@@ -27,12 +30,12 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     async (options) => {
       const { files } = await zipFixture('v2-api', {
         fixtureDir: FIXTURES_ESM_DIR,
-        opts: merge(options, {
-          featureFlags: { zisi_functions_api_v2: true },
-        }),
+        opts: options,
       })
 
       for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('esm')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -55,12 +58,12 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     async (options) => {
       const { files } = await zipFixture('v2-api-mjs', {
         fixtureDir: FIXTURES_ESM_DIR,
-        opts: merge(options, {
-          featureFlags: { zisi_functions_api_v2: true },
-        }),
+        opts: options,
       })
 
       for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('esm')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -85,11 +88,12 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
-          featureFlags: { zisi_functions_api_v2: true },
         }),
       })
 
       for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('esm')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -113,11 +117,12 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         fixtureDir: FIXTURES_ESM_DIR,
         opts: merge(options, {
           archiveFormat: ARCHIVE_FORMAT.NONE,
-          featureFlags: { zisi_functions_api_v2: true },
         }),
       })
 
       for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('cjs')
         expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
         expect(entry.runtimeAPIVersion).toBe(2)
       }
@@ -137,11 +142,195 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     },
   )
 
+  testMany(
+    'Handles an ESM function that imports both CJS and ESM modules',
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+    async (options) => {
+      const fixtureName = 'v2-api-esm-mixed-modules'
+      const { files, tmpDir } = await zipFixture(fixtureName, {
+        length: 2,
+        fixtureDir: FIXTURES_ESM_DIR,
+        opts: merge(options, {
+          archiveFormat: ARCHIVE_FORMAT.NONE,
+        }),
+      })
+
+      for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('esm')
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+        expect(entry.runtimeAPIVersion).toBe(2)
+
+        const expectedInputs = [
+          'package.json',
+          entry.name === 'function-js' ? 'function-js.js' : 'function-ts.ts',
+          'node_modules/cjs-module/package.json',
+          'node_modules/cjs-module/index.js',
+          'node_modules/esm-module/package.json',
+          'node_modules/esm-module/index.js',
+          'node_modules/esm-module/foo.js',
+          'node_modules/cjs-module/foo.js',
+          'lib/helper1.ts',
+          'lib/helper2.ts',
+          'lib/helper3.ts',
+          'lib/helper4.js',
+          'lib/helper5.mjs',
+          'lib/helper6.js',
+        ]
+          .map((relativePath) => resolve(FIXTURES_ESM_DIR, fixtureName, relativePath))
+          .sort()
+
+        expect(entry.inputs?.sort()).toEqual(expectedInputs)
+
+        const [{ name: archive, entryFilename }] = files
+
+        const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+        const { body: bodyStream, statusCode } = await invokeLambda(func)
+        const body = await readAsBuffer(bodyStream)
+
+        expect(JSON.parse(body)).toEqual({
+          cjs: { foo: '🌭', type: 'cjs' },
+          esm: { foo: '🌭', type: 'esm' },
+          helper1: 'helper1',
+          helper2: 'helper2',
+          helper3: 'helper3',
+          helper4: 'helper4',
+          helper5: 'helper5',
+        })
+        expect(statusCode).toBe(200)
+      }
+    },
+  )
+
+  testMany(
+    'Handles a CJS function that imports CJS and ESM modules',
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+    async (options) => {
+      const fixtureName = 'v2-api-cjs-modules'
+      const { files, tmpDir } = await zipFixture(fixtureName, {
+        length: 2,
+        fixtureDir: FIXTURES_ESM_DIR,
+        opts: merge(options, {
+          archiveFormat: ARCHIVE_FORMAT.NONE,
+        }),
+      })
+
+      for (const entry of files) {
+        expect(entry.bundler).toBe('nft')
+        expect(entry.outputModuleFormat).toBe('cjs')
+        expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+        expect(entry.runtimeAPIVersion).toBe(2)
+
+        const expectedInputs = [
+          'package.json',
+          entry.name === 'function-ts' ? 'function-ts.ts' : 'function-js.js',
+          'node_modules/cjs-module/package.json',
+          'node_modules/cjs-module/index.js',
+          'node_modules/esm-module/package.json',
+          'node_modules/esm-module/index.js',
+          'node_modules/esm-module/foo.js',
+          'node_modules/cjs-module/foo.js',
+          'lib/helper1.ts',
+          'lib/helper2.ts',
+          'lib/helper3.ts',
+          'lib/helper4.js',
+          'lib/helper5.mjs',
+        ]
+          .map((relativePath) => resolve(FIXTURES_ESM_DIR, fixtureName, relativePath))
+          .sort()
+
+        expect(entry.inputs?.sort()).toEqual(expectedInputs)
+
+        const [{ name: archive, entryFilename }] = files
+
+        const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+        const { body: bodyStream, statusCode } = await invokeLambda(func)
+        const body = await readAsBuffer(bodyStream)
+
+        expect(JSON.parse(body)).toEqual({
+          cjs: { foo: '🌭', type: 'cjs' },
+          esm: { foo: '🌭', type: 'esm' },
+          helper1: 'helper1',
+          helper2: 'helper2',
+          helper3: 'helper3',
+          helper4: 'helper4',
+          helper5: 'helper5',
+        })
+        expect(statusCode).toBe(200)
+      }
+    },
+  )
+
+  testMany('Handles a CJS TypeScript function that uses path aliases', ['bundler_default'], async (options) => {
+    const { files, tmpDir } = await zipFixture('v2-api-cjs-ts-aliases', {
+      fixtureDir: FIXTURES_ESM_DIR,
+      opts: merge(options, {
+        archiveFormat: ARCHIVE_FORMAT.NONE,
+      }),
+    })
+
+    for (const entry of files) {
+      expect(entry.bundler).toBe('nft')
+      expect(entry.outputModuleFormat).toBe('cjs')
+      expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+      expect(entry.runtimeAPIVersion).toBe(2)
+    }
+
+    const [{ name: archive, entryFilename }] = files
+
+    const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+    const { body: bodyStream, statusCode } = await invokeLambda(func)
+    const body = await readAsBuffer(bodyStream)
+
+    expect(JSON.parse(body)).toEqual({
+      cjs: { foo: '🌭', type: 'cjs' },
+      esm: { foo: '🌭', type: 'esm' },
+      helper1: 'helper1',
+      helper2: 'helper2',
+      helper3: 'helper3',
+      helper4: 'helper4',
+      helper5: 'helper5',
+    })
+    expect(statusCode).toBe(200)
+  })
+
+  testMany('Handles an ESM TypeScript function that uses path aliases', ['bundler_default'], async (options) => {
+    const { files, tmpDir } = await zipFixture('v2-api-esm-ts-aliases', {
+      fixtureDir: FIXTURES_ESM_DIR,
+      opts: merge(options, {
+        archiveFormat: ARCHIVE_FORMAT.NONE,
+      }),
+    })
+
+    for (const entry of files) {
+      expect(entry.bundler).toBe('nft')
+      expect(entry.outputModuleFormat).toBe('esm')
+      expect(entry.entryFilename).toBe('___netlify-entry-point.mjs')
+      expect(entry.runtimeAPIVersion).toBe(2)
+    }
+
+    const [{ name: archive, entryFilename }] = files
+
+    const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+    const { body: bodyStream, statusCode } = await invokeLambda(func)
+    const body = await readAsBuffer(bodyStream)
+
+    expect(JSON.parse(body)).toEqual({
+      cjs: { foo: '🌭', type: 'cjs' },
+      esm: { foo: '🌭', type: 'esm' },
+      helper1: 'helper1',
+      helper2: 'helper2',
+      helper3: 'helper3',
+      helper4: 'helper4',
+      helper5: 'helper5',
+    })
+    expect(statusCode).toBe(200)
+  })
+
   test('Returns Node.js 18 if older version is set', async () => {
     const { files } = await zipFixture('v2-api-mjs', {
       fixtureDir: FIXTURES_ESM_DIR,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         config: {
           '*': {
             nodeVersion: '16.0.0',
@@ -157,7 +346,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     const { files } = await zipFixture('v2-api-mjs', {
       fixtureDir: FIXTURES_ESM_DIR,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         config: {
           '*': {
             nodeVersion: 'invalid',
@@ -173,7 +361,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     const { files } = await zipFixture('v2-api-mjs', {
       fixtureDir: FIXTURES_ESM_DIR,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         config: {
           '*': {
             nodeVersion: '19.0.0',
@@ -191,7 +378,6 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     await zipFixture('v2-api', {
       fixtureDir: FIXTURES_ESM_DIR,
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         systemLog,
       },
     })
@@ -205,11 +391,80 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
     await zipFixture('simple', {
       opts: {
-        featureFlags: { zisi_functions_api_v2: true },
         systemLog,
       },
     })
 
     expect(systemLog).not.toHaveBeenCalled()
+  })
+
+  test('Extracts routes from the `path` in-source configuration property', async () => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+
+    const { files } = await zipFixture('v2-api-with-path', {
+      fixtureDir: FIXTURES_ESM_DIR,
+      length: 3,
+      opts: {
+        manifest: manifestPath,
+      },
+    })
+
+    expect.assertions(files.length + 2)
+
+    for (const file of files) {
+      switch (file.name) {
+        case 'with-literal':
+          expect(file.routes).toEqual([{ pattern: '/products', literal: '/products', methods: ['GET', 'POST'] }])
+
+          break
+
+        case 'with-named-group':
+          expect(file.routes).toEqual([
+            {
+              pattern: '/products/:id',
+              expression: '^\\/products(?:\\/([^\\/]+?))\\/?$',
+              methods: [],
+            },
+          ])
+
+          break
+
+        case 'with-regex':
+          expect(file.routes).toEqual([
+            {
+              pattern: '/numbers/(\\d+)',
+              expression: '^\\/numbers(?:\\/(\\d+))\\/?$',
+              methods: [],
+            },
+          ])
+
+          break
+
+        default:
+          continue
+      }
+    }
+
+    const manifestString = await readFile(manifestPath, { encoding: 'utf8' })
+    const manifest = JSON.parse(manifestString)
+    expect(manifest.functions[0].routes[0].methods).toEqual(['GET', 'POST'])
+    expect(manifest.functions[0].buildData.runtimeAPIVersion).toEqual(2)
+  })
+
+  test('Flags invalid values of the `path` in-source configuration property as user errors', async () => {
+    expect.assertions(3)
+
+    try {
+      await zipFixture('v2-api-with-invalid-path', {
+        fixtureDir: FIXTURES_ESM_DIR,
+      })
+    } catch (error) {
+      const { customErrorInfo } = error
+
+      expect(customErrorInfo.type).toBe('functionsBundling')
+      expect(customErrorInfo.location.functionName).toBe('function')
+      expect(customErrorInfo.location.runtime).toBe('js')
+    }
   })
 })

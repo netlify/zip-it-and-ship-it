@@ -2,8 +2,10 @@ import { FunctionArchive } from '../function.js'
 import { RuntimeName } from '../runtimes/runtime.js'
 
 import { removeUndefined } from './remove_undefined.js'
+import type { Route } from './routes.js'
 
 export type FunctionResult = Omit<FunctionArchive, 'runtime'> & {
+  routes?: Route[]
   runtime: RuntimeName
   schedule?: string
   runtimeAPIVersion?: number
@@ -13,10 +15,11 @@ export type FunctionResult = Omit<FunctionArchive, 'runtime'> & {
 export const formatZipResult = (archive: FunctionArchive) => {
   const functionResult: FunctionResult = {
     ...archive,
-    inSourceConfig: undefined,
+    staticAnalysisResult: undefined,
+    routes: archive.staticAnalysisResult?.routes,
     runtime: archive.runtime.name,
-    schedule: archive.inSourceConfig?.schedule ?? archive?.config?.schedule,
-    runtimeAPIVersion: archive.inSourceConfig?.runtimeAPIVersion,
+    schedule: archive.staticAnalysisResult?.schedule ?? archive?.config?.schedule,
+    runtimeAPIVersion: archive.staticAnalysisResult?.runtimeAPIVersion,
   }
 
   return removeUndefined(functionResult)

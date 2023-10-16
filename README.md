@@ -278,11 +278,6 @@ Additionally, the following properties also exist for Node.js functions:
   }
   ```
 
-- `nodeModulesWithDynamicImports`: `Array<string>`
-
-  A list of Node modules that reference other files with a dynamic expression (e.g. `require(someFunction())` as opposed
-  to `require('./some-file')`). This is an array containing the module names.
-
 - `runtimeAPIVersion` `number | undefined`
 
   When a function with the new API will be detected this is set to `2`. Otherwise it is set to `1`. `undefined` is only
