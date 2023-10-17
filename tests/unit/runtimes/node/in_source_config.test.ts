@@ -187,6 +187,16 @@ describe('V2 API', () => {
       expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], schedule: '@daily', runtimeAPIVersion: 2 })
     })
 
+    test.only('ESM file with default export wrapped in a literal from an arrow function', () => {
+      const source = `
+      const handler = async () => ({ statusCode: 200, body: "Hello" })
+      const config = { schedule: "@daily" }
+      export { handler as default, config };`
+
+      const isc = parseSource(source, options)
+      expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], schedule: '@daily', runtimeAPIVersion: 2 })
+    })
+
     test('ESM file with default export wrapped in a literal from a function', () => {
       const source = `
       async function handler(){ return { statusCode: 200, body: "Hello" }}
