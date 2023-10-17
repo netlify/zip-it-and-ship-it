@@ -39,6 +39,11 @@ export const traverseNodes = (nodes: Statement[], getAllBindings: BindingMethod)
     }
 
     const esmHandlerExports = getNamedESMExport(node, 'handler', getAllBindings)
+    const esmConfigExports = getNamedESMExport(node, 'config', getAllBindings)
+
+    if (esmConfigExports.length !== 0 && esmConfigExports[0].type === 'object-expression') {
+      configExport = esmConfigExports[0].object
+    }
 
     if (esmHandlerExports.length !== 0) {
       if (esmHandlerExports.some(({ type }) => type === 'default')) {
@@ -59,18 +64,16 @@ export const traverseNodes = (nodes: Statement[], getAllBindings: BindingMethod)
       return
     }
 
-    if (isESMDefaultExport(node)) {
-      hasDefaultExport = true
-
-      return
-    }
-
     const cjsDefaultExports = getCJSExports(node, 'default')
 
     if (cjsDefaultExports.length !== 0) {
       hasDefaultExport = true
 
       return
+    }
+
+    if (isESMDefaultExport(node)) {
+      hasDefaultExport = true
     }
 
     const esmConfig = parseConfigESMExport(node)
@@ -251,19 +254,25 @@ const getExportsFromBindings = (
   name: string,
   getAllBindings: BindingMethod,
 ): ISCExport[] => {
-  const defaultExport = specifiers.find((node) => isDefaultExport(node))
-
-  if (defaultExport && defaultExport.type === 'ExportSpecifier') {
-    const binding = getAllBindings().get(defaultExport.local.name)
-
-    if (binding?.type === 'ArrowFunctionExpression' || binding?.type === 'FunctionDeclaration') {
-      return [{ type: 'default' }]
-    }
-  }
-
   const specifier = specifiers.find((node) => isNamedExport(node, name))
 
+  // If there's no named export with the given name, check if there's a default
   if (!specifier || specifier.type !== 'ExportSpecifier') {
+    const defaultExport = specifiers.find((node) => isDefaultExport(node))
+
+    if (defaultExport && defaultExport.type === 'ExportSpecifier') {
+      const binding = getAllBindings().get(defaultExport.local.name)
+
+      // eslint-disable-next-line max-depth
+      if (
+        binding?.type === 'ArrowFunctionExpression' ||
+        binding?.type === 'FunctionDeclaration' ||
+        binding?.type === 'Identifier'
+      ) {
+        return [{ type: 'default' }]
+      }
+    }
+
     return []
   }
 
