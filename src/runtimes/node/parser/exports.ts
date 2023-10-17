@@ -264,7 +264,11 @@ const getExportsFromBindings = (
       const binding = getAllBindings().get(defaultExport.local.name)
 
       // eslint-disable-next-line max-depth
-      if (binding?.type === 'ArrowFunctionExpression' || binding?.type === 'FunctionDeclaration') {
+      if (
+        binding?.type === 'ArrowFunctionExpression' ||
+        binding?.type === 'FunctionDeclaration' ||
+        binding?.type === 'Identifier'
+      ) {
         return [{ type: 'default' }]
       }
     }

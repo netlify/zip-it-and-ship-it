@@ -208,6 +208,34 @@ describe('V2 API', () => {
       expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], schedule: '@daily', runtimeAPIVersion: 2 })
     })
 
+    test('the Remix handler', () => {
+      const source = `
+      var handler = createRequestHandler({
+        build: server_build_exports,
+        mode: "production"
+      }), server_default = handler, config = {
+        path: "/*"
+      };
+      export {
+        config,
+        server_default as default
+      };
+      `
+
+      const isc = parseSource(source, options)
+      expect(isc).toEqual({
+        inputModuleFormat: 'esm',
+        routes: [
+          {
+            expression: '^(?:\\/(.*))\\/?$',
+            methods: [],
+            pattern: '/*',
+          },
+        ],
+        runtimeAPIVersion: 2,
+      })
+    })
+
     test('ESM file with default export wrapped in a literal from a function', () => {
       const source = `
       async function handler(){ return { statusCode: 200, body: "Hello" }}
