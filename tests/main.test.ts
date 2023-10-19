@@ -1904,6 +1904,7 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         entryFilename: '',
         runtime: 'go',
+        runtimeVersion: 'provided.al2',
       },
       {
         config: expect.anything(),
@@ -1912,6 +1913,7 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         entryFilename: '',
         runtime: 'go',
+        runtimeVersion: 'provided.al2',
       },
     ])
 
@@ -1920,7 +1922,7 @@ describe('zip-it-and-ship-it', () => {
     expect(shellUtils.runCommand).toHaveBeenNthCalledWith(
       1,
       'go',
-      ['build', '-o', expect.stringMatching(/(\/|\\)go-func-1$/), '-ldflags', '-s -w'],
+      ['build', '-o', expect.stringMatching(/(\/|\\)go-func-1$/), '-ldflags', '-s -w', '-tags', 'lambda.norpc'],
       expect.objectContaining({
         env: expect.objectContaining({ CGO_ENABLED: '0', GOOS: 'linux' }),
       }),
@@ -1929,7 +1931,7 @@ describe('zip-it-and-ship-it', () => {
     expect(shellUtils.runCommand).toHaveBeenNthCalledWith(
       2,
       'go',
-      ['build', '-o', expect.stringMatching(/(\/|\\)go-func-2$/), '-ldflags', '-s -w'],
+      ['build', '-o', expect.stringMatching(/(\/|\\)go-func-2$/), '-ldflags', '-s -w', '-tags', 'lambda.norpc'],
       expect.objectContaining({
         env: expect.objectContaining({ CGO_ENABLED: '0', GOOS: 'linux' }),
       }),
