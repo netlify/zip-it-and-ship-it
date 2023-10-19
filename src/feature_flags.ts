@@ -26,9 +26,6 @@ export const defaultFlags = {
 
   // If multiple glob stars are in includedFiles, fail the build instead of warning.
   zisi_esbuild_fail_double_glob: false,
-
-  // Bundle for the provided.AL2 runtime for Go functions.
-  zisi_golang_use_al2: false,
 } as const
 
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>

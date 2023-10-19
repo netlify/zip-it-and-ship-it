@@ -1791,9 +1791,6 @@ describe('zip-it-and-ship-it', () => {
             zipGo: true,
           },
         },
-        featureFlags: {
-          zisi_golang_use_al2: true,
-        },
       },
     })
     const binaryPath = join(FIXTURES_DIR, fixtureName, 'test')
@@ -1837,9 +1834,6 @@ describe('zip-it-and-ship-it', () => {
           '*': {
             zipGo: true,
           },
-        },
-        featureFlags: {
-          zisi_golang_use_al2: true,
         },
       },
     })
