@@ -93,7 +93,7 @@
     "@types/glob": "8.1.0",
     "@types/is-ci": "3.0.3",
     "@types/node": "14.18.63",
-    "@types/normalize-path": "3.0.0",
+    "@types/normalize-path": "3.0.1",
     "@types/resolve": "1.20.3",
     "@types/semver": "7.5.3",
     "@types/tmp": "0.2.4",
