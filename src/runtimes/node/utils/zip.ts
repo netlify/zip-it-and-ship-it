@@ -78,13 +78,29 @@ const createDirectory = async function ({
   runtimeAPIVersion,
   srcFiles,
 }: ZipNodeParameters) {
+  // There is a naming conflict with the entry file if one of the supporting
+  // files (i.e. not the main file) has the path that the entry file needs to
+  // take.
+  const hasEntryFileConflict = conflictsWithEntryFile(srcFiles, {
+    basePath,
+    extension,
+    featureFlags,
+    filename,
+    mainFile,
+    runtimeAPIVersion,
+  })
+
+  // If there is a naming conflict, we move all user files (everything other
+  // than the entry file) to its own sub-directory.
+  const userNamespace = hasEntryFileConflict ? DEFAULT_USER_SUBDIRECTORY : ''
+
   const { contents: entryContents, filename: entryFilename } = getEntryFile({
     commonPrefix: basePath,
     featureFlags,
     filename,
     mainFile,
     moduleFormat,
-    userNamespace: DEFAULT_USER_SUBDIRECTORY,
+    userNamespace,
     runtimeAPIVersion,
   })
   const functionFolder = join(destFolder, basename(filename, extension))
@@ -108,7 +124,7 @@ const createDirectory = async function ({
       const normalizedDestPath = normalizeFilePath({
         commonPrefix: basePath,
         path: destPath,
-        userNamespace: DEFAULT_USER_SUBDIRECTORY,
+        userNamespace,
       })
       const absoluteDestPath = join(functionFolder, normalizedDestPath)
 
