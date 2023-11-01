@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer'
 import { Stats } from 'fs'
-import { mkdir, rm, writeFile } from 'fs/promises'
+import { mkdir, readlink as readLink, rm, symlink, writeFile } from 'fs/promises'
 import os from 'os'
 import { basename, extname, join } from 'path'
 
@@ -68,6 +68,7 @@ const addBootstrapFile = function (srcFiles: string[], aliases: Map<string, stri
 const createDirectory = async function ({
   aliases = new Map(),
   basePath,
+  cache,
   destFolder,
   extension,
   featureFlags,
@@ -116,10 +117,12 @@ const createDirectory = async function ({
     addBootstrapFile(srcFiles, aliases)
   }
 
+  const symlinks = new Map<string, string>()
+
   // Copying source files.
   await pMap(
     srcFiles,
-    (srcFile) => {
+    async (srcFile) => {
       const destPath = aliases.get(srcFile) || srcFile
       const normalizedDestPath = normalizeFilePath({
         commonPrefix: basePath,
@@ -132,10 +135,28 @@ const createDirectory = async function ({
         return mkdirAndWriteFile(absoluteDestPath, rewrites.get(srcFile) as string)
       }
 
+      const stat = await cachedLstat(cache.lstatCache, srcFile)
+
+      // If the path is a symlink, find the link target and add the link to a
+      // `symlinks` map, which we'll later use to create the symlinks in the
+      // target directory. We can't do that right now because the target path
+      // may not have been copied over yet.
+      if (stat.isSymbolicLink()) {
+        const targetPath = await readLink(srcFile)
+
+        symlinks.set(targetPath, absoluteDestPath)
+
+        return
+      }
+
       return copyFile(srcFile, absoluteDestPath)
     },
     { concurrency: COPY_FILE_CONCURRENCY },
   )
+
+  await pMap([...symlinks.entries()], ([target, path]) => symlink(target, path), {
+    concurrency: COPY_FILE_CONCURRENCY,
+  })
 
   return { path: functionFolder, entryFilename }
 }

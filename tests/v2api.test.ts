@@ -12,7 +12,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import { ARCHIVE_FORMAT } from '../src/archive.js'
 
 import { invokeLambda, readAsBuffer } from './helpers/lambda.js'
-import { zipFixture, unzipFiles, importFunctionFile, FIXTURES_ESM_DIR } from './helpers/main.js'
+import { zipFixture, unzipFiles, importFunctionFile, FIXTURES_ESM_DIR, FIXTURES_DIR } from './helpers/main.js'
 import { testMany } from './helpers/test_many.js'
 
 const pGlob = promisify(glob)
@@ -500,4 +500,24 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       expect(statusCode).toBe(200)
     },
   )
+
+  describe('Handles an ESM module installed with pnpm', () => {
+    test('With `archiveFormat: none`', async (options) => {
+      const fixtureName = 'pnpm-esm-v2'
+      const { files, tmpDir } = await zipFixture(join(fixtureName, 'netlify', 'functions'), {
+        opts: merge(options, {
+          archiveFormat: ARCHIVE_FORMAT.NONE,
+          basePath: join(FIXTURES_DIR, fixtureName),
+        }),
+      })
+
+      const [{ name: archive, entryFilename }] = files
+      const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
+      const { body: bodyStream, statusCode } = await invokeLambda(func)
+      const body = await readAsBuffer(bodyStream)
+
+      expect(statusCode).toBe(200)
+      expect(body).toBe('foo!bar')
+    })
+  })
 })
