@@ -519,5 +519,24 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       expect(statusCode).toBe(200)
       expect(body).toBe('foo!bar')
     })
+
+    test('With `archiveFormat: zip`', async (options) => {
+      const fixtureName = 'pnpm-esm-v2'
+      const { files } = await zipFixture(join(fixtureName, 'netlify', 'functions'), {
+        opts: merge(options, {
+          archiveFormat: ARCHIVE_FORMAT.ZIP,
+          basePath: join(FIXTURES_DIR, fixtureName),
+        }),
+      })
+
+      const unzippedFunctions = await unzipFiles(files)
+
+      const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/${files[0].entryFilename}`)
+      const { body: bodyStream, statusCode } = await invokeLambda(func)
+      const body = await readAsBuffer(bodyStream)
+
+      expect(statusCode).toBe(200)
+      expect(body).toBe('foo!bar')
+    })
   })
 })
