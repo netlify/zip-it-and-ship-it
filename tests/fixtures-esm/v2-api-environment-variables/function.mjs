@@ -1,3 +1,5 @@
+const baz = Netlify.env.get('baz')
+
 export default async () => {
   Netlify.env.set('bar', 'bar!')
 
@@ -10,5 +12,6 @@ export default async () => {
     foo: Netlify.env.has('foo'),
     bar: Netlify.env.get('bar'),
     env: Netlify.env.toObject(),
+    baz,
   })
 }
