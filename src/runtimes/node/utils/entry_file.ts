@@ -31,13 +31,12 @@ const getEntryFileContents = (
 
   if (runtimeAPIVersion === 2) {
     return [
-      `import * as func from '${importPath}'`,
       `import * as bootstrap from './${BOOTSTRAP_FILE_NAME}'`,
+      `import * as func from '${importPath}'`,
 
       // See https://esbuild.github.io/content-types/#default-interop.
       'const funcModule = typeof func.default === "function" ? func : func.default',
 
-      `global.Netlify = bootstrap.getNetlifyGlobal()`,
       `export const handler = bootstrap.getLambdaHandler(funcModule)`,
     ].join(';')
   }

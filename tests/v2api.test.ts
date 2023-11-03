@@ -480,6 +480,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       })
 
       vi.stubEnv('foo', 'foo!')
+      vi.stubEnv('baz', 'baz!')
 
       const [{ name: archive, entryFilename }] = files
       const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
@@ -494,6 +495,7 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
         env: expect.objectContaining({
           foo: 'foo!',
         }),
+        baz: 'baz!',
       })
       // bar got set and deleted again
       expect(parsed).not.toHaveProperty('bar')
