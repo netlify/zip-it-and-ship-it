@@ -593,4 +593,68 @@ describe('V2 API', () => {
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
   })
+
+  describe('`preferStatic` property', () => {
+    test('Sets a `prefer_static` property on a single route', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: "/products",
+        preferStatic: true
+      }`
+
+      const { routes } = parseSource(source, options)
+
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [], prefer_static: true }])
+    })
+
+    test('Sets a `prefer_static` property on all routes', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: ["/items", "/products"],
+        preferStatic: true
+      }`
+
+      const { routes } = parseSource(source, options)
+
+      expect(routes).toEqual([
+        { pattern: '/items', literal: '/items', methods: [], prefer_static: true },
+        { pattern: '/products', literal: '/products', methods: [], prefer_static: true },
+      ])
+    })
+
+    test('Does not set a `prefer_static` property if `preferStatic` is not a boolean', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: "/products",
+        preferStatic: "yep"
+      }`
+
+      const { routes } = parseSource(source, options)
+
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
+    })
+
+    test('Does not set a `prefer_static` property if `preferStatic` is not set', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: "/products"
+      }`
+
+      const { routes } = parseSource(source, options)
+
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
+    })
+  })
 })
