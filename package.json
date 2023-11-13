@@ -91,7 +91,7 @@
     "@netlify/eslint-config-node": "7.0.1",
     "@types/archiver": "5.3.4",
     "@types/glob": "8.1.0",
-    "@types/is-ci": "3.0.3",
+    "@types/is-ci": "3.0.4",
     "@types/node": "14.18.63",
     "@types/normalize-path": "3.0.1",
     "@types/resolve": "1.20.4",
