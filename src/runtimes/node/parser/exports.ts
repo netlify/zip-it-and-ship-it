@@ -45,6 +45,15 @@ export const traverseNodes = (nodes: Statement[], getAllBindings: BindingMethod)
       configExport = esmConfigExports[0].object
     }
 
+    if (node.type === 'ExportNamedDeclaration') {
+        for (const exportSpecifier of node.specifiers) {
+            if (exportSpecifier.exported.name === 'default') {
+                hasDefaultExport = true;
+                return;
+            }
+        }    
+    }
+
     if (esmHandlerExports.length !== 0) {
       if (esmHandlerExports.some(({ type }) => type === 'default')) {
         hasDefaultExport = true
