@@ -1,6 +1,5 @@
 import type {
   Declaration,
-  ExportDefaultDeclaration,
   ExportNamedDeclaration,
   ExportSpecifier,
   Expression,
@@ -167,9 +166,14 @@ const isNamedExport = (node: ExportNamedDeclaration['specifiers'][number], name:
   )
 }
 
-// Returns whether a given node is a default export declaration.
-const isESMDefaultExport = (node: Statement): node is ExportDefaultDeclaration =>
-  node.type === 'ExportDefaultDeclaration'
+// Returns whether a given node is or contains a default export declaration.
+const isESMDefaultExport = (node: Statement): boolean =>
+  node.type === 'ExportDefaultDeclaration' ||
+  (node.type === 'ExportNamedDeclaration' &&
+    node.specifiers.some(
+      (exportSpecifier) =>
+        exportSpecifier.exported.type === 'Identifier' && exportSpecifier.exported.name === 'default',
+    ))
 
 /**
  * Finds a `config` named CJS export that maps to an object variable
