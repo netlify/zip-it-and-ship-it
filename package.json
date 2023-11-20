@@ -63,7 +63,7 @@
     "common-path-prefix": "^3.0.0",
     "cp-file": "^10.0.0",
     "es-module-lexer": "^1.0.0",
-    "esbuild": "0.19.5",
+    "esbuild": "0.19.6",
     "execa": "^6.0.0",
     "filter-obj": "^5.0.0",
     "find-up": "^6.0.0",
