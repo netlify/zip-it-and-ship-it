@@ -692,5 +692,20 @@ describe('V2 API', () => {
 
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
     })
+
+    test('Understands minfied true', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: "/products",
+        preferStatic: !0
+      }`
+
+      const { routes } = parseSource(source, options)
+
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [], prefer_static: true }])
+    })
   })
 })
