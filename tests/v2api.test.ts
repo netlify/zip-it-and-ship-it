@@ -43,11 +43,11 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       const unzippedFunctions = await unzipFiles(files)
 
       const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/${files[0].entryFilename}`)
-      const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
+      const { body: bodyStream, multiValueHeaders = {}, statusCode } = await invokeLambda(func)
       const body = await readAsBuffer(bodyStream)
 
       expect(body).toBe('<h1>Hello world</h1>')
-      expect(headers['content-type']).toBe('text/html')
+      expect(multiValueHeaders['content-type']).toEqual(['text/html'])
       expect(statusCode).toBe(200)
     },
   )
@@ -71,11 +71,11 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       const unzippedFunctions = await unzipFiles(files)
 
       const func = await importFunctionFile(`${unzippedFunctions[0].unzipPath}/${files[0].entryFilename}`)
-      const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
+      const { body: bodyStream, multiValueHeaders = {}, statusCode } = await invokeLambda(func)
       const body = await readAsBuffer(bodyStream)
 
       expect(body).toBe('<h1>Hello world</h1>')
-      expect(headers['content-type']).toBe('text/html')
+      expect(multiValueHeaders['content-type']).toEqual(['text/html'])
       expect(statusCode).toBe(200)
     },
   )
@@ -100,11 +100,11 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
 
       const [{ name: archive, entryFilename }] = files
       const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
-      const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
+      const { body: bodyStream, multiValueHeaders = {}, statusCode } = await invokeLambda(func)
       const body = await readAsBuffer(bodyStream)
 
       expect(body).toBe('<h1>Hello world</h1>')
-      expect(headers['content-type']).toBe('text/html')
+      expect(multiValueHeaders['content-type']).toEqual(['text/html'])
       expect(statusCode).toBe(200)
     },
   )
@@ -133,11 +133,11 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       expect(untranspiledFiles).toEqual([])
 
       const func = await importFunctionFile(`${tmpDir}/${archive}/${entryFilename}`)
-      const { body: bodyStream, headers = {}, statusCode } = await invokeLambda(func)
+      const { body: bodyStream, multiValueHeaders = {}, statusCode } = await invokeLambda(func)
       const body = await readAsBuffer(bodyStream)
 
       expect(body).toBe('<h1>Hello world from Typescript</h1>')
-      expect(headers['content-type']).toBe('text/html')
+      expect(multiValueHeaders['content-type']).toEqual(['text/html'])
       expect(statusCode).toBe(200)
     },
   )
