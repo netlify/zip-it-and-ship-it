@@ -245,6 +245,12 @@ const parsePrimitive = (exp: Expression | PatternLike): PrimitiveResult => {
   if (exp.type === 'NullLiteral') {
     return null
   }
+
+  // special case: minifiers like to transform `true` to `!0` and `false` to `!1`.
+  // because this can be hard to turn off for some frameworks, we have a special case.
+  if (exp.type === 'UnaryExpression' && exp.operator === '!' && exp.argument.type === 'NumericLiteral') {
+    return !exp.argument.value
+  }
 }
 
 /**
