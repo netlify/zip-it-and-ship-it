@@ -1791,6 +1791,9 @@ describe('zip-it-and-ship-it', () => {
             zipGo: true,
           },
         },
+        featureFlags: {
+          zisi_go_drop_runtime_override: true,
+        },
       },
     })
     const binaryPath = join(FIXTURES_DIR, fixtureName, 'test')
@@ -1803,7 +1806,7 @@ describe('zip-it-and-ship-it', () => {
 
     const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
 
-    expect(manifest.functions[0].runtimeVersion).toEqual('provided.al2')
+    expect(manifest.functions[0].runtimeVersion).toBeUndefined()
 
     const unzippedFunctions = await unzipFiles([func])
     const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'bootstrap')
