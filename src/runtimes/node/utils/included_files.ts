@@ -1,6 +1,8 @@
 import { normalize, resolve } from 'path'
 
-import { minimatch, glob } from '../../../utils/matching.js'
+import fastGlob from 'fast-glob'
+
+import { minimatch } from '../../../utils/matching.js'
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
@@ -46,16 +48,14 @@ export const getPathsOfIncludedFiles = async (
     { include: [], excludePatterns: [] },
   )
 
-  const pathGroups = await Promise.all(
-    include.map((expression) =>
-      glob(expression, { absolute: true, cwd: basePath, ignore: excludePatterns, nodir: true }),
-    ),
-  )
+  const pathGroups = await fastGlob(include, {
+    absolute: true,
+    cwd: basePath,
+    dot: true,
+    ignore: excludePatterns,
+    followSymbolicLinks: true,
+    throwErrorOnBrokenSymbolicLink: true,
+  })
 
-  // `pathGroups` is an array containing the paths for each expression in the
-  // `include` array. We flatten it into a single dimension.
-  const paths = pathGroups.flat()
-  const normalizedPaths = paths.map(normalize)
-
-  return { excludePatterns, paths: [...new Set(normalizedPaths)] }
+  return { excludePatterns, paths: pathGroups.map(normalize) }
 }
