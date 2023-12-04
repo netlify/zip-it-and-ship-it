@@ -103,7 +103,7 @@
     "@types/yargs": "17.0.32",
     "@vitest/coverage-v8": "0.34.6",
     "adm-zip": "0.5.10",
-    "browserslist": "4.22.1",
+    "browserslist": "4.22.2",
     "cardinal": "2.1.1",
     "cpy": "9.0.1",
     "deepmerge": "4.3.1",
