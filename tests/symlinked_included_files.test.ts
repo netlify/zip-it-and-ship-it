@@ -1,7 +1,7 @@
 import { readdir } from 'fs/promises'
 import { join } from 'path'
 
-import AdmZip from 'adm-zip'
+import decompress from 'decompress'
 import { dir as getTmpDir } from 'tmp-promise'
 import { expect, test } from 'vitest'
 
@@ -24,7 +24,7 @@ const readDirWithTypes = async (dir: string, readFiles?: Record<string, boolean>
   return files
 }
 
-test('zippy dippy', async () => {
+test('if symlinked directories from the included files are preserved', async () => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const basePath = join(FIXTURES_ESM_DIR, 'symlinked-included-files')
   const mainFile = join(basePath, 'function.mjs')
@@ -52,9 +52,7 @@ test('zippy dippy', async () => {
   })
 
   const unzippedPath = join(tmpDir, 'extracted')
-  const zip = new AdmZip(result!.path)
-  // eslint-disable-next-line no-inline-comments
-  zip.extractAllTo(unzippedPath, true /* override */, true /* keep original permissions */)
+  await decompress(result!.path, unzippedPath)
 
   // expect that the symlink for `node_modules/crazy-dep` is preserved
   expect(await readDirWithTypes(unzippedPath)).toEqual({
