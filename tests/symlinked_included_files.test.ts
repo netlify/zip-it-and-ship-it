@@ -33,8 +33,8 @@ test('Symlinked directories from `includedFiles` are preserved', async () => {
   // assert on the source files
   expect(await readDirWithType(basePath)).toEqual({
     'function.mjs': false,
-    'crazy-dep/package.json': false,
-    'node_modules/crazy-dep': true,
+    [join('crazy-dep/package.json')]: false,
+    [join('node_modules/crazy-dep')]: true,
   })
 
   const result = await zipFunction(mainFile, tmpDir, {
@@ -60,7 +60,7 @@ test('Symlinked directories from `includedFiles` are preserved', async () => {
     '___netlify-bootstrap.mjs': false,
     '___netlify-entry-point.mjs': false,
     'function.mjs': false,
-    [join('crazy-dep', 'package.json')]: false,
-    [join('node_modules', 'crazy-dep')]: true,
+    [join('crazy-dep/package.json')]: false,
+    [join('node_modules/crazy-dep')]: true,
   })
 })
