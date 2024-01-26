@@ -1,11 +1,12 @@
-import { mkdir, readFile, chmod, symlink, writeFile, rm } from 'fs/promises'
+import { mkdir, readFile, rm, symlink, writeFile } from 'fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'path'
-import { arch, platform, version as nodeVersion } from 'process'
+import { arch, version as nodeVersion, platform } from 'process'
 
-import AdmZip from 'adm-zip'
 import cpy from 'cpy'
+import decompress from 'decompress'
 import merge from 'deepmerge'
 import { execa, execaNode } from 'execa'
+import glob from 'fast-glob'
 import isCI from 'is-ci'
 import { pathExists } from 'path-exists'
 import semver from 'semver'
@@ -22,15 +23,15 @@ import { shellUtils } from '../src/utils/shell.js'
 import type { ZipFunctionsOptions } from '../src/zip.js'
 
 import {
+  BINARY_PATH,
+  FIXTURES_DIR,
+  getBundlerNameFromOptions,
   getRequires,
-  zipNode,
-  zipFixture,
+  importFunctionFile,
   unzipFiles,
   zipCheckFunctions,
-  FIXTURES_DIR,
-  BINARY_PATH,
-  importFunctionFile,
-  getBundlerNameFromOptions,
+  zipFixture,
+  zipNode,
 } from './helpers/main.js'
 import { computeSha1 } from './helpers/sha.js'
 import { allBundleConfigs, testMany } from './helpers/test_many.js'
@@ -39,8 +40,6 @@ import { allBundleConfigs, testMany } from './helpers/test_many.js'
 import 'source-map-support/register'
 
 vi.mock('../src/utils/shell.js', () => ({ shellUtils: { runCommand: vi.fn() } }))
-
-const EXECUTABLE_PERMISSION = 0o755
 
 const getZipChecksum = async function (opts: ZipFunctionsOptions) {
   const {
@@ -1754,16 +1753,6 @@ describe('zip-it-and-ship-it', () => {
     const unzippedFile = `${unzippedFunctions[0].unzipPath}/bootstrap`
     await expect(unzippedFile).toPathExist()
 
-    // The library we use for unzipping does not keep executable permissions.
-    // https://github.com/cthackers/adm-zip/issues/86
-    // However `chmod()` is not cross-platform
-    if (platform === 'linux') {
-      await chmod(unzippedFile, EXECUTABLE_PERMISSION)
-
-      const { stdout } = await execa(unzippedFile)
-      expect(stdout).toBe('Hello, world!')
-    }
-
     const tcFile = `${unzippedFunctions[0].unzipPath}/netlify-toolchain`
     await expect(tcFile).toPathExist()
     const tc = await readFile(tcFile, 'utf8')
@@ -2853,7 +2842,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('only includes files once in a zip', [...allBundleConfigs], async (options) => {
-    const { files } = await zipFixture('local-require', {
+    const { files, tmpDir } = await zipFixture('local-require', {
       length: 1,
       opts: merge(options, {
         basePath: join(FIXTURES_DIR, 'local-require'),
@@ -2866,9 +2855,11 @@ describe('zip-it-and-ship-it', () => {
       }),
     })
 
-    const zip = new AdmZip(files[0].path)
+    const unzipPath = join(tmpDir, 'unzipped')
 
-    const fileNames: string[] = zip.getEntries().map((entry) => entry.entryName)
+    await decompress(files[0].path, unzipPath)
+
+    const fileNames: string[] = await glob('**', { dot: true, cwd: unzipPath })
     const duplicates = fileNames.filter((item, index) => fileNames.indexOf(item) !== index)
     expect(duplicates).toHaveLength(0)
   })
