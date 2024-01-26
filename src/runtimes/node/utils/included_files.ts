@@ -53,9 +53,13 @@ export const getPathsOfIncludedFiles = async (
     cwd: basePath,
     dot: true,
     ignore: excludePatterns,
-    followSymbolicLinks: true,
-    throwErrorOnBrokenSymbolicLink: true,
+    onlyFiles: false,
+    // get directories as well to get symlinked directories,
+    // to filter the regular non symlinked directories out mark them with a slash at the end to filter them out.
+    markDirectories: true,
+    followSymbolicLinks: false,
   })
 
-  return { excludePatterns, paths: pathGroups.map(normalize) }
+  // now filter the non symlinked directories out that got marked with a trailing slash
+  return { excludePatterns, paths: pathGroups.filter((path) => !path.endsWith('/')).map(normalize) }
 }
