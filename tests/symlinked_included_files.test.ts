@@ -1,4 +1,5 @@
 import { readdir } from 'fs/promises'
+import { platform } from 'os'
 import { join } from 'path'
 
 import decompress from 'decompress'
@@ -25,7 +26,7 @@ const readDirWithType = async (dir: string, readFiles?: Record<string, boolean>,
   return files
 }
 
-test('Symlinked directories from `includedFiles` are preserved', async () => {
+test.skipIf(platform() === 'win32')('Symlinked directories from `includedFiles` are preserved', async () => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const basePath = join(FIXTURES_ESM_DIR, 'symlinked-included-files')
   const mainFile = join(basePath, 'function.mjs')
