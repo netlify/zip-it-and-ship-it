@@ -59,7 +59,7 @@ test('if symlinked directories from the included files are preserved', async () 
     '___netlify-bootstrap.mjs': false,
     '___netlify-entry-point.mjs': false,
     'function.mjs': false,
-    'crazy-dep/package.json': false,
-    'node_modules/crazy-dep': true,
+    [join('crazy-dep/package.json')]: false,
+    [join('node_modules/crazy-dep')]: true,
   })
 })
