@@ -46,7 +46,9 @@ test.skipIf(platform() === 'win32')('Symlinked directories from `includedFiles` 
         includedFiles: ['**'],
       },
     },
-    featureFlags: {},
+    featureFlags: {
+      zisi_fix_symlinks: true,
+    },
     repositoryRoot: basePath,
     systemLog: console.log,
     debug: true,

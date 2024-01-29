@@ -37,10 +37,11 @@ const getModuleFormat = async function (mainFile: string): Promise<ModuleFormat>
   return MODULE_FORMAT.COMMONJS
 }
 
-export const getSrcFiles: GetSrcFilesFunction = async function ({ config, mainFile }) {
+export const getSrcFiles: GetSrcFilesFunction = async function ({ config, mainFile, featureFlags }) {
   const { includedFiles = [], includedFilesBasePath } = config
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
+    featureFlags,
     includedFilesBasePath,
   )
   const includedPaths = filterExcludedPaths(includedFilePaths, excludePatterns)

@@ -53,6 +53,7 @@ const bundle: BundleFunction = async ({
 
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
+    featureFlags,
     includedFilesBasePath || basePath,
   )
   const {
@@ -238,10 +239,11 @@ const traceFilesAndTranspile = async function ({
   }
 }
 
-const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mainFile }) {
+const getSrcFiles: GetSrcFilesFunction = async function ({ basePath, config, mainFile, featureFlags }) {
   const { includedFiles = [], includedFilesBasePath } = config
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
+    featureFlags,
     includedFilesBasePath,
   )
   const { fileList: dependencyPaths } = await nodeFileTrace([mainFile], {
