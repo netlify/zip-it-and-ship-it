@@ -2889,12 +2889,12 @@ test('Adds a `priority` field to the generated manifest file', async () => {
   expect(manifest.system.platform).toBe(platform)
   expect(manifest.timestamp).toBeTypeOf('number')
 
-  const userFunction1 = manifest.function.find((fn) => fn.name === 'function_user')
+  const userFunction1 = manifest.functions.find((fn) => fn.name === 'function_user')
   expect(userFunction1.priority).toBe(10)
 
-  const userFunction2 = manifest.function.find((fn) => fn.name === 'function')
+  const userFunction2 = manifest.functions.find((fn) => fn.name === 'function')
   expect(userFunction2.priority).toBe(10)
 
-  const generatedFunction1 = manifest.function.find((fn) => fn.name === 'function_internal')
+  const generatedFunction1 = manifest.functions.find((fn) => fn.name === 'function_internal')
   expect(generatedFunction1.priority).toBe(0)
 })
