@@ -19,6 +19,7 @@ interface ManifestFunction {
   displayName?: string
   bundler?: string
   generator?: string
+  priority?: number
 }
 
 export interface Manifest {
@@ -53,6 +54,7 @@ const formatFunctionForManifest = ({
   mainFile,
   name,
   path,
+  priority,
   routes,
   runtime,
   runtimeVersion,
@@ -67,6 +69,7 @@ const formatFunctionForManifest = ({
     buildData: { runtimeAPIVersion },
     mainFile,
     name,
+    priority,
     runtimeVersion,
     path: resolve(path),
     runtime,

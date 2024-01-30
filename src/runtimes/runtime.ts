@@ -53,6 +53,7 @@ export interface ZipFunctionResult {
   outputModuleFormat?: ModuleFormat
   nativeNodeModules?: object
   path: string
+  priority?: number
   runtimeVersion?: string
   staticAnalysisResult?: StaticAnalysisResult
   entryFilename: string
