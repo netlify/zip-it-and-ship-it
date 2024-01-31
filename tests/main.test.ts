@@ -2864,3 +2864,37 @@ describe('zip-it-and-ship-it', () => {
     expect(duplicates).toHaveLength(0)
   })
 })
+
+test('Adds a `priority` field to the generated manifest file', async () => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const fixtureName = 'multiple-src-directories'
+  const manifestPath = join(tmpDir, 'manifest.json')
+  const paths = {
+    generated: `${fixtureName}/.netlify/internal-functions`,
+    user: `${fixtureName}/netlify/functions`,
+  }
+
+  await zipNode([paths.generated, paths.user], {
+    length: 3,
+    opts: {
+      internalSrcFolder: join(FIXTURES_DIR, paths.generated),
+      manifest: manifestPath,
+    },
+  })
+
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+  expect(manifest.version).toBe(1)
+  expect(manifest.system.arch).toBe(arch)
+  expect(manifest.system.platform).toBe(platform)
+  expect(manifest.timestamp).toBeTypeOf('number')
+
+  const userFunction1 = manifest.functions.find((fn) => fn.name === 'function_user')
+  expect(userFunction1.priority).toBe(10)
+
+  const userFunction2 = manifest.functions.find((fn) => fn.name === 'function')
+  expect(userFunction2.priority).toBe(10)
+
+  const generatedFunction1 = manifest.functions.find((fn) => fn.name === 'function_internal')
+  expect(generatedFunction1.priority).toBe(0)
+})
