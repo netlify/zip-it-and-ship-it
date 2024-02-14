@@ -17,7 +17,7 @@ const readDirWithType = async (dir: string, readFiles?: Record<string, boolean>,
 
   for (const dirent of dirents) {
     if (dirent.isDirectory()) {
-      await readDirWithType(join(dir, dirent.name), files, dirent.name)
+      await readDirWithType(join(dir, dirent.name), files, join(parent, dirent.name))
     } else {
       files[join(parent, dirent.name)] = dirent.isSymbolicLink()
     }
@@ -34,7 +34,7 @@ test.skipIf(platform() === 'win32')('Symlinked directories from `includedFiles` 
   // assert on the source files
   expect(await readDirWithType(basePath)).toEqual({
     'function.mjs': false,
-    [join('crazy-dep/package.json')]: false,
+    [join('node_modules/.pnpm/crazy-dep/package.json')]: false,
     [join('node_modules/crazy-dep')]: true,
   })
 
@@ -63,7 +63,7 @@ test.skipIf(platform() === 'win32')('Symlinked directories from `includedFiles` 
     '___netlify-bootstrap.mjs': false,
     '___netlify-entry-point.mjs': false,
     'function.mjs': false,
-    [join('crazy-dep/package.json')]: false,
+    [join('node_modules/.pnpm/crazy-dep/package.json')]: false,
     [join('node_modules/crazy-dep')]: true,
   })
 })
