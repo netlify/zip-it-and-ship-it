@@ -62,7 +62,7 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath, entryFilename: '' }
   }
 
-  const staticAnalysisResult = await parseFile(mainFile, { functionName: name, logger })
+  const staticAnalysisResult = await parseFile(mainFile, { functionName: name })
   const runtimeAPIVersion = staticAnalysisResult.runtimeAPIVersion === 2 ? 2 : 1
 
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
