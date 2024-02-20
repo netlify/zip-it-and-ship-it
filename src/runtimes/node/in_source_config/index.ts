@@ -2,7 +2,6 @@ import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName 
 
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
-import { Logger } from '../../../utils/logger.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { getRoutes, Route } from '../../../utils/routes.js'
 import { RUNTIME } from '../../runtime.js'
@@ -31,7 +30,6 @@ export interface StaticAnalysisResult extends ISCValues {
 
 interface FindISCDeclarationsOptions {
   functionName: string
-  logger: Logger
 }
 
 const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean, functionName: string): void => {
@@ -79,7 +77,7 @@ const normalizeMethods = (input: unknown, name: string): string[] | undefined =>
  */
 export const parseFile = async (
   sourcePath: string,
-  { functionName, logger }: FindISCDeclarationsOptions,
+  { functionName }: FindISCDeclarationsOptions,
 ): Promise<StaticAnalysisResult> => {
   const source = await safelyReadSource(sourcePath)
 
@@ -87,7 +85,7 @@ export const parseFile = async (
     return {}
   }
 
-  return parseSource(source, { functionName, logger })
+  return parseSource(source, { functionName })
 }
 
 /**
@@ -95,10 +93,7 @@ export const parseFile = async (
  * series of data points, such as in-source configuration properties and
  * other metadata.
  */
-export const parseSource = (
-  source: string,
-  { functionName, logger }: FindISCDeclarationsOptions,
-): StaticAnalysisResult => {
+export const parseSource = (source: string, { functionName }: FindISCDeclarationsOptions): StaticAnalysisResult => {
   const ast = safelyParseSource(source)
 
   if (ast === null) {
@@ -120,8 +115,6 @@ export const parseSource = (
       inputModuleFormat,
       runtimeAPIVersion: 2,
     }
-
-    logger.system('detected v2 function')
 
     if (typeof configExport.schedule === 'string') {
       result.schedule = configExport.schedule
