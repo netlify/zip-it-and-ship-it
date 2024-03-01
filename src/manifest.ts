@@ -3,6 +3,7 @@ import { resolve } from 'path'
 import { arch, platform } from 'process'
 
 import type { InvocationMode } from './function.js'
+import type { Ratelimit } from './ratelimit.js'
 import type { FunctionResult } from './utils/format_result.js'
 import type { Route } from './utils/routes.js'
 
@@ -20,6 +21,7 @@ interface ManifestFunction {
   bundler?: string
   generator?: string
   priority?: number
+  ratelimit?: Ratelimit
 }
 
 export interface Manifest {
@@ -55,6 +57,7 @@ const formatFunctionForManifest = ({
   name,
   path,
   priority,
+  ratelimit,
   routes,
   runtime,
   runtimeVersion,
@@ -70,6 +73,7 @@ const formatFunctionForManifest = ({
     mainFile,
     name,
     priority,
+    ratelimit,
     runtimeVersion,
     path: resolve(path),
     runtime,

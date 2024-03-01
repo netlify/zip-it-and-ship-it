@@ -2898,3 +2898,26 @@ test('Adds a `priority` field to the generated manifest file', async () => {
   const generatedFunction1 = manifest.functions.find((fn) => fn.name === 'function_internal')
   expect(generatedFunction1.priority).toBe(0)
 })
+
+test('Adds a `ratelimit` field to the generated manifest file', async () => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const fixtureName = 'ratelimit'
+  const manifestPath = join(tmpDir, 'manifest.json')
+  const path = `${fixtureName}/netlify/functions`
+
+  await zipFixture(path, {
+    length: 1,
+    opts: { manifest: manifestPath },
+  })
+
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+  expect(manifest.version).toBe(1)
+  expect(manifest.system.arch).toBe(arch)
+  expect(manifest.system.platform).toBe(platform)
+  expect(manifest.timestamp).toBeTypeOf('number')
+
+  const userFunction = manifest.functions.find((fn) => fn.name === 'function')
+  expect(userFunction.ratelimit.windowLimit).toBe(60)
+  expect(userFunction.ratelimit.windowSize).toBe(50)
+})
