@@ -5,9 +5,12 @@ export default async (req: Request, context: Context) => {
 };
 
 export const config: Config = {
-  path: "/ratelimited",
+  path: "/rewrite",
   ratelimit: {
-    windowLimit: 60,
-    windowSize: 50
+    action: "rewrite",
+    to: "/rewritten",
+    windowSize: 20,
+    windowLimit: 200,
+    aggregateBy: ["ip", "domain"],
   }
 };

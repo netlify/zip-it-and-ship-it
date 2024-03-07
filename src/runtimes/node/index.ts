@@ -141,7 +141,7 @@ const zipFunction: ZipFunction = async function ({
     invocationMode = INVOCATION_MODE.Background
   }
 
-  const { ratelimit } = staticAnalysisResult
+  const { trafficRulesConfig } = staticAnalysisResult
 
   const outputModuleFormat =
     extname(finalMainFile) === MODULE_FILE_EXTENSION.MJS ? MODULE_FORMAT.ESM : MODULE_FORMAT.COMMONJS
@@ -162,7 +162,7 @@ const zipFunction: ZipFunction = async function ({
     nativeNodeModules,
     path: zipPath.path,
     priority,
-    ratelimit,
+    trafficRulesConfig,
     runtimeVersion:
       runtimeAPIVersion === 2 ? getNodeRuntimeForV2(config.nodeVersion) : getNodeRuntime(config.nodeVersion),
   }

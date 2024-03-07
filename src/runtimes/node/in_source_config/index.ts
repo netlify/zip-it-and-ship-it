@@ -1,7 +1,8 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
-import { Ratelimit, RatelimitAlgorithm } from '../../../ratelimit.js'
+import { TrafficRulesConfig } from '../../../manifest.js'
+import { RatelimitAction, RatelimitAggregator, RatelimitAlgorithm, RewriteActionConfig } from '../../../ratelimit.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { getRoutes, Route } from '../../../utils/routes.js'
@@ -21,7 +22,7 @@ export type ISCValues = {
   routes?: Route[]
   schedule?: string
   methods?: string[]
-  ratelimit?: Ratelimit
+  trafficRulesConfig?: TrafficRulesConfig
 }
 
 export interface StaticAnalysisResult extends ISCValues {
@@ -76,7 +77,7 @@ const normalizeMethods = (input: unknown, name: string): string[] | undefined =>
 /**
  * Extracts the `ratelimit` configuration from the exported config.
  */
-const getRateLimitConfig = (input: unknown, name: string): Ratelimit | undefined => {
+const getTrafficRulesConfig = (input: unknown, name: string): TrafficRulesConfig | undefined => {
   if (typeof input !== 'object' || input === null) {
     throw new FunctionBundlingUserError(
       `Could not parse ratelimit declaration of function '${name}'. Expecting an object, got ${input}`,
@@ -88,7 +89,7 @@ const getRateLimitConfig = (input: unknown, name: string): Ratelimit | undefined
     )
   }
 
-  const { windowSize, windowLimit } = input as Record<string, unknown>
+  const { windowSize, windowLimit, algorithm, aggregateBy, action } = input as Record<string, unknown>
 
   if (
     typeof windowSize !== 'number' ||
@@ -106,7 +107,25 @@ const getRateLimitConfig = (input: unknown, name: string): Ratelimit | undefined
     )
   }
 
-  return { algorithm: RatelimitAlgorithm.SlidingWindow, windowSize, windowLimit }
+  const ratelimitAgg = Array.isArray(aggregateBy) ? aggregateBy : [RatelimitAggregator.Domain]
+  const rewriteConfig = (input as RewriteActionConfig).to ? { to: (input as RewriteActionConfig).to } : undefined
+
+  return {
+    action: {
+      type: (action as RatelimitAction) || RatelimitAction.Limit,
+      config: {
+        ...rewriteConfig,
+        rateLimitConfig: {
+          windowLimit,
+          windowSize,
+          algorithm: (algorithm as RatelimitAlgorithm) || RatelimitAlgorithm.SlidingWindow,
+        },
+        aggregate: {
+          keys: ratelimitAgg.map((agg) => ({ type: agg })),
+        },
+      },
+    },
+  }
 }
 
 /**
@@ -170,7 +189,7 @@ export const parseSource = (source: string, { functionName }: FindISCDeclaration
     })
 
     if (configExport.ratelimit !== undefined) {
-      result.ratelimit = getRateLimitConfig(configExport.ratelimit, functionName)
+      result.trafficRulesConfig = getTrafficRulesConfig(configExport.ratelimit, functionName)
     }
 
     return result

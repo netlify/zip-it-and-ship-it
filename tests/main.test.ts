@@ -2906,7 +2906,7 @@ test('Adds a `ratelimit` field to the generated manifest file', async () => {
   const path = `${fixtureName}/netlify/functions`
 
   await zipFixture(path, {
-    length: 1,
+    length: 2,
     opts: { manifest: manifestPath },
   })
 
@@ -2917,7 +2917,20 @@ test('Adds a `ratelimit` field to the generated manifest file', async () => {
   expect(manifest.system.platform).toBe(platform)
   expect(manifest.timestamp).toBeTypeOf('number')
 
-  const userFunction = manifest.functions.find((fn) => fn.name === 'function')
-  expect(userFunction.ratelimit.windowLimit).toBe(60)
-  expect(userFunction.ratelimit.windowSize).toBe(50)
+  const ratelimitFunction = manifest.functions.find((fn) => fn.name === 'ratelimit')
+  const { type: ratelimitType, config: ratelimitConfig } = ratelimitFunction.trafficRulesConfig.action
+  expect(ratelimitType).toBe('rate_limit')
+  expect(ratelimitConfig.rateLimitConfig.windowLimit).toBe(60)
+  expect(ratelimitConfig.rateLimitConfig.windowSize).toBe(50)
+  expect(ratelimitConfig.rateLimitConfig.algorithm).toBe('sliding_window')
+  expect(ratelimitConfig.aggregate.keys).toStrictEqual([{ type: 'ip' }, { type: 'domain' }])
+
+  const rewriteFunction = manifest.functions.find((fn) => fn.name === 'rewrite')
+  const { type: rewriteType, config: rewriteConfig } = rewriteFunction.trafficRulesConfig.action
+  expect(rewriteType).toBe('rewrite')
+  expect(rewriteConfig.to).toBe('/rewritten')
+  expect(rewriteConfig.rateLimitConfig.windowLimit).toBe(200)
+  expect(rewriteConfig.rateLimitConfig.windowSize).toBe(20)
+  expect(rewriteConfig.rateLimitConfig.algorithm).toBe('sliding_window')
+  expect(rewriteConfig.aggregate.keys).toStrictEqual([{ type: 'ip' }, { type: 'domain' }])
 })

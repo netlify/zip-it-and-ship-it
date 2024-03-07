@@ -2,13 +2,29 @@ export enum RatelimitAlgorithm {
   SlidingWindow = 'sliding_window',
 }
 
-type SlidingWindow = {
-  windowSize: number
+export enum RatelimitAggregator {
+  Domain = 'domain',
+  IP = 'ip',
+}
+
+export enum RatelimitAction {
+  Limit = 'rate_limit',
+  Rewrite = 'rewrite',
+}
+
+interface SlidingWindow {
   windowLimit: number
+  windowSize: number
 }
 
-type RatelimitConfig = {
-  algorithm: RatelimitAlgorithm
+export type RewriteActionConfig = SlidingWindow & {
+  to: string
 }
 
-export type Ratelimit = RatelimitConfig & SlidingWindow
+interface RatelimitConfig {
+  action?: RatelimitAction
+  aggregateBy?: RatelimitAggregator | RatelimitAggregator[]
+  algorithm?: RatelimitAlgorithm
+}
+
+export type Ratelimit = RatelimitConfig & (SlidingWindow | RewriteActionConfig)
