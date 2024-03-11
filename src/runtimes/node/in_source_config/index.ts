@@ -2,7 +2,7 @@ import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName 
 
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
 import { TrafficRules } from '../../../manifest.js'
-import { RatelimitAction, RatelimitAggregator, RatelimitAlgorithm } from '../../../ratelimit.js'
+import { RateLimitAction, RateLimitAggregator, RateLimitAlgorithm } from '../../../rate_limit.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { getRoutes, Route } from '../../../utils/routes.js'
@@ -107,21 +107,21 @@ const getTrafficRulesConfig = (input: unknown, name: string): TrafficRules | und
     )
   }
 
-  const ratelimitAgg = Array.isArray(aggregateBy) ? aggregateBy : [RatelimitAggregator.Domain]
+  const rateLimitAgg = Array.isArray(aggregateBy) ? aggregateBy : [RateLimitAggregator.Domain]
   const rewriteConfig = 'to' in input && typeof input.to === 'string' ? { to: input.to } : undefined
 
   return {
     action: {
-      type: (action as RatelimitAction) || RatelimitAction.Limit,
+      type: (action as RateLimitAction) || RateLimitAction.Limit,
       config: {
         ...rewriteConfig,
         rateLimitConfig: {
           windowLimit,
           windowSize,
-          algorithm: (algorithm as RatelimitAlgorithm) || RatelimitAlgorithm.SlidingWindow,
+          algorithm: (algorithm as RateLimitAlgorithm) || RateLimitAlgorithm.SlidingWindow,
         },
         aggregate: {
-          keys: ratelimitAgg.map((agg) => ({ type: agg })),
+          keys: rateLimitAgg.map((agg) => ({ type: agg })),
         },
       },
     },
