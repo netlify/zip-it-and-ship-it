@@ -2918,7 +2918,7 @@ test('Adds a `ratelimit` field to the generated manifest file', async () => {
   expect(manifest.timestamp).toBeTypeOf('number')
 
   const ratelimitFunction = manifest.functions.find((fn) => fn.name === 'ratelimit')
-  const { type: ratelimitType, config: ratelimitConfig } = ratelimitFunction.trafficRulesConfig.action
+  const { type: ratelimitType, config: ratelimitConfig } = ratelimitFunction.trafficRules.action
   expect(ratelimitType).toBe('rate_limit')
   expect(ratelimitConfig.rateLimitConfig.windowLimit).toBe(60)
   expect(ratelimitConfig.rateLimitConfig.windowSize).toBe(50)
@@ -2926,7 +2926,7 @@ test('Adds a `ratelimit` field to the generated manifest file', async () => {
   expect(ratelimitConfig.aggregate.keys).toStrictEqual([{ type: 'ip' }, { type: 'domain' }])
 
   const rewriteFunction = manifest.functions.find((fn) => fn.name === 'rewrite')
-  const { type: rewriteType, config: rewriteConfig } = rewriteFunction.trafficRulesConfig.action
+  const { type: rewriteType, config: rewriteConfig } = rewriteFunction.trafficRules.action
   expect(rewriteType).toBe('rewrite')
   expect(rewriteConfig.to).toBe('/rewritten')
   expect(rewriteConfig.rateLimitConfig.windowLimit).toBe(200)

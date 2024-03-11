@@ -6,7 +6,7 @@ import type { InvocationMode } from './function.js'
 import type { FunctionResult } from './utils/format_result.js'
 import type { Route } from './utils/routes.js'
 
-export interface TrafficRulesConfig {
+export interface TrafficRules {
   action: {
     type: string
     config: {
@@ -39,7 +39,7 @@ interface ManifestFunction {
   bundler?: string
   generator?: string
   priority?: number
-  trafficRulesConfig?: TrafficRulesConfig
+  trafficRules?: TrafficRules
 }
 
 export interface Manifest {
@@ -75,7 +75,7 @@ const formatFunctionForManifest = ({
   name,
   path,
   priority,
-  trafficRulesConfig,
+  trafficRules,
   routes,
   runtime,
   runtimeVersion,
@@ -91,7 +91,7 @@ const formatFunctionForManifest = ({
     mainFile,
     name,
     priority,
-    trafficRulesConfig,
+    trafficRules,
     runtimeVersion,
     path: resolve(path),
     runtime,

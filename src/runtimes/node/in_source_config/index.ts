@@ -1,8 +1,8 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
-import { TrafficRulesConfig } from '../../../manifest.js'
-import { RatelimitAction, RatelimitAggregator, RatelimitAlgorithm, RewriteActionConfig } from '../../../ratelimit.js'
+import { TrafficRules } from '../../../manifest.js'
+import { RatelimitAction, RatelimitAggregator, RatelimitAlgorithm } from '../../../ratelimit.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { getRoutes, Route } from '../../../utils/routes.js'
@@ -22,7 +22,7 @@ export type ISCValues = {
   routes?: Route[]
   schedule?: string
   methods?: string[]
-  trafficRulesConfig?: TrafficRulesConfig
+  trafficRules?: TrafficRules
 }
 
 export interface StaticAnalysisResult extends ISCValues {
@@ -77,7 +77,7 @@ const normalizeMethods = (input: unknown, name: string): string[] | undefined =>
 /**
  * Extracts the `ratelimit` configuration from the exported config.
  */
-const getTrafficRulesConfig = (input: unknown, name: string): TrafficRulesConfig | undefined => {
+const getTrafficRulesConfig = (input: unknown, name: string): TrafficRules | undefined => {
   if (typeof input !== 'object' || input === null) {
     throw new FunctionBundlingUserError(
       `Could not parse ratelimit declaration of function '${name}'. Expecting an object, got ${input}`,
@@ -108,7 +108,7 @@ const getTrafficRulesConfig = (input: unknown, name: string): TrafficRulesConfig
   }
 
   const ratelimitAgg = Array.isArray(aggregateBy) ? aggregateBy : [RatelimitAggregator.Domain]
-  const rewriteConfig = (input as RewriteActionConfig).to ? { to: (input as RewriteActionConfig).to } : undefined
+  const rewriteConfig = 'to' in input && typeof input.to === 'string' ? { to: input.to } : undefined
 
   return {
     action: {
@@ -188,8 +188,8 @@ export const parseSource = (source: string, { functionName }: FindISCDeclaration
       preferStatic: configExport.preferStatic === true,
     })
 
-    if (configExport.ratelimit !== undefined) {
-      result.trafficRulesConfig = getTrafficRulesConfig(configExport.ratelimit, functionName)
+    if (configExport.rateLimit !== undefined) {
+      result.trafficRules = getTrafficRulesConfig(configExport.rateLimit, functionName)
     }
 
     return result

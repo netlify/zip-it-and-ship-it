@@ -6,7 +6,7 @@ export default async (req: Request, context: Context) => {
 
 export const config: Config = {
   path: "/ratelimited",
-  ratelimit: {
+  rateLimit: {
     windowLimit: 60,
     windowSize: 50,
     aggregateBy: ["ip", "domain"],

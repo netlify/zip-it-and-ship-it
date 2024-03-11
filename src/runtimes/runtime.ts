@@ -3,7 +3,7 @@ import type { FunctionConfig } from '../config.js'
 import type { FeatureFlags } from '../feature_flags.js'
 import type { FunctionSource, InvocationMode, SourceFile } from '../function.js'
 import type { ModuleFormat } from '../main.js'
-import { TrafficRulesConfig } from '../manifest.js'
+import { TrafficRules } from '../manifest.js'
 import { ObjectValues } from '../types/utils.js'
 import type { RuntimeCache } from '../utils/cache.js'
 import { Logger } from '../utils/logger.js'
@@ -55,7 +55,7 @@ export interface ZipFunctionResult {
   nativeNodeModules?: object
   path: string
   priority?: number
-  trafficRulesConfig?: TrafficRulesConfig
+  trafficRules?: TrafficRules
   runtimeVersion?: string
   staticAnalysisResult?: StaticAnalysisResult
   entryFilename: string
