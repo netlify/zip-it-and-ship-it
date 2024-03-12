@@ -68,7 +68,7 @@ test.skipIf(platform() === 'win32')('Symlinked directories from `includedFiles` 
   })
 })
 
-test.skipIf(platform() === 'win32')('symlinks in subdir of `includedFiles` are copied over successfully', async () => {
+test('symlinks in subdir of `includedFiles` are copied over successfully', async () => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const basePath = join(FIXTURES_ESM_DIR, 'symlinked-bin')
   const mainFile = join(basePath, 'function.ts')
@@ -98,7 +98,7 @@ test.skipIf(platform() === 'win32')('symlinks in subdir of `includedFiles` are c
     '___netlify-bootstrap.mjs': false,
     '___netlify-entry-point.mjs': false,
     'function.cjs': false,
-    'subproject/node_modules/.bin/cli.js': true,
-    'subproject/node_modules/tool/cli.js': false,
+    [join('subproject/node_modules/.bin/cli.js')]: true,
+    [join('subproject/node_modules/tool/cli.js')]: false,
   })
 })
