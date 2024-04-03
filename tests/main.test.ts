@@ -2898,3 +2898,39 @@ test('Adds a `priority` field to the generated manifest file', async () => {
   const generatedFunction1 = manifest.functions.find((fn) => fn.name === 'function_internal')
   expect(generatedFunction1.priority).toBe(0)
 })
+
+test('Adds a `ratelimit` field to the generated manifest file', async () => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const fixtureName = 'ratelimit'
+  const manifestPath = join(tmpDir, 'manifest.json')
+  const path = `${fixtureName}/netlify/functions`
+
+  await zipFixture(path, {
+    length: 2,
+    opts: { manifest: manifestPath },
+  })
+
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+  expect(manifest.version).toBe(1)
+  expect(manifest.system.arch).toBe(arch)
+  expect(manifest.system.platform).toBe(platform)
+  expect(manifest.timestamp).toBeTypeOf('number')
+
+  const ratelimitFunction = manifest.functions.find((fn) => fn.name === 'ratelimit')
+  const { type: ratelimitType, config: ratelimitConfig } = ratelimitFunction.trafficRules.action
+  expect(ratelimitType).toBe('rate_limit')
+  expect(ratelimitConfig.rateLimitConfig.windowLimit).toBe(60)
+  expect(ratelimitConfig.rateLimitConfig.windowSize).toBe(50)
+  expect(ratelimitConfig.rateLimitConfig.algorithm).toBe('sliding_window')
+  expect(ratelimitConfig.aggregate.keys).toStrictEqual([{ type: 'ip' }, { type: 'domain' }])
+
+  const rewriteFunction = manifest.functions.find((fn) => fn.name === 'rewrite')
+  const { type: rewriteType, config: rewriteConfig } = rewriteFunction.trafficRules.action
+  expect(rewriteType).toBe('rewrite')
+  expect(rewriteConfig.to).toBe('/rewritten')
+  expect(rewriteConfig.rateLimitConfig.windowLimit).toBe(200)
+  expect(rewriteConfig.rateLimitConfig.windowSize).toBe(20)
+  expect(rewriteConfig.rateLimitConfig.algorithm).toBe('sliding_window')
+  expect(rewriteConfig.aggregate.keys).toStrictEqual([{ type: 'ip' }, { type: 'domain' }])
+})
