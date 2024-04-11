@@ -6,6 +6,25 @@ import type { InvocationMode } from './function.js'
 import type { FunctionResult } from './utils/format_result.js'
 import type { Route } from './utils/routes.js'
 
+export interface TrafficRules {
+  action: {
+    type: string
+    config: {
+      rateLimitConfig: {
+        algorithm: string
+        windowSize: number
+        windowLimit: number
+      }
+      aggregate: {
+        keys: {
+          type: string
+        }[]
+      }
+      to?: string
+    }
+  }
+}
+
 interface ManifestFunction {
   buildData?: Record<string, unknown>
   invocationMode?: InvocationMode
@@ -19,6 +38,8 @@ interface ManifestFunction {
   displayName?: string
   bundler?: string
   generator?: string
+  priority?: number
+  trafficRules?: TrafficRules
 }
 
 export interface Manifest {
@@ -53,6 +74,8 @@ const formatFunctionForManifest = ({
   mainFile,
   name,
   path,
+  priority,
+  trafficRules,
   routes,
   runtime,
   runtimeVersion,
@@ -67,6 +90,8 @@ const formatFunctionForManifest = ({
     buildData: { runtimeAPIVersion },
     mainFile,
     name,
+    priority,
+    trafficRules,
     runtimeVersion,
     path: resolve(path),
     runtime,

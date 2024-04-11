@@ -2,7 +2,7 @@ import { Buffer } from 'buffer'
 import { Stats } from 'fs'
 import { mkdir, readlink as readLink, rm, symlink, writeFile } from 'fs/promises'
 import os from 'os'
-import { basename, extname, join } from 'path'
+import { basename, extname, join, dirname } from 'path'
 
 import { getPath as getV2APIPath } from '@netlify/serverless-functions-api'
 import { copyFile } from 'cp-file'
@@ -154,9 +154,16 @@ const createDirectory = async function ({
     { concurrency: COPY_FILE_CONCURRENCY },
   )
 
-  await pMap([...symlinks.entries()], ([target, path]) => symlink(target, path), {
-    concurrency: COPY_FILE_CONCURRENCY,
-  })
+  await pMap(
+    [...symlinks.entries()],
+    async ([target, path]) => {
+      await mkdir(dirname(path), { recursive: true })
+      await symlink(target, path)
+    },
+    {
+      concurrency: COPY_FILE_CONCURRENCY,
+    },
+  )
 
   return { path: functionFolder, entryFilename }
 }

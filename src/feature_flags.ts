@@ -26,6 +26,9 @@ export const defaultFlags = {
 
   // If multiple glob stars are in includedFiles, fail the build instead of warning.
   zisi_esbuild_fail_double_glob: false,
+
+  // fixes symlinks in included files
+  zisi_fix_symlinks: false,
 } as const
 
 export type FeatureFlags = Partial<Record<keyof typeof defaultFlags, boolean>>

@@ -1,8 +1,9 @@
 import type { ArgumentPlaceholder, Expression, SpreadElement, JSXNamespacedName } from '@babel/types'
 
 import { InvocationMode, INVOCATION_MODE } from '../../../function.js'
+import { TrafficRules } from '../../../manifest.js'
+import { RateLimitAction, RateLimitAggregator, RateLimitAlgorithm } from '../../../rate_limit.js'
 import { FunctionBundlingUserError } from '../../../utils/error.js'
-import { Logger } from '../../../utils/logger.js'
 import { nonNullable } from '../../../utils/non_nullable.js'
 import { getRoutes, Route } from '../../../utils/routes.js'
 import { RUNTIME } from '../../runtime.js'
@@ -21,6 +22,7 @@ export type ISCValues = {
   routes?: Route[]
   schedule?: string
   methods?: string[]
+  trafficRules?: TrafficRules
 }
 
 export interface StaticAnalysisResult extends ISCValues {
@@ -31,7 +33,6 @@ export interface StaticAnalysisResult extends ISCValues {
 
 interface FindISCDeclarationsOptions {
   functionName: string
-  logger: Logger
 }
 
 const validateScheduleFunction = (functionFound: boolean, scheduleFound: boolean, functionName: string): void => {
@@ -74,12 +75,66 @@ const normalizeMethods = (input: unknown, name: string): string[] | undefined =>
 }
 
 /**
+ * Extracts the `ratelimit` configuration from the exported config.
+ */
+const getTrafficRulesConfig = (input: unknown, name: string): TrafficRules | undefined => {
+  if (typeof input !== 'object' || input === null) {
+    throw new FunctionBundlingUserError(
+      `Could not parse ratelimit declaration of function '${name}'. Expecting an object, got ${input}`,
+      {
+        functionName: name,
+        runtime: RUNTIME.JAVASCRIPT,
+        bundler: NODE_BUNDLER.ESBUILD,
+      },
+    )
+  }
+
+  const { windowSize, windowLimit, algorithm, aggregateBy, action } = input as Record<string, unknown>
+
+  if (
+    typeof windowSize !== 'number' ||
+    typeof windowLimit !== 'number' ||
+    !Number.isInteger(windowSize) ||
+    !Number.isInteger(windowLimit)
+  ) {
+    throw new FunctionBundlingUserError(
+      `Could not parse ratelimit declaration of function '${name}'. Expecting 'windowSize' and 'limitSize' integer properties, got ${input}`,
+      {
+        functionName: name,
+        runtime: RUNTIME.JAVASCRIPT,
+        bundler: NODE_BUNDLER.ESBUILD,
+      },
+    )
+  }
+
+  const rateLimitAgg = Array.isArray(aggregateBy) ? aggregateBy : [RateLimitAggregator.Domain]
+  const rewriteConfig = 'to' in input && typeof input.to === 'string' ? { to: input.to } : undefined
+
+  return {
+    action: {
+      type: (action as RateLimitAction) || RateLimitAction.Limit,
+      config: {
+        ...rewriteConfig,
+        rateLimitConfig: {
+          windowLimit,
+          windowSize,
+          algorithm: (algorithm as RateLimitAlgorithm) || RateLimitAlgorithm.SlidingWindow,
+        },
+        aggregate: {
+          keys: rateLimitAgg.map((agg) => ({ type: agg })),
+        },
+      },
+    },
+  }
+}
+
+/**
  * Loads a file at a given path, parses it into an AST, and returns a series of
  * data points, such as in-source configuration properties and other metadata.
  */
 export const parseFile = async (
   sourcePath: string,
-  { functionName, logger }: FindISCDeclarationsOptions,
+  { functionName }: FindISCDeclarationsOptions,
 ): Promise<StaticAnalysisResult> => {
   const source = await safelyReadSource(sourcePath)
 
@@ -87,7 +142,7 @@ export const parseFile = async (
     return {}
   }
 
-  return parseSource(source, { functionName, logger })
+  return parseSource(source, { functionName })
 }
 
 /**
@@ -95,10 +150,7 @@ export const parseFile = async (
  * series of data points, such as in-source configuration properties and
  * other metadata.
  */
-export const parseSource = (
-  source: string,
-  { functionName, logger }: FindISCDeclarationsOptions,
-): StaticAnalysisResult => {
+export const parseSource = (source: string, { functionName }: FindISCDeclarationsOptions): StaticAnalysisResult => {
   const ast = safelyParseSource(source)
 
   if (ast === null) {
@@ -121,8 +173,6 @@ export const parseSource = (
       runtimeAPIVersion: 2,
     }
 
-    logger.system('detected v2 function')
-
     if (typeof configExport.schedule === 'string') {
       result.schedule = configExport.schedule
     }
@@ -137,6 +187,10 @@ export const parseSource = (
       path: configExport.path,
       preferStatic: configExport.preferStatic === true,
     })
+
+    if (configExport.rateLimit !== undefined) {
+      result.trafficRules = getTrafficRulesConfig(configExport.rateLimit, functionName)
+    }
 
     return result
   }

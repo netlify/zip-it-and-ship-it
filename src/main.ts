@@ -9,7 +9,6 @@ import { ModuleFormat } from './runtimes/node/utils/module_format.js'
 import { GetSrcFilesFunction, RuntimeName, RUNTIME } from './runtimes/runtime.js'
 import { RuntimeCache } from './utils/cache.js'
 import { listFunctionsDirectories, resolveFunctionsDirectories } from './utils/fs.js'
-import { getLogger } from './utils/logger.js'
 
 export { Config, FunctionConfig } from './config.js'
 export { zipFunction, zipFunctions, ZipFunctionOptions, ZipFunctionsOptions } from './zip.js'
@@ -54,7 +53,6 @@ const augmentWithStaticAnalysis = async (func: FunctionSource): Promise<Augmente
 
   const staticAnalysisResult = await parseFile(func.mainFile, {
     functionName: func.name,
-    logger: getLogger(),
   })
 
   return { ...func, staticAnalysisResult }

@@ -4,10 +4,17 @@ import { getNewCache, TraversalCache } from '../../utils/traversal_cache.js'
 import type { GetSrcFilesFunction } from '../types.js'
 import { getDependencyPathsForDependency } from '../zisi/traverse.js'
 
-export const getSrcFiles: GetSrcFilesFunction = async ({ config, mainFile, pluginsModulesPath, srcDir }) => {
+export const getSrcFiles: GetSrcFilesFunction = async ({
+  config,
+  mainFile,
+  pluginsModulesPath,
+  srcDir,
+  featureFlags,
+}) => {
   const { externalNodeModules = [], includedFiles = [], includedFilesBasePath, nodeVersion } = config
   const { excludePatterns, paths: includedFilePaths } = await getPathsOfIncludedFiles(
     includedFiles,
+    featureFlags,
     includedFilesBasePath,
   )
   const dependencyPaths = await getSrcFilesForDependencies({
