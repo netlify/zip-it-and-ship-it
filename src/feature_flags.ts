@@ -27,9 +27,6 @@ export const defaultFlags = {
   // If multiple glob stars are in includedFiles, fail the build instead of warning.
   zisi_esbuild_fail_double_glob: false,
 
-  // drops the "runtimeVersion" override field
-  zisi_go_drop_runtime_override: false,
-
   // fixes symlinks in included files
   zisi_fix_symlinks: false,
 } as const

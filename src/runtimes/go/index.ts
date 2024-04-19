@@ -113,7 +113,6 @@ const zipFunction: ZipFunction = async function ({
   srcPath,
   stat,
   isInternal,
-  featureFlags,
 }) {
   const destPath = join(destFolder, filename)
   const isSource = extname(mainFile) === '.go'
@@ -138,7 +137,6 @@ const zipFunction: ZipFunction = async function ({
     config,
     displayName: config?.name,
     generator: config?.generator || getInternalValue(isInternal),
-    runtimeVersion: featureFlags.zisi_go_drop_runtime_override ? undefined : 'provided.al2',
   }
 
   // If `zipGo` is enabled, we create a zip archive with the Go binary and the
