@@ -17,6 +17,8 @@ export { ArchiveFormat, ARCHIVE_FORMAT } from './archive.js'
 export { NodeBundlerName, NODE_BUNDLER } from './runtimes/node/bundlers/types.js'
 export { RuntimeName, RUNTIME } from './runtimes/runtime.js'
 export { ModuleFormat, MODULE_FORMAT } from './runtimes/node/utils/module_format.js'
+export { TrafficRules, Manifest } from './manifest.js'
+export { FunctionResult } from './utils/format_result.js'
 
 export interface ListedFunction {
   name: string
