@@ -115,7 +115,9 @@ const createDirectory = async function ({
   // Writing entry files.
   await Promise.all([
     writeFile(join(functionFolder, entryFilename), entryContents),
-    writeFile(join(functionFolder, telemetryFilename), telemetryContents),
+    featureFlags.zisi_add_instrumentation_loader
+      ? writeFile(join(functionFolder, telemetryFilename), telemetryContents)
+      : Promise.resolve(),
   ])
 
   if (runtimeAPIVersion === 2) {
@@ -233,7 +235,9 @@ const createZipArchive = async function ({
   }
   const telemetryFile = getTelemetryFile()
 
-  addEntryFileToZip(archive, telemetryFile)
+  if (featureFlags.zisi_add_instrumentation_loader === true) {
+    addEntryFileToZip(archive, telemetryFile)
+  }
 
   if (runtimeAPIVersion === 2) {
     addBootstrapFile(srcFiles, aliases)
