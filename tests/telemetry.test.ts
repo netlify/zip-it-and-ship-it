@@ -41,7 +41,7 @@ test('The telemetry file should be added by default to the function bundle', asy
   ])
 })
 
-test('The telemetry file should be added by default to the function bundle if bundler is none', async () => {
+test('The telemetry file should be added if bundler is none', async () => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const basePath = join(FIXTURES_ESM_DIR, 'v2-api')
   const mainFile = join(basePath, 'function.js')
