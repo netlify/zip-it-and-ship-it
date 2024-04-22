@@ -62,6 +62,7 @@ test.skipIf(platform() === 'win32')('Symlinked directories from `includedFiles` 
   expect(await readDirWithType(unzippedPath)).toEqual({
     '___netlify-bootstrap.mjs': false,
     '___netlify-entry-point.mjs': false,
+    '___netlify-telemetry.mjs': false,
     'function.mjs': false,
     [join('node_modules/.pnpm/crazy-dep/package.json')]: false,
     [join('node_modules/crazy-dep')]: true,
@@ -97,6 +98,7 @@ test('symlinks in subdir of `includedFiles` are copied over successfully', async
   expect(await readDirWithType(join(tmpDir, 'function'))).toEqual({
     '___netlify-bootstrap.mjs': false,
     '___netlify-entry-point.mjs': false,
+    '___netlify-telemetry.mjs': false,
     'function.cjs': false,
     [join('subproject/node_modules/.bin/cli.js')]: true,
     [join('subproject/node_modules/tool/cli.js')]: false,

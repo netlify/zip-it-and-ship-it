@@ -2,20 +2,20 @@ import { Buffer } from 'buffer'
 import { Stats } from 'fs'
 import { mkdir, readlink as readLink, rm, symlink, writeFile } from 'fs/promises'
 import os from 'os'
-import { basename, extname, join, dirname } from 'path'
+import { basename, dirname, extname, join } from 'path'
 
 import { getPath as getV2APIPath } from '@netlify/serverless-functions-api'
 import { copyFile } from 'cp-file'
 import pMap from 'p-map'
 
 import {
-  startZip,
-  addZipFile,
   addZipContent,
-  endZip,
-  ZipArchive,
-  ArchiveFormat,
+  addZipFile,
   ARCHIVE_FORMAT,
+  ArchiveFormat,
+  endZip,
+  startZip,
+  ZipArchive,
 } from '../../../archive.js'
 import type { FeatureFlags } from '../../../feature_flags.js'
 import type { RuntimeCache } from '../../../utils/cache.js'
@@ -26,6 +26,7 @@ import {
   conflictsWithEntryFile,
   EntryFile,
   getEntryFile,
+  getTelemetryFile,
   isNamedLikeEntryFile,
 } from './entry_file.js'
 import { ModuleFormat } from './module_format.js'
@@ -104,14 +105,20 @@ const createDirectory = async function ({
     userNamespace,
     runtimeAPIVersion,
   })
+  const { contents: telemetryContents, filename: telemetryFilename } = getTelemetryFile()
   const functionFolder = join(destFolder, basename(filename, extension))
 
   // Deleting the functions directory in case it exists before creating it.
   await rm(functionFolder, { recursive: true, force: true, maxRetries: 3 })
   await mkdir(functionFolder, { recursive: true })
 
-  // Writing entry file.
-  await writeFile(join(functionFolder, entryFilename), entryContents)
+  // Writing entry files.
+  await Promise.all([
+    writeFile(join(functionFolder, entryFilename), entryContents),
+    featureFlags.zisi_add_instrumentation_loader
+      ? writeFile(join(functionFolder, telemetryFilename), telemetryContents)
+      : Promise.resolve(),
+  ])
 
   if (runtimeAPIVersion === 2) {
     addBootstrapFile(srcFiles, aliases)
@@ -225,6 +232,11 @@ const createZipArchive = async function ({
     entryFilename = entryFile.filename
 
     addEntryFileToZip(archive, entryFile)
+  }
+  const telemetryFile = getTelemetryFile()
+
+  if (featureFlags.zisi_add_instrumentation_loader === true) {
+    addEntryFileToZip(archive, telemetryFile)
   }
 
   if (runtimeAPIVersion === 2) {
