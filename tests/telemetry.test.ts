@@ -41,6 +41,34 @@ test('The telemetry file should be added by default to the function bundle', asy
   ])
 })
 
+test('The telemetry file should be added by default to the function bundle if bundler is none', async () => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const basePath = join(FIXTURES_ESM_DIR, 'v2-api')
+  const mainFile = join(basePath, 'function.js')
+
+  const result = await zipFunction(mainFile, tmpDir, {
+    archiveFormat: ARCHIVE_FORMAT.NONE,
+    basePath,
+    config: {
+      '*': {
+        includedFiles: ['**'],
+      },
+    },
+    repositoryRoot: basePath,
+    systemLog: console.log,
+    debug: true,
+    internalSrcFolder: undefined,
+  })
+
+  expect(await glob('**/*', { cwd: result!.path })).toEqual([
+    '___netlify-bootstrap.mjs',
+    '___netlify-entry-point.mjs',
+    '___netlify-telemetry.mjs',
+    'function.mjs',
+    'package.json',
+  ])
+})
+
 test('The telemetry file should not be added to the bundle if the feature flag is explicitly turned off', async () => {
   const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
   const basePath = join(FIXTURES_ESM_DIR, 'v2-api')
