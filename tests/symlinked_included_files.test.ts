@@ -7,6 +7,7 @@ import { dir as getTmpDir } from 'tmp-promise'
 import { expect, test } from 'vitest'
 
 import { ARCHIVE_FORMAT, zipFunction } from '../src/main.js'
+import { BOOTSTRAP_FILE_NAME, TELEMETRY_FILE_NAME } from '../src/runtimes/node/utils/entry_file.js'
 
 import { FIXTURES_ESM_DIR } from './helpers/main.js'
 
@@ -60,8 +61,9 @@ test.skipIf(platform() === 'win32')('Symlinked directories from `includedFiles` 
 
   // expect that the symlink for `node_modules/crazy-dep` is preserved
   expect(await readDirWithType(unzippedPath)).toEqual({
-    '___netlify-bootstrap.mjs': false,
+    [BOOTSTRAP_FILE_NAME]: false,
     '___netlify-entry-point.mjs': false,
+    [TELEMETRY_FILE_NAME]: false,
     'function.mjs': false,
     [join('node_modules/.pnpm/crazy-dep/package.json')]: false,
     [join('node_modules/crazy-dep')]: true,
@@ -95,8 +97,9 @@ test('symlinks in subdir of `includedFiles` are copied over successfully', async
   })
 
   expect(await readDirWithType(join(tmpDir, 'function'))).toEqual({
-    '___netlify-bootstrap.mjs': false,
+    [BOOTSTRAP_FILE_NAME]: false,
     '___netlify-entry-point.mjs': false,
+    [TELEMETRY_FILE_NAME]: false,
     'function.cjs': false,
     [join('subproject/node_modules/.bin/cli.js')]: true,
     [join('subproject/node_modules/tool/cli.js')]: false,
