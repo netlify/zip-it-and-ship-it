@@ -32,7 +32,8 @@ test('The telemetry file should be added by default to the function bundle', asy
 
   await decompress(result!.path, unzippedPath)
 
-  expect(await glob('**/*', { cwd: unzippedPath })).toEqual([
+  const files = await glob('**/*', { cwd: unzippedPath })
+  expect(files.sort()).toEqual([
     '___netlify-bootstrap.mjs',
     '___netlify-entry-point.mjs',
     '___netlify-telemetry.mjs',
@@ -60,7 +61,8 @@ test('The telemetry file should be added if bundler is none', async () => {
     internalSrcFolder: undefined,
   })
 
-  expect(await glob('**/*', { cwd: result!.path })).toEqual([
+  const files = await glob('**/*', { cwd: result!.path })
+  expect(files.sort()).toEqual([
     '___netlify-bootstrap.mjs',
     '___netlify-entry-point.mjs',
     '___netlify-telemetry.mjs',
@@ -92,7 +94,8 @@ test('The telemetry file should not be added to the bundle if the feature flag i
   const unzippedPath = join(tmpDir, 'extracted')
   await decompress(result!.path, unzippedPath)
 
-  expect(await glob('**/*', { cwd: unzippedPath })).toEqual([
+  const files = await glob('**/*', { cwd: unzippedPath })
+  expect(files.sort()).toEqual([
     '___netlify-bootstrap.mjs',
     '___netlify-entry-point.mjs',
     'function.mjs',
