@@ -105,7 +105,7 @@
     "browserslist": "4.22.2",
     "cardinal": "2.1.1",
     "cpy": "9.0.1",
-    "decompress": "^4.2.1",
+    "decompress": "4.2.1",
     "deepmerge": "4.3.1",
     "get-stream": "8.0.1",
     "husky": "8.0.3",
