@@ -2,7 +2,6 @@ import { describe, expect, test } from 'vitest'
 
 import { parseSource } from '../../../../src/runtimes/node/in_source_config/index.js'
 import { getLogger } from '../../../../src/utils/logger.js'
-import { generate } from 'fast-glob/out/managers/tasks.js'
 
 describe('`schedule` helper', () => {
   const options = { functionName: 'func1', featureFlags: {}, logger: getLogger() }
