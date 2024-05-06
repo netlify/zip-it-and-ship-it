@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 
 import { parseSource } from '../../../../src/runtimes/node/in_source_config/index.js'
 import { getLogger } from '../../../../src/utils/logger.js'
+import { generate } from 'fast-glob/out/managers/tasks.js'
 
 describe('`schedule` helper', () => {
   const options = { functionName: 'func1', featureFlags: {}, logger: getLogger() }
@@ -701,6 +702,21 @@ describe('V2 API', () => {
       const { routes } = parseSource(source, options)
 
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [], prefer_static: true }])
+    })
+  })
+
+  test('Understands name and generator', () => {
+    const source = `
+    export default async () => new Response("Hello!")
+    export const config = { name: "foo", generator: "bar@1.2.3" }`
+
+    const isc = parseSource(source, options)
+    expect(isc).toEqual({
+      inputModuleFormat: 'esm',
+      routes: [],
+      runtimeAPIVersion: 2,
+      name: 'foo',
+      generator: 'bar@1.2.3',
     })
   })
 })

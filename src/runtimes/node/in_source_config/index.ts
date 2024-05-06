@@ -23,6 +23,8 @@ export type ISCValues = {
   schedule?: string
   methods?: string[]
   trafficRules?: TrafficRules
+  name?: string
+  generator?: string
 }
 
 export interface StaticAnalysisResult extends ISCValues {
@@ -175,6 +177,14 @@ export const parseSource = (source: string, { functionName }: FindISCDeclaration
 
     if (typeof configExport.schedule === 'string') {
       result.schedule = configExport.schedule
+    }
+
+    if (typeof configExport.name === 'string') {
+      result.name = configExport.name
+    }
+
+    if (typeof configExport.generator === 'string') {
+      result.generator = configExport.generator
     }
 
     if (configExport.method !== undefined) {
