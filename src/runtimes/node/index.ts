@@ -141,7 +141,7 @@ const zipFunction: ZipFunction = async function ({
     invocationMode = INVOCATION_MODE.Background
   }
 
-  const { trafficRules } = staticAnalysisResult
+  const { trafficRules, generator: staticAnalysisGenerator, name: staticAnalysisName } = staticAnalysisResult
 
   const outputModuleFormat =
     extname(finalMainFile) === MODULE_FILE_EXTENSION.MJS ? MODULE_FORMAT.ESM : MODULE_FORMAT.COMMONJS
@@ -151,9 +151,9 @@ const zipFunction: ZipFunction = async function ({
     bundler: bundlerName,
     bundlerWarnings,
     config,
-    displayName: config?.name,
+    displayName: config?.name ?? staticAnalysisName,
     entryFilename: zipPath.entryFilename,
-    generator: config?.generator || getInternalValue(isInternal),
+    generator: config?.generator ?? staticAnalysisGenerator ?? getInternalValue(isInternal),
     inputs,
     includedFiles,
     staticAnalysisResult,
