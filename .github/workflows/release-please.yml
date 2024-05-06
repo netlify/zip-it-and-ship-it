@@ -24,7 +24,7 @@ jobs:
           package-name: '@netlify/zip-it-and-ship-it'
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.release_created }}
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: '*'
           cache: 'npm'
