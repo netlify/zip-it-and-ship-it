@@ -8,6 +8,4 @@ export default async () =>
 export const config = {
   path: '/products',
   method: ['GET', 'POST'],
-  name: 'Product List',
-  generator: 'foo@1.2.3',
 }

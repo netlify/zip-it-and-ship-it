@@ -1,0 +1,7 @@
+{
+  "config": {
+    "name": "should not be respected, ISC takes precedence",
+    "generator": "should not be respected, ISC takes precedence"
+  },
+  "version": 1
+}
