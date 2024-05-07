@@ -1,4 +1,4 @@
-export default () => new Response("hello world")
+export default () => new Response('hello world')
 
 export const config = {
   name: 'SSR Function',
