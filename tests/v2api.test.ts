@@ -528,4 +528,26 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
       expect(body).toBe('foo!bar')
     })
   })
+
+  test('Name and Generator are taken from ISC and take precedence over deploy config', async () => {
+    const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+    const manifestPath = join(tmpDir, 'manifest.json')
+
+    const fixtureName = 'v2-api-name-generator'
+    const pathInternal = join(fixtureName, '.netlify', 'functions-internal')
+
+    const {
+      files: [func],
+    } = await zipFixture(pathInternal, {
+      fixtureDir: FIXTURES_ESM_DIR,
+      length: 1,
+      opts: {
+        manifest: manifestPath,
+        configFileDirectories: [join(FIXTURES_ESM_DIR, fixtureName)],
+      },
+    })
+
+    expect(func.displayName).toBe('SSR Function')
+    expect(func.generator).toBe('next-runtime@1.2.3')
+  })
 })

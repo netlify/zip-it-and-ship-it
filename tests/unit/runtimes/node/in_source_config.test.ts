@@ -703,4 +703,19 @@ describe('V2 API', () => {
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [], prefer_static: true }])
     })
   })
+
+  test('Understands name and generator', () => {
+    const source = `
+    export default async () => new Response("Hello!")
+    export const config = { name: "foo", generator: "bar@1.2.3" }`
+
+    const isc = parseSource(source, options)
+    expect(isc).toEqual({
+      inputModuleFormat: 'esm',
+      routes: [],
+      runtimeAPIVersion: 2,
+      name: 'foo',
+      generator: 'bar@1.2.3',
+    })
+  })
 })
