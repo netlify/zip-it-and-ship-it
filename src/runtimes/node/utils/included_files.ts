@@ -1,6 +1,9 @@
 import { normalize, resolve } from 'path'
 
-import { minimatch, glob } from '../../../utils/matching.js'
+import fastGlob from 'fast-glob'
+
+import { type FeatureFlags } from '../../../feature_flags.js'
+import { minimatch } from '../../../utils/matching.js'
 
 // Returns the subset of `paths` that don't match any of the glob expressions
 // from `exclude`.
@@ -16,6 +19,7 @@ export const filterExcludedPaths = (paths: string[], excludePattern: string[] = 
 
 export const getPathsOfIncludedFiles = async (
   includedFiles: string[],
+  featureFlags: FeatureFlags,
   basePath?: string,
 ): Promise<{ excludePatterns: string[]; paths: string[] }> => {
   if (basePath === undefined) {
@@ -46,16 +50,29 @@ export const getPathsOfIncludedFiles = async (
     { include: [], excludePatterns: [] },
   )
 
-  const pathGroups = await Promise.all(
-    include.map((expression) =>
-      glob(expression, { absolute: true, cwd: basePath, ignore: excludePatterns, nodir: true }),
-    ),
-  )
+  const pathGroups = await fastGlob(include, {
+    absolute: true,
+    cwd: basePath,
+    dot: true,
+    ignore: excludePatterns,
+    ...(featureFlags.zisi_fix_symlinks
+      ? {
+          onlyFiles: false,
+          // get directories as well to get symlinked directories,
+          // to filter the regular non symlinked directories out mark them with a slash at the end to filter them out.
+          markDirectories: true,
+          followSymbolicLinks: false,
+        }
+      : {
+          followSymbolicLinks: true,
+          throwErrorOnBrokenSymbolicLink: true,
+        }),
+  })
 
-  // `pathGroups` is an array containing the paths for each expression in the
-  // `include` array. We flatten it into a single dimension.
-  const paths = pathGroups.flat()
-  const normalizedPaths = paths.map(normalize)
+  const paths = featureFlags.zisi_fix_symlinks
+    ? pathGroups.filter((path) => !path.endsWith('/')).map(normalize)
+    : pathGroups.map(normalize)
 
-  return { excludePatterns, paths: [...new Set(normalizedPaths)] }
+  // now filter the non symlinked directories out that got marked with a trailing slash
+  return { excludePatterns, paths }
 }

@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs'
+import { createRequire } from 'module'
 import { basename, extname, resolve } from 'path'
 
 import type { FeatureFlags } from '../../../feature_flags.js'
@@ -15,6 +17,9 @@ import { normalizeFilePath } from './normalize_path.js'
 
 export const ENTRY_FILE_NAME = '___netlify-entry-point'
 export const BOOTSTRAP_FILE_NAME = '___netlify-bootstrap.mjs'
+export const TELEMETRY_FILE_NAME = '___netlify-telemetry.mjs'
+
+const require = createRequire(import.meta.url)
 
 export interface EntryFile {
   contents: string
@@ -151,6 +156,17 @@ const getEntryFileName = ({
   }
 
   return `${basename(filename, extname(filename))}${extension}`
+}
+
+export const getTelemetryFile = (): EntryFile => {
+  // TODO: switch with import.meta.resolve once we drop support for Node 16.x
+  const filePath = require.resolve('@netlify/serverless-functions-api/instrumentation.js')
+  const contents = readFileSync(filePath, 'utf8')
+
+  return {
+    contents,
+    filename: TELEMETRY_FILE_NAME,
+  }
 }
 
 export const getEntryFile = ({

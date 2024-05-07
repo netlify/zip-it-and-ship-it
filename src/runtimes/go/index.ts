@@ -137,7 +137,6 @@ const zipFunction: ZipFunction = async function ({
     config,
     displayName: config?.name,
     generator: config?.generator || getInternalValue(isInternal),
-    runtimeVersion: 'provided.al2',
   }
 
   // If `zipGo` is enabled, we create a zip archive with the Go binary and the

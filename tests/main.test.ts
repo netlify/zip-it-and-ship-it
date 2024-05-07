@@ -1,11 +1,12 @@
-import { mkdir, readFile, chmod, symlink, writeFile, rm } from 'fs/promises'
+import { mkdir, readFile, rm, symlink, writeFile } from 'fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'path'
-import { arch, platform, version as nodeVersion } from 'process'
+import { arch, version as nodeVersion, platform } from 'process'
 
-import AdmZip from 'adm-zip'
 import cpy from 'cpy'
+import decompress from 'decompress'
 import merge from 'deepmerge'
 import { execa, execaNode } from 'execa'
+import glob from 'fast-glob'
 import isCI from 'is-ci'
 import { pathExists } from 'path-exists'
 import semver from 'semver'
@@ -22,15 +23,15 @@ import { shellUtils } from '../src/utils/shell.js'
 import type { ZipFunctionsOptions } from '../src/zip.js'
 
 import {
+  BINARY_PATH,
+  FIXTURES_DIR,
+  getBundlerNameFromOptions,
   getRequires,
-  zipNode,
-  zipFixture,
+  importFunctionFile,
   unzipFiles,
   zipCheckFunctions,
-  FIXTURES_DIR,
-  BINARY_PATH,
-  importFunctionFile,
-  getBundlerNameFromOptions,
+  zipFixture,
+  zipNode,
 } from './helpers/main.js'
 import { computeSha1 } from './helpers/sha.js'
 import { allBundleConfigs, testMany } from './helpers/test_many.js'
@@ -39,8 +40,6 @@ import { allBundleConfigs, testMany } from './helpers/test_many.js'
 import 'source-map-support/register'
 
 vi.mock('../src/utils/shell.js', () => ({ shellUtils: { runCommand: vi.fn() } }))
-
-const EXECUTABLE_PERMISSION = 0o755
 
 const getZipChecksum = async function (opts: ZipFunctionsOptions) {
   const {
@@ -1754,16 +1753,6 @@ describe('zip-it-and-ship-it', () => {
     const unzippedFile = `${unzippedFunctions[0].unzipPath}/bootstrap`
     await expect(unzippedFile).toPathExist()
 
-    // The library we use for unzipping does not keep executable permissions.
-    // https://github.com/cthackers/adm-zip/issues/86
-    // However `chmod()` is not cross-platform
-    if (platform === 'linux') {
-      await chmod(unzippedFile, EXECUTABLE_PERMISSION)
-
-      const { stdout } = await execa(unzippedFile)
-      expect(stdout).toBe('Hello, world!')
-    }
-
     const tcFile = `${unzippedFunctions[0].unzipPath}/netlify-toolchain`
     await expect(tcFile).toPathExist()
     const tc = await readFile(tcFile, 'utf8')
@@ -1803,7 +1792,7 @@ describe('zip-it-and-ship-it', () => {
 
     const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
 
-    expect(manifest.functions[0].runtimeVersion).toEqual('provided.al2')
+    expect(manifest.functions[0].runtimeVersion).toBeUndefined()
 
     const unzippedFunctions = await unzipFiles([func])
     const unzippedBinaryPath = join(unzippedFunctions[0].unzipPath, 'bootstrap')
@@ -1844,7 +1833,7 @@ describe('zip-it-and-ship-it', () => {
 
     const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
 
-    expect(manifest.functions[0].runtimeVersion).toEqual('provided.al2')
+    expect(manifest.functions[0].runtimeVersion).toBeUndefined()
 
     // remove the binary before unzipping
     await rm(join(tmpDir, 'go-func-1'), { maxRetries: 10 })
@@ -1904,7 +1893,6 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         entryFilename: '',
         runtime: 'go',
-        runtimeVersion: 'provided.al2',
       },
       {
         config: expect.anything(),
@@ -1913,7 +1901,6 @@ describe('zip-it-and-ship-it', () => {
         path: expect.anything(),
         entryFilename: '',
         runtime: 'go',
-        runtimeVersion: 'provided.al2',
       },
     ])
 
@@ -2850,7 +2837,7 @@ describe('zip-it-and-ship-it', () => {
   })
 
   testMany('only includes files once in a zip', [...allBundleConfigs], async (options) => {
-    const { files } = await zipFixture('local-require', {
+    const { files, tmpDir } = await zipFixture('local-require', {
       length: 1,
       opts: merge(options, {
         basePath: join(FIXTURES_DIR, 'local-require'),
@@ -2863,10 +2850,82 @@ describe('zip-it-and-ship-it', () => {
       }),
     })
 
-    const zip = new AdmZip(files[0].path)
+    const unzipPath = join(tmpDir, 'unzipped')
 
-    const fileNames: string[] = zip.getEntries().map((entry) => entry.entryName)
+    await decompress(files[0].path, unzipPath)
+
+    const fileNames: string[] = await glob('**', { dot: true, cwd: unzipPath })
     const duplicates = fileNames.filter((item, index) => fileNames.indexOf(item) !== index)
     expect(duplicates).toHaveLength(0)
   })
+})
+
+test('Adds a `priority` field to the generated manifest file', async () => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const fixtureName = 'multiple-src-directories'
+  const manifestPath = join(tmpDir, 'manifest.json')
+  const paths = {
+    generated: `${fixtureName}/.netlify/internal-functions`,
+    user: `${fixtureName}/netlify/functions`,
+  }
+
+  await zipNode([paths.generated, paths.user], {
+    length: 3,
+    opts: {
+      internalSrcFolder: join(FIXTURES_DIR, paths.generated),
+      manifest: manifestPath,
+    },
+  })
+
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+  expect(manifest.version).toBe(1)
+  expect(manifest.system.arch).toBe(arch)
+  expect(manifest.system.platform).toBe(platform)
+  expect(manifest.timestamp).toBeTypeOf('number')
+
+  const userFunction1 = manifest.functions.find((fn) => fn.name === 'function_user')
+  expect(userFunction1.priority).toBe(10)
+
+  const userFunction2 = manifest.functions.find((fn) => fn.name === 'function')
+  expect(userFunction2.priority).toBe(10)
+
+  const generatedFunction1 = manifest.functions.find((fn) => fn.name === 'function_internal')
+  expect(generatedFunction1.priority).toBe(0)
+})
+
+test('Adds a `ratelimit` field to the generated manifest file', async () => {
+  const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
+  const fixtureName = 'ratelimit'
+  const manifestPath = join(tmpDir, 'manifest.json')
+  const path = `${fixtureName}/netlify/functions`
+
+  await zipFixture(path, {
+    length: 2,
+    opts: { manifest: manifestPath },
+  })
+
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf-8'))
+
+  expect(manifest.version).toBe(1)
+  expect(manifest.system.arch).toBe(arch)
+  expect(manifest.system.platform).toBe(platform)
+  expect(manifest.timestamp).toBeTypeOf('number')
+
+  const ratelimitFunction = manifest.functions.find((fn) => fn.name === 'ratelimit')
+  const { type: ratelimitType, config: ratelimitConfig } = ratelimitFunction.trafficRules.action
+  expect(ratelimitType).toBe('rate_limit')
+  expect(ratelimitConfig.rateLimitConfig.windowLimit).toBe(60)
+  expect(ratelimitConfig.rateLimitConfig.windowSize).toBe(50)
+  expect(ratelimitConfig.rateLimitConfig.algorithm).toBe('sliding_window')
+  expect(ratelimitConfig.aggregate.keys).toStrictEqual([{ type: 'ip' }, { type: 'domain' }])
+
+  const rewriteFunction = manifest.functions.find((fn) => fn.name === 'rewrite')
+  const { type: rewriteType, config: rewriteConfig } = rewriteFunction.trafficRules.action
+  expect(rewriteType).toBe('rewrite')
+  expect(rewriteConfig.to).toBe('/rewritten')
+  expect(rewriteConfig.rateLimitConfig.windowLimit).toBe(200)
+  expect(rewriteConfig.rateLimitConfig.windowSize).toBe(20)
+  expect(rewriteConfig.rateLimitConfig.algorithm).toBe('sliding_window')
+  expect(rewriteConfig.aggregate.keys).toStrictEqual([{ type: 'ip' }, { type: 'domain' }])
 })

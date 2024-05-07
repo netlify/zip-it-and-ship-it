@@ -3,6 +3,7 @@ import { extname, join } from 'path'
 import { copyFile } from 'cp-file'
 
 import { INVOCATION_MODE } from '../../function.js'
+import { Priority } from '../../priority.js'
 import getInternalValue from '../../utils/get_internal_value.js'
 import { GetSrcFilesFunction, Runtime, RUNTIME, ZipFunction } from '../runtime.js'
 
@@ -61,7 +62,7 @@ const zipFunction: ZipFunction = async function ({
     return { config, path: destPath, entryFilename: '' }
   }
 
-  const staticAnalysisResult = await parseFile(mainFile, { functionName: name, logger })
+  const staticAnalysisResult = await parseFile(mainFile, { functionName: name })
   const runtimeAPIVersion = staticAnalysisResult.runtimeAPIVersion === 2 ? 2 : 1
 
   const pluginsModulesPath = await getPluginsModulesPath(srcDir)
@@ -140,8 +141,11 @@ const zipFunction: ZipFunction = async function ({
     invocationMode = INVOCATION_MODE.Background
   }
 
+  const { trafficRules } = staticAnalysisResult
+
   const outputModuleFormat =
     extname(finalMainFile) === MODULE_FILE_EXTENSION.MJS ? MODULE_FORMAT.ESM : MODULE_FORMAT.COMMONJS
+  const priority = isInternal ? Priority.GeneratedFunction : Priority.UserFunction
 
   return {
     bundler: bundlerName,
@@ -157,6 +161,8 @@ const zipFunction: ZipFunction = async function ({
     outputModuleFormat,
     nativeNodeModules,
     path: zipPath.path,
+    priority,
+    trafficRules,
     runtimeVersion:
       runtimeAPIVersion === 2 ? getNodeRuntimeForV2(config.nodeVersion) : getNodeRuntime(config.nodeVersion),
   }

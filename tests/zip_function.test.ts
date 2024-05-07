@@ -188,19 +188,6 @@ describe('zipFunction', () => {
       expect(result.entryFilename).toEqual('___netlify-entry-point.mjs')
     })
 
-    test('Logs to systemlog', async () => {
-      const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
-      const mainFile = join(FIXTURES_ESM_DIR, 'v2-api', 'function.js')
-      const systemLog = vi.fn()
-
-      await zipFunction(mainFile, tmpDir, {
-        systemLog,
-      })
-
-      expect(systemLog).toHaveBeenCalledOnce()
-      expect(systemLog).toHaveBeenCalledWith('detected v2 function')
-    })
-
     test('Does not log to systemlog for v1', async () => {
       const { path: tmpDir } = await getTmpDir({ prefix: 'zip-it-test' })
       const mainFile = join(FIXTURES_DIR, 'simple', 'function.js')

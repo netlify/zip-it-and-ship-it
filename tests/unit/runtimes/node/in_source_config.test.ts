@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 
 import { parseSource } from '../../../../src/runtimes/node/in_source_config/index.js'
 import { getLogger } from '../../../../src/utils/logger.js'
@@ -126,13 +126,8 @@ describe('V2 API', () => {
       const source = `export default async () => {
         return new Response("Hello!")
       }`
+      const isc = parseSource(source, { ...options })
 
-      const systemLog = vi.fn()
-
-      const isc = parseSource(source, { ...options, logger: getLogger(systemLog) })
-
-      expect(systemLog).toHaveBeenCalledOnce()
-      expect(systemLog).toHaveBeenCalledWith('detected v2 function')
       expect(isc).toEqual({ inputModuleFormat: 'esm', routes: [], runtimeAPIVersion: 2 })
     })
 
@@ -691,6 +686,21 @@ describe('V2 API', () => {
       const { routes } = parseSource(source, options)
 
       expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [] }])
+    })
+
+    test('Understands minfied true', () => {
+      const source = `export default async () => {
+        return new Response("Hello!")
+      }
+  
+      export const config = {
+        path: "/products",
+        preferStatic: !0
+      }`
+
+      const { routes } = parseSource(source, options)
+
+      expect(routes).toEqual([{ pattern: '/products', literal: '/products', methods: [], prefer_static: true }])
     })
   })
 })
