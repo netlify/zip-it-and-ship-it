@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.22.5",
-    "@babel/types": "7.23.6",
+    "@babel/types": "7.24.5",
     "@netlify/binary-info": "^1.0.0",
     "@netlify/serverless-functions-api": "^1.18.1",
     "@vercel/nft": "^0.23.0",
