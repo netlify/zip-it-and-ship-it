@@ -550,4 +550,27 @@ describe.runIf(semver.gte(nodeVersion, '18.13.0'))('V2 functions API', () => {
     expect(func.displayName).toBe('SSR Function')
     expect(func.generator).toBe('next-runtime@1.2.3')
   })
+
+  testMany(
+    'Bootstrap is imported before user code so it can apply side-effects before the user code runs',
+    ['bundler_default', 'bundler_esbuild', 'bundler_esbuild_zisi', 'bundler_default_nft', 'bundler_nft'],
+    async (options) => {
+      const { files } = await zipFixture('v2-api', {
+        fixtureDir: FIXTURES_ESM_DIR,
+        opts: options,
+      })
+
+      const unzippedFunctions = await unzipFiles(files)
+
+      const contents = await readFile(join(unzippedFunctions[0].unzipPath, files[0].entryFilename), {
+        encoding: 'utf-8',
+      })
+      const positionOfBootstrapImport = contents.indexOf('___netlify-bootstrap.mjs')
+      const positionOfUserCodeImport = contents.indexOf('function.mjs')
+
+      expect(positionOfBootstrapImport).toBeGreaterThan(0)
+      expect(positionOfUserCodeImport).toBeGreaterThan(0)
+      expect(positionOfBootstrapImport).toBeLessThan(positionOfUserCodeImport)
+    },
+  )
 })
