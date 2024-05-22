@@ -90,7 +90,7 @@
   },
   "devDependencies": {
     "@netlify/eslint-config-node": "7.0.1",
-    "@types/archiver": "5.3.4",
+    "@types/archiver": "6.0.2",
     "@types/glob": "8.1.0",
     "@types/is-ci": "3.0.4",
     "@types/node": "20.12.11",
